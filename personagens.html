@@ -442,6 +442,48 @@
       border-color: #ff5566;
       box-shadow: 0 0 10px rgba(255,85,102,0.4);
     }
+    /* ── Mobile ── */
+    @media (max-width: 600px) {
+      .page {
+        padding: 28px 20px 60px;
+      }
+
+      /* Header: voltar em cima, título centralizado abaixo */
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 36px;
+      }
+      .page-title {
+        align-self: center;
+        font-size: 11px;
+        letter-spacing: 6px;
+      }
+      .header-spacer { display: none; }
+
+      /* Roster: coluna centralizada */
+      .roster {
+        flex-direction: column;
+        align-items: center;
+        gap: 32px;
+        width: 100%;
+      }
+
+      /* Cards menores no mobile */
+      .char-btn {
+        width: 180px;
+        height: 180px;
+      }
+      .char-projection {
+        width: 144px;
+        height: 144px;
+      }
+      .new-char-btn {
+        width: 180px;
+        height: 180px;
+      }
+    }
     </style>
 </head>
 <body>
