@@ -2,7 +2,6 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMDQwODEwIi8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwZmZlNyIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iNiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDBmZmU3IiBzdHJva2Utd2lkdGg9IjAuOCIgc3Ryb2tlLWRhc2hhcnJheT0iMiAyIi8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMyIgZmlsbD0iIzAwZmZlNyIgb3BhY2l0eT0iMC45Ii8+CiAgPGxpbmUgeDE9IjQiIHkxPSI0IiB4Mj0iMTAiIHkyPSI0IiBzdHJva2U9IiNmZjZiMWEiIHN0cm9rZS13aWR0aD0iMSIvPgogIDxsaW5lIHgxPSI0IiB5MT0iNCIgeDI9IjQiIHkyPSIxMCIgc3Ryb2tlPSIjZmY2YjFhIiBzdHJva2Utd2lkdGg9IjEiLz4KICA8bGluZSB4MT0iMjgiIHkxPSI0IiB4Mj0iMjIiIHkyPSI0IiBzdHJva2U9IiNmZjZiMWEiIHN0cm9rZS13aWR0aD0iMSIvPgogIDxsaW5lIHgxPSIyOCIgeTE9IjQiIHgyPSIyOCIgeTI9IjEwIiBzdHJva2U9IiNmZjZiMWEiIHN0cm9rZS13aWR0aD0iMSIvPgogIDxsaW5lIHgxPSI0IiB5MT0iMjgiIHgyPSIxMCIgeTI9IjI4IiBzdHJva2U9IiNmZjZiMWEiIHN0cm9rZS13aWR0aD0iMSIvPgogIDxsaW5lIHgxPSI0IiB5MT0iMjgiIHgyPSI0IiB5Mj0iMjIiIHN0cm9rZT0iI2ZmNmIxYSIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgPGxpbmUgeDE9IjI4IiB5MT0iMjgiIHgyPSIyMiIgeTI9IjI4IiBzdHJva2U9IiNmZjZiMWEiIHN0cm9rZS13aWR0aD0iMSIvPgogIDxsaW5lIHgxPSIyOCIgeTE9IjI4IiB4Mj0iMjgiIHkyPSIyMiIgc3Ryb2tlPSIjZmY2YjFhIiBzdHJva2Utd2lkdGg9IjEiLz4KPC9zdmc+">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Personagens · Mundo Aberto</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
@@ -525,8 +524,24 @@
   </div>
 
   <script>
+    var SUPABASE_URL = 'https://mxyqqfsyybluavwlrhsa.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eXFxZnN5eWJsdWF2d2xyaHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTM4MzEsImV4cCI6MjA5MzY2OTgzMX0.b0Ij7UGzbMLpqZjLYxoPEu2kGwEW52U_2NSDtpMGUPM';
+
+    function sbFetch(path, method, body) {
+      return fetch(SUPABASE_URL + path, {
+        method: method || 'GET',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: body ? JSON.stringify(body) : undefined
+      }).then(function(r) { return r.json(); });
+    }
+
     // ── Holograma reutilizável ──
-    function createHoloCard(id, href, name, imgSrc) {
+    function createHoloCard(charId, name, imgSrc) {
+      const href = 'ficha.html?id=' + charId;
       const group = document.createElement('div');
       group.className = 'char-group';
 
@@ -581,16 +596,9 @@
         e.preventDefault();
         e.stopPropagation();
         if (!confirm('Excluir "' + (name || 'Personagem') + '"? Esta ação não pode ser desfeita.')) return;
-        // Remove do roster
-        let roster = [];
-        try { roster = JSON.parse(localStorage.getItem('ma:roster') || '[]'); } catch(err) {}
-        roster = roster.filter(c => c.id !== id);
-        localStorage.setItem('ma:roster', JSON.stringify(roster));
-        // Remove dados da ficha do localStorage
-        Object.keys(localStorage).forEach(k => {
-          if (k.startsWith('ma:char:' + id + ':')) localStorage.removeItem(k);
-        });
-        // Anima saída e remove o card
+        // Remove do Supabase
+        sbFetch('/rest/v1/personagens?char_id=eq.' + charId, 'DELETE');
+        // Anima saída
         group.style.transition = 'opacity 0.3s, transform 0.3s';
         group.style.opacity = '0';
         group.style.transform = 'scale(0.85)';
@@ -603,25 +611,26 @@
       return group;
     }
 
-    // ── Carrega fichas salvas ──
+    // ── Carrega personagens do Supabase ──
     function loadRoster() {
       const rosterEl = document.getElementById('roster');
       const newCharGroup = rosterEl.querySelector('.new-char-group');
 
-      let chars = [];
-      try { chars = JSON.parse(localStorage.getItem('ma:roster') || '[]'); } catch(e) {}
-
-      chars.forEach((char, i) => {
-        const href = 'ficha.html?id=' + char.id;
-        const card = createHoloCard(char.id, href, char.name, char.img);
-        card.style.animationDelay = (i * 80) + 'ms';
-        rosterEl.insertBefore(card, newCharGroup);
-      });
+      sbFetch('/rest/v1/personagens?select=*&order=created_at.asc', 'GET')
+        .then(function(chars) {
+          if (!Array.isArray(chars)) return;
+          chars.forEach(function(char, i) {
+            const card = createHoloCard(char.char_id, char.name, char.img_url);
+            card.style.animationDelay = (i * 80) + 'ms';
+            rosterEl.insertBefore(card, newCharGroup);
+          });
+        })
+        .catch(function(e) { console.error('Erro ao carregar personagens:', e); });
     }
 
     loadRoster();
 
-    // ── Novo personagem: gera ID único e abre ficha com ele ──
+    // ── Novo personagem: gera ID único e abre ficha ──
     document.getElementById('newCharBtn').addEventListener('click', (e) => {
       e.preventDefault();
       const id = 'char_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
