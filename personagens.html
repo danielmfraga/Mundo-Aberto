@@ -633,6 +633,17 @@
     // ── Novo personagem: gera ID único e abre ficha ──
     document.getElementById('newCharBtn').addEventListener('click', (e) => {
       e.preventDefault();
+      // Limpa todos os campos do localStorage antes de abrir ficha nova
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith('idfield:') || k.startsWith('bio:') ||
+            k === 'holoImg' || k === 'sheetTitle' || k === 'notes' ||
+            k === 'xpTotal' || k === 'xpSpent' ||
+            k.startsWith('vit:') || k.startsWith('fdv:') || k.startsWith('desp:') ||
+            k.startsWith('trunfo:') || k.startsWith('quality:') ||
+            k.startsWith('equip:') || k.startsWith('distinct:')) {
+          localStorage.removeItem(k);
+        }
+      });
       const id = 'char_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
       window.location.href = 'ficha.html?id=' + id;
     });
