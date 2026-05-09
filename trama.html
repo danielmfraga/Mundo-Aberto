@@ -707,16 +707,24 @@
         var mm = {'#00cc66':'arr-green','#ff4466':'arr-red','#ffcc00':'arr-yellow','#ff6b1a':'arr-orange'};
         path.setAttribute('marker-end', 'url(#' + (mm[col] || 'arr') + ')');
         path.classList.add('conn-path');
-        path.style.pointerEvents = 'visibleStroke';
-        path.style.cursor = 'context-menu';
-        path.addEventListener('contextmenu', function(e) {
+        path.style.pointerEvents = 'none';
+        svgLayer.appendChild(path);
+        var hit = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        hit.setAttribute('d', path.getAttribute('d'));
+        hit.setAttribute('fill', 'none');
+        hit.setAttribute('stroke', 'transparent');
+        hit.setAttribute('stroke-width', '14');
+        hit.classList.add('conn-path');
+        hit.style.pointerEvents = 'visibleStroke';
+        hit.style.cursor = 'context-menu';
+        hit.addEventListener('contextmenu', function(e) {
           e.preventDefault(); e.stopPropagation();
           window._activeConn = conn;
           var m = document.getElementById('conn-menu');
           m.style.left = e.clientX + 'px'; m.style.top = e.clientY + 'px';
           m.classList.add('open');
         });
-        svgLayer.appendChild(path);
+        svgLayer.appendChild(hit);
         if (conn.labelWrap) {
           const mx = (p1.x + p2.x) / 2;
           const my = (p1.y + p2.y) / 2;
