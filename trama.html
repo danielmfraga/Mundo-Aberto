@@ -487,11 +487,11 @@
     .cmlabel { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(207,233,240,0.6); }
 
     #sel-rect {
-      position: absolute;
+      position: fixed;
       border: 1px solid rgba(0,255,231,0.5);
       background: rgba(0,255,231,0.05);
       pointer-events: none;
-      z-index: 5;
+      z-index: 50;
       display: none;
     }
     .node.multi-selected {
@@ -669,11 +669,11 @@
         var wx = (e.clientX - rect.left - panOffset.x) / scale;
         var wy = (e.clientY - rect.top  - panOffset.y) / scale;
         if (e.shiftKey) {
-          // Start selection rect
+          // Start selection rect — use screen coords for visual, world coords for hit test
           selDragging = true;
-          selStart = { x: wx, y: wy };
+          selStart = { wx: wx, wy: wy, sx: e.clientX, sy: e.clientY };
           var sr = document.getElementById('sel-rect');
-          sr.style.left = wx + 'px'; sr.style.top = wy + 'px';
+          sr.style.left = e.clientX + 'px'; sr.style.top = e.clientY + 'px';
           sr.style.width = '0'; sr.style.height = '0';
           sr.style.display = 'block';
         } else {
@@ -714,10 +714,13 @@
         var wx2 = (e.clientX - rect2.left - panOffset.x) / scale;
         var wy2 = (e.clientY - rect2.top  - panOffset.y) / scale;
         var sr = document.getElementById('sel-rect');
-        var rx = Math.min(selStart.x, wx2), ry = Math.min(selStart.y, wy2);
-        var rw = Math.abs(wx2 - selStart.x), rh = Math.abs(wy2 - selStart.y);
-        sr.style.left = rx + 'px'; sr.style.top = ry + 'px';
-        sr.style.width = rw + 'px'; sr.style.height = rh + 'px';
+        // Visual: screen coords
+        var srx = Math.min(selStart.sx, e.clientX), sry = Math.min(selStart.sy, e.clientY);
+        var srw = Math.abs(e.clientX - selStart.sx), srh = Math.abs(e.clientY - selStart.sy);
+        sr.style.left = srx + 'px'; sr.style.top = sry + 'px';
+        sr.style.width = srw + 'px'; sr.style.height = srh + 'px';
+        // Store world bounds for hit testing
+        selStart.wx2 = wx2; selStart.wy2 = wy2;
       }
       if (selDragging && false) {} // placeholder
       if (multiSelected.size > 0 && dragging && multiSelected.has(dragging.dataset.id)) {
@@ -772,14 +775,17 @@
         sr.style.display = 'none';
         // Select nodes inside rect
         if (selStart) {
-          var rx = parseFloat(sr.style.left), ry = parseFloat(sr.style.top);
-          var rw = parseFloat(sr.style.width), rh = parseFloat(sr.style.height);
+          // Use world coords for hit testing
+          var rx = Math.min(selStart.wx, selStart.wx2 || selStart.wx);
+          var ry = Math.min(selStart.wy, selStart.wy2 || selStart.wy);
+          var rr = Math.max(selStart.wx, selStart.wx2 || selStart.wx);
+          var rb = Math.max(selStart.wy, selStart.wy2 || selStart.wy);
           clearMultiSelect();
           Object.entries(nodes).forEach(function(entry) {
             var nid = entry[0], nel = entry[1];
             var nx = parseFloat(nel.style.left), ny = parseFloat(nel.style.top);
             var nw = nel.offsetWidth, nh = nel.offsetHeight;
-            if (nx + nw > rx && nx < rx + rw && ny + nh > ry && ny < ry + rh) {
+            if (nx + nw > rx && nx < rr && ny + nh > ry && ny < rb) {
               multiSelected.add(nid);
               nel.classList.add('multi-selected');
             }
