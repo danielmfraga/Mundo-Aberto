@@ -117,6 +117,7 @@
       pointer-events: none;
       overflow: visible;
       filter: drop-shadow(0 0 3px rgba(0,255,231,0.25));
+      touch-action: none;
     }
 
     /* Nodes */
@@ -506,6 +507,8 @@
         hit.setAttribute('stroke-width', '24');
         hit.classList.add('conn-path');
         hit.style.cursor = 'pointer';
+        hit.style.pointerEvents = 'visibleStroke';
+        hit.style.touchAction = 'none';
         hit.dataset.connIdx = idx;
         svgLayer.appendChild(hit);
 
@@ -729,7 +732,7 @@
     }
 
     function getHitConn(clientX, clientY) {
-      // Find connection hit path at point
+      // Try elementsFromPoint first
       var els = document.elementsFromPoint(clientX, clientY);
       for (var i = 0; i < els.length; i++) {
         var el = els[i];
@@ -737,7 +740,23 @@
           return connections[parseInt(el.dataset.connIdx)];
         }
       }
-      return null;
+      // Fallback: find nearest connection by proximity to midpoint (for mobile)
+      var wc = worldCoords(clientX, clientY);
+      var best = null, bestDist = 30; // 30px threshold in world coords
+      connections.forEach(function(conn) {
+        var n1 = nodes[conn.from.id], n2 = nodes[conn.to.id];
+        if (!n1 || !n2) return;
+        var p1 = getAnchorPos(n1, conn.from.pos);
+        var p2 = getAnchorPos(n2, conn.to.pos);
+        // Distance from point to line segment
+        var dx = p2.x - p1.x, dy = p2.y - p1.y;
+        var len2 = dx*dx + dy*dy;
+        var t = len2 > 0 ? Math.max(0, Math.min(1, ((wc.x-p1.x)*dx + (wc.y-p1.y)*dy) / len2)) : 0;
+        var px = p1.x + t*dx - wc.x, py = p1.y + t*dy - wc.y;
+        var d = Math.sqrt(px*px + py*py);
+        if (d < bestDist) { bestDist = d; best = conn; }
+      });
+      return best;
     }
 
     viewport.addEventListener('touchstart', function(e) {
