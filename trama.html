@@ -426,9 +426,22 @@
     }
 
     /* Minimap */
-    #minimap {
+    #minimap-label {
       position: fixed;
       bottom: 24px;
+      left: 56px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: rgba(0,255,231,0.25);
+      text-transform: uppercase;
+      z-index: 500;
+      width: 120px;
+      text-align: center;
+    }
+    #minimap {
+      position: fixed;
+      bottom: 48px;
       left: 56px;
       width: 120px;
       height: 80px;
@@ -452,20 +465,103 @@
       border-radius: 1px;
     }
 
-    /* Hint */
-    #hint {
+    #func-btn {
       position: fixed;
       bottom: 24px;
       left: 50%;
       transform: translateX(-50%);
       font-family: 'Share Tech Mono', monospace;
       font-size: 9px;
-      letter-spacing: 2px;
-      color: rgba(0,255,231,0.18);
+      letter-spacing: 3px;
+      color: rgba(0,255,231,0.35);
       z-index: 500;
       text-transform: uppercase;
       white-space: nowrap;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      padding: 4px 8px;
+      transition: color 0.2s, text-shadow 0.2s;
     }
+    #func-btn:hover {
+      color: var(--holo);
+      text-shadow: 0 0 10px rgba(0,255,231,0.5);
+    }
+    #func-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(4,8,16,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+      backdrop-filter: blur(4px);
+    }
+    #func-modal.open { display: flex; }
+    #func-box {
+      background: rgba(4,8,16,0.98);
+      border: 1px solid rgba(0,255,231,0.2);
+      border-radius: 6px;
+      padding: 28px 32px;
+      max-width: 480px;
+      width: 90vw;
+      animation: modalIn 0.2s ease;
+    }
+    .func-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--holo);
+      text-shadow: 0 0 20px rgba(0,255,231,0.4);
+      margin-bottom: 20px;
+      letter-spacing: 4px;
+    }
+    .func-section {
+      margin-bottom: 16px;
+    }
+    .func-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 3px;
+      color: var(--orange);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .func-item {
+      display: flex;
+      gap: 12px;
+      align-items: baseline;
+      margin-bottom: 5px;
+    }
+    .func-key {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: var(--holo);
+      white-space: nowrap;
+      min-width: 140px;
+    }
+    .func-desc {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 12px;
+      color: rgba(207,233,240,0.5);
+    }
+    #func-close {
+      margin-top: 20px;
+      width: 100%;
+      background: transparent;
+      border: 1px solid rgba(0,255,231,0.2);
+      color: rgba(0,255,231,0.5);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 8px;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.2s;
+    }
+    #func-close:hover { color: var(--holo); border-color: var(--holo); }
 
     #conn-menu {
       position: fixed;
@@ -583,9 +679,48 @@
   <div id="minimap">
     <div id="minimap-viewport"></div>
   </div>
+  <div id="minimap-label">Mundo Aberto</div>
 
-  <div id="hint">Duplo clique no mapa para criar NPC · Arraste pelos nós · Puxe pelas âncoras para conectar</div>
-  <div id="status">Pronto</div>
+  <button id="func-btn">Funcionalidades</button>
+
+  <div id="func-modal">
+    <div id="func-box">
+      <div class="func-title">Funcionalidades</div>
+
+      <div class="func-section">
+        <div class="func-label">Criar & Navegar</div>
+        <div class="func-item"><span class="func-key">Duplo clique</span><span class="func-desc">Criar novo NPC no mapa</span></div>
+        <div class="func-item"><span class="func-key">Arrastar fundo</span><span class="func-desc">Mover o mapa (pan)</span></div>
+        <div class="func-item"><span class="func-key">Scroll</span><span class="func-desc">Zoom in / zoom out</span></div>
+      </div>
+
+      <div class="func-section">
+        <div class="func-label">Conexões</div>
+        <div class="func-item"><span class="func-key">Clicar âncora → âncora</span><span class="func-desc">Conectar dois NPCs</span></div>
+        <div class="func-item"><span class="func-key">Arrastar âncora</span><span class="func-desc">Conectar arrastando</span></div>
+        <div class="func-item"><span class="func-key">Botão direito no fio</span><span class="func-desc">Colorir relação (aliado, inimigo...)</span></div>
+      </div>
+
+      <div class="func-section">
+        <div class="func-label">Seleção & Edição</div>
+        <div class="func-item"><span class="func-key">Shift + arrastar</span><span class="func-desc">Selecionar múltiplos NPCs</span></div>
+        <div class="func-item"><span class="func-key">Arrastar seleção</span><span class="func-desc">Mover grupo selecionado</span></div>
+        <div class="func-item"><span class="func-key">Botão direito</span><span class="func-desc">Excluir selecionados</span></div>
+        <div class="func-item"><span class="func-key">✎ no NPC</span><span class="func-desc">Abrir notas do personagem</span></div>
+        <div class="func-item"><span class="func-key">× no NPC</span><span class="func-desc">Deletar NPC e seus fios</span></div>
+      </div>
+
+      <div class="func-section">
+        <div class="func-label">Histórico</div>
+        <div class="func-item"><span class="func-key">Ctrl + Z</span><span class="func-desc">Desfazer (até 10 passos)</span></div>
+        <div class="func-item"><span class="func-key">Ctrl + Shift + Z</span><span class="func-desc">Refazer (até 10 passos)</span></div>
+        <div class="func-item"><span class="func-key">ESC</span><span class="func-desc">Cancelar ação atual</span></div>
+      </div>
+
+      <button id="func-close">Fechar</button>
+    </div>
+  </div>
+  <div id="status">09.05.2026 · Alpha</div>
 
   <script>
     const SUPABASE_URL = 'https://mxyqqfsyybluavwlrhsa.supabase.co';
@@ -1253,8 +1388,22 @@
       updateConnections();
     });
 
+    document.getElementById('func-btn').addEventListener('click', function() {
+      document.getElementById('func-modal').classList.add('open');
+    });
+    document.getElementById('func-close').addEventListener('click', function() {
+      document.getElementById('func-modal').classList.remove('open');
+    });
+    document.getElementById('func-modal').addEventListener('click', function(e) {
+      if (e.target === document.getElementById('func-modal'))
+        document.getElementById('func-modal').classList.remove('open');
+    });
+
     document.addEventListener('keydown', function(e) {
       if (document.getElementById('modal-overlay').classList.contains('open')) return;
+      if (document.getElementById('func-modal').classList.contains('open')) {
+        document.getElementById('func-modal').classList.remove('open'); return;
+      }
       // Undo
       if (e.key === 'z' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
