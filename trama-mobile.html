@@ -335,11 +335,10 @@
 
     /* Hint */
     #hint {
-      position: fixed; bottom: 18px; left: 50%;
-      transform: translateX(-50%);
+      position: fixed; bottom: 18px; left: 56px;
       font-family: 'Share Tech Mono', monospace;
-      font-size: 8px; letter-spacing: 2px;
-      color: rgba(0,255,231,0.15); z-index: 500;
+      font-size: 9px; letter-spacing: 3px;
+      color: rgba(0,255,231,0.25); z-index: 500;
       text-transform: uppercase; white-space: nowrap;
       pointer-events: none;
     }
@@ -396,7 +395,7 @@
 
   <div id="status">Pronto</div>
   <div id="date-label">09.05.2026 · Alpha</div>
-  <div id="hint">Toque duplo · Segure âncora para conectar · Segure fio para colorir</div>
+  <div id="hint">Mundo Aberto</div>
 
   <script>
     const SUPABASE_URL = 'https://mxyqqfsyybluavwlrhsa.supabase.co';
@@ -1010,11 +1009,13 @@
         .catch(function() { btn.textContent = 'Erro'; setTimeout(function() { btn.textContent = '↑ Salvar'; }, 2000); });
     });
 
-    // ── Load on start ──
-    sbFetch('/rest/v1/tramas?trama_id=eq.' + TRAMA_ID + '&select=data', 'GET')
-      .then(function(rows) {
-        if (rows && rows.length && rows[0].data) loadState(rows[0].data);
-      }).catch(function() {});
+    // ── Load on start (only if ?id= param present) ──
+    if ((new URLSearchParams(window.location.search)).get('id')) {
+      sbFetch('/rest/v1/tramas?trama_id=eq.' + TRAMA_ID + '&select=data', 'GET')
+        .then(function(rows) {
+          if (rows && rows.length && rows[0].data) loadState(rows[0].data);
+        }).catch(function() {});
+    }
 
     panOffset = { x: viewport.offsetWidth/2 - 500, y: viewport.offsetHeight/2 - 300 };
     applyTransform();
