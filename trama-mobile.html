@@ -680,24 +680,7 @@
 
     // Double tap to create node
     var lastTapTime = 0, lastTapTarget = null;
-    viewport.addEventListener('touchend', function(e) {
-      var t = e.changedTouches[0];
-      var now = Date.now();
-      var target = document.elementFromPoint(t.clientX, t.clientY);
-      var isBackground = target === viewport || target === world || target === svgLayer || (target && target.tagName === 'svg');
-      if (isBackground && now - lastTapTime < 300) {
-        var wc = worldCoords(t.clientX, t.clientY);
-        var id = createNode(wc.x - 70, wc.y - 26);
-        setTimeout(function() {
-          var titleEl = nodes[id] && nodes[id].querySelector('.node-title');
-          if (titleEl) titleEl.focus();
-        }, 50);
-        lastTapTime = 0;
-      } else if (isBackground) {
-        lastTapTime = now;
-        connMenu.classList.remove('open');
-      }
-    });
+// double tap merged into main touchend
 
     // Main touch handler
     var touchState   = { _anchorEl: null };
@@ -911,7 +894,9 @@
       clearLong();
       secondaryId = null;
 
-      // Handle anchor tap
+      var t = e.changedTouches[0];
+
+      // Handle anchor tap FIRST
       if (touchState._anchorEl) {
         var anchorEl = touchState._anchorEl;
         touchState._anchorEl = null;
@@ -919,7 +904,6 @@
         var pos = anchorEl.dataset.pos;
         if (connSource) {
           if (connSource.id !== nid) {
-            // Complete connection
             addConnection(connSource, { id: nid, pos: pos });
             if (nodes[connSource.id]) nodes[connSource.id].classList.remove('connect-src');
             var srcA = nodes[connSource.id] && nodes[connSource.id].querySelector('.anchor[data-pos="'+connSource.pos+'"]');
@@ -928,7 +912,6 @@
             if (ghostLine) { ghostLine.remove(); ghostLine = null; }
           }
         } else {
-          // Start connection
           connSource = { id: nid, pos: pos };
           if (nodes[nid]) nodes[nid].classList.add('connect-src');
           anchorEl.classList.add('active');
@@ -936,6 +919,33 @@
         dragNodeId = null;
         isPanning  = false;
         return;
+      }
+
+      // Double tap on background = create node
+      var now = Date.now();
+      var target = document.elementFromPoint(t.clientX, t.clientY);
+      var isBackground = !target || target === viewport || target === world || target === svgLayer || target.tagName === 'svg' || target.tagName === 'path';
+      if (isBackground && !touchMoved) {
+        if (now - lastTapTime < 350) {
+          var wc = worldCoords(t.clientX, t.clientY);
+          var newId = createNode(wc.x - 70, wc.y - 26);
+          setTimeout(function() {
+            var titleEl = nodes[newId] && nodes[newId].querySelector('.node-title');
+            if (titleEl) titleEl.focus();
+          }, 50);
+          lastTapTime = 0;
+        } else {
+          lastTapTime = now;
+          // Cancel connSource if tapping background
+          if (connSource) {
+            if (nodes[connSource.id]) nodes[connSource.id].classList.remove('connect-src');
+            var srcAnchorEl = nodes[connSource.id] && nodes[connSource.id].querySelector('.anchor[data-pos="'+connSource.pos+'"]');
+            if (srcAnchorEl) srcAnchorEl.classList.remove('active');
+            connSource = null;
+            if (ghostLine) { ghostLine.remove(); ghostLine = null; }
+          }
+          connMenu.classList.remove('open');
+        }
       }
 
       dragNodeId  = null;
