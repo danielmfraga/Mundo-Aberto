@@ -662,7 +662,13 @@
       dragging = null;
       viewport.style.cursor = '';
       if (ghostLine) { ghostLine.remove(); ghostLine = null; }
-      dragConn = null;
+      setTimeout(function() {
+        if (dragConn) {
+          if (nodes[dragConn.id]) nodes[dragConn.id].classList.remove('connect-src');
+          dragConn = null;
+          connectSource = null;
+        }
+      }, 30);
     });
 
     // ── Anchor positions ──
@@ -852,6 +858,12 @@
         if (e.target.classList.contains('anchor') || e.target === noteBtn || e.target === delBtn || e.target === title) return;
         e.stopPropagation();
         e.preventDefault();
+        if (connectSource) {
+          if (nodes[connectSource.id]) nodes[connectSource.id].classList.remove('connect-src');
+          connectSource = null; dragConn = null;
+          if (ghostLine) { ghostLine.remove(); ghostLine = null; }
+          return;
+        }
         dragging = el;
         panning = false;
         const rect = viewport.getBoundingClientRect();
@@ -1048,7 +1060,13 @@
     document.addEventListener('keydown', function(e) {
       if (document.getElementById('modal-overlay').classList.contains('open')) return;
       if (e.key === 'Escape') {
-        if (connectMode) { toggleConnect(false); return; }
+        if (connectSource) {
+          if (nodes[connectSource.id]) nodes[connectSource.id].classList.remove('connect-src');
+          connectSource = null;
+          dragConn = null;
+          if (ghostLine) { ghostLine.remove(); ghostLine = null; }
+          return;
+        }
         selectNode(null);
       }
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedNode && document.activeElement === document.body) {
