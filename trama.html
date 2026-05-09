@@ -485,6 +485,43 @@
     .cmitem:hover { background: rgba(0,255,231,0.06); }
     .cmdot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
     .cmlabel { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(207,233,240,0.6); }
+
+    #sel-rect {
+      position: absolute;
+      border: 1px solid rgba(0,255,231,0.5);
+      background: rgba(0,255,231,0.05);
+      pointer-events: none;
+      z-index: 5;
+      display: none;
+    }
+    .node.multi-selected {
+      border-color: var(--holo);
+      box-shadow: 0 0 8px rgba(0,255,231,0.4);
+    }
+    #sel-menu {
+      position: fixed;
+      background: rgba(4,8,16,0.97);
+      border: 1px solid rgba(255,68,102,0.3);
+      border-radius: 6px;
+      padding: 6px;
+      z-index: 2000;
+      display: none;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 140px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    }
+    #sel-menu.open { display: flex; }
+    .smitem {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 10px; cursor: pointer;
+      border-radius: 4px; transition: background 0.15s;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px; letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,68,102,0.7);
+    }
+    .smitem:hover { background: rgba(255,68,102,0.08); color: #ff4466; }
   </style>
 </head>
 <body>
@@ -539,6 +576,10 @@
     <div class="cmitem" data-color="#ffcc00"><div class="cmdot" style="background:#ffcc00;box-shadow:0 0 4px #ffcc00"></div><span class="cmlabel">Suspeito</span></div>
     <div class="cmitem" data-color="#ff6b1a"><div class="cmdot" style="background:#ff6b1a;box-shadow:0 0 4px #ff6b1a"></div><span class="cmlabel">Parente</span></div>
   </div>
+  <div id="sel-rect"></div>
+  <div id="sel-menu">
+    <div class="smitem" id="sel-del">✕ &nbsp;Excluir selecionados</div>
+  </div>
   <div id="minimap">
     <div id="minimap-viewport"></div>
   </div>
@@ -583,6 +624,13 @@
     let currentNoteNodeId = null;
     let dragConn = null;
     let ghostLine = null;
+    let multiSelected = new Set(); // node ids
+    let selConns = new Set();      // connection indices
+    let selRect = null;            // {x,y,w,h} in world coords
+    let selDragging = false;       // dragging selection rect
+    let selStart = null;           // {x,y} world coords
+    let multiDragStart = null;     // mouse world pos at drag start
+    let multiDragOrigins = {};     // id -> {x,y} at drag start
 
     function setStatus(msg, ok) {
       status.textContent = msg;
@@ -615,9 +663,35 @@
           connectSource = null;
           return;
         }
-        panning = true;
-        panStart = { x: e.clientX - panOffset.x, y: e.clientY - panOffset.y };
-        viewport.style.cursor = 'grabbing';
+        document.getElementById('sel-menu').classList.remove('open');
+        if (e.button === 2) return; // right click handled separately
+        var rect = viewport.getBoundingClientRect();
+        var wx = (e.clientX - rect.left - panOffset.x) / scale;
+        var wy = (e.clientY - rect.top  - panOffset.y) / scale;
+        if (e.shiftKey) {
+          // Start selection rect
+          selDragging = true;
+          selStart = { x: wx, y: wy };
+          var sr = document.getElementById('sel-rect');
+          sr.style.left = wx + 'px'; sr.style.top = wy + 'px';
+          sr.style.width = '0'; sr.style.height = '0';
+          sr.style.display = 'block';
+        } else {
+          clearMultiSelect();
+          panning = true;
+          panStart = { x: e.clientX - panOffset.x, y: e.clientY - panStart.y };
+          panStart = { x: e.clientX - panOffset.x, y: e.clientY - panOffset.y };
+          viewport.style.cursor = 'grabbing';
+        }
+      }
+    });
+    // Right click on viewport to show sel-menu if multiSelected
+    viewport.addEventListener('contextmenu', function(e) {
+      if (multiSelected.size > 0 || selConns.size > 0) {
+        e.preventDefault();
+        var m = document.getElementById('sel-menu');
+        m.style.left = e.clientX + 'px'; m.style.top = e.clientY + 'px';
+        m.classList.add('open');
       }
     });
 
@@ -634,6 +708,34 @@
         dragging.style.left = Math.max(0, wx - dragOffset.x) + 'px';
         dragging.style.top  = Math.max(0, wy - dragOffset.y) + 'px';
         updateConnections();
+      }
+      if (selDragging && selStart) {
+        var rect2 = viewport.getBoundingClientRect();
+        var wx2 = (e.clientX - rect2.left - panOffset.x) / scale;
+        var wy2 = (e.clientY - rect2.top  - panOffset.y) / scale;
+        var sr = document.getElementById('sel-rect');
+        var rx = Math.min(selStart.x, wx2), ry = Math.min(selStart.y, wy2);
+        var rw = Math.abs(wx2 - selStart.x), rh = Math.abs(wy2 - selStart.y);
+        sr.style.left = rx + 'px'; sr.style.top = ry + 'px';
+        sr.style.width = rw + 'px'; sr.style.height = rh + 'px';
+      }
+      if (selDragging && false) {} // placeholder
+      if (multiSelected.size > 0 && dragging && multiSelected.has(dragging.dataset.id)) {
+        // Move all selected nodes together
+        var rect3 = viewport.getBoundingClientRect();
+        var mx3 = (e.clientX - rect3.left - panOffset.x) / scale;
+        var my3 = (e.clientY - rect3.top  - panOffset.y) / scale;
+        if (multiDragStart) {
+          var ddx = mx3 - multiDragStart.x;
+          var ddy = my3 - multiDragStart.y;
+          multiSelected.forEach(function(nid) {
+            if (!nodes[nid] || !multiDragOrigins[nid]) return;
+            nodes[nid].style.left = Math.max(0, multiDragOrigins[nid].x + ddx) + 'px';
+            nodes[nid].style.top  = Math.max(0, multiDragOrigins[nid].y + ddy) + 'px';
+          });
+          updateConnections();
+        }
+        return;
       }
       if (dragConn) {
         const rect = viewport.getBoundingClientRect();
@@ -660,8 +762,37 @@
     document.addEventListener('mouseup', function() {
       panning = false;
       dragging = null;
+      multiDragStart = null;
+      multiDragOrigins = {};
       viewport.style.cursor = '';
       if (ghostLine) { ghostLine.remove(); ghostLine = null; }
+      if (selDragging) {
+        selDragging = false;
+        var sr = document.getElementById('sel-rect');
+        sr.style.display = 'none';
+        // Select nodes inside rect
+        if (selStart) {
+          var rx = parseFloat(sr.style.left), ry = parseFloat(sr.style.top);
+          var rw = parseFloat(sr.style.width), rh = parseFloat(sr.style.height);
+          clearMultiSelect();
+          Object.entries(nodes).forEach(function(entry) {
+            var nid = entry[0], nel = entry[1];
+            var nx = parseFloat(nel.style.left), ny = parseFloat(nel.style.top);
+            var nw = nel.offsetWidth, nh = nel.offsetHeight;
+            if (nx + nw > rx && nx < rx + rw && ny + nh > ry && ny < ry + rh) {
+              multiSelected.add(nid);
+              nel.classList.add('multi-selected');
+            }
+          });
+          // Select connections between selected nodes
+          connections.forEach(function(conn, i) {
+            if (multiSelected.has(conn.from.id) && multiSelected.has(conn.to.id)) {
+              selConns.add(i);
+            }
+          });
+          selStart = null;
+        }
+      }
       setTimeout(function() {
         if (dragConn) {
           if (nodes[dragConn.id]) nodes[dragConn.id].classList.remove('connect-src');
@@ -864,6 +995,25 @@
           if (ghostLine) { ghostLine.remove(); ghostLine = null; }
           return;
         }
+        document.getElementById('sel-menu').classList.remove('open');
+        if (multiSelected.has(id)) {
+          // Start multi-drag
+          dragging = el;
+          panning = false;
+          var rect4 = viewport.getBoundingClientRect();
+          multiDragStart = {
+            x: (e.clientX - rect4.left - panOffset.x) / scale,
+            y: (e.clientY - rect4.top  - panOffset.y) / scale
+          };
+          multiDragOrigins = {};
+          multiSelected.forEach(function(nid) {
+            if (nodes[nid]) multiDragOrigins[nid] = {
+              x: parseFloat(nodes[nid].style.left) || 0,
+              y: parseFloat(nodes[nid].style.top)  || 0
+            };
+          });
+          return;
+        }
         dragging = el;
         panning = false;
         const rect = viewport.getBoundingClientRect();
@@ -876,6 +1026,14 @@
         selectNode(id);
       });
 
+      el.addEventListener('contextmenu', function(e) {
+        if (multiSelected.size > 0 || selConns.size > 0) {
+          e.preventDefault(); e.stopPropagation();
+          var m = document.getElementById('sel-menu');
+          m.style.left = e.clientX + 'px'; m.style.top = e.clientY + 'px';
+          m.classList.add('open');
+        }
+      });
       noteBtn.addEventListener('click', function(e) {
         e.stopPropagation();
         openModal(id);
@@ -905,6 +1063,7 @@
       nodes[id].remove();
       delete nodes[id];
       if (selectedNode === id) selectedNode = null;
+      multiSelected.delete(id);
       updateConnections();
     }
 
@@ -912,6 +1071,14 @@
       if (selectedNode && nodes[selectedNode]) nodes[selectedNode].classList.remove('selected');
       selectedNode = id;
       if (id && nodes[id]) nodes[id].classList.add('selected');
+      clearMultiSelect();
+    }
+    function clearMultiSelect() {
+      multiSelected.forEach(function(nid) {
+        if (nodes[nid]) nodes[nid].classList.remove('multi-selected');
+      });
+      multiSelected.clear();
+      selConns.clear();
     }
 
     // ── Modal ──
@@ -1057,16 +1224,30 @@
 
 
     // ── Keyboard ──
+    document.getElementById('sel-del').addEventListener('click', function() {
+      document.getElementById('sel-menu').classList.remove('open');
+      // Delete selected connections first
+      var connIdxToDelete = Array.from(selConns).sort(function(a,b){return b-a;});
+      connIdxToDelete.forEach(function(i) {
+        if (connections[i] && connections[i].labelWrap) connections[i].labelWrap.remove();
+        connections.splice(i, 1);
+      });
+      // Delete selected nodes (and their connections)
+      Array.from(multiSelected).forEach(function(nid) { deleteNode(nid); });
+      clearMultiSelect();
+      updateConnections();
+    });
+
     document.addEventListener('keydown', function(e) {
       if (document.getElementById('modal-overlay').classList.contains('open')) return;
       if (e.key === 'Escape') {
         if (connectSource) {
           if (nodes[connectSource.id]) nodes[connectSource.id].classList.remove('connect-src');
-          connectSource = null;
-          dragConn = null;
+          connectSource = null; dragConn = null;
           if (ghostLine) { ghostLine.remove(); ghostLine = null; }
           return;
         }
+        if (multiSelected.size > 0 || selConns.size > 0) { clearMultiSelect(); return; }
         selectNode(null);
       }
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedNode && document.activeElement === document.body) {
