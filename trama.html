@@ -487,11 +487,11 @@
     .cmlabel { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(207,233,240,0.6); }
 
     #sel-rect {
-      position: fixed;
+      position: absolute;
       border: 1px solid rgba(0,255,231,0.5);
       background: rgba(0,255,231,0.05);
       pointer-events: none;
-      z-index: 50;
+      z-index: 5;
       display: none;
     }
     .node.multi-selected {
@@ -629,8 +629,10 @@
     let selRect = null;            // {x,y,w,h} in world coords
     let selDragging = false;       // dragging selection rect
     let selStart = null;           // {x,y} world coords
-    let multiDragStart = null;     // mouse world pos at drag start
-    let multiDragOrigins = {};     // id -> {x,y} at drag start
+    let multiDragStart = null;
+    let multiDragOrigins = {};
+    let undoStack = [];  // max 10
+    let redoStack = [];
 
     function setStatus(msg, ok) {
       status.textContent = msg;
@@ -669,11 +671,11 @@
         var wx = (e.clientX - rect.left - panOffset.x) / scale;
         var wy = (e.clientY - rect.top  - panOffset.y) / scale;
         if (e.shiftKey) {
-          // Start selection rect — use screen coords for visual, world coords for hit test
+          // Start selection rect
           selDragging = true;
-          selStart = { wx: wx, wy: wy, sx: e.clientX, sy: e.clientY };
+          selStart = { x: wx, y: wy };
           var sr = document.getElementById('sel-rect');
-          sr.style.left = e.clientX + 'px'; sr.style.top = e.clientY + 'px';
+          sr.style.left = wx + 'px'; sr.style.top = wy + 'px';
           sr.style.width = '0'; sr.style.height = '0';
           sr.style.display = 'block';
         } else {
@@ -714,13 +716,10 @@
         var wx2 = (e.clientX - rect2.left - panOffset.x) / scale;
         var wy2 = (e.clientY - rect2.top  - panOffset.y) / scale;
         var sr = document.getElementById('sel-rect');
-        // Visual: screen coords
-        var srx = Math.min(selStart.sx, e.clientX), sry = Math.min(selStart.sy, e.clientY);
-        var srw = Math.abs(e.clientX - selStart.sx), srh = Math.abs(e.clientY - selStart.sy);
-        sr.style.left = srx + 'px'; sr.style.top = sry + 'px';
-        sr.style.width = srw + 'px'; sr.style.height = srh + 'px';
-        // Store world bounds for hit testing
-        selStart.wx2 = wx2; selStart.wy2 = wy2;
+        var rx = Math.min(selStart.x, wx2), ry = Math.min(selStart.y, wy2);
+        var rw = Math.abs(wx2 - selStart.x), rh = Math.abs(wy2 - selStart.y);
+        sr.style.left = rx + 'px'; sr.style.top = ry + 'px';
+        sr.style.width = rw + 'px'; sr.style.height = rh + 'px';
       }
       if (selDragging && false) {} // placeholder
       if (multiSelected.size > 0 && dragging && multiSelected.has(dragging.dataset.id)) {
@@ -763,8 +762,10 @@
     });
 
     document.addEventListener('mouseup', function() {
+      var wasDragging = dragging !== null;
       panning = false;
       dragging = null;
+      if (multiDragStart && Object.keys(multiDragOrigins).length > 0) pushUndo();
       multiDragStart = null;
       multiDragOrigins = {};
       viewport.style.cursor = '';
@@ -775,17 +776,14 @@
         sr.style.display = 'none';
         // Select nodes inside rect
         if (selStart) {
-          // Use world coords for hit testing
-          var rx = Math.min(selStart.wx, selStart.wx2 || selStart.wx);
-          var ry = Math.min(selStart.wy, selStart.wy2 || selStart.wy);
-          var rr = Math.max(selStart.wx, selStart.wx2 || selStart.wx);
-          var rb = Math.max(selStart.wy, selStart.wy2 || selStart.wy);
+          var rx = parseFloat(sr.style.left), ry = parseFloat(sr.style.top);
+          var rw = parseFloat(sr.style.width), rh = parseFloat(sr.style.height);
           clearMultiSelect();
           Object.entries(nodes).forEach(function(entry) {
             var nid = entry[0], nel = entry[1];
             var nx = parseFloat(nel.style.left), ny = parseFloat(nel.style.top);
             var nw = nel.offsetWidth, nh = nel.offsetHeight;
-            if (nx + nw > rx && nx < rr && ny + nh > ry && ny < rb) {
+            if (nx + nw > rx && nx < rx + rw && ny + nh > ry && ny < ry + rh) {
               multiSelected.add(nid);
               nel.classList.add('multi-selected');
             }
@@ -881,6 +879,7 @@
     }
 
     function addConnection(from, to, savedColor) {
+      if (!savedColor) pushUndo(); // don't push during loadState
       var wrap = document.createElement('div');
       wrap.className = 'conn-label-wrap';
       var del = document.createElement('div');
@@ -1052,6 +1051,7 @@
 
       title.addEventListener('input', updateConnections);
 
+      pushUndo();
       world.appendChild(el);
       nodes[id] = el;
       updateConnections();
@@ -1059,6 +1059,7 @@
     }
 
     function deleteNode(id) {
+      pushUndo();
       connections = connections.filter(function(c) {
         if (c.from.id === id || c.to.id === id) {
           if (c.labelWrap) c.labelWrap.remove();
@@ -1127,7 +1128,7 @@
     document.getElementById('conn-menu').querySelectorAll('.cmitem').forEach(function(item) {
       item.addEventListener('click', function(e) {
         e.stopPropagation();
-        if (window._activeConn) { window._activeConn.color = item.dataset.color; updateConnections(); }
+        if (window._activeConn) { pushUndo(); window._activeConn.color = item.dataset.color; updateConnections(); }
         document.getElementById('conn-menu').classList.remove('open');
         window._activeConn = null;
       });
@@ -1175,6 +1176,14 @@
     }
 
     // ── Save / Load ──
+    function pushUndo() {
+      var snap = JSON.stringify(serializeState());
+      if (undoStack.length && undoStack[undoStack.length-1] === snap) return;
+      undoStack.push(snap);
+      if (undoStack.length > 10) undoStack.shift();
+      redoStack = []; // clear redo on new action
+    }
+
     function serializeState() {
       const nodeData = Object.entries(nodes).map(function([id, el]) {
         return {
@@ -1246,6 +1255,33 @@
 
     document.addEventListener('keydown', function(e) {
       if (document.getElementById('modal-overlay').classList.contains('open')) return;
+      // Undo
+      if (e.key === 'z' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        e.preventDefault();
+        if (undoStack.length === 0) return;
+        var current = JSON.stringify(serializeState());
+        redoStack.push(current);
+        if (redoStack.length > 10) redoStack.shift();
+        var prev = JSON.parse(undoStack.pop());
+        loadState(prev);
+        setStatus('Desfeito ↩', true);
+        setTimeout(function() { setStatus('Pronto'); }, 1500);
+        return;
+      }
+      // Redo — Ctrl+Shift+Z (z ou Z) ou Ctrl+Y
+      if (((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey) && e.shiftKey) ||
+          (e.key === 'y' && (e.ctrlKey || e.metaKey))) {
+        e.preventDefault();
+        if (redoStack.length === 0) return;
+        var current2 = JSON.stringify(serializeState());
+        undoStack.push(current2);
+        if (undoStack.length > 10) undoStack.shift();
+        var next = JSON.parse(redoStack.pop());
+        loadState(next);
+        setStatus('Refeito ↪', true);
+        setTimeout(function() { setStatus('Pronto'); }, 1500);
+        return;
+      }
       if (e.key === 'Escape') {
         if (connectSource) {
           if (nodes[connectSource.id]) nodes[connectSource.id].classList.remove('connect-src');
