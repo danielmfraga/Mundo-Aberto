@@ -377,6 +377,8 @@
     <div class="cmitem" data-color="#ff4466"><div class="cmdot" style="background:#ff4466"></div><span class="cmlabel">Inimigo</span></div>
     <div class="cmitem" data-color="#ffcc00"><div class="cmdot" style="background:#ffcc00"></div><span class="cmlabel">Suspeito</span></div>
     <div class="cmitem" data-color="#ff6b1a"><div class="cmdot" style="background:#ff6b1a"></div><span class="cmlabel">Parente</span></div>
+    <div style="height:1px;background:rgba(255,68,102,0.2);margin:4px 0;"></div>
+    <div class="cmitem" id="conn-delete"><div class="cmdot" style="background:#ff4466;box-shadow:0 0 4px #ff4466"></div><span class="cmlabel" style="color:rgba(255,68,102,0.8)">Deletar fio</span></div>
   </div>
 
   <div id="modal-overlay">
@@ -507,13 +509,7 @@
         hit.dataset.connIdx = idx;
         svgLayer.appendChild(hit);
 
-        // Update label wrap position
-        if (conn.labelWrap) {
-          var mx = (p1.x + p2.x) / 2;
-          var my = (p1.y + p2.y) / 2;
-          conn.labelWrap.style.left = (mx - 11) + 'px';
-          conn.labelWrap.style.top  = (my - 11) + 'px';
-        }
+        // no label wrap in mobile version
       });
     }
 
@@ -630,11 +626,7 @@
 
     function deleteNode(id) {
       connections = connections.filter(function(c) {
-        if (c.from.id === id || c.to.id === id) {
-          if (c.labelWrap) c.labelWrap.remove();
-          return false;
-        }
-        return true;
+        return !(c.from.id === id || c.to.id === id);
       });
       if (nodes[id]) nodes[id].remove();
       delete nodes[id];
@@ -642,20 +634,8 @@
     }
 
     function addConnection(from, to, savedColor) {
-      var wrap = document.createElement('div');
-      wrap.className = 'conn-label-wrap';
-      var del = document.createElement('div');
-      del.className = 'conn-del';
-      del.textContent = '×';
-      wrap.appendChild(del);
-      world.appendChild(wrap);
-      var conn = { from: from, to: to, labelWrap: wrap, color: savedColor || '#00ffe7' };
+      var conn = { from: from, to: to, labelWrap: null, color: savedColor || '#00ffe7' };
       connections.push(conn);
-      del.addEventListener('click', function() {
-        connections = connections.filter(function(c) { return c !== conn; });
-        wrap.remove();
-        updateConnections();
-      });
       setTimeout(updateConnections, 50);
     }
 
@@ -686,7 +666,14 @@
     var connMenu = document.getElementById('conn-menu');
     connMenu.querySelectorAll('.cmitem').forEach(function(item) {
       item.addEventListener('click', function() {
-        if (activeConn) { activeConn.color = item.dataset.color; updateConnections(); }
+        if (item.id === 'conn-delete') {
+          if (activeConn) {
+            connections = connections.filter(function(c) { return c !== activeConn; });
+            updateConnections();
+          }
+        } else {
+          if (activeConn && item.dataset.color) { activeConn.color = item.dataset.color; updateConnections(); }
+        }
         connMenu.classList.remove('open');
         activeConn = null;
       });
