@@ -570,6 +570,40 @@
         a.className = 'anchor';
         a.dataset.pos = pos;
         a.dataset.nodeId = id;
+
+        a.addEventListener('touchstart', function(e) {
+          e.stopPropagation();
+          e.preventDefault();
+        }, { passive: false });
+
+        a.addEventListener('touchend', function(e) {
+          e.stopPropagation();
+          e.preventDefault();
+          if (connSource) {
+            if (connSource.id !== id) {
+              // Complete connection
+              addConnection(connSource, { id: id, pos: pos });
+              if (nodes[connSource.id]) nodes[connSource.id].classList.remove('connect-src');
+              var old = nodes[connSource.id] && nodes[connSource.id].querySelector('.anchor.active');
+              if (old) old.classList.remove('active');
+              connSource = null;
+              if (ghostLine) { ghostLine.remove(); ghostLine = null; }
+            } else {
+              // Tapped same node — cancel
+              nodes[connSource.id].classList.remove('connect-src');
+              var old2 = nodes[connSource.id].querySelector('.anchor.active');
+              if (old2) old2.classList.remove('active');
+              connSource = null;
+              if (ghostLine) { ghostLine.remove(); ghostLine = null; }
+            }
+          } else {
+            // Start connection
+            connSource = { id: id, pos: pos };
+            nodes[id].classList.add('connect-src');
+            a.classList.add('active');
+          }
+        }, { passive: false });
+
         el.appendChild(a);
       });
 
@@ -762,13 +796,10 @@
       // What did we touch?
       var el = document.elementFromPoint(t.clientX, t.clientY);
 
-      // Anchor? — record touch start on anchor, handle on touchend
-      var anchorEl = el && (el.classList.contains('anchor') ? el : el.closest && el.closest('.anchor'));
-      if (anchorEl) {
-        touchState._anchorEl = anchorEl;
-        return;
-      }
+      // Anchor handled by direct listeners on each anchor element
       touchState._anchorEl = null;
+      var anchorEl = el && (el.classList.contains('anchor') ? el : el.closest && el.closest('.anchor'));
+      if (anchorEl) return; // handled by anchor's own listener
 
       // Node body?
       var nodeEl = el && (el.classList.contains('node') ? el : el.closest && el.closest('.node'));
@@ -895,31 +926,6 @@
       secondaryId = null;
 
       var t = e.changedTouches[0];
-
-      // Handle anchor tap FIRST
-      if (touchState._anchorEl) {
-        var anchorEl = touchState._anchorEl;
-        touchState._anchorEl = null;
-        var nid = anchorEl.dataset.nodeId;
-        var pos = anchorEl.dataset.pos;
-        if (connSource) {
-          if (connSource.id !== nid) {
-            addConnection(connSource, { id: nid, pos: pos });
-            if (nodes[connSource.id]) nodes[connSource.id].classList.remove('connect-src');
-            var srcA = nodes[connSource.id] && nodes[connSource.id].querySelector('.anchor[data-pos="'+connSource.pos+'"]');
-            if (srcA) srcA.classList.remove('active');
-            connSource = null;
-            if (ghostLine) { ghostLine.remove(); ghostLine = null; }
-          }
-        } else {
-          connSource = { id: nid, pos: pos };
-          if (nodes[nid]) nodes[nid].classList.add('connect-src');
-          anchorEl.classList.add('active');
-        }
-        dragNodeId = null;
-        isPanning  = false;
-        return;
-      }
 
       // Double tap on background = create node
       var now = Date.now();
