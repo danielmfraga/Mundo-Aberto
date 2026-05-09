@@ -576,6 +576,18 @@
       noteBtn.addEventListener('click', function(e) { e.stopPropagation(); openModal(id); });
       delBtn.addEventListener('click',  function(e) { e.stopPropagation(); deleteNode(id); });
 
+      // Mobile: tap on title opens keyboard
+      title.addEventListener('touchend', function(e) {
+        e.stopPropagation();
+        title.focus();
+        // Place cursor at end
+        var range = document.createRange();
+        range.selectNodeContents(title);
+        range.collapse(false);
+        var sel = window.getSelection();
+        if (sel) { sel.removeAllRanges(); sel.addRange(range); }
+      });
+
       world.appendChild(el);
       nodes[id] = el;
       updateConnections();
@@ -688,6 +700,7 @@
     });
 
     // Main touch handler
+    var touchState   = { _anchorEl: null };
     var primaryId    = null; // touch id for main action
     var secondaryId  = null; // touch id for pinch
     var touchStartPos = { x: 0, y: 0 };
@@ -724,6 +737,13 @@
     }
 
     viewport.addEventListener('touchstart', function(e) {
+      // Let buttons handle themselves
+      var el0 = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+      if (el0 && (el0.classList.contains('node-act-btn') || el0.classList.contains('conn-del') ||
+                  el0.classList.contains('cmitem') || el0.closest('.modal-box') ||
+                  el0.id === 'btn-save' || el0.id === 'modal-save' || el0.id === 'modal-cancel')) {
+        return; // let click events handle these
+      }
       e.preventDefault();
       connMenu.classList.remove('open');
 
@@ -759,28 +779,13 @@
       // What did we touch?
       var el = document.elementFromPoint(t.clientX, t.clientY);
 
-      // Anchor?
+      // Anchor? — record touch start on anchor, handle on touchend
       var anchorEl = el && (el.classList.contains('anchor') ? el : el.closest && el.closest('.anchor'));
       if (anchorEl) {
-        var nid = anchorEl.dataset.nodeId;
-        var pos = anchorEl.dataset.pos;
-        if (connSource) {
-          // Second anchor — complete connection
-          if (connSource.id !== nid) {
-            addConnection(connSource, { id: nid, pos: pos });
-            nodes[connSource.id] && nodes[connSource.id].classList.remove('connect-src');
-            var srcAnchor = nodes[connSource.id] && nodes[connSource.id].querySelector('.anchor[data-pos="'+connSource.pos+'"]');
-            if (srcAnchor) srcAnchor.classList.remove('active');
-            connSource = null;
-            if (ghostLine) { ghostLine.remove(); ghostLine = null; }
-          }
-        } else {
-          connSource = { id: nid, pos: pos };
-          nodes[nid] && nodes[nid].classList.add('connect-src');
-          anchorEl.classList.add('active');
-        }
+        touchState._anchorEl = anchorEl;
         return;
       }
+      touchState._anchorEl = null;
 
       // Node body?
       var nodeEl = el && (el.classList.contains('node') ? el : el.closest && el.closest('.node'));
@@ -905,6 +910,34 @@
     viewport.addEventListener('touchend', function(e) {
       clearLong();
       secondaryId = null;
+
+      // Handle anchor tap
+      if (touchState._anchorEl) {
+        var anchorEl = touchState._anchorEl;
+        touchState._anchorEl = null;
+        var nid = anchorEl.dataset.nodeId;
+        var pos = anchorEl.dataset.pos;
+        if (connSource) {
+          if (connSource.id !== nid) {
+            // Complete connection
+            addConnection(connSource, { id: nid, pos: pos });
+            if (nodes[connSource.id]) nodes[connSource.id].classList.remove('connect-src');
+            var srcA = nodes[connSource.id] && nodes[connSource.id].querySelector('.anchor[data-pos="'+connSource.pos+'"]');
+            if (srcA) srcA.classList.remove('active');
+            connSource = null;
+            if (ghostLine) { ghostLine.remove(); ghostLine = null; }
+          }
+        } else {
+          // Start connection
+          connSource = { id: nid, pos: pos };
+          if (nodes[nid]) nodes[nid].classList.add('connect-src');
+          anchorEl.classList.add('active');
+        }
+        dragNodeId = null;
+        isPanning  = false;
+        return;
+      }
+
       dragNodeId  = null;
       isPanning   = false;
       if (ghostLine && !connSource) { ghostLine.remove(); ghostLine = null; }
