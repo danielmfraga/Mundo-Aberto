@@ -27,7 +27,6 @@
       overflow: hidden;
       width: 100vw;
       height: 100vh;
-      cursor: crosshair;
     }
 
     /* Grid background */
@@ -88,9 +87,7 @@
       gap: 6px;
     }
     .tb-btn:hover { color: var(--holo); border-color: var(--holo); box-shadow: 0 0 10px rgba(0,255,231,0.2); }
-    .tb-btn.active { color: #00ffe7; border-color: #00ffe7; background: rgba(0,255,231,0.08); box-shadow: 0 0 12px rgba(0,255,231,0.3); }
-    .tb-btn.danger { border-color: rgba(255,68,102,0.3); color: rgba(255,68,102,0.6); }
-    .tb-btn.danger:hover { color: var(--danger); border-color: var(--danger); box-shadow: 0 0 10px rgba(255,68,102,0.2); }
+    .tb-btn:active { background: rgba(0,255,231,0.1); }
     .tb-sep { width: 1px; height: 20px; background: rgba(0,255,231,0.1); }
 
     /* Back button */
@@ -140,25 +137,24 @@
       filter: drop-shadow(0 0 3px rgba(0,255,231,0.25));
     }
 
-    /* Nodes */
+    /* ── NODES ── */
     .node {
       position: absolute;
-      min-width: 160px;
+      min-width: 140px;
       max-width: 160px;
       background: rgba(4,8,16,0.95);
       border: 1px solid rgba(0,255,231,0.25);
       border-radius: 8px;
-      cursor: grab;
       z-index: 10;
       transition: border-color 0.2s, box-shadow 0.2s;
       user-select: none;
     }
-    .node:hover { border-color: rgba(0,255,231,0.5); }
-    .node.selected { border-color: var(--holo); box-shadow: var(--glow); }
+    .node.selected   { border-color: var(--holo); box-shadow: var(--glow); }
     .node.connect-src { border-color: #1D9E75; box-shadow: 0 0 12px rgba(29,158,117,0.4); }
+    .node.multi-selected { border-color: var(--holo); box-shadow: 0 0 8px rgba(0,255,231,0.4); }
 
     .node-header {
-      padding: 14px 20px;
+      padding: 14px 12px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -183,7 +179,6 @@
     }
 
     .node-title {
-      flex: 1;
       font-family: 'Share Tech Mono', monospace;
       font-size: 11px;
       letter-spacing: 1px;
@@ -193,7 +188,7 @@
       background: transparent;
       cursor: text;
       min-width: 60px;
-      max-width: 110px;
+      max-width: 100px;
       line-height: 1.4;
       text-align: center;
       flex: none;
@@ -211,11 +206,11 @@
       right: -6px;
       display: flex;
       gap: 3px;
-      opacity: 0;
-      transition: opacity 0.2s;
       z-index: 30;
     }
-    .node:hover .node-actions { opacity: 1; }
+    /* Desktop: show on hover only */
+    body.is-desktop .node-actions { opacity: 0; transition: opacity 0.2s; }
+    body.is-desktop .node:hover .node-actions { opacity: 1; }
 
     .node-act-btn {
       background: rgba(4,8,16,0.95);
@@ -223,8 +218,8 @@
       color: rgba(0,255,231,0.5);
       cursor: pointer;
       font-size: 11px;
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -232,28 +227,19 @@
       border-radius: 50%;
       transition: all 0.15s;
     }
+    /* Mobile: larger tap targets */
+    body.is-mobile .node-act-btn { width: 22px; height: 22px; font-size: 12px; }
     .node-act-btn:hover { color: var(--holo); border-color: var(--holo); }
+    .node-act-btn.del { border-color: rgba(255,68,102,0.3); color: rgba(255,68,102,0.5); }
     .node-act-btn.del:hover { color: var(--danger); border-color: var(--danger); }
 
-    .node-body {
-      display: none;
-    }
-
-    .node-tag {
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 2px;
-      color: rgba(0,255,231,0.3);
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-
     .node-note-preview {
+      padding: 4px 12px 8px;
       font-family: 'Rajdhani', sans-serif;
       font-size: 11px;
       color: rgba(207,233,240,0.4);
       line-height: 1.4;
-      max-height: 36px;
+      max-height: 40px;
       overflow: hidden;
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -261,27 +247,57 @@
     }
     .node-note-preview:empty { display: none; }
 
-    /* Anchors */
+    /* ── ANCHORS ── */
     .anchor {
       position: absolute;
+      background: var(--dark);
+      border-radius: 50%;
+      z-index: 20;
+    }
+    /* Desktop anchors: small, hidden until hover */
+    body.is-desktop .anchor {
       width: 10px;
       height: 10px;
-      background: var(--dark);
       border: 1.5px solid rgba(0,255,231,0.3);
-      border-radius: 50%;
       cursor: crosshair;
-      z-index: 20;
       opacity: 0;
       transition: opacity 0.15s, background 0.15s;
     }
-    .node:hover .anchor, .node.selected .anchor { opacity: 1; }
-    .anchor:hover { background: var(--holo); border-color: var(--holo); }
-    .anchor[data-pos=top]    { top: -5px;  left: 50%; transform: translateX(-50%); }
-    .anchor[data-pos=bottom] { bottom: -5px; left: 50%; transform: translateX(-50%); }
-    .anchor[data-pos=left]   { left: -5px;  top: 50%; transform: translateY(-50%); }
-    .anchor[data-pos=right]  { right: -5px; top: 50%; transform: translateY(-50%); }
+    body.is-desktop .node:hover .anchor,
+    body.is-desktop .node.selected .anchor { opacity: 1; }
+    body.is-desktop .anchor:hover { background: var(--holo); border-color: var(--holo); }
 
-    /* Connection labels */
+    /* Mobile anchors: bigger, always visible, with inner dot */
+    body.is-mobile .anchor {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(0,255,231,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    body.is-mobile .anchor::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(0,255,231,0.4);
+    }
+    body.is-mobile .anchor.active { background: var(--holo); border-color: var(--holo); }
+    body.is-mobile .anchor.active::after { background: var(--dark); }
+
+    /* Anchor positions — desktop offset */
+    body.is-desktop .anchor[data-pos=top]    { top: -5px;    left: 50%; transform: translateX(-50%); }
+    body.is-desktop .anchor[data-pos=bottom] { bottom: -5px; left: 50%; transform: translateX(-50%); }
+    body.is-desktop .anchor[data-pos=left]   { left: -5px;   top: 50%; transform: translateY(-50%); }
+    body.is-desktop .anchor[data-pos=right]  { right: -5px;  top: 50%; transform: translateY(-50%); }
+    /* Anchor positions — mobile offset */
+    body.is-mobile .anchor[data-pos=top]    { top: -10px;    left: 50%; transform: translateX(-50%); }
+    body.is-mobile .anchor[data-pos=bottom] { bottom: -10px; left: 50%; transform: translateX(-50%); }
+    body.is-mobile .anchor[data-pos=left]   { left: -10px;   top: 50%; transform: translateY(-50%); }
+    body.is-mobile .anchor[data-pos=right]  { right: -10px;  top: 50%; transform: translateY(-50%); }
+
+    /* ── CONNECTION LABELS (desktop only) ── */
     .conn-label-wrap {
       position: absolute;
       z-index: 15;
@@ -324,11 +340,11 @@
     .conn-label-wrap:hover .conn-del { display: flex; }
     .conn-del:hover { color: var(--danger); border-color: var(--danger); }
 
-    /* Modal */
+    /* ── MODAL ── */
     #modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(4,8,16,0.8);
+      background: rgba(4,8,16,0.85);
       display: none;
       align-items: center;
       justify-content: center;
@@ -336,21 +352,19 @@
       backdrop-filter: blur(4px);
     }
     #modal-overlay.open { display: flex; }
-
     #modal-box {
       background: rgba(4,8,16,0.98);
       border: 1px solid rgba(0,255,231,0.25);
       border-radius: 4px;
       padding: 24px;
-      width: 380px;
-      max-width: 90vw;
+      width: 90vw;
+      max-width: 380px;
       animation: modalIn 0.2s ease;
     }
     @keyframes modalIn {
       from { opacity: 0; transform: scale(0.95); }
       to   { opacity: 1; transform: scale(1); }
     }
-
     .modal-label {
       font-family: 'Share Tech Mono', monospace;
       font-size: 9px;
@@ -359,26 +373,23 @@
       text-transform: uppercase;
       margin-bottom: 6px;
     }
-
     #modal-name {
       font-family: 'Orbitron', monospace;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       color: var(--holo);
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       text-shadow: 0 0 20px rgba(0,255,231,0.4);
     }
-
     #modal-note {
       width: 100%;
-      min-height: 140px;
+      min-height: 130px;
       background: rgba(0,255,231,0.03);
       border: 1px solid rgba(0,255,231,0.15);
       border-radius: 2px;
       padding: 10px 12px;
       font-family: 'Rajdhani', sans-serif;
       font-size: 13px;
-      font-weight: 400;
       color: rgba(207,233,240,0.8);
       resize: vertical;
       outline: none;
@@ -386,13 +397,7 @@
     }
     #modal-note:focus { border-color: rgba(0,255,231,0.3); }
     #modal-note::placeholder { color: rgba(207,233,240,0.2); }
-
-    .modal-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-    }
-
+    .modal-row { display: flex; gap: 8px; margin-top: 12px; }
     .modal-btn {
       flex: 1;
       background: transparent;
@@ -411,22 +416,60 @@
     .modal-btn.save { border-color: rgba(0,255,231,0.4); color: var(--holo); }
     .modal-btn.save:hover { background: rgba(0,255,231,0.08); box-shadow: 0 0 10px rgba(0,255,231,0.2); }
 
-    /* Status */
-    #status {
+    /* ── COLOR MENU (connections) ── */
+    #conn-menu {
+      position: fixed;
+      background: rgba(4,8,16,0.97);
+      border: 1px solid rgba(0,255,231,0.2);
+      border-radius: 6px;
+      padding: 8px;
+      z-index: 2000;
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 130px;
+      box-shadow: 0 0 20px rgba(0,255,231,0.1);
+    }
+    #conn-menu.open { display: flex; }
+    .cmitem { display:flex; align-items:center; gap:8px; padding:6px 8px; cursor:pointer; border-radius:4px; transition:background 0.15s; }
+    .cmitem:hover, .cmitem:active { background: rgba(0,255,231,0.06); }
+    .cmdot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+    .cmlabel { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(207,233,240,0.6); }
+    #conn-delete .cmlabel { color: rgba(255,68,102,0.8); }
+
+    /* ── DESKTOP-ONLY UI ── */
+    #sel-rect {
+      position: fixed;
+      border: 1px solid rgba(0,255,231,0.5);
+      background: rgba(0,255,231,0.05);
+      pointer-events: none;
+      z-index: 50;
       display: none;
     }
-    #date-label {
+    #sel-menu {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 2px;
-      color: rgba(0,255,231,0.3);
-      z-index: 500;
-      text-transform: uppercase;
-      pointer-events: none;
+      background: rgba(4,8,16,0.97);
+      border: 1px solid rgba(255,68,102,0.3);
+      border-radius: 6px;
+      padding: 6px;
+      z-index: 2000;
+      display: none;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 140px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
     }
+    #sel-menu.open { display: flex; }
+    .smitem {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 10px; cursor: pointer;
+      border-radius: 4px; transition: background 0.15s;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px; letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,68,102,0.7);
+    }
+    .smitem:hover { background: rgba(255,68,102,0.08); color: #ff4466; }
 
     /* Minimap */
     #minimap-label {
@@ -467,7 +510,14 @@
       background: rgba(0,255,231,0.5);
       border-radius: 1px;
     }
+    body.is-mobile #minimap,
+    body.is-mobile #minimap-label,
+    body.is-mobile #sel-rect,
+    body.is-mobile #sel-menu,
+    body.is-mobile #func-btn,
+    body.is-mobile #func-modal { display: none !important; }
 
+    /* ── FUNC MODAL (desktop only) ── */
     #func-btn {
       position: fixed;
       bottom: 24px;
@@ -486,10 +536,7 @@
       padding: 4px 8px;
       transition: color 0.2s, text-shadow 0.2s;
     }
-    #func-btn:hover {
-      color: var(--holo);
-      text-shadow: 0 0 10px rgba(0,255,231,0.5);
-    }
+    #func-btn:hover { color: var(--holo); text-shadow: 0 0 10px rgba(0,255,231,0.5); }
     #func-modal {
       position: fixed;
       inset: 0;
@@ -510,159 +557,61 @@
       width: 90vw;
       animation: modalIn 0.2s ease;
     }
-    .func-title {
-      font-family: 'Orbitron', monospace;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--holo);
-      text-shadow: 0 0 20px rgba(0,255,231,0.4);
-      margin-bottom: 20px;
-      letter-spacing: 4px;
-    }
-    .func-section {
-      margin-bottom: 16px;
-    }
-    .func-label {
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 8px;
-      letter-spacing: 3px;
-      color: var(--orange);
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-    .func-item {
-      display: flex;
-      gap: 12px;
-      align-items: baseline;
-      margin-bottom: 5px;
-    }
-    .func-key {
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 1px;
-      color: var(--holo);
-      white-space: nowrap;
-      min-width: 140px;
-    }
-    .func-desc {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 12px;
-      color: rgba(207,233,240,0.5);
-    }
+    .func-title { font-family:'Orbitron',monospace; font-size:13px; font-weight:700; color:var(--holo); text-shadow:0 0 20px rgba(0,255,231,0.4); margin-bottom:20px; letter-spacing:4px; }
+    .func-section { margin-bottom:16px; }
+    .func-label { font-family:'Share Tech Mono',monospace; font-size:8px; letter-spacing:3px; color:var(--orange); text-transform:uppercase; margin-bottom:8px; }
+    .func-item { display:flex; gap:12px; align-items:baseline; margin-bottom:5px; }
+    .func-key { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:1px; color:var(--holo); white-space:nowrap; min-width:140px; }
+    .func-desc { font-family:'Rajdhani',sans-serif; font-size:12px; color:rgba(207,233,240,0.5); }
     #func-close {
-      margin-top: 20px;
-      width: 100%;
-      background: transparent;
-      border: 1px solid rgba(0,255,231,0.2);
-      color: rgba(0,255,231,0.5);
+      margin-top:20px; width:100%; background:transparent;
+      border:1px solid rgba(0,255,231,0.2); color:rgba(0,255,231,0.5);
+      font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:3px;
+      text-transform:uppercase; padding:8px; cursor:pointer; border-radius:2px; transition:all 0.2s;
+    }
+    #func-close:hover { color:var(--holo); border-color:var(--holo); }
+
+    /* ── STATUS ── */
+    #status { display: none; }
+    #date-label {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: rgba(0,255,231,0.3);
+      z-index: 500;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+    /* Mobile: hint text */
+    #hint {
+      position: fixed;
+      bottom: 18px;
+      left: 56px;
       font-family: 'Share Tech Mono', monospace;
       font-size: 9px;
       letter-spacing: 3px;
+      color: rgba(0,255,231,0.25);
+      z-index: 500;
       text-transform: uppercase;
-      padding: 8px;
-      cursor: pointer;
-      border-radius: 2px;
-      transition: all 0.2s;
-    }
-    #func-close:hover { color: var(--holo); border-color: var(--holo); }
-
-    #conn-menu {
-      position: fixed;
-      background: rgba(4,8,16,0.97);
-      border: 1px solid rgba(0,255,231,0.2);
-      border-radius: 6px;
-      padding: 8px;
-      z-index: 2000;
-      display: none;
-      flex-direction: column;
-      gap: 4px;
-      min-width: 120px;
-      box-shadow: 0 0 20px rgba(0,255,231,0.1);
-    }
-    #conn-menu.open { display: flex; }
-    .cmitem { display:flex; align-items:center; gap:8px; padding:5px 8px; cursor:pointer; border-radius:4px; transition:background 0.15s; }
-    .cmitem:hover { background: rgba(0,255,231,0.06); }
-    .cmdot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-    .cmlabel { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(207,233,240,0.6); }
-
-    #sel-rect {
-      position: fixed;
-      border: 1px solid rgba(0,255,231,0.5);
-      background: rgba(0,255,231,0.05);
+      white-space: nowrap;
       pointer-events: none;
-      z-index: 50;
       display: none;
     }
-    .node.multi-selected {
-      border-color: var(--holo);
-      box-shadow: 0 0 8px rgba(0,255,231,0.4);
-    }
-    #sel-menu {
-      position: fixed;
-      background: rgba(4,8,16,0.97);
-      border: 1px solid rgba(255,68,102,0.3);
-      border-radius: 6px;
-      padding: 6px;
-      z-index: 2000;
-      display: none;
-      flex-direction: column;
-      gap: 3px;
-      min-width: 140px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.4);
-    }
-    #sel-menu.open { display: flex; }
-    .smitem {
-      display: flex; align-items: center; gap: 8px;
-      padding: 6px 10px; cursor: pointer;
-      border-radius: 4px; transition: background 0.15s;
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 9px; letter-spacing: 2px;
-      text-transform: uppercase;
-      color: rgba(255,68,102,0.7);
-    }
-    .smitem:hover { background: rgba(255,68,102,0.08); color: #ff4466; }
+    body.is-mobile #hint { display: block; }
+    body.is-mobile #minimap-label { display: none; }
 
-    /* ── Mobile touch cursor ── */
-    #touch-cursor {
-      position: fixed;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--holo);
-      box-shadow: 0 0 8px var(--holo), 0 0 20px rgba(0,255,231,0.4);
-      pointer-events: none;
-      z-index: 9999;
-      display: none;
-      transform: translate(-50%, -50%);
-      transition: transform 0.05s, width 0.15s, height 0.15s;
-    }
-    #touch-cursor.longpress {
-      width: 20px;
-      height: 20px;
-      background: var(--orange);
-      box-shadow: 0 0 8px var(--orange), 0 0 20px rgba(255,107,26,0.4);
-    }
-    #touch-hint-mobile {
-      display: none;
-    }
-    @media (pointer: coarse) {
-      #touch-cursor { display: block; }
-      #touch-hint-mobile {
-        display: block;
-        position: fixed;
-        top: 68px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-family: 'Share Tech Mono', monospace;
-        font-size: 8px;
-        letter-spacing: 2px;
-        color: rgba(0,255,231,0.2);
-        text-transform: uppercase;
-        white-space: nowrap;
-        pointer-events: none;
-        z-index: 500;
-      }
-    }
+    /* Desktop cursor */
+    body.is-desktop { cursor: crosshair; }
+    body.is-desktop .node { cursor: grab; }
+
+    /* Mobile: touch-action */
+    body.is-mobile #viewport,
+    body.is-mobile #svg-layer,
+    body.is-mobile .node { touch-action: none; }
+    body.is-mobile { touch-action: none; }
   </style>
 </head>
 <body>
@@ -682,16 +631,16 @@
     <div id="world">
       <svg id="svg-layer" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <marker id="arr-green" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#00cc66"/></marker>
-          <marker id="arr-red" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#ff4466"/></marker>
-          <marker id="arr-yellow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#ffcc00"/></marker>
-          <marker id="arr-orange" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#ff6b1a"/></marker>
           <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
             <path d="M0,0 L0,6 L8,3 z" fill="rgba(0,255,231,0.4)"/>
           </marker>
           <marker id="arr-hover" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
             <path d="M0,0 L0,6 L8,3 z" fill="rgba(0,255,231,0.8)"/>
           </marker>
+          <marker id="arr-green"  markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#00cc66"/></marker>
+          <marker id="arr-red"    markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#ff4466"/></marker>
+          <marker id="arr-yellow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#ffcc00"/></marker>
+          <marker id="arr-orange" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#ff6b1a"/></marker>
         </defs>
       </svg>
     </div>
@@ -710,44 +659,48 @@
     </div>
   </div>
 
+  <!-- Color / connection menu -->
   <div id="conn-menu">
     <div class="cmitem" data-color="#00ffe7"><div class="cmdot" style="background:#00ffe7;box-shadow:0 0 4px #00ffe7"></div><span class="cmlabel">Neutro</span></div>
     <div class="cmitem" data-color="#00cc66"><div class="cmdot" style="background:#00cc66;box-shadow:0 0 4px #00cc66"></div><span class="cmlabel">Aliado</span></div>
     <div class="cmitem" data-color="#ff4466"><div class="cmdot" style="background:#ff4466;box-shadow:0 0 4px #ff4466"></div><span class="cmlabel">Inimigo</span></div>
     <div class="cmitem" data-color="#ffcc00"><div class="cmdot" style="background:#ffcc00;box-shadow:0 0 4px #ffcc00"></div><span class="cmlabel">Suspeito</span></div>
     <div class="cmitem" data-color="#ff6b1a"><div class="cmdot" style="background:#ff6b1a;box-shadow:0 0 4px #ff6b1a"></div><span class="cmlabel">Parente</span></div>
+    <!-- Mobile only: delete connection -->
+    <div style="height:1px;background:rgba(255,68,102,0.2);margin:4px 0;" class="mobile-only"></div>
+    <div class="cmitem mobile-only" id="conn-delete"><div class="cmdot" style="background:#ff4466;box-shadow:0 0 4px #ff4466"></div><span class="cmlabel" style="color:rgba(255,68,102,0.8)">Deletar fio</span></div>
   </div>
+
+  <!-- Desktop: selection rect & menu -->
   <div id="sel-rect"></div>
   <div id="sel-menu">
     <div class="smitem" id="sel-del">✕ &nbsp;Excluir selecionados</div>
   </div>
-  <div id="minimap">
-    <div id="minimap-viewport"></div>
-  </div>
+
+  <!-- Desktop: minimap -->
+  <div id="minimap"><div id="minimap-viewport"></div></div>
   <div id="minimap-label">Mundo Aberto</div>
 
-  <div id="touch-cursor"></div>
-  <div id="touch-hint-mobile">Toque · Toque longo = menu · 2 dedos = mover mapa</div>
-  <button id="func-btn">Funcionalidades</button>
+  <!-- Mobile: hint -->
+  <div id="hint">Mundo Aberto</div>
 
+  <!-- Desktop: funcionalidades -->
+  <button id="func-btn">Funcionalidades</button>
   <div id="func-modal">
     <div id="func-box">
       <div class="func-title">Funcionalidades</div>
-
       <div class="func-section">
         <div class="func-label">Criar & Navegar</div>
         <div class="func-item"><span class="func-key">Duplo clique</span><span class="func-desc">Criar novo NPC no mapa</span></div>
         <div class="func-item"><span class="func-key">Arrastar fundo</span><span class="func-desc">Mover o mapa (pan)</span></div>
         <div class="func-item"><span class="func-key">Scroll</span><span class="func-desc">Zoom in / zoom out</span></div>
       </div>
-
       <div class="func-section">
         <div class="func-label">Conexões</div>
         <div class="func-item"><span class="func-key">Clicar âncora → âncora</span><span class="func-desc">Conectar dois NPCs</span></div>
         <div class="func-item"><span class="func-key">Arrastar âncora</span><span class="func-desc">Conectar arrastando</span></div>
-        <div class="func-item"><span class="func-key">Botão direito no fio</span><span class="func-desc">Colorir relação (aliado, inimigo...)</span></div>
+        <div class="func-item"><span class="func-key">Botão direito no fio</span><span class="func-desc">Colorir relação</span></div>
       </div>
-
       <div class="func-section">
         <div class="func-label">Seleção & Edição</div>
         <div class="func-item"><span class="func-key">Shift + arrastar</span><span class="func-desc">Selecionar múltiplos NPCs</span></div>
@@ -756,24 +709,43 @@
         <div class="func-item"><span class="func-key">✎ no NPC</span><span class="func-desc">Abrir notas do personagem</span></div>
         <div class="func-item"><span class="func-key">× no NPC</span><span class="func-desc">Deletar NPC e seus fios</span></div>
       </div>
-
       <div class="func-section">
         <div class="func-label">Histórico</div>
         <div class="func-item"><span class="func-key">Ctrl + Z</span><span class="func-desc">Desfazer (até 10 passos)</span></div>
         <div class="func-item"><span class="func-key">Ctrl + Shift + Z</span><span class="func-desc">Refazer (até 10 passos)</span></div>
         <div class="func-item"><span class="func-key">ESC</span><span class="func-desc">Cancelar ação atual</span></div>
       </div>
-
       <button id="func-close">Fechar</button>
     </div>
   </div>
-  <div id="status">09.05.2026 · Alpha</div>
-  <div id="date-label">09.05.2026 · Alpha</div>
+
+  <div id="status">Pronto</div>
+  <div id="date-label">10.05.2026 · Alpha</div>
 
   <script>
-    const SUPABASE_URL = 'https://mxyqqfsyybluavwlrhsa.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eXFxZnN5eWJsdWF2d2xyaHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTM4MzEsImV4cCI6MjA5MzY2OTgzMX0.b0Ij7UGzbMLpqZjLYxoPEu2kGwEW52U_2NSDtpMGUPM';
-    const TRAMA_ID = window.location.search ? (new URLSearchParams(window.location.search)).get('id') || 'default' : 'default';
+    // ══════════════════════════════════════════════════════════
+    //  DETECÇÃO DE DISPOSITIVO
+    // ══════════════════════════════════════════════════════════
+    var IS_MOBILE = window.matchMedia('(pointer: coarse)').matches;
+    document.body.classList.add(IS_MOBILE ? 'is-mobile' : 'is-desktop');
+
+    // Viewport meta: bloquear zoom nativo no mobile
+    if (IS_MOBILE) {
+      var vp = document.querySelector('meta[name=viewport]');
+      if (vp) vp.content = 'width=device-width, initial-scale=1.0, user-scalable=no';
+    }
+
+    // Esconder separador/deletar fio no desktop
+    document.querySelectorAll('.mobile-only').forEach(function(el) {
+      if (!IS_MOBILE) el.style.display = 'none';
+    });
+
+    // ══════════════════════════════════════════════════════════
+    //  SUPABASE
+    // ══════════════════════════════════════════════════════════
+    var SUPABASE_URL = 'https://mxyqqfsyybluavwlrhsa.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eXFxZnN5eWJsdWF2d2xyaHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTM4MzEsImV4cCI6MjA5MzY2OTgzMX0.b0Ij7UGzbMLpqZjLYxoPEu2kGwEW52U_2NSDtpMGUPM';
+    var TRAMA_ID = (new URLSearchParams(window.location.search)).get('id') || 'default';
 
     function sbFetch(path, method, body) {
       return fetch(SUPABASE_URL + path, {
@@ -786,344 +758,202 @@
       });
     }
 
-    const viewport = document.getElementById('viewport');
-    const world    = document.getElementById('world');
-    const svgLayer = document.getElementById('svg-layer');
-    const status   = document.getElementById('status');
+    // ══════════════════════════════════════════════════════════
+    //  ESTADO GLOBAL
+    // ══════════════════════════════════════════════════════════
+    var viewport  = document.getElementById('viewport');
+    var world     = document.getElementById('world');
+    var svgLayer  = document.getElementById('svg-layer');
+    var statusEl  = document.getElementById('status');
+    var connMenu  = document.getElementById('conn-menu');
 
-    let nodes = {};
-    let connections = [];
-    let nodeCount = 0;
-    let connCount = 0;
-    let selectedNode = null;
-    let connectMode = false;
-    let connectSource = null;
-    let dragging = null;
-    let dragOffset = { x: 0, y: 0 };
-    let panning = false;
-    let panStart = { x: 0, y: 0 };
-    let panOffset = { x: 0, y: 0 };
-    let scale = 1;
-    let currentNoteNodeId = null;
-    let dragConn = null;
-    let ghostLine = null;
-    let multiSelected = new Set(); // node ids
-    let selConns = new Set();      // connection indices
-    let selRect = null;            // {x,y,w,h} in world coords
-    let selDragging = false;       // dragging selection rect
-    let selStart = null;           // {x,y} world coords
-    let multiDragStart = null;
-    let multiDragOrigins = {};
-    let undoStack = [];  // max 10
-    let redoStack = [];
+    var nodes       = {};
+    var connections = [];
+    var nodeCount   = 0;
+    var scale       = 1;
+    var panOffset   = { x: 0, y: 0 };
 
+    // Desktop-only state
+    var selectedNode    = null;
+    var connectSource   = null;
+    var dragging        = null;
+    var dragOffset      = { x: 0, y: 0 };
+    var panning         = false;
+    var panStart        = { x: 0, y: 0 };
+    var dragConn        = null;
+    var ghostLine       = null;
+    var multiSelected   = new Set();
+    var selConns        = new Set();
+    var selDragging     = false;
+    var selStart        = null;
+    var multiDragStart  = null;
+    var multiDragOrigins = {};
+    var undoStack       = [];
+    var redoStack       = [];
+    var currentNoteNodeId = null;
+
+    // Mobile-only state
+    var primaryId      = null;
+    var secondaryId    = null;
+    var touchStartPos  = { x: 0, y: 0 };
+    var touchMoved     = false;
+    var longTimer      = null;
+    var dragNodeId     = null;
+    var dragNodeOffset = { x: 0, y: 0 };
+    var connSource     = null;
+    var isPanning      = false;
+    var pinchStartDist  = 0;
+    var pinchStartScale = 1;
+    var pinchStartPan   = { x: 0, y: 0 };
+    var pinchMidStart   = { x: 0, y: 0 };
+    var lastTapTime     = 0;
+    var activeConn      = null;
+    var LONG_PRESS_MS   = 500;
+    var TAP_DIST        = 10;
+
+    // ══════════════════════════════════════════════════════════
+    //  SHARED UTILITIES
+    // ══════════════════════════════════════════════════════════
     function setStatus(msg, ok) {
-      status.textContent = msg;
-      status.style.color = ok === false ? 'rgba(255,68,102,0.6)' : ok === true ? 'rgba(0,255,231,0.6)' : 'rgba(0,255,231,0.3)';
+      statusEl.textContent = msg;
+      statusEl.style.color = ok === false ? 'rgba(255,68,102,0.6)' : ok === true ? 'rgba(0,255,231,0.6)' : 'rgba(0,255,231,0.3)';
     }
 
-    // ── Pan & Zoom ──
     function applyTransform() {
-      world.style.transform = `translate(${panOffset.x}px, ${panOffset.y}px) scale(${scale})`;
-      updateMinimap();
+      world.style.transform = 'translate(' + panOffset.x + 'px,' + panOffset.y + 'px) scale(' + scale + ')';
+      if (!IS_MOBILE) updateMinimap();
     }
 
-    viewport.addEventListener('wheel', function(e) {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? 0.9 : 1.1;
-      const newScale = Math.min(2, Math.max(0.3, scale * delta));
-      const rect = viewport.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
-      panOffset.x = mx - (mx - panOffset.x) * (newScale / scale);
-      panOffset.y = my - (my - panOffset.y) * (newScale / scale);
-      scale = newScale;
-      applyTransform();
-    }, { passive: false });
+    function worldCoords(clientX, clientY) {
+      var r = viewport.getBoundingClientRect();
+      return {
+        x: (clientX - r.left - panOffset.x) / scale,
+        y: (clientY - r.top  - panOffset.y) / scale
+      };
+    }
 
-    viewport.addEventListener('mousedown', function(e) {
-      if (e.target === viewport || e.target === world || e.target === svgLayer) {
-        if (connectSource) {
-          if (nodes[connectSource.id]) nodes[connectSource.id].classList.remove('connect-src');
-          connectSource = null;
-          return;
-        }
-        document.getElementById('sel-menu').classList.remove('open');
-        if (e.button === 2) return; // right click handled separately
-        var rect = viewport.getBoundingClientRect();
-        var wx = (e.clientX - rect.left - panOffset.x) / scale;
-        var wy = (e.clientY - rect.top  - panOffset.y) / scale;
-        if (e.shiftKey) {
-          selDragging = true;
-          selStart = { wx: wx, wy: wy, sx: e.clientX, sy: e.clientY };
-          var sr = document.getElementById('sel-rect');
-          sr.style.left = e.clientX + 'px'; sr.style.top = e.clientY + 'px';
-          sr.style.width = '0'; sr.style.height = '0';
-          sr.style.display = 'block';
-        } else {
-          clearMultiSelect();
-          panning = true;
-          panStart = { x: e.clientX - panOffset.x, y: e.clientY - panStart.y };
-          panStart = { x: e.clientX - panOffset.x, y: e.clientY - panOffset.y };
-          viewport.style.cursor = 'grabbing';
-        }
-      }
-    });
-    // Right click on viewport to show sel-menu if multiSelected
-    viewport.addEventListener('contextmenu', function(e) {
-      if (multiSelected.size > 0 || selConns.size > 0) {
-        e.preventDefault();
-        var m = document.getElementById('sel-menu');
-        m.style.left = e.clientX + 'px'; m.style.top = e.clientY + 'px';
-        m.classList.add('open');
-      }
-    });
-
-    document.addEventListener('mousemove', function(e) {
-      if (panning) {
-        panOffset.x = e.clientX - panStart.x;
-        panOffset.y = e.clientY - panStart.y;
-        applyTransform();
-      }
-      if (dragging) {
-        const rect = viewport.getBoundingClientRect();
-        const wx = (e.clientX - rect.left - panOffset.x) / scale;
-        const wy = (e.clientY - rect.top  - panOffset.y) / scale;
-        dragging.style.left = Math.max(0, wx - dragOffset.x) + 'px';
-        dragging.style.top  = Math.max(0, wy - dragOffset.y) + 'px';
-        updateConnections();
-      }
-      if (selDragging && selStart) {
-        var rect2 = viewport.getBoundingClientRect();
-        var wx2 = (e.clientX - rect2.left - panOffset.x) / scale;
-        var wy2 = (e.clientY - rect2.top  - panOffset.y) / scale;
-        selStart.wx2 = wx2; selStart.wy2 = wy2;
-        var sr = document.getElementById('sel-rect');
-        var srx = Math.min(selStart.sx, e.clientX), sry = Math.min(selStart.sy, e.clientY);
-        var srw = Math.abs(e.clientX - selStart.sx), srh = Math.abs(e.clientY - selStart.sy);
-        sr.style.left = srx + 'px'; sr.style.top = sry + 'px';
-        sr.style.width = srw + 'px'; sr.style.height = srh + 'px';
-      }
-      if (selDragging && false) {} // placeholder
-      if (multiSelected.size > 0 && dragging && multiSelected.has(dragging.dataset.id)) {
-        // Move all selected nodes together
-        var rect3 = viewport.getBoundingClientRect();
-        var mx3 = (e.clientX - rect3.left - panOffset.x) / scale;
-        var my3 = (e.clientY - rect3.top  - panOffset.y) / scale;
-        if (multiDragStart) {
-          var ddx = mx3 - multiDragStart.x;
-          var ddy = my3 - multiDragStart.y;
-          multiSelected.forEach(function(nid) {
-            if (!nodes[nid] || !multiDragOrigins[nid]) return;
-            nodes[nid].style.left = Math.max(0, multiDragOrigins[nid].x + ddx) + 'px';
-            nodes[nid].style.top  = Math.max(0, multiDragOrigins[nid].y + ddy) + 'px';
-          });
-          updateConnections();
-        }
-        return;
-      }
-      if (dragConn) {
-        const rect = viewport.getBoundingClientRect();
-        const mx = (e.clientX - rect.left - panOffset.x) / scale;
-        const my = (e.clientY - rect.top  - panOffset.y) / scale;
-        const srcNode = nodes[dragConn.id];
-        if (!srcNode) return;
-        const p1 = getAnchorPos(srcNode, dragConn.pos);
-        if (ghostLine) ghostLine.remove();
-        ghostLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        const ddx = Math.abs(mx - p1.x), ddy = Math.abs(my - p1.y);
-        const gcx = p1.x + (dragConn.pos === 'right' ? ddx*0.5 : dragConn.pos === 'left' ? -ddx*0.5 : 0);
-        const gcy = p1.y + (dragConn.pos === 'bottom' ? ddy*0.5 : dragConn.pos === 'top' ? -ddy*0.5 : 0);
-        ghostLine.setAttribute('d', 'M'+p1.x+','+p1.y+' C'+gcx+','+gcy+' '+mx+','+my+' '+mx+','+my);
-        ghostLine.setAttribute('fill', 'none');
-        ghostLine.setAttribute('stroke', 'rgba(0,255,231,0.3)');
-        ghostLine.setAttribute('stroke-width', '1');
-        ghostLine.setAttribute('stroke-dasharray', '5,4');
-        ghostLine.setAttribute('pointer-events', 'none');
-        svgLayer.appendChild(ghostLine);
-      }
-    });
-
-    document.addEventListener('mouseup', function() {
-      var wasDragging = dragging !== null;
-      panning = false;
-      dragging = null;
-      if (multiDragStart && Object.keys(multiDragOrigins).length > 0) pushUndo();
-      multiDragStart = null;
-      multiDragOrigins = {};
-      viewport.style.cursor = '';
-      if (ghostLine) { ghostLine.remove(); ghostLine = null; }
-      if (selDragging) {
-        selDragging = false;
-        var sr = document.getElementById('sel-rect');
-        sr.style.display = 'none';
-        // Select nodes inside rect
-        if (selStart) {
-          var rx = Math.min(selStart.wx, selStart.wx2 || selStart.wx);
-          var ry = Math.min(selStart.wy, selStart.wy2 || selStart.wy);
-          var rr = Math.max(selStart.wx, selStart.wx2 || selStart.wx);
-          var rb = Math.max(selStart.wy, selStart.wy2 || selStart.wy);
-          clearMultiSelect();
-          Object.entries(nodes).forEach(function(entry) {
-            var nid = entry[0], nel = entry[1];
-            var nx = parseFloat(nel.style.left), ny = parseFloat(nel.style.top);
-            var nw = nel.offsetWidth, nh = nel.offsetHeight;
-            if (nx + nw > rx && nx < rr && ny + nh > ry && ny < rb) {
-              multiSelected.add(nid);
-              nel.classList.add('multi-selected');
-            }
-          });
-          // Select connections between selected nodes
-          connections.forEach(function(conn, i) {
-            if (multiSelected.has(conn.from.id) && multiSelected.has(conn.to.id)) {
-              selConns.add(i);
-            }
-          });
-          selStart = null;
-        }
-      }
-      setTimeout(function() {
-        if (dragConn) {
-          if (nodes[dragConn.id]) nodes[dragConn.id].classList.remove('connect-src');
-          dragConn = null;
-          connectSource = null;
-        }
-      }, 30);
-    });
-
-    // ── Anchor positions ──
     function getAnchorPos(nodeEl, pos) {
-      const x = parseFloat(nodeEl.style.left) || 0;
-      const y = parseFloat(nodeEl.style.top) || 0;
-      const w = nodeEl.offsetWidth;
-      const h = nodeEl.offsetHeight;
+      var x = parseFloat(nodeEl.style.left) || 0;
+      var y = parseFloat(nodeEl.style.top)  || 0;
+      var w = nodeEl.offsetWidth;
+      var h = nodeEl.offsetHeight;
       if (pos === 'top')    return { x: x + w/2, y: y };
       if (pos === 'bottom') return { x: x + w/2, y: y + h };
       if (pos === 'left')   return { x: x,       y: y + h/2 };
       if (pos === 'right')  return { x: x + w,   y: y + h/2 };
     }
 
-    // ── Connections ──
     function updateConnections() {
-      svgLayer.querySelectorAll('.conn-path').forEach(e => e.remove());
+      svgLayer.querySelectorAll('.conn-path').forEach(function(e) { e.remove(); });
+
       connections.forEach(function(conn, connIdx) {
-        const n1 = nodes[conn.from.id], n2 = nodes[conn.to.id];
+        var n1 = nodes[conn.from.id], n2 = nodes[conn.to.id];
         if (!n1 || !n2) return;
+
         var hasPair = connections.some(function(c2, i2) {
           return i2 !== connIdx && c2.from.id === conn.to.id && c2.to.id === conn.from.id;
         });
         var off = hasPair ? 4 : 0;
-        const p1r = getAnchorPos(n1, conn.from.pos);
-        const p2r = getAnchorPos(n2, conn.to.pos);
+        var p1r = getAnchorPos(n1, conn.from.pos);
+        var p2r = getAnchorPos(n2, conn.to.pos);
         var ang = Math.atan2(p2r.y - p1r.y, p2r.x - p1r.x);
-        var p1 = off > 0 ? {x: p1r.x + Math.sin(ang)*off, y: p1r.y - Math.cos(ang)*off} : {x: p1r.x, y: p1r.y};
-        var p2 = off > 0 ? {x: p2r.x + Math.sin(ang)*off, y: p2r.y - Math.cos(ang)*off} : {x: p2r.x, y: p2r.y};
-        const dx = Math.abs(p2.x - p1.x), dy = Math.abs(p2.y - p1.y);
-        const cx1 = p1.x + (conn.from.pos === 'right' ? dx*0.5 : conn.from.pos === 'left' ? -dx*0.5 : 0);
-        const cy1 = p1.y + (conn.from.pos === 'bottom' ? dy*0.5 : conn.from.pos === 'top' ? -dy*0.5 : 0);
-        const cx2 = p2.x + (conn.to.pos === 'left' ? -dx*0.5 : conn.to.pos === 'right' ? dx*0.5 : 0);
-        const cy2 = p2.y + (conn.to.pos === 'top' ? -dy*0.5 : conn.to.pos === 'bottom' ? dy*0.5 : 0);
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', `M${p1.x},${p1.y} C${cx1},${cy1} ${cx2},${cy2} ${p2.x},${p2.y}`);
-        path.setAttribute('fill', 'none');
+        var p1 = off > 0 ? { x: p1r.x + Math.sin(ang)*off, y: p1r.y - Math.cos(ang)*off } : p1r;
+        var p2 = off > 0 ? { x: p2r.x + Math.sin(ang)*off, y: p2r.y - Math.cos(ang)*off } : p2r;
+
+        var dx = Math.abs(p2.x - p1.x), dy = Math.abs(p2.y - p1.y);
+        var cx1 = p1.x + (conn.from.pos === 'right' ? dx*0.5 : conn.from.pos === 'left' ? -dx*0.5 : 0);
+        var cy1 = p1.y + (conn.from.pos === 'bottom' ? dy*0.5 : conn.from.pos === 'top' ? -dy*0.5 : 0);
+        var cx2 = p2.x + (conn.to.pos === 'left' ? -dx*0.5 : conn.to.pos === 'right' ? dx*0.5 : 0);
+        var cy2 = p2.y + (conn.to.pos === 'top' ? -dy*0.5 : conn.to.pos === 'bottom' ? dy*0.5 : 0);
+        var d   = 'M'+p1.x+','+p1.y+' C'+cx1+','+cy1+' '+cx2+','+cy2+' '+p2.x+','+p2.y;
+
         var col = conn.color || '#00ffe7';
         var strokeCol = col === '#00ffe7' ? 'rgba(0,255,231,0.4)' : col;
+        var mm = { '#00cc66':'arr-green', '#ff4466':'arr-red', '#ffcc00':'arr-yellow', '#ff6b1a':'arr-orange' };
+
+        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('fill', 'none');
         path.setAttribute('stroke', strokeCol);
-        path.setAttribute('stroke-width', '1');
-        var mm = {'#00cc66':'arr-green','#ff4466':'arr-red','#ffcc00':'arr-yellow','#ff6b1a':'arr-orange'};
+        path.setAttribute('stroke-width', IS_MOBILE ? '1.5' : '1');
         path.setAttribute('marker-end', 'url(#' + (mm[col] || 'arr') + ')');
         path.classList.add('conn-path');
         path.style.pointerEvents = 'none';
         svgLayer.appendChild(path);
+
+        // Hit path (fat invisible)
         var hit = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        hit.setAttribute('d', path.getAttribute('d'));
+        hit.setAttribute('d', d);
         hit.setAttribute('fill', 'none');
         hit.setAttribute('stroke', 'transparent');
-        hit.setAttribute('stroke-width', '14');
+        hit.setAttribute('stroke-width', IS_MOBILE ? '24' : '14');
         hit.classList.add('conn-path');
         hit.style.pointerEvents = 'visibleStroke';
-        hit.style.cursor = 'context-menu';
-        hit.addEventListener('contextmenu', function(e) {
-          e.preventDefault(); e.stopPropagation();
-          window._activeConn = conn;
-          var m = document.getElementById('conn-menu');
-          m.style.left = e.clientX + 'px'; m.style.top = e.clientY + 'px';
-          m.classList.add('open');
-        });
+        hit.style.cursor = IS_MOBILE ? 'pointer' : 'context-menu';
+        if (IS_MOBILE) {
+          hit.style.touchAction = 'none';
+          hit.dataset.connIdx = connIdx;
+        } else {
+          hit.addEventListener('contextmenu', function(e) {
+            e.preventDefault(); e.stopPropagation();
+            window._activeConn = conn;
+            connMenu.style.left = e.clientX + 'px';
+            connMenu.style.top  = e.clientY + 'px';
+            connMenu.classList.add('open');
+          });
+        }
         svgLayer.appendChild(hit);
-        if (conn.labelWrap) {
-          const mx = (p1.x + p2.x) / 2;
-          const my = (p1.y + p2.y) / 2;
-          const lw = conn.labelWrap.offsetWidth;
-          const lh = conn.labelWrap.offsetHeight;
+
+        // Desktop: label wrap
+        if (!IS_MOBILE && conn.labelWrap) {
+          var mx = (p1.x + p2.x) / 2;
+          var my = (p1.y + p2.y) / 2;
+          var lw = conn.labelWrap.offsetWidth;
+          var lh = conn.labelWrap.offsetHeight;
           conn.labelWrap.style.left = (mx - lw/2) + 'px';
           conn.labelWrap.style.top  = (my - lh/2) + 'px';
         }
       });
-      updateMinimap();
+
+      if (!IS_MOBILE) updateMinimap();
     }
 
-    function addConnection(from, to, savedColor) {
-      if (!savedColor) pushUndo(); // don't push during loadState
-      var wrap = document.createElement('div');
-      wrap.className = 'conn-label-wrap';
-      var del = document.createElement('div');
-      del.className = 'conn-del';
-      del.textContent = 'x';
-      wrap.appendChild(del);
-      world.appendChild(wrap);
-      var conn = { from: from, to: to, labelWrap: wrap, color: savedColor || '#00ffe7' };
-      connections.push(conn);
-      del.addEventListener('click', function(e) {
-        e.stopPropagation();
-        connections = connections.filter(function(c2) { return c2 !== conn; });
-        wrap.remove();
-        updateConnections();
-      });
-      wrap.addEventListener('contextmenu', function(e) {
-        e.preventDefault(); e.stopPropagation();
-        window._activeConn = conn;
-        var m = document.getElementById('conn-menu');
-        m.style.left = e.clientX + 'px'; m.style.top = e.clientY + 'px';
-        m.classList.add('open');
-      });
-      setTimeout(updateConnections, 50);
-    }
-
-    // ── Nodes ──
+    // ══════════════════════════════════════════════════════════
+    //  NODE CREATION
+    // ══════════════════════════════════════════════════════════
     function createNode(x, y, data) {
-      const id = data && data.id ? data.id : 'n' + (++nodeCount);
+      var id = (data && data.id) ? data.id : 'n' + (++nodeCount);
       if (data && data.id) nodeCount = Math.max(nodeCount, parseInt(id.replace('n','')) || nodeCount);
 
-      const el = document.createElement('div');
+      var el = document.createElement('div');
       el.className = 'node';
       el.dataset.id = id;
       el.style.left = (data ? data.x : x) + 'px';
       el.style.top  = (data ? data.y : y) + 'px';
       if (data && data.note) el.dataset.note = data.note;
 
-      const header = document.createElement('div');
+      var header = document.createElement('div');
       header.className = 'node-header';
 
-      const dot = document.createElement('div');
+      var dot = document.createElement('div');
       dot.className = 'node-dot';
 
-      const title = document.createElement('div');
+      var title = document.createElement('div');
       title.className = 'node-title';
       title.contentEditable = true;
       title.spellcheck = false;
       title.dataset.ph = 'Nome...';
       title.textContent = (data && data.name) ? data.name : '';
 
-      const acts = document.createElement('div');
+      var acts = document.createElement('div');
       acts.className = 'node-actions';
 
-      const noteBtn = document.createElement('button');
+      var noteBtn = document.createElement('button');
       noteBtn.className = 'node-act-btn';
       noteBtn.textContent = '✎';
       noteBtn.title = 'Notas';
 
-      const delBtn = document.createElement('button');
+      var delBtn = document.createElement('button');
       delBtn.className = 'node-act-btn del';
       delBtn.textContent = '×';
       delBtn.title = 'Apagar';
@@ -1133,110 +963,139 @@
       header.appendChild(dot);
       header.appendChild(title);
       header.appendChild(acts);
+      el.appendChild(header);
 
-      const body = document.createElement('div');
-      body.className = 'node-body';
-
-      const preview = document.createElement('div');
+      var preview = document.createElement('div');
       preview.className = 'node-note-preview';
       preview.textContent = (data && data.note) ? data.note.slice(0, 60) : '';
-      body.appendChild(preview);
-      el.appendChild(header);
-      el.appendChild(body);
+      el.appendChild(preview);
 
+      // Anchors
       ['top','bottom','left','right'].forEach(function(pos) {
-        const a = document.createElement('div');
+        var a = document.createElement('div');
         a.className = 'anchor';
         a.dataset.pos = pos;
-        a.addEventListener('mousedown', function(e) {
-          e.stopPropagation();
-          e.preventDefault();
-          if (!connectSource) {
-            connectSource = { id, pos };
-            el.classList.add('connect-src');
-            dragConn = { id, pos };
-          } else if (connectSource.id !== id) {
-            addConnection(connectSource, { id, pos });
-            if (nodes[connectSource.id]) nodes[connectSource.id].classList.remove('connect-src');
-            connectSource = null;
-            dragConn = null;
-          }
-        });
-        a.addEventListener('mouseup', function(e) {
-          if (dragConn && dragConn.id !== id) {
+        a.dataset.nodeId = id;
+
+        if (!IS_MOBILE) {
+          // Desktop: mousedown to start/finish connection
+          a.addEventListener('mousedown', function(e) {
             e.stopPropagation();
-            addConnection(dragConn, { id, pos });
-            if (nodes[dragConn.id]) nodes[dragConn.id].classList.remove('connect-src');
-            connectSource = null;
-            dragConn = null;
-            if (ghostLine) { ghostLine.remove(); ghostLine = null; }
-          }
-        });
+            e.preventDefault();
+            if (!connectSource) {
+              connectSource = { id: id, pos: pos };
+              el.classList.add('connect-src');
+              dragConn = { id: id, pos: pos };
+            } else if (connectSource.id !== id) {
+              addConnection(connectSource, { id: id, pos: pos });
+              if (nodes[connectSource.id]) nodes[connectSource.id].classList.remove('connect-src');
+              connectSource = null; dragConn = null;
+            }
+          });
+          a.addEventListener('mouseup', function(e) {
+            if (dragConn && dragConn.id !== id) {
+              e.stopPropagation();
+              addConnection(dragConn, { id: id, pos: pos });
+              if (nodes[dragConn.id]) nodes[dragConn.id].classList.remove('connect-src');
+              connectSource = null; dragConn = null;
+              if (ghostLine) { ghostLine.remove(); ghostLine = null; }
+            }
+          });
+        } else {
+          // Mobile: tap anchor to start/finish connection
+          a.addEventListener('touchstart', function(e) {
+            e.stopPropagation(); e.preventDefault();
+          }, { passive: false });
+          a.addEventListener('touchend', function(e) {
+            e.stopPropagation(); e.preventDefault();
+            if (connSource) {
+              if (connSource.id !== id) {
+                addConnection(connSource, { id: id, pos: pos });
+                if (nodes[connSource.id]) nodes[connSource.id].classList.remove('connect-src');
+                var old = nodes[connSource.id] && nodes[connSource.id].querySelector('.anchor.active');
+                if (old) old.classList.remove('active');
+                connSource = null;
+                if (ghostLine) { ghostLine.remove(); ghostLine = null; }
+              } else {
+                // Tapped same node — cancel
+                nodes[connSource.id].classList.remove('connect-src');
+                var old2 = nodes[connSource.id].querySelector('.anchor.active');
+                if (old2) old2.classList.remove('active');
+                connSource = null;
+                if (ghostLine) { ghostLine.remove(); ghostLine = null; }
+              }
+            } else {
+              connSource = { id: id, pos: pos };
+              nodes[id].classList.add('connect-src');
+              a.classList.add('active');
+            }
+          }, { passive: false });
+        }
+
         el.appendChild(a);
       });
 
-      el.addEventListener('mousedown', function(e) {
-        if (e.target.classList.contains('anchor') || e.target === noteBtn || e.target === delBtn || e.target === title) return;
-        e.stopPropagation();
-        e.preventDefault();
-        if (connectSource) {
-          if (nodes[connectSource.id]) nodes[connectSource.id].classList.remove('connect-src');
-          connectSource = null; dragConn = null;
-          if (ghostLine) { ghostLine.remove(); ghostLine = null; }
-          return;
-        }
-        document.getElementById('sel-menu').classList.remove('open');
-        if (multiSelected.has(id)) {
-          // Start multi-drag
-          dragging = el;
-          panning = false;
-          var rect4 = viewport.getBoundingClientRect();
-          multiDragStart = {
-            x: (e.clientX - rect4.left - panOffset.x) / scale,
-            y: (e.clientY - rect4.top  - panOffset.y) / scale
-          };
-          multiDragOrigins = {};
-          multiSelected.forEach(function(nid) {
-            if (nodes[nid]) multiDragOrigins[nid] = {
-              x: parseFloat(nodes[nid].style.left) || 0,
-              y: parseFloat(nodes[nid].style.top)  || 0
+      noteBtn.addEventListener('click', function(e) { e.stopPropagation(); openModal(id); });
+      delBtn.addEventListener('click',  function(e) { e.stopPropagation(); deleteNode(id); });
+
+      if (!IS_MOBILE) {
+        // Desktop: node drag
+        el.addEventListener('mousedown', function(e) {
+          if (e.target.classList.contains('anchor') || e.target === noteBtn || e.target === delBtn || e.target === title) return;
+          e.stopPropagation(); e.preventDefault();
+          if (connectSource) {
+            if (nodes[connectSource.id]) nodes[connectSource.id].classList.remove('connect-src');
+            connectSource = null; dragConn = null;
+            if (ghostLine) { ghostLine.remove(); ghostLine = null; }
+            return;
+          }
+          document.getElementById('sel-menu').classList.remove('open');
+          if (multiSelected.has(id)) {
+            dragging = el; panning = false;
+            var rect4 = viewport.getBoundingClientRect();
+            multiDragStart = {
+              x: (e.clientX - rect4.left - panOffset.x) / scale,
+              y: (e.clientY - rect4.top  - panOffset.y) / scale
             };
-          });
-          return;
-        }
-        dragging = el;
-        panning = false;
-        const rect = viewport.getBoundingClientRect();
-        const wx = (e.clientX - rect.left - panOffset.x) / scale;
-        const wy = (e.clientY - rect.top  - panOffset.y) / scale;
-        dragOffset = {
-          x: wx - parseFloat(el.style.left || 0),
-          y: wy - parseFloat(el.style.top  || 0)
-        };
-        selectNode(id);
-      });
+            multiDragOrigins = {};
+            multiSelected.forEach(function(nid) {
+              if (nodes[nid]) multiDragOrigins[nid] = {
+                x: parseFloat(nodes[nid].style.left) || 0,
+                y: parseFloat(nodes[nid].style.top)  || 0
+              };
+            });
+            return;
+          }
+          dragging = el; panning = false;
+          var rect = viewport.getBoundingClientRect();
+          var wx = (e.clientX - rect.left - panOffset.x) / scale;
+          var wy = (e.clientY - rect.top  - panOffset.y) / scale;
+          dragOffset = { x: wx - parseFloat(el.style.left || 0), y: wy - parseFloat(el.style.top || 0) };
+          selectNode(id);
+        });
+        el.addEventListener('contextmenu', function(e) {
+          if (multiSelected.size > 0 || selConns.size > 0) {
+            e.preventDefault(); e.stopPropagation();
+            var m = document.getElementById('sel-menu');
+            m.style.left = e.clientX + 'px'; m.style.top = e.clientY + 'px';
+            m.classList.add('open');
+          }
+        });
+        title.addEventListener('input', updateConnections);
+      } else {
+        // Mobile: tap on title to open keyboard
+        title.addEventListener('touchend', function(e) {
+          e.stopPropagation();
+          title.focus();
+          var range = document.createRange();
+          range.selectNodeContents(title);
+          range.collapse(false);
+          var sel = window.getSelection();
+          if (sel) { sel.removeAllRanges(); sel.addRange(range); }
+        });
+      }
 
-      el.addEventListener('contextmenu', function(e) {
-        if (multiSelected.size > 0 || selConns.size > 0) {
-          e.preventDefault(); e.stopPropagation();
-          var m = document.getElementById('sel-menu');
-          m.style.left = e.clientX + 'px'; m.style.top = e.clientY + 'px';
-          m.classList.add('open');
-        }
-      });
-      noteBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        openModal(id);
-      });
-
-      delBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        deleteNode(id);
-      });
-
-      title.addEventListener('input', updateConnections);
-
-      pushUndo();
+      if (!IS_MOBILE) pushUndo();
       world.appendChild(el);
       nodes[id] = el;
       updateConnections();
@@ -1244,7 +1103,7 @@
     }
 
     function deleteNode(id) {
-      pushUndo();
+      if (!IS_MOBILE) pushUndo();
       connections = connections.filter(function(c) {
         if (c.from.id === id || c.to.id === id) {
           if (c.labelWrap) c.labelWrap.remove();
@@ -1252,375 +1111,696 @@
         }
         return true;
       });
-      nodes[id].remove();
+      if (nodes[id]) nodes[id].remove();
       delete nodes[id];
       if (selectedNode === id) selectedNode = null;
-      multiSelected.delete(id);
+      if (!IS_MOBILE) multiSelected.delete(id);
       updateConnections();
     }
 
-    function selectNode(id) {
-      if (selectedNode && nodes[selectedNode]) nodes[selectedNode].classList.remove('selected');
-      selectedNode = id;
-      if (id && nodes[id]) nodes[id].classList.add('selected');
-      clearMultiSelect();
-    }
-    function clearMultiSelect() {
-      multiSelected.forEach(function(nid) {
-        if (nodes[nid]) nodes[nid].classList.remove('multi-selected');
-      });
-      multiSelected.clear();
-      selConns.clear();
+    function addConnection(from, to, savedColor) {
+      if (!IS_MOBILE && !savedColor) pushUndo();
+      var conn = { from: from, to: to, color: savedColor || '#00ffe7', labelWrap: null };
+
+      if (!IS_MOBILE) {
+        // Desktop: create label wrap
+        var wrap = document.createElement('div');
+        wrap.className = 'conn-label-wrap';
+        var del = document.createElement('div');
+        del.className = 'conn-del';
+        del.textContent = 'x';
+        wrap.appendChild(del);
+        world.appendChild(wrap);
+        conn.labelWrap = wrap;
+        del.addEventListener('click', function(e) {
+          e.stopPropagation();
+          connections = connections.filter(function(c2) { return c2 !== conn; });
+          wrap.remove();
+          updateConnections();
+        });
+        wrap.addEventListener('contextmenu', function(e) {
+          e.preventDefault(); e.stopPropagation();
+          window._activeConn = conn;
+          connMenu.style.left = e.clientX + 'px'; connMenu.style.top = e.clientY + 'px';
+          connMenu.classList.add('open');
+        });
+      }
+
+      connections.push(conn);
+      setTimeout(updateConnections, 50);
     }
 
-    // ── Modal ──
+    // ══════════════════════════════════════════════════════════
+    //  MODAL (shared)
+    // ══════════════════════════════════════════════════════════
     function openModal(id) {
       currentNoteNodeId = id;
-      const title = nodes[id].querySelector('.node-title').textContent || 'NPC';
-      document.getElementById('modal-name').textContent = title;
-      document.getElementById('modal-note').value = nodes[id].dataset.note || '';
+      var titleText = nodes[id] ? nodes[id].querySelector('.node-title').textContent : 'NPC';
+      document.getElementById('modal-name').textContent = titleText || 'NPC';
+      document.getElementById('modal-note').value = nodes[id] ? (nodes[id].dataset.note || '') : '';
       document.getElementById('modal-overlay').classList.add('open');
-      document.getElementById('modal-note').focus();
+      if (!IS_MOBILE) document.getElementById('modal-note').focus();
     }
-
     function closeModal(save) {
       if (save && currentNoteNodeId && nodes[currentNoteNodeId]) {
-        const note = document.getElementById('modal-note').value;
+        var note = document.getElementById('modal-note').value;
         nodes[currentNoteNodeId].dataset.note = note;
-        const prev = nodes[currentNoteNodeId].querySelector('.node-note-preview');
+        var prev = nodes[currentNoteNodeId].querySelector('.node-note-preview');
         if (prev) prev.textContent = note.slice(0, 60);
       }
       document.getElementById('modal-overlay').classList.remove('open');
       currentNoteNodeId = null;
     }
-
     document.getElementById('modal-save').addEventListener('click', function() { closeModal(true); });
     document.getElementById('modal-cancel').addEventListener('click', function() { closeModal(false); });
     document.getElementById('modal-overlay').addEventListener('click', function(e) {
       if (e.target === document.getElementById('modal-overlay')) closeModal(false);
     });
 
-    // ── Connect mode ──
-
-
-
-
-    // ── Add NPC ──
-
-
-
-    window._activeConn = null;
-    document.getElementById('conn-menu').querySelectorAll('.cmitem').forEach(function(item) {
+    // ══════════════════════════════════════════════════════════
+    //  COLOR MENU (shared)
+    // ══════════════════════════════════════════════════════════
+    connMenu.querySelectorAll('.cmitem').forEach(function(item) {
       item.addEventListener('click', function(e) {
         e.stopPropagation();
-        if (window._activeConn) { pushUndo(); window._activeConn.color = item.dataset.color; updateConnections(); }
-        document.getElementById('conn-menu').classList.remove('open');
+        var target = IS_MOBILE ? activeConn : window._activeConn;
+        if (item.id === 'conn-delete') {
+          if (target) {
+            connections = connections.filter(function(c) { return c !== target; });
+            updateConnections();
+          }
+        } else if (target && item.dataset.color) {
+          if (!IS_MOBILE) pushUndo();
+          target.color = item.dataset.color;
+          updateConnections();
+        }
+        connMenu.classList.remove('open');
+        activeConn = null;
         window._activeConn = null;
       });
     });
-    document.addEventListener('click', function() {
-      document.getElementById('conn-menu').classList.remove('open');
-    });
+    document.addEventListener('click', function() { connMenu.classList.remove('open'); });
 
-    // Double click on world to add
-    viewport.addEventListener('dblclick', function(e) {
-      if (e.target !== viewport && e.target !== world && !e.target.closest('#svg-layer')) return;
-      const rect = viewport.getBoundingClientRect();
-      const wx = (e.clientX - rect.left - panOffset.x) / scale;
-      const wy = (e.clientY - rect.top  - panOffset.y) / scale;
-      const id = createNode(wx - 70, wy - 20);
-      selectNode(id);
-      setTimeout(function() {
-        const t = nodes[id].querySelector('.node-title');
-        if (t) { t.focus(); }
-      }, 50);
-    });
-
-    // ── Minimap ──
-    function updateMinimap() {
-      const mm = document.getElementById('minimap');
-      const mv = document.getElementById('minimap-viewport');
-      mm.querySelectorAll('.minimap-node').forEach(e => e.remove());
-      const scaleX = mm.offsetWidth  / 4000;
-      const scaleY = mm.offsetHeight / 3000;
-      Object.values(nodes).forEach(function(el) {
-        const dot = document.createElement('div');
-        dot.className = 'minimap-node';
-        dot.style.left = (parseFloat(el.style.left) * scaleX) + 'px';
-        dot.style.top  = (parseFloat(el.style.top)  * scaleY) + 'px';
-        mm.appendChild(dot);
-      });
-      const vw = viewport.offsetWidth  / scale * scaleX;
-      const vh = viewport.offsetHeight / scale * scaleY;
-      const vx = -panOffset.x / scale * scaleX;
-      const vy = -panOffset.y / scale * scaleY;
-      mv.style.width  = vw + 'px';
-      mv.style.height = vh + 'px';
-      mv.style.left   = Math.max(0, vx) + 'px';
-      mv.style.top    = Math.max(0, vy) + 'px';
+    function openConnMenu(conn, clientX, clientY) {
+      activeConn = conn;
+      connMenu.style.left = Math.min(clientX, window.innerWidth - 160) + 'px';
+      connMenu.style.top  = Math.min(clientY, window.innerHeight - 200) + 'px';
+      connMenu.classList.add('open');
+      if (navigator.vibrate) navigator.vibrate(40);
     }
 
-    // ── Save / Load ──
-    function pushUndo() {
-      var snap = JSON.stringify(serializeState());
-      if (undoStack.length && undoStack[undoStack.length-1] === snap) return;
-      undoStack.push(snap);
-      if (undoStack.length > 10) undoStack.shift();
-      redoStack = []; // clear redo on new action
-    }
-
+    // ══════════════════════════════════════════════════════════
+    //  SERIALIZE / LOAD (shared)
+    // ══════════════════════════════════════════════════════════
     function serializeState() {
-      const nodeData = Object.entries(nodes).map(function([id, el]) {
-        return {
-          id,
-          x: parseFloat(el.style.left),
-          y: parseFloat(el.style.top),
-          name: el.querySelector('.node-title').textContent,
-          note: el.dataset.note || ''
-        };
+      var nodeData = Object.entries(nodes).map(function(entry) {
+        var id = entry[0], el = entry[1];
+        return { id: id, x: parseFloat(el.style.left), y: parseFloat(el.style.top),
+                 name: el.querySelector('.node-title').textContent, note: el.dataset.note || '' };
       });
-      const connData = connections.map(function(c) {
-        return {
-          from: c.from,
-          to: c.to,
-          color: c.color || '#00ffe7'
-        };
+      var connData = connections.map(function(c) {
+        return { from: c.from, to: c.to, color: c.color || '#00ffe7' };
       });
       return { nodes: nodeData, connections: connData };
     }
 
     function loadState(state) {
       Object.keys(nodes).forEach(deleteNode);
-      connections.forEach(function(c) { if(c.labelWrap) c.labelWrap.remove(); });
+      connections.forEach(function(c) { if (c.labelWrap) c.labelWrap.remove(); });
       connections = [];
-      svgLayer.querySelectorAll('.conn-path').forEach(e => e.remove());
+      svgLayer.querySelectorAll('.conn-path').forEach(function(e) { e.remove(); });
       if (state.nodes) state.nodes.forEach(function(n) { createNode(0, 0, n); });
       if (state.connections) {
         state.connections.forEach(function(c) {
           if (nodes[c.from.id] && nodes[c.to.id]) {
-            addConnection(c.from, c.to);
-            const conn = connections[connections.length-1];
-            if (conn && c.color) conn.color = c.color;
+            addConnection(c.from, c.to, c.color);
           }
         });
       }
       setTimeout(updateConnections, 100);
     }
 
+    // ══════════════════════════════════════════════════════════
+    //  SAVE / LOAD (shared)
+    // ══════════════════════════════════════════════════════════
     document.getElementById('btn-save').addEventListener('click', function() {
+      var btn = document.getElementById('btn-save');
+      var orig = btn.textContent;
+      btn.textContent = '...';
       setStatus('Salvando...');
-      const state = serializeState();
+      var state = serializeState();
       sbFetch('/rest/v1/tramas?trama_id=eq.' + TRAMA_ID + '&select=id', 'GET')
         .then(function(rows) {
-          const entry = { trama_id: TRAMA_ID, data: state };
+          var entry = { trama_id: TRAMA_ID, data: state };
           return (rows && rows.length)
             ? sbFetch('/rest/v1/tramas?trama_id=eq.' + TRAMA_ID, 'PATCH', entry)
             : sbFetch('/rest/v1/tramas', 'POST', entry);
         })
-        .then(function() { setStatus('Salvo ✓', true); setTimeout(function(){setStatus('Pronto');},2000); })
-        .catch(function() { setStatus('Erro ao salvar', false); });
+        .then(function() {
+          btn.textContent = '✓ Salvo';
+          setStatus('Salvo ✓', true);
+          setTimeout(function() { btn.textContent = orig; setStatus('Pronto'); }, 2000);
+        })
+        .catch(function() {
+          btn.textContent = 'Erro';
+          setStatus('Erro ao salvar', false);
+          setTimeout(function() { btn.textContent = orig; }, 2000);
+        });
     });
 
+    // ══════════════════════════════════════════════════════════
+    //  DESKTOP: PAN, ZOOM, DRAG, SELECTION
+    // ══════════════════════════════════════════════════════════
+    if (!IS_MOBILE) {
 
+      // Cursor
+      document.body.style.cursor = 'crosshair';
 
-    // ── Keyboard ──
-    document.getElementById('sel-del').addEventListener('click', function() {
-      document.getElementById('sel-menu').classList.remove('open');
-      // Delete selected connections first
-      var connIdxToDelete = Array.from(selConns).sort(function(a,b){return b-a;});
-      connIdxToDelete.forEach(function(i) {
-        if (connections[i] && connections[i].labelWrap) connections[i].labelWrap.remove();
-        connections.splice(i, 1);
+      viewport.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        var delta = e.deltaY > 0 ? 0.9 : 1.1;
+        var newScale = Math.min(2, Math.max(0.3, scale * delta));
+        var rect = viewport.getBoundingClientRect();
+        var mx = e.clientX - rect.left;
+        var my = e.clientY - rect.top;
+        panOffset.x = mx - (mx - panOffset.x) * (newScale / scale);
+        panOffset.y = my - (my - panOffset.y) * (newScale / scale);
+        scale = newScale;
+        applyTransform();
+      }, { passive: false });
+
+      viewport.addEventListener('mousedown', function(e) {
+        if (e.target === viewport || e.target === world || e.target === svgLayer) {
+          if (connectSource) {
+            if (nodes[connectSource.id]) nodes[connectSource.id].classList.remove('connect-src');
+            connectSource = null; return;
+          }
+          document.getElementById('sel-menu').classList.remove('open');
+          if (e.button === 2) return;
+          var rect = viewport.getBoundingClientRect();
+          var wx = (e.clientX - rect.left - panOffset.x) / scale;
+          var wy = (e.clientY - rect.top  - panOffset.y) / scale;
+          if (e.shiftKey) {
+            selDragging = true;
+            selStart = { wx: wx, wy: wy, sx: e.clientX, sy: e.clientY };
+            var sr = document.getElementById('sel-rect');
+            sr.style.left = e.clientX + 'px'; sr.style.top = e.clientY + 'px';
+            sr.style.width = '0'; sr.style.height = '0';
+            sr.style.display = 'block';
+          } else {
+            clearMultiSelect();
+            panning = true;
+            panStart = { x: e.clientX - panOffset.x, y: e.clientY - panOffset.y };
+            viewport.style.cursor = 'grabbing';
+          }
+        }
       });
-      // Delete selected nodes (and their connections)
-      Array.from(multiSelected).forEach(function(nid) { deleteNode(nid); });
-      clearMultiSelect();
-      updateConnections();
-    });
 
-    document.getElementById('func-btn').addEventListener('click', function() {
-      document.getElementById('func-modal').classList.add('open');
-    });
-    document.getElementById('func-close').addEventListener('click', function() {
-      document.getElementById('func-modal').classList.remove('open');
-    });
-    document.getElementById('func-modal').addEventListener('click', function(e) {
-      if (e.target === document.getElementById('func-modal'))
-        document.getElementById('func-modal').classList.remove('open');
-    });
+      viewport.addEventListener('contextmenu', function(e) {
+        if (multiSelected.size > 0 || selConns.size > 0) {
+          e.preventDefault();
+          var m = document.getElementById('sel-menu');
+          m.style.left = e.clientX + 'px'; m.style.top = e.clientY + 'px';
+          m.classList.add('open');
+        }
+      });
 
-    document.addEventListener('keydown', function(e) {
-      if (document.getElementById('modal-overlay').classList.contains('open')) return;
-      if (document.getElementById('func-modal').classList.contains('open')) {
-        document.getElementById('func-modal').classList.remove('open'); return;
+      document.addEventListener('mousemove', function(e) {
+        if (panning) {
+          panOffset.x = e.clientX - panStart.x;
+          panOffset.y = e.clientY - panStart.y;
+          applyTransform();
+        }
+        if (dragging && multiSelected.size > 0 && multiSelected.has(dragging.dataset.id)) {
+          var rect3 = viewport.getBoundingClientRect();
+          var mx3 = (e.clientX - rect3.left - panOffset.x) / scale;
+          var my3 = (e.clientY - rect3.top  - panOffset.y) / scale;
+          if (multiDragStart) {
+            var ddx = mx3 - multiDragStart.x;
+            var ddy = my3 - multiDragStart.y;
+            multiSelected.forEach(function(nid) {
+              if (!nodes[nid] || !multiDragOrigins[nid]) return;
+              nodes[nid].style.left = Math.max(0, multiDragOrigins[nid].x + ddx) + 'px';
+              nodes[nid].style.top  = Math.max(0, multiDragOrigins[nid].y + ddy) + 'px';
+            });
+            updateConnections();
+          }
+          return;
+        }
+        if (dragging) {
+          var rect = viewport.getBoundingClientRect();
+          var wx = (e.clientX - rect.left - panOffset.x) / scale;
+          var wy = (e.clientY - rect.top  - panOffset.y) / scale;
+          dragging.style.left = Math.max(0, wx - dragOffset.x) + 'px';
+          dragging.style.top  = Math.max(0, wy - dragOffset.y) + 'px';
+          updateConnections();
+        }
+        if (selDragging && selStart) {
+          var rect2 = viewport.getBoundingClientRect();
+          var wx2 = (e.clientX - rect2.left - panOffset.x) / scale;
+          var wy2 = (e.clientY - rect2.top  - panOffset.y) / scale;
+          selStart.wx2 = wx2; selStart.wy2 = wy2;
+          var sr = document.getElementById('sel-rect');
+          var srx = Math.min(selStart.sx, e.clientX), sry = Math.min(selStart.sy, e.clientY);
+          var srw = Math.abs(e.clientX - selStart.sx), srh = Math.abs(e.clientY - selStart.sy);
+          sr.style.left = srx + 'px'; sr.style.top = sry + 'px';
+          sr.style.width = srw + 'px'; sr.style.height = srh + 'px';
+        }
+        if (dragConn) {
+          var rect = viewport.getBoundingClientRect();
+          var mx = (e.clientX - rect.left - panOffset.x) / scale;
+          var my = (e.clientY - rect.top  - panOffset.y) / scale;
+          var srcNode = nodes[dragConn.id];
+          if (!srcNode) return;
+          var p1 = getAnchorPos(srcNode, dragConn.pos);
+          if (ghostLine) ghostLine.remove();
+          ghostLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          var ddx = Math.abs(mx - p1.x), ddy = Math.abs(my - p1.y);
+          var gcx = p1.x + (dragConn.pos === 'right' ? ddx*0.5 : dragConn.pos === 'left' ? -ddx*0.5 : 0);
+          var gcy = p1.y + (dragConn.pos === 'bottom' ? ddy*0.5 : dragConn.pos === 'top' ? -ddy*0.5 : 0);
+          ghostLine.setAttribute('d', 'M'+p1.x+','+p1.y+' C'+gcx+','+gcy+' '+mx+','+my+' '+mx+','+my);
+          ghostLine.setAttribute('fill', 'none');
+          ghostLine.setAttribute('stroke', 'rgba(0,255,231,0.3)');
+          ghostLine.setAttribute('stroke-width', '1');
+          ghostLine.setAttribute('stroke-dasharray', '5,4');
+          ghostLine.setAttribute('pointer-events', 'none');
+          svgLayer.appendChild(ghostLine);
+        }
+      });
+
+      document.addEventListener('mouseup', function() {
+        panning = false;
+        dragging = null;
+        if (multiDragStart && Object.keys(multiDragOrigins).length > 0) pushUndo();
+        multiDragStart = null;
+        multiDragOrigins = {};
+        viewport.style.cursor = '';
+        if (ghostLine) { ghostLine.remove(); ghostLine = null; }
+        if (selDragging) {
+          selDragging = false;
+          var sr = document.getElementById('sel-rect');
+          sr.style.display = 'none';
+          if (selStart) {
+            var rx = Math.min(selStart.wx, selStart.wx2 || selStart.wx);
+            var ry = Math.min(selStart.wy, selStart.wy2 || selStart.wy);
+            var rr = Math.max(selStart.wx, selStart.wx2 || selStart.wx);
+            var rb = Math.max(selStart.wy, selStart.wy2 || selStart.wy);
+            clearMultiSelect();
+            Object.entries(nodes).forEach(function(entry) {
+              var nid = entry[0], nel = entry[1];
+              var nx = parseFloat(nel.style.left), ny = parseFloat(nel.style.top);
+              var nw = nel.offsetWidth, nh = nel.offsetHeight;
+              if (nx + nw > rx && nx < rr && ny + nh > ry && ny < rb) {
+                multiSelected.add(nid); nel.classList.add('multi-selected');
+              }
+            });
+            connections.forEach(function(conn, i) {
+              if (multiSelected.has(conn.from.id) && multiSelected.has(conn.to.id)) selConns.add(i);
+            });
+            selStart = null;
+          }
+        }
+        setTimeout(function() {
+          if (dragConn) {
+            if (nodes[dragConn.id]) nodes[dragConn.id].classList.remove('connect-src');
+            dragConn = null; connectSource = null;
+          }
+        }, 30);
+      });
+
+      // Double click to add node
+      viewport.addEventListener('dblclick', function(e) {
+        if (e.target !== viewport && e.target !== world && !e.target.closest('#svg-layer')) return;
+        var rect = viewport.getBoundingClientRect();
+        var wx = (e.clientX - rect.left - panOffset.x) / scale;
+        var wy = (e.clientY - rect.top  - panOffset.y) / scale;
+        var id = createNode(wx - 70, wy - 20);
+        selectNode(id);
+        setTimeout(function() {
+          var t = nodes[id] && nodes[id].querySelector('.node-title');
+          if (t) t.focus();
+        }, 50);
+      });
+
+      // Minimap
+      function updateMinimap() {
+        var mm = document.getElementById('minimap');
+        var mv = document.getElementById('minimap-viewport');
+        mm.querySelectorAll('.minimap-node').forEach(function(e) { e.remove(); });
+        var scaleX = mm.offsetWidth  / 4000;
+        var scaleY = mm.offsetHeight / 3000;
+        Object.values(nodes).forEach(function(el) {
+          var dot = document.createElement('div');
+          dot.className = 'minimap-node';
+          dot.style.left = (parseFloat(el.style.left) * scaleX) + 'px';
+          dot.style.top  = (parseFloat(el.style.top)  * scaleY) + 'px';
+          mm.appendChild(dot);
+        });
+        var vw = viewport.offsetWidth  / scale * scaleX;
+        var vh = viewport.offsetHeight / scale * scaleY;
+        var vx = -panOffset.x / scale * scaleX;
+        var vy = -panOffset.y / scale * scaleY;
+        mv.style.width  = vw + 'px'; mv.style.height = vh + 'px';
+        mv.style.left   = Math.max(0, vx) + 'px'; mv.style.top = Math.max(0, vy) + 'px';
       }
-      // Undo
-      if (e.key === 'z' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
-        e.preventDefault();
-        if (undoStack.length === 0) return;
-        var current = JSON.stringify(serializeState());
-        redoStack.push(current);
-        if (redoStack.length > 10) redoStack.shift();
-        var prev = JSON.parse(undoStack.pop());
-        loadState(prev);
-        setStatus('Desfeito ↩', true);
-        setTimeout(function() { setStatus('Pronto'); }, 1500);
-        return;
-      }
-      // Redo — Ctrl+Shift+Z (z ou Z) ou Ctrl+Y
-      if (((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey) && e.shiftKey) ||
-          (e.key === 'y' && (e.ctrlKey || e.metaKey))) {
-        e.preventDefault();
-        if (redoStack.length === 0) return;
-        var current2 = JSON.stringify(serializeState());
-        undoStack.push(current2);
+
+      // Undo/Redo
+      function pushUndo() {
+        var snap = JSON.stringify(serializeState());
+        if (undoStack.length && undoStack[undoStack.length-1] === snap) return;
+        undoStack.push(snap);
         if (undoStack.length > 10) undoStack.shift();
-        var next = JSON.parse(redoStack.pop());
-        loadState(next);
-        setStatus('Refeito ↪', true);
-        setTimeout(function() { setStatus('Pronto'); }, 1500);
-        return;
+        redoStack = [];
       }
-      if (e.key === 'Escape') {
-        if (connectSource) {
-          if (nodes[connectSource.id]) nodes[connectSource.id].classList.remove('connect-src');
-          connectSource = null; dragConn = null;
+
+      // Selection helpers
+      function selectNode(id) {
+        if (selectedNode && nodes[selectedNode]) nodes[selectedNode].classList.remove('selected');
+        selectedNode = id;
+        if (id && nodes[id]) nodes[id].classList.add('selected');
+        clearMultiSelect();
+      }
+      function clearMultiSelect() {
+        multiSelected.forEach(function(nid) {
+          if (nodes[nid]) nodes[nid].classList.remove('multi-selected');
+        });
+        multiSelected.clear(); selConns.clear();
+      }
+
+      // Selection delete
+      document.getElementById('sel-del').addEventListener('click', function() {
+        document.getElementById('sel-menu').classList.remove('open');
+        var connIdxToDelete = Array.from(selConns).sort(function(a,b){return b-a;});
+        connIdxToDelete.forEach(function(i) {
+          if (connections[i] && connections[i].labelWrap) connections[i].labelWrap.remove();
+          connections.splice(i, 1);
+        });
+        Array.from(multiSelected).forEach(function(nid) { deleteNode(nid); });
+        clearMultiSelect();
+        updateConnections();
+      });
+
+      // Func modal
+      document.getElementById('func-btn').addEventListener('click', function() {
+        document.getElementById('func-modal').classList.add('open');
+      });
+      document.getElementById('func-close').addEventListener('click', function() {
+        document.getElementById('func-modal').classList.remove('open');
+      });
+      document.getElementById('func-modal').addEventListener('click', function(e) {
+        if (e.target === document.getElementById('func-modal'))
+          document.getElementById('func-modal').classList.remove('open');
+      });
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', function(e) {
+        if (document.getElementById('modal-overlay').classList.contains('open')) return;
+        if (document.getElementById('func-modal').classList.contains('open')) {
+          document.getElementById('func-modal').classList.remove('open'); return;
+        }
+        if (e.key === 'z' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+          e.preventDefault();
+          if (!undoStack.length) return;
+          redoStack.push(JSON.stringify(serializeState()));
+          if (redoStack.length > 10) redoStack.shift();
+          loadState(JSON.parse(undoStack.pop()));
+          setStatus('Desfeito ↩', true);
+          setTimeout(function() { setStatus('Pronto'); }, 1500);
+          return;
+        }
+        if (((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey) && e.shiftKey) ||
+            (e.key === 'y' && (e.ctrlKey || e.metaKey))) {
+          e.preventDefault();
+          if (!redoStack.length) return;
+          undoStack.push(JSON.stringify(serializeState()));
+          if (undoStack.length > 10) undoStack.shift();
+          loadState(JSON.parse(redoStack.pop()));
+          setStatus('Refeito ↪', true);
+          setTimeout(function() { setStatus('Pronto'); }, 1500);
+          return;
+        }
+        if (e.key === 'Escape') {
+          if (connectSource) {
+            if (nodes[connectSource.id]) nodes[connectSource.id].classList.remove('connect-src');
+            connectSource = null; dragConn = null;
+            if (ghostLine) { ghostLine.remove(); ghostLine = null; }
+            return;
+          }
+          if (multiSelected.size > 0 || selConns.size > 0) { clearMultiSelect(); return; }
+          selectNode(null);
+        }
+        if ((e.key === 'Delete' || e.key === 'Backspace') && selectedNode && document.activeElement === document.body) {
+          deleteNode(selectedNode);
+        }
+      });
+
+    } // end !IS_MOBILE
+
+    // ══════════════════════════════════════════════════════════
+    //  MOBILE: TOUCH HANDLING
+    // ══════════════════════════════════════════════════════════
+    if (IS_MOBILE) {
+
+      function clearLong() { if (longTimer) { clearTimeout(longTimer); longTimer = null; } }
+
+      function getTouchById(e, id) {
+        for (var i = 0; i < e.touches.length; i++) {
+          if (e.touches[i].identifier === id) return e.touches[i];
+        }
+        return null;
+      }
+
+      function distTouches(t1, t2) {
+        var dx = t1.clientX - t2.clientX, dy = t1.clientY - t2.clientY;
+        return Math.sqrt(dx*dx + dy*dy);
+      }
+
+      // Find connection near a tap point
+      function getHitConn(clientX, clientY) {
+        var els = document.elementsFromPoint(clientX, clientY);
+        for (var i = 0; i < els.length; i++) {
+          if (els[i].classList && els[i].classList.contains('conn-path') && els[i].dataset.connIdx !== undefined) {
+            return connections[parseInt(els[i].dataset.connIdx)];
+          }
+        }
+        // Proximity fallback
+        var wc = worldCoords(clientX, clientY);
+        var best = null, bestDist = 30;
+        connections.forEach(function(conn) {
+          var n1 = nodes[conn.from.id], n2 = nodes[conn.to.id];
+          if (!n1 || !n2) return;
+          var p1 = getAnchorPos(n1, conn.from.pos);
+          var p2 = getAnchorPos(n2, conn.to.pos);
+          var dx = p2.x - p1.x, dy = p2.y - p1.y;
+          var len2 = dx*dx + dy*dy;
+          var t = len2 > 0 ? Math.max(0, Math.min(1, ((wc.x-p1.x)*dx + (wc.y-p1.y)*dy) / len2)) : 0;
+          var px = p1.x + t*dx - wc.x, py = p1.y + t*dy - wc.y;
+          var d = Math.sqrt(px*px + py*py);
+          if (d < bestDist) { bestDist = d; best = conn; }
+        });
+        return best;
+      }
+
+      viewport.addEventListener('touchstart', function(e) {
+        // Let buttons handle themselves
+        var el0 = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+        if (el0 && (el0.classList.contains('node-act-btn') || el0.classList.contains('conn-del') ||
+                    el0.classList.contains('cmitem') || el0.id === 'btn-save' ||
+                    el0.id === 'modal-save' || el0.id === 'modal-cancel')) return;
+        e.preventDefault();
+        connMenu.classList.remove('open');
+
+        var touches = Array.from(e.touches);
+
+        if (touches.length === 2 && primaryId !== null) {
+          secondaryId = touches.find(function(t) { return t.identifier !== primaryId; }).identifier;
+          var t1 = getTouchById(e, primaryId);
+          var t2 = getTouchById(e, secondaryId);
+          if (t1 && t2) {
+            pinchStartDist  = distTouches(t1, t2);
+            pinchStartScale = scale;
+            pinchStartPan   = { x: panOffset.x, y: panOffset.y };
+            pinchMidStart   = { x: (t1.clientX + t2.clientX)/2, y: (t1.clientY + t2.clientY)/2 };
+            clearLong(); dragNodeId = null; isPanning = false;
+          }
+          return;
+        }
+        if (touches.length > 1) return;
+
+        var t = touches[0];
+        primaryId = t.identifier;
+        touchStartPos = { x: t.clientX, y: t.clientY };
+        touchMoved = false;
+        dragNodeId = null;
+        isPanning  = false;
+        connSource; // already declared
+
+        var el = document.elementFromPoint(t.clientX, t.clientY);
+
+        // Anchor handled by its own listener
+        var anchorEl = el && (el.classList.contains('anchor') ? el : el.closest && el.closest('.anchor'));
+        if (anchorEl) return;
+
+        // Node body
+        var nodeEl = el && (el.classList.contains('node') ? el : el.closest && el.closest('.node'));
+        if (nodeEl && !el.classList.contains('node-act-btn')) {
+          var nid2 = nodeEl.dataset.id;
+          if (connSource) {
+            // Tapping a node while connecting — cancel
+            if (nodes[connSource.id]) nodes[connSource.id].classList.remove('connect-src');
+            var srcA = nodes[connSource.id] && nodes[connSource.id].querySelector('.anchor[data-pos="'+connSource.pos+'"]');
+            if (srcA) srcA.classList.remove('active');
+            connSource = null;
+            if (ghostLine) { ghostLine.remove(); ghostLine = null; }
+            return;
+          }
+          dragNodeId = nid2;
+          var wc = worldCoords(t.clientX, t.clientY);
+          dragNodeOffset = {
+            x: wc.x - parseFloat(nodeEl.style.left || 0),
+            y: wc.y - parseFloat(nodeEl.style.top  || 0)
+          };
+          return;
+        }
+
+        // Connection hit? — long press to color
+        var hitConn = getHitConn(t.clientX, t.clientY);
+        if (hitConn) {
+          longTimer = setTimeout(function() {
+            openConnMenu(hitConn, t.clientX, t.clientY);
+            longTimer = null;
+          }, LONG_PRESS_MS);
+          return;
+        }
+
+        // Background: pan or cancel connSource
+        if (connSource) {
+          if (nodes[connSource.id]) nodes[connSource.id].classList.remove('connect-src');
+          var srcA2 = nodes[connSource.id] && nodes[connSource.id].querySelector('.anchor[data-pos="'+connSource.pos+'"]');
+          if (srcA2) srcA2.classList.remove('active');
+          connSource = null;
           if (ghostLine) { ghostLine.remove(); ghostLine = null; }
           return;
         }
-        if (multiSelected.size > 0 || selConns.size > 0) { clearMultiSelect(); return; }
-        selectNode(null);
-      }
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedNode && document.activeElement === document.body) {
-        deleteNode(selectedNode);
-      }
-    });
+        isPanning = true;
+        panStart = { x: t.clientX - panOffset.x, y: t.clientY - panOffset.y };
 
-    // ── Touch / Mobile support ──
-    (function() {
-      var cursor = document.getElementById('touch-cursor');
-      var longTimer = null;
-      var longFired = false;
-      var lastTouchPos = { x: 0, y: 0 };
-      var pinchStartDist = 0;
-      var pinchStartScale = 1;
-      var panTouch = null; // single finger pan touch id
+      }, { passive: false });
 
-      function isMobile() {
-        return window.matchMedia('(pointer: coarse)').matches;
-      }
+      viewport.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+        var touches = Array.from(e.touches);
 
-      function simulateEvent(type, x, y, button) {
-        var el = document.elementFromPoint(x, y);
-        if (!el) return;
-        var evt = new MouseEvent(type, {
-          bubbles: true, cancelable: true,
-          clientX: x, clientY: y,
-          button: button || 0,
-          buttons: button === 2 ? 2 : 1
-        });
-        el.dispatchEvent(evt);
-      }
-
-      function moveCursor(x, y) {
-        cursor.style.left = x + 'px';
-        cursor.style.top  = y + 'px';
-      }
-
-      document.addEventListener('touchstart', function(e) {
-        if (!isMobile()) return;
-
-        if (e.touches.length === 2) {
-          // Pinch start
-          var dx = e.touches[0].clientX - e.touches[1].clientX;
-          var dy = e.touches[0].clientY - e.touches[1].clientY;
-          pinchStartDist = Math.sqrt(dx*dx + dy*dy);
-          pinchStartScale = scale;
-          clearTimeout(longTimer);
+        // Pinch
+        if (secondaryId !== null) {
+          var t1 = getTouchById(e, primaryId);
+          var t2 = getTouchById(e, secondaryId);
+          if (t1 && t2) {
+            var d = distTouches(t1, t2);
+            var newScale = Math.min(2.5, Math.max(0.2, pinchStartScale * (d / pinchStartDist)));
+            var mid = { x: (t1.clientX + t2.clientX)/2, y: (t1.clientY + t2.clientY)/2 };
+            panOffset.x = pinchStartPan.x + (mid.x - pinchMidStart.x) + (pinchMidStart.x - 0) * (1 - newScale/pinchStartScale);
+            panOffset.y = pinchStartPan.y + (mid.y - pinchMidStart.y) + (pinchMidStart.y - 0) * (1 - newScale/pinchStartScale);
+            scale = newScale;
+            applyTransform();
+          }
           return;
         }
 
-        var t = e.touches[0];
-        var x = t.clientX, y = t.clientY;
-        lastTouchPos = { x, y };
-        longFired = false;
-        moveCursor(x, y);
-        cursor.classList.remove('longpress');
+        var t = null;
+        for (var i = 0; i < touches.length; i++) {
+          if (touches[i].identifier === primaryId) { t = touches[i]; break; }
+        }
+        if (!t) return;
 
-        // Simulate mousemove to trigger hover effects
-        simulateEvent('mousemove', x, y);
+        var dx = t.clientX - touchStartPos.x;
+        var dy = t.clientY - touchStartPos.y;
+        if (Math.abs(dx) > TAP_DIST || Math.abs(dy) > TAP_DIST) { touchMoved = true; clearLong(); }
 
-        // Long press timer — simulates right click
-        longTimer = setTimeout(function() {
-          longFired = true;
-          cursor.classList.add('longpress');
-          simulateEvent('contextmenu', x, y, 2);
-          // Vibrate if supported
-          if (navigator.vibrate) navigator.vibrate(40);
-        }, 500);
+        // Ghost line while connecting
+        if (connSource && !dragNodeId) {
+          var wc = worldCoords(t.clientX, t.clientY);
+          var srcNode = nodes[connSource.id];
+          if (srcNode) {
+            var p1 = getAnchorPos(srcNode, connSource.pos);
+            if (ghostLine) ghostLine.remove();
+            ghostLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            var ddx = Math.abs(wc.x - p1.x), ddy = Math.abs(wc.y - p1.y);
+            var gcx = p1.x + (connSource.pos === 'right' ? ddx*0.5 : connSource.pos === 'left' ? -ddx*0.5 : 0);
+            var gcy = p1.y + (connSource.pos === 'bottom' ? ddy*0.5 : connSource.pos === 'top' ? -ddy*0.5 : 0);
+            ghostLine.setAttribute('d', 'M'+p1.x+','+p1.y+' C'+gcx+','+gcy+' '+wc.x+','+wc.y+' '+wc.x+','+wc.y);
+            ghostLine.setAttribute('fill', 'none');
+            ghostLine.setAttribute('stroke', 'rgba(0,255,231,0.3)');
+            ghostLine.setAttribute('stroke-width', '1.5');
+            ghostLine.setAttribute('stroke-dasharray', '6,4');
+            ghostLine.setAttribute('pointer-events', 'none');
+            svgLayer.appendChild(ghostLine);
+          }
+          return;
+        }
 
-      }, { passive: true });
+        // Drag node
+        if (dragNodeId && nodes[dragNodeId]) {
+          var wc2 = worldCoords(t.clientX, t.clientY);
+          nodes[dragNodeId].style.left = Math.max(0, wc2.x - dragNodeOffset.x) + 'px';
+          nodes[dragNodeId].style.top  = Math.max(0, wc2.y - dragNodeOffset.y) + 'px';
+          updateConnections();
+          return;
+        }
 
-      document.addEventListener('touchmove', function(e) {
-        if (!isMobile()) return;
-
-        if (e.touches.length === 2) {
-          // Pinch zoom
-          var dx = e.touches[0].clientX - e.touches[1].clientX;
-          var dy = e.touches[0].clientY - e.touches[1].clientY;
-          var dist = Math.sqrt(dx*dx + dy*dy);
-          var newScale = Math.min(2, Math.max(0.3, pinchStartScale * (dist / pinchStartDist)));
-          var mx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-          var my = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-          panOffset.x = mx - (mx - panOffset.x) * (newScale / scale);
-          panOffset.y = my - (my - panOffset.y) * (newScale / scale);
-          scale = newScale;
+        // Pan
+        if (isPanning) {
+          panOffset.x = t.clientX - panStart.x;
+          panOffset.y = t.clientY - panStart.y;
           applyTransform();
-          clearTimeout(longTimer);
-          return;
         }
 
-        var t = e.touches[0];
-        var x = t.clientX, y = t.clientY;
-        var dx2 = x - lastTouchPos.x;
-        var dy2 = y - lastTouchPos.y;
+      }, { passive: false });
 
-        // Cancel long press if moved more than 8px
-        if (Math.abs(dx2) > 8 || Math.abs(dy2) > 8) {
-          clearTimeout(longTimer);
+      viewport.addEventListener('touchend', function(e) {
+        clearLong();
+        secondaryId = null;
+
+        var t = e.changedTouches[0];
+        var now = Date.now();
+        var target = document.elementFromPoint(t.clientX, t.clientY);
+        var isBackground = !target || target === viewport || target === world || target === svgLayer ||
+                           target.tagName === 'svg' || target.tagName === 'path';
+
+        // Double tap on background = create node
+        if (isBackground && !touchMoved) {
+          if (now - lastTapTime < 350) {
+            var wc = worldCoords(t.clientX, t.clientY);
+            var newId = createNode(wc.x - 70, wc.y - 26);
+            setTimeout(function() {
+              var titleEl = nodes[newId] && nodes[newId].querySelector('.node-title');
+              if (titleEl) titleEl.focus();
+            }, 50);
+            lastTapTime = 0;
+          } else {
+            lastTapTime = now;
+            if (connSource) {
+              if (nodes[connSource.id]) nodes[connSource.id].classList.remove('connect-src');
+              var srcAnchorEl = nodes[connSource.id] && nodes[connSource.id].querySelector('.anchor[data-pos="'+connSource.pos+'"]');
+              if (srcAnchorEl) srcAnchorEl.classList.remove('active');
+              connSource = null;
+              if (ghostLine) { ghostLine.remove(); ghostLine = null; }
+            }
+            connMenu.classList.remove('open');
+          }
         }
 
-        lastTouchPos = { x, y };
-        moveCursor(x, y);
-        cursor.classList.remove('longpress');
+        dragNodeId = null;
+        isPanning  = false;
+        if (ghostLine && !connSource) { ghostLine.remove(); ghostLine = null; }
 
-        // Simulate mousemove
-        simulateEvent('mousemove', x, y);
+      }, { passive: false });
 
-      }, { passive: true });
+    } // end IS_MOBILE
 
-      document.addEventListener('touchend', function(e) {
-        if (!isMobile()) return;
-        clearTimeout(longTimer);
-        cursor.classList.remove('longpress');
-
-        if (longFired) { longFired = false; return; }
-
-        if (e.changedTouches.length > 0) {
-          var t = e.changedTouches[0];
-          var x = t.clientX, y = t.clientY;
-          moveCursor(x, y);
-          // Simulate click
-          simulateEvent('mousedown', x, y);
-          setTimeout(function() { simulateEvent('mouseup', x, y); }, 50);
-          setTimeout(function() { simulateEvent('click', x, y); }, 60);
-        }
-      }, { passive: true });
-
-    })();
-
-
-    // ── Load on start ──
+    // ══════════════════════════════════════════════════════════
+    //  INIT
+    // ══════════════════════════════════════════════════════════
     setStatus('Carregando...');
     sbFetch('/rest/v1/tramas?trama_id=eq.' + TRAMA_ID + '&select=data', 'GET')
       .then(function(rows) {
@@ -1630,11 +1810,10 @@
         } else {
           setStatus('Nova trama');
         }
-        setTimeout(function(){ setStatus('Pronto'); }, 2000);
+        setTimeout(function() { setStatus('Pronto'); }, 2000);
       })
       .catch(function() { setStatus('Pronto'); });
 
-    // Initial pan to center
     panOffset = { x: viewport.offsetWidth/2 - 500, y: viewport.offsetHeight/2 - 300 };
     applyTransform();
   </script>
