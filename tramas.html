@@ -108,10 +108,13 @@
       position: fixed; bottom: 52px; left: 50%; transform: translateX(-50%);
       font-family: 'Share Tech Mono', monospace; font-size: 9px;
       letter-spacing: 2px; color: rgba(0,255,231,0.2); text-transform: uppercase;
-      z-index: 150; pointer-events: none; opacity: 0;
-      animation: hintFade 5s ease forwards 0.5s;
+      z-index: 150; pointer-events: all; opacity: 0;
+      animation: hintFade 15s ease forwards 0.5s;
+      transition: opacity 0.4s;
+      white-space: nowrap;
     }
-    @keyframes hintFade { 0%{opacity:0} 15%{opacity:1} 75%{opacity:1} 100%{opacity:0} }
+    .nav-hint:hover { opacity: 1 !important; }
+    @keyframes hintFade { 0%{opacity:0} 5%{opacity:1} 80%{opacity:1} 100%{opacity:0} }
 
     /* ── Cena 3D ── */
     #scene { position: fixed; inset: 0; perspective: 1200px; z-index: 1; }
@@ -148,17 +151,26 @@
       display: flex; align-items: center; justify-content: center;
     }
 
-    /* NEXUS tem borda, user-cards não */
-    .nexus-card .globe-wrap::before {
-      content: '';
-      position: absolute; inset: 0;
-      border: 1px solid rgba(0,255,231,0.2); border-radius: 8px;
-      background: rgba(0,255,231,0.015);
-      transition: background 0.3s, border-color 0.3s;
+    /* Nexus perolado — hue-rotate nos anéis + core multicolor */
+    .nexus-card .globe-projection {
+      animation: nexusHue 10s linear infinite;
     }
-    .nexus-card:hover .globe-wrap::before {
-      background: rgba(0,255,231,0.04);
-      border-color: rgba(0,255,231,0.4);
+    @keyframes nexusHue {
+      0%   { filter: hue-rotate(0deg)   brightness(1.1); }
+      25%  { filter: hue-rotate(90deg)  brightness(1.2); }
+      50%  { filter: hue-rotate(200deg) brightness(1.1); }
+      75%  { filter: hue-rotate(290deg) brightness(1.2); }
+      100% { filter: hue-rotate(360deg) brightness(1.1); }
+    }
+    .nexus-card .globe-core {
+      animation: nexusCorePearl 10s linear infinite;
+    }
+    @keyframes nexusCorePearl {
+      0%   { box-shadow: 0 0 18px #00ffe7cc, 0 0 45px #00ffe766, inset 0 0 28px rgba(0,255,231,0.18); border-color: rgba(0,255,231,0.75); }
+      25%  { box-shadow: 0 0 18px #0088ffcc, 0 0 45px #0088ff66, inset 0 0 28px rgba(0,136,255,0.18); border-color: rgba(0,136,255,0.75); }
+      50%  { box-shadow: 0 0 18px #a855f7cc, 0 0 45px #a855f766, inset 0 0 28px rgba(168,85,247,0.18); border-color: rgba(168,85,247,0.75); }
+      75%  { box-shadow: 0 0 18px #ff6b1acc, 0 0 45px #ff6b1a66, inset 0 0 28px rgba(255,107,26,0.18); border-color: rgba(255,107,26,0.75); }
+      100% { box-shadow: 0 0 18px #00ffe7cc, 0 0 45px #00ffe766, inset 0 0 28px rgba(0,255,231,0.18); border-color: rgba(0,255,231,0.75); }
     }
 
     .globe-projection {
@@ -179,7 +191,7 @@
 
     .globe-core {
       position: relative; z-index: 2;
-      width: 56px; height: 56px; border-radius: 50%;
+      width: 64px; height: 64px; border-radius: 50%;
       border: 1.5px solid rgba(0,255,231,0.4);
       box-shadow: var(--glow), inset 0 0 20px rgba(0,255,231,0.06);
       background: rgba(0,255,231,0.02);
@@ -198,12 +210,6 @@
       border-color: rgba(0,255,231,0.7);
     }
 
-    /* NEXUS core brilha mais */
-    .nexus-card .globe-core {
-      width: 64px; height: 64px;
-      border-color: rgba(0,255,231,0.55);
-      box-shadow: 0 0 15px #00ffe7bb, 0 0 40px #00ffe755, inset 0 0 30px rgba(0,255,231,0.1);
-    }
 
     .globe-dot {
       position: absolute; width: 3px; height: 3px;
@@ -339,8 +345,8 @@
 
   <script>
     // ── Constantes ──
-    var MIN_FROM_NEXUS = 280;
-    var MIN_FROM_OTHER = 190;
+    var MIN_FROM_NEXUS = 340;
+    var MIN_FROM_OTHER = 220;
 
     // ── Estado ──
     var camX = 0, camY = 0, camZ = 0;
