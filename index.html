@@ -408,6 +408,33 @@
         height: 160px;
       }
     }
+    /* ── Bloqueio Trama ── */
+    @keyframes btnGlitch {
+      0%,100% { transform: translate(0,0); }
+      10%     { transform: translate(-4px, 1px); }
+      20%     { transform: translate( 4px,-2px); }
+      30%     { transform: translate(-3px, 0px); filter: hue-rotate(90deg); }
+      40%     { transform: translate( 3px, 3px); }
+      50%     { transform: translate(-2px,-3px); filter: hue-rotate(180deg); }
+      60%     { transform: translate( 4px, 1px); }
+      70%     { transform: translate(-4px, 2px); filter: hue-rotate(270deg); }
+      80%     { transform: translate( 3px,-1px); }
+      90%     { transform: translate(-3px, 0px); }
+    }
+    #tramaGroup.locked {
+      animation: btnGlitch 0.12s ease-in-out infinite;
+      opacity: 0.45;
+      pointer-events: none;
+    }
+    #tramaGroup.locked #tramaLink { pointer-events: none; cursor: not-allowed; }
+    .lock-counter {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px; letter-spacing: 3px;
+      color: #ff4466;
+      text-align: center;
+      text-shadow: 0 0 10px #ff4466aa;
+      margin-top: 2px;
+    }
   </style>
 </head>
 <body>
@@ -465,8 +492,8 @@
         <div class="btn-name">Personagens</div>
       </div>
 
-      <div class="btn-group">
-        <a href="tramas.html" class="holo-btn">
+      <div class="btn-group" id="tramaGroup">
+        <a href="tramas.html" class="holo-btn" id="tramaLink">
           <div class="holo-btn-panel"></div>
           <div class="device-led-wrap">
             <div class="device-led"></div>
@@ -508,5 +535,30 @@
     </div>
   </div>
 
+  <script>
+    var lockUntil = parseInt(localStorage.getItem('ma_trama_lock') || '0');
+    if (lockUntil > Date.now()) applyLock(lockUntil);
+
+    function applyLock(until) {
+      var group   = document.getElementById('tramaGroup');
+      var counter = document.createElement('div');
+      counter.className = 'lock-counter';
+      group.appendChild(counter);
+      group.classList.add('locked');
+
+      function tick() {
+        var remaining = Math.ceil((until - Date.now()) / 1000);
+        if (remaining <= 0) {
+          localStorage.removeItem('ma_trama_lock');
+          group.classList.remove('locked');
+          counter.remove();
+          return;
+        }
+        counter.textContent = remaining + 's';
+        setTimeout(tick, 1000);
+      }
+      tick();
+    }
+  </script>
 </body>
 </html>
