@@ -309,6 +309,77 @@
       color: var(--holo);
       text-shadow: 0 0 10px #00ffe7aa;
     }
+    /* ── Globe button ── */
+    .globe-projection {
+      position: relative;
+      width: 190px; height: 190px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .globe-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(0,255,231,0.22);
+    }
+    .gring1 { width: 86%; height: 86%; border-color: rgba(0,255,231,0.18); animation: gringMerid  18s linear infinite; }
+    .gring2 { width: 86%; height: 86%; border-color: rgba(0,136,255,0.28); animation: gringTilt   13s linear infinite reverse; }
+    .gring3 { width: 86%; height: 86%; border-color: rgba(123,47,255,0.22); border-style: dashed; animation: gringMerid2 25s linear infinite; }
+    .gring4 { width: 86%; height: 43%; border-color: rgba(0,255,231,0.15); animation: gringEq     20s linear infinite; }
+
+    @keyframes gringMerid  { from { transform: rotateY(0deg); }              to { transform: rotateY(360deg); } }
+    @keyframes gringMerid2 { from { transform: rotateX(30deg) rotateY(0deg); } to { transform: rotateX(30deg) rotateY(360deg); } }
+    @keyframes gringTilt   { from { transform: rotateX(60deg) rotateY(0deg); } to { transform: rotateX(60deg) rotateY(360deg); } }
+    @keyframes gringEq     { from { transform: rotateX(80deg) rotateZ(0deg); } to { transform: rotateX(80deg) rotateZ(360deg); } }
+
+    .globe-core {
+      position: relative;
+      z-index: 2;
+      width: 68px; height: 68px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(0,255,231,0.4);
+      box-shadow: var(--glow), inset 0 0 20px rgba(0,255,231,0.06);
+      background: rgba(0,255,231,0.02);
+      overflow: hidden;
+      transition: box-shadow 0.3s, border-color 0.3s;
+    }
+    .globe-core::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 3px,
+        rgba(0,255,231,0.04) 3px, rgba(0,255,231,0.04) 4px
+      );
+      pointer-events: none;
+      animation: scanMove 4s linear infinite;
+    }
+    .holo-btn:hover .globe-core {
+      box-shadow: 0 0 20px #00ffe7cc, 0 0 60px #00ffe766, inset 0 0 30px rgba(0,255,231,0.2);
+      border-color: rgba(0,255,231,0.7);
+    }
+
+    .globe-dot {
+      position: absolute;
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--holo);
+      box-shadow: 0 0 6px var(--holo), 0 0 12px var(--holo);
+      z-index: 3;
+    }
+    @keyframes dotPulse {
+      0%,100% { opacity: 1;   box-shadow: 0 0 6px var(--holo), 0 0 12px var(--holo); }
+      50%      { opacity: 0.3; box-shadow: 0 0 3px var(--holo); }
+    }
+
+    .globe-lines {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+    }
+
     /* ── Mobile ── */
     @media (max-width: 600px) {
       h1 {
@@ -329,6 +400,10 @@
         height: 200px;
       }
       .holo-projection {
+        width: 160px;
+        height: 160px;
+      }
+      .globe-projection {
         width: 160px;
         height: 160px;
       }
@@ -388,6 +463,46 @@
 
         </a>
         <div class="btn-name">Personagens</div>
+      </div>
+
+      <div class="btn-group">
+        <a href="tramas.html" class="holo-btn">
+          <div class="holo-btn-panel"></div>
+          <div class="device-led-wrap">
+            <div class="device-led"></div>
+            <span class="device-led-label">Nexus</span>
+          </div>
+
+          <div class="globe-projection">
+            <div class="gring1 globe-ring"></div>
+            <div class="gring2 globe-ring"></div>
+            <div class="gring3 globe-ring"></div>
+            <div class="gring4 globe-ring"></div>
+
+            <div class="globe-dot" style="top:22%;left:62%;animation:dotPulse 2.1s ease-in-out infinite"></div>
+            <div class="globe-dot" style="top:40%;left:18%;animation:dotPulse 2.8s ease-in-out infinite 0.4s"></div>
+            <div class="globe-dot" style="top:65%;left:70%;animation:dotPulse 2.3s ease-in-out infinite 0.8s"></div>
+            <div class="globe-dot" style="top:74%;left:32%;animation:dotPulse 3.1s ease-in-out infinite 0.2s"></div>
+            <div class="globe-dot" style="top:45%;left:52%;animation:dotPulse 2.5s ease-in-out infinite 1s"></div>
+            <div class="globe-dot" style="top:28%;left:35%;animation:dotPulse 1.9s ease-in-out infinite 0.6s"></div>
+
+            <div class="globe-core"></div>
+
+            <div class="holo-beam"></div>
+
+            <svg class="globe-lines" viewBox="0 0 190 190" xmlns="http://www.w3.org/2000/svg">
+              <line x1="67"  y1="53"  x2="118" y2="42"  stroke="rgba(0,255,231,0.2)"  stroke-width="0.5" stroke-dasharray="3,3"><animate attributeName="stroke-dashoffset" values="0;-6" dur="1.2s" repeatCount="indefinite"/></line>
+              <line x1="118" y1="42"  x2="99"  y2="86"  stroke="rgba(0,136,255,0.2)"  stroke-width="0.5" stroke-dasharray="3,3"><animate attributeName="stroke-dashoffset" values="0;-6" dur="1.5s" repeatCount="indefinite"/></line>
+              <line x1="99"  y1="86"  x2="34"  y2="76"  stroke="rgba(0,255,231,0.2)"  stroke-width="0.5" stroke-dasharray="3,3"><animate attributeName="stroke-dashoffset" values="0;-6" dur="1s"   repeatCount="indefinite"/></line>
+              <line x1="99"  y1="86"  x2="133" y2="124" stroke="rgba(123,47,255,0.2)" stroke-width="0.5" stroke-dasharray="3,3"><animate attributeName="stroke-dashoffset" values="0;-6" dur="1.7s" repeatCount="indefinite"/></line>
+              <line x1="99"  y1="86"  x2="61"  y2="141" stroke="rgba(0,255,231,0.2)"  stroke-width="0.5" stroke-dasharray="3,3"><animate attributeName="stroke-dashoffset" values="0;-6" dur="1.3s" repeatCount="indefinite"/></line>
+              <line x1="133" y1="124" x2="61"  y2="141" stroke="rgba(0,136,255,0.15)" stroke-width="0.5" stroke-dasharray="3,3"><animate attributeName="stroke-dashoffset" values="0;-6" dur="2s"   repeatCount="indefinite"/></line>
+              <line x1="34"  y1="76"  x2="67"  y2="53"  stroke="rgba(0,255,231,0.15)" stroke-width="0.5" stroke-dasharray="3,3"><animate attributeName="stroke-dashoffset" values="0;-6" dur="1.4s" repeatCount="indefinite"/></line>
+            </svg>
+          </div>
+
+        </a>
+        <div class="btn-name">Trama</div>
       </div>
 
     </div>
