@@ -300,6 +300,24 @@
     .modal-btn:hover { border-color: var(--holo); color: var(--holo); box-shadow: 0 0 12px rgba(0,255,231,0.2); background: rgba(0,255,231,0.04); }
     .modal-btn.danger:hover { border-color: #ff4466; color: #ff4466; box-shadow: 0 0 12px rgba(255,68,102,0.2); background: rgba(255,68,102,0.04); }
 
+    /* ── Botão deletar trama ── */
+    .trama-delete {
+      position: absolute;
+      top: 4px; right: -10px;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: rgba(4,8,16,0.92);
+      border: 1px solid rgba(255,68,102,0.4);
+      color: rgba(255,68,102,0.6);
+      font-size: 9px; line-height: 1;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.2s, box-shadow 0.2s, color 0.2s;
+      z-index: 20; pointer-events: all;
+    }
+    .trama-card.draggable:hover .trama-delete { opacity: 1; }
+    .trama-delete:hover { color: #ff4466; border-color: #ff4466; box-shadow: 0 0 10px rgba(255,68,102,0.4); }
+
     /* ── Estado vazio ── */
     .empty-msg {
       position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -380,6 +398,7 @@
     // ── Drag (câmera ou card) ──
     scene.addEventListener('mousedown', function(e) {
       if (modal.classList.contains('open')) return;
+      if (e.target.closest('.trama-delete')) return;
       var cardEl = e.target.closest('.trama-card.draggable');
       if (cardEl) {
         isDraggingCard = true;
@@ -491,10 +510,40 @@
       return { x: Math.cos(a)*520, y: Math.sin(a)*290, z: 0 };
     }
 
-    // ── HTML interno do globo ──
-    function globeHTML(viewSize) {
+    // ── KB e tamanho do globo ──
+    function getTramaKB(tramaId) {
+      var total = 0;
+      try {
+        Object.keys(localStorage).forEach(function(k) {
+          if (k.indexOf(tramaId) !== -1) total += (localStorage.getItem(k) || '').length;
+        });
+      } catch(e) {}
+      return total / 1024;
+    }
+    function getGlobeSize(kb) {
+      if (kb <= 0) return 160;
+      return Math.min(Math.round(160 + Math.log2(kb + 1) * 18), 320);
+    }
+
+    // ── Deletar trama ──
+    function deleteTrama(tramaId, cardEl) {
+      if (!confirm('Deletar esta trama? Ação irreversível.')) return;
+      tramas = tramas.filter(function(t) { return t.id !== tramaId; });
+      saveTramas();
+      cardEl.style.transition = 'opacity 0.3s, transform 0.3s';
+      cardEl.style.opacity = '0';
+      cardEl.style.transform = cardEl.style.transform + ' scale(0.7)';
+      setTimeout(function() {
+        cardEl.remove();
+        world.querySelectorAll('.trama-card.draggable').forEach(function(c, i) {
+          c.dataset.idx = i;
+        });
+      }, 300);
+    }
+
+    // ── Conteúdo interno do globo (anéis, pontos, core, beam, svg) ──
+    function globeInnerHTML() {
       return (
-        '<div class="globe-projection">' +
           '<div class="gring1 globe-ring"></div>' +
           '<div class="gring2 globe-ring"></div>' +
           '<div class="gring3 globe-ring"></div>' +
@@ -514,9 +563,13 @@
             '<line x1="68" y1="59" x2="91" y2="85" stroke="rgba(123,47,255,0.2)" stroke-width="0.5" stroke-dasharray="3,3"><animate attributeName="stroke-dashoffset" values="0;-6" dur="1.7s" repeatCount="indefinite"/></line>' +
             '<line x1="68" y1="59" x2="42" y2="96" stroke="rgba(0,255,231,0.2)"  stroke-width="0.5" stroke-dasharray="3,3"><animate attributeName="stroke-dashoffset" values="0;-6" dur="1.3s" repeatCount="indefinite"/></line>' +
             '<line x1="91" y1="85" x2="42" y2="96" stroke="rgba(0,136,255,0.15)" stroke-width="0.5" stroke-dasharray="3,3"><animate attributeName="stroke-dashoffset" values="0;-6" dur="2s"   repeatCount="indefinite"/></line>' +
-          '</svg>' +
-        '</div>'
+          '</svg>'
       );
+    }
+
+    // globeHTML: envolve globeInnerHTML na div de projeção
+    function globeHTML() {
+      return '<div class="globe-projection">' + globeInnerHTML() + '</div>';
     }
 
     // ── Renderizar NEXUS (fixo, centro) ──
@@ -538,15 +591,34 @@
     function renderCard(t, idx) {
       var dur  = ((3.5 + (idx * 0.31) % 2) * 1.2).toFixed(1);
       var del  = ((idx * 0.67) % 4).toFixed(1);
+      var kb   = getTramaKB(t.id);
+      var size = getGlobeSize(kb);
+      var proj = Math.round(size * 0.81);
+
       var card = document.createElement('div');
       card.className = 'trama-card draggable';
       card.dataset.idx = idx;
+      card.dataset.tid = t.id;
       card.style.transform = 'translate3d(' + t.x + 'px,' + t.y + 'px,' + t.z + 'px)';
       card.innerHTML =
         '<div class="trama-float" style="animation:cardFloat ' + dur + 's ease-in-out infinite ' + del + 's">' +
-          '<div class="globe-wrap">' + globeHTML() + '</div>' +
+          '<div class="globe-wrap" style="width:' + size + 'px;height:' + size + 'px">' +
+            '<div class="globe-projection" style="width:' + proj + 'px;height:' + proj + 'px">' +
+              globeInnerHTML() +
+            '</div>' +
+          '</div>' +
           '<div class="trama-name">' + (t.name || 'Trama') + '</div>' +
         '</div>';
+
+      var delBtn = document.createElement('button');
+      delBtn.className = 'trama-delete';
+      delBtn.title = 'Deletar trama';
+      delBtn.textContent = '✕';
+      delBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        deleteTrama(t.id, card);
+      });
+      card.appendChild(delBtn);
       world.appendChild(card);
       return card;
     }
@@ -579,7 +651,7 @@
       var t   = { id: id, name: 'Trama', x: pos.x, y: pos.y, z: pos.z };
       tramas.push(t);
       saveTramas();
-      renderCard(t, tramas.length - 1);
+      window.location.href = 'trama.html?id=' + id;
     }
   </script>
 
