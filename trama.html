@@ -1340,8 +1340,8 @@
             var ddy = my3 - multiDragStart.y;
             multiSelected.forEach(function(nid) {
               if (!nodes[nid] || !multiDragOrigins[nid]) return;
-              nodes[nid].style.left = Math.max(0, multiDragOrigins[nid].x + ddx) + 'px';
-              nodes[nid].style.top  = Math.max(0, multiDragOrigins[nid].y + ddy) + 'px';
+              nodes[nid].style.left = (multiDragOrigins[nid].x + ddx) + 'px';
+              nodes[nid].style.top  = (multiDragOrigins[nid].y + ddy) + 'px';
             });
             updateConnections();
           }
@@ -1351,8 +1351,8 @@
           var rect = viewport.getBoundingClientRect();
           var wx = (e.clientX - rect.left - panOffset.x) / scale;
           var wy = (e.clientY - rect.top  - panOffset.y) / scale;
-          dragging.style.left = Math.max(0, wx - dragOffset.x) + 'px';
-          dragging.style.top  = Math.max(0, wy - dragOffset.y) + 'px';
+          dragging.style.left = (wx - dragOffset.x) + 'px';
+          dragging.style.top  = (wy - dragOffset.y) + 'px';
           updateConnections();
         }
         if (selDragging && selStart) {
@@ -1742,8 +1742,8 @@
         // Drag node
         if (dragNodeId && nodes[dragNodeId]) {
           var wc2 = worldCoords(t.clientX, t.clientY);
-          nodes[dragNodeId].style.left = Math.max(0, wc2.x - dragNodeOffset.x) + 'px';
-          nodes[dragNodeId].style.top  = Math.max(0, wc2.y - dragNodeOffset.y) + 'px';
+          nodes[dragNodeId].style.left = (wc2.x - dragNodeOffset.x) + 'px';
+          nodes[dragNodeId].style.top  = (wc2.y - dragNodeOffset.y) + 'px';
           updateConnections();
           return;
         }
