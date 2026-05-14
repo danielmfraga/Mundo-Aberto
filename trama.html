@@ -693,6 +693,110 @@
       color: rgba(255,180,0,0.8);
       font-size: 9px;
     }
+
+    /* ── NÓ VINCULADO A FICHA ── */
+    .node.linked {
+      border-color: rgba(255,107,26,0.5);
+      box-shadow: 0 0 12px rgba(255,107,26,0.15);
+    }
+    .node-linked-bar {
+      display: flex; align-items: center; gap: 7px;
+      padding: 6px 10px 8px;
+      border-top: 1px solid rgba(255,107,26,0.12);
+    }
+    .node-linked-photo {
+      width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(255,107,26,0.12) center/cover no-repeat;
+      border: 1px solid rgba(255,107,26,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; color: rgba(255,107,26,0.5);
+    }
+    .node-linked-name {
+      font-family: 'Rajdhani', sans-serif; font-size: 11px;
+      color: rgba(255,107,26,0.75); flex: 1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .node-linked-goto {
+      font-family: 'Share Tech Mono', monospace; font-size: 10px;
+      color: rgba(255,107,26,0.45); text-decoration: none;
+      flex-shrink: 0; transition: color 0.15s;
+    }
+    .node-linked-goto:hover { color: var(--orange); }
+
+    /* ── MODAL VINCULAR ── */
+    .vincular-sep {
+      height: 1px; background: rgba(0,255,231,0.08);
+      margin: 14px 0 12px;
+    }
+    .vincular-label {
+      font-family: 'Share Tech Mono', monospace; font-size: 8px;
+      letter-spacing: 3px; color: var(--orange);
+      text-transform: uppercase; margin-bottom: 10px;
+    }
+    .vinc-search {
+      width: 100%; background: rgba(0,255,231,0.03);
+      border: 1px solid rgba(0,255,231,0.15); border-radius: 2px;
+      padding: 7px 10px; font-family: 'Rajdhani', sans-serif;
+      font-size: 12px; color: rgba(207,233,240,0.8);
+      outline: none; margin-bottom: 6px;
+    }
+    .vinc-search:focus { border-color: rgba(0,255,231,0.3); }
+    .vinc-search::placeholder { color: rgba(207,233,240,0.2); }
+    .vinc-list { max-height: 130px; overflow-y: auto; }
+    .vinc-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 8px; cursor: pointer; border-radius: 3px;
+      transition: background 0.15s;
+    }
+    .vinc-item:hover { background: rgba(0,255,231,0.05); }
+    .vinc-item-photo {
+      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(255,107,26,0.1) center/cover no-repeat;
+      border: 1px solid rgba(255,107,26,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; color: rgba(255,107,26,0.4);
+    }
+    .vinc-item-name {
+      font-family: 'Rajdhani', sans-serif; font-size: 12px;
+      color: rgba(207,233,240,0.65); letter-spacing: 0.5px;
+    }
+    .vinc-empty {
+      font-family: 'Share Tech Mono', monospace; font-size: 9px;
+      letter-spacing: 2px; color: rgba(0,255,231,0.2);
+      text-align: center; padding: 10px 0;
+    }
+    .vinc-linked-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px; background: rgba(255,107,26,0.04);
+      border: 1px solid rgba(255,107,26,0.15); border-radius: 3px;
+    }
+    .vinc-photo {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(255,107,26,0.1) center/cover no-repeat;
+      border: 1px solid rgba(255,107,26,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; color: rgba(255,107,26,0.5);
+    }
+    .vinc-linked-info { flex: 1; min-width: 0; }
+    .vinc-linked-name {
+      font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600;
+      color: rgba(255,107,26,0.85); white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .vinc-goto {
+      font-family: 'Share Tech Mono', monospace; font-size: 9px;
+      letter-spacing: 1px; color: rgba(0,255,231,0.4);
+      text-decoration: none; transition: color 0.15s;
+    }
+    .vinc-goto:hover { color: var(--holo); }
+    .vinc-unlink-btn {
+      background: transparent; border: 1px solid rgba(255,68,102,0.25);
+      color: rgba(255,68,102,0.5); font-size: 10px; width: 22px; height: 22px;
+      border-radius: 50%; cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .vinc-unlink-btn:hover { border-color: #ff4466; color: #ff4466; }
   </style>
 </head>
 <body>
@@ -751,6 +855,9 @@
       <div class="modal-label">Arquivo · NPC</div>
       <div id="modal-name">—</div>
       <textarea id="modal-note" placeholder="Histórico, motivações, segredos..."></textarea>
+      <div class="vincular-sep"></div>
+      <div class="vincular-label">Ficha vinculada</div>
+      <div id="vincular-section"></div>
       <div class="modal-row">
         <button class="modal-btn" id="modal-cancel">Cancelar</button>
         <button class="modal-btn save" id="modal-save">Salvar notas</button>
@@ -838,6 +945,155 @@
     document.querySelectorAll('.mobile-only').forEach(function(el) {
       if (!IS_MOBILE) el.style.display = 'none';
     });
+
+    // ══════════════════════════════════════════════════════════
+    //  VÍNCULOS TRAMA ↔ FICHA
+    // ══════════════════════════════════════════════════════════
+    var tramaLinks     = {}; // node_id → { personagem_id, name, img_url }
+    var personagensList = [];
+
+    function loadPersonagens() {
+      sbFetch('/rest/v1/personagens?select=char_id,name,img_url&order=name', 'GET')
+        .then(function(rows) { if (Array.isArray(rows)) personagensList = rows; })
+        .catch(function() {});
+    }
+
+    function loadTramaLinks() {
+      if (TRAMA_ID === 'default') return;
+      sbFetch('/rest/v1/trama_links?trama_id=eq.' + TRAMA_ID + '&select=node_id,personagem_id', 'GET')
+        .then(function(links) {
+          if (!Array.isArray(links) || !links.length) return;
+          var ids = links.map(function(l) { return l.personagem_id; })
+                         .filter(function(v, i, a) { return a.indexOf(v) === i; });
+          return sbFetch('/rest/v1/personagens?char_id=in.(' + ids.join(',') + ')&select=char_id,name,img_url', 'GET')
+            .then(function(personas) {
+              var map = {};
+              if (Array.isArray(personas)) personas.forEach(function(p) { map[p.char_id] = p; });
+              links.forEach(function(link) {
+                var p = map[link.personagem_id];
+                if (p) {
+                  tramaLinks[link.node_id] = { personagem_id: link.personagem_id, name: p.name, img_url: p.img_url };
+                  if (nodes[link.node_id]) applyLinkToNode(link.node_id, tramaLinks[link.node_id]);
+                }
+              });
+            });
+        })
+        .catch(function() {});
+    }
+
+    function applyLinkToNode(nodeId, personagem) {
+      var el = nodes[nodeId];
+      if (!el) return;
+      el.classList.add('linked');
+      var old = el.querySelector('.node-linked-bar');
+      if (old) old.remove();
+      var bar = document.createElement('div');
+      bar.className = 'node-linked-bar';
+      var photo = document.createElement('div');
+      photo.className = 'node-linked-photo';
+      if (personagem.img_url) photo.style.backgroundImage = 'url(' + personagem.img_url + ')';
+      else photo.textContent = '⬡';
+      var nameEl = document.createElement('span');
+      nameEl.className = 'node-linked-name';
+      nameEl.textContent = personagem.name || 'Personagem';
+      var link = document.createElement('a');
+      link.className = 'node-linked-goto';
+      link.href = 'ficha.html?id=' + personagem.personagem_id;
+      link.textContent = '→';
+      link.title = 'Abrir ficha';
+      link.addEventListener('click', function(e) { e.stopPropagation(); });
+      link.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+      bar.appendChild(photo); bar.appendChild(nameEl); bar.appendChild(link);
+      el.appendChild(bar);
+    }
+
+    function clearLinkFromNode(nodeId) {
+      var el = nodes[nodeId];
+      if (!el) return;
+      el.classList.remove('linked');
+      var bar = el.querySelector('.node-linked-bar');
+      if (bar) bar.remove();
+    }
+
+    function renderVincularSection(nodeId) {
+      var section = document.getElementById('vincular-section');
+      if (!section) return;
+      var linked = tramaLinks[nodeId];
+      if (linked) {
+        var imgStyle = linked.img_url ? 'background-image:url(' + linked.img_url + ')' : '';
+        section.innerHTML =
+          '<div class="vinc-linked-row">' +
+            '<div class="vinc-photo" style="' + imgStyle + '">' + (linked.img_url ? '' : '⬡') + '</div>' +
+            '<div class="vinc-linked-info">' +
+              '<div class="vinc-linked-name">' + (linked.name || 'Personagem') + '</div>' +
+              '<a class="vinc-goto" href="ficha.html?id=' + linked.personagem_id + '" target="_blank">Abrir ficha →</a>' +
+            '</div>' +
+            '<button class="vinc-unlink-btn" id="vinc-unlink">✕</button>' +
+          '</div>';
+        document.getElementById('vinc-unlink').addEventListener('click', function() {
+          unlinkPersonagem(nodeId);
+          renderVincularSection(nodeId);
+        });
+      } else {
+        section.innerHTML =
+          '<input id="vinc-search" class="vinc-search" type="text" placeholder="Buscar personagem..." autocomplete="off">' +
+          '<div id="vinc-list" class="vinc-list"></div>';
+        var search = document.getElementById('vinc-search');
+        search.addEventListener('keydown', function(e) { e.stopPropagation(); });
+        function renderList(filter) {
+          var list = document.getElementById('vinc-list');
+          if (!list) return;
+          var filtered = personagensList.filter(function(p) {
+            return !filter || (p.name || '').toLowerCase().indexOf(filter.toLowerCase()) !== -1;
+          });
+          if (!filtered.length) {
+            list.innerHTML = '<div class="vinc-empty">Nenhum personagem encontrado</div>';
+            return;
+          }
+          list.innerHTML = '';
+          filtered.slice(0, 8).forEach(function(p) {
+            var item = document.createElement('div');
+            item.className = 'vinc-item';
+            var imgStyle = p.img_url ? 'background-image:url(' + p.img_url + ')' : '';
+            item.innerHTML =
+              '<div class="vinc-item-photo" style="' + imgStyle + '">' + (p.img_url ? '' : '⬡') + '</div>' +
+              '<span class="vinc-item-name">' + (p.name || 'Personagem') + '</span>';
+            item.addEventListener('click', function() {
+              linkPersonagem(nodeId, p);
+              renderVincularSection(nodeId);
+            });
+            list.appendChild(item);
+          });
+        }
+        renderList('');
+        search.addEventListener('input', function() { renderList(this.value); });
+      }
+    }
+
+    function linkPersonagem(nodeId, p) {
+      if (TRAMA_ID === 'default') return;
+      var data = { personagem_id: p.char_id, name: p.name, img_url: p.img_url };
+      tramaLinks[nodeId] = data;
+      applyLinkToNode(nodeId, data);
+      markDirty();
+      sbFetch('/rest/v1/trama_links?trama_id=eq.' + TRAMA_ID + '&node_id=eq.' + nodeId, 'GET')
+        .then(function(rows) {
+          var entry = { trama_id: TRAMA_ID, node_id: nodeId, personagem_id: p.char_id };
+          return (rows && rows.length)
+            ? sbFetch('/rest/v1/trama_links?trama_id=eq.' + TRAMA_ID + '&node_id=eq.' + nodeId, 'PATCH', entry)
+            : sbFetch('/rest/v1/trama_links', 'POST', entry);
+        })
+        .catch(function() {});
+    }
+
+    function unlinkPersonagem(nodeId) {
+      if (TRAMA_ID === 'default') return;
+      delete tramaLinks[nodeId];
+      clearLinkFromNode(nodeId);
+      markDirty();
+      sbFetch('/rest/v1/trama_links?trama_id=eq.' + TRAMA_ID + '&node_id=eq.' + nodeId, 'DELETE')
+        .catch(function() {});
+    }
 
     // ══════════════════════════════════════════════════════════
     //  DIRTY STATE (alterações não salvas)
@@ -1305,6 +1561,7 @@
       var titleText = nodes[id] ? nodes[id].querySelector('.node-title').textContent : 'NPC';
       document.getElementById('modal-name').textContent = titleText || 'NPC';
       document.getElementById('modal-note').value = nodes[id] ? (nodes[id].dataset.note || '') : '';
+      renderVincularSection(id);
       document.getElementById('modal-overlay').classList.add('open');
       if (!IS_MOBILE) document.getElementById('modal-note').focus();
     }
@@ -1971,6 +2228,7 @@
     //  INIT
     // ══════════════════════════════════════════════════════════
     setStatus('Carregando...');
+    loadPersonagens();
     sbFetch('/rest/v1/tramas?trama_id=eq.' + TRAMA_ID + '&select=data,name', 'GET')
       .then(function(rows) {
         if (rows && rows.length) {
@@ -1984,6 +2242,7 @@
         } else {
           setStatus('Nova trama');
         }
+        loadTramaLinks();
         setTimeout(function() { setStatus('Pronto'); }, 2000);
       })
       .catch(function() { setStatus('Pronto'); });
