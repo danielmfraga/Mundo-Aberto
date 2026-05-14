@@ -71,16 +71,14 @@
 
     /* ── HUD ── */
     .back-btn {
-      position: fixed; top: 28px; left: 50%; transform: translateX(-50%);
+      position: fixed; top: 28px; left: 64px;
       display: flex; align-items: center; gap: 10px;
       font-family: 'Share Tech Mono', monospace;
       font-size: 10px; letter-spacing: 3px;
       color: rgba(0,255,231,0.45);
       text-decoration: none; text-transform: uppercase;
       transition: color 0.2s; z-index: 150;
-      white-space: nowrap;
     }
-    .back-btn .arr { font-size: 13px; font-weight: 900; line-height: 1; }
     .back-btn:hover { color: var(--holo); }
 
     .page-title {
@@ -392,7 +390,7 @@
   <div class="corner corner-bl"></div>
   <div class="corner corner-br"></div>
 
-  <a href="index.html" class="back-btn"><span class="arr">←</span> Voltar</a>
+  <a href="index.html" class="back-btn">← Voltar</a>
   <div class="page-title">Trama</div>
 
   <div id="scene">

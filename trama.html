@@ -120,7 +120,8 @@
     #back-btn {
       position: fixed;
       top: 20px;
-      left: 56px;
+      left: 50%;
+      transform: translateX(-50%);
       font-family: 'Share Tech Mono', monospace;
       font-size: 10px;
       letter-spacing: 3px;
@@ -132,7 +133,9 @@
       gap: 6px;
       z-index: 500;
       transition: color 0.2s;
+      white-space: nowrap;
     }
+    #back-btn .arr { font-size: 14px; font-weight: 900; line-height: 1; }
     #back-btn:hover { color: rgba(0,255,231,0.7); }
 
     /* Canvas wrapper */
@@ -828,7 +831,7 @@
   <div class="corner corner-bl"></div>
   <div class="corner corner-br"></div>
 
-  <a href="tramas.html" id="back-btn">← Voltar</a>
+  <a href="tramas.html" id="back-btn"><span class="arr">←</span> Voltar</a>
 
   <!-- Modal: sair sem salvar -->
   <div id="exit-overlay">
