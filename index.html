@@ -382,31 +382,22 @@
 
     /* ── Mobile ── */
     @media (max-width: 600px) {
+      body { overflow-y: auto; justify-content: flex-start; padding: 28px 0 32px; }
       h1 {
-        font-size: clamp(36px, 13vw, 60px);
-        letter-spacing: 6px;
+        font-size: clamp(28px, 10vw, 50px);
+        letter-spacing: 5px;
         text-align: center;
-        padding: 0 16px;
+        padding: 0 12px;
       }
-      .title-line {
-        margin-top: -20px;
-      }
-      .container {
-        gap: 36px;
-        padding: 0 20px;
-      }
-      .holo-btn {
-        width: 200px;
-        height: 200px;
-      }
-      .holo-projection {
-        width: 160px;
-        height: 160px;
-      }
-      .globe-projection {
-        width: 160px;
-        height: 160px;
-      }
+      .title-line { margin-top: -16px; }
+      .container { gap: 24px; padding: 0 12px; }
+      .buttons { gap: 16px; flex-wrap: nowrap; }
+      .btn-group { gap: 6px; }
+      .holo-btn { width: 150px; height: 150px; }
+      .holo-projection { width: 118px; height: 118px; }
+      .globe-projection { width: 118px; height: 118px; }
+      .holo-core { transform: scale(0.82); }
+      .btn-name { font-size: 9px; letter-spacing: 3px; }
     }
     /* ── Bloqueio Trama ── */
     @keyframes btnGlitch {

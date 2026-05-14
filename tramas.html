@@ -90,33 +90,38 @@
 
     /* ── Botão Nova Trama ── */
     .new-trama-btn {
-      position: fixed; bottom: 40px; right: 44px;
+      position: fixed; bottom: 90px; right: 44px;
       z-index: 150; display: flex; flex-direction: column;
       align-items: center; gap: 8px;
       text-decoration: none; cursor: pointer; background: none; border: none;
     }
     .new-trama-icon {
       width: 50px; height: 50px;
-      border: 1px dashed rgba(0,255,231,0.28); border-radius: 8px;
+      border: 1px solid rgba(0,255,231,0.38); border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
       background: rgba(4,8,16,0.85); backdrop-filter: blur(8px);
-      transition: border-color 0.3s, background 0.3s; position: relative;
+      box-shadow: 0 0 10px rgba(0,255,231,0.12), inset 0 0 8px rgba(0,255,231,0.04);
+      transition: border-color 0.3s, background 0.3s, box-shadow 0.3s; position: relative;
     }
-    .new-trama-icon::before { content: ''; position: absolute; width: 18px; height: 1px; background: rgba(0,255,231,0.45); transition: background 0.3s, box-shadow 0.3s; }
-    .new-trama-icon::after  { content: ''; position: absolute; width: 1px; height: 18px; background: rgba(0,255,231,0.45); transition: background 0.3s, box-shadow 0.3s; }
-    .new-trama-btn:hover .new-trama-icon { border-color: rgba(0,255,231,0.55); background: rgba(0,255,231,0.04); }
+    .new-trama-icon::before { content: ''; position: absolute; width: 18px; height: 1px; background: rgba(0,255,231,0.55); transition: background 0.3s, box-shadow 0.3s; }
+    .new-trama-icon::after  { content: ''; position: absolute; width: 1px; height: 18px; background: rgba(0,255,231,0.55); transition: background 0.3s, box-shadow 0.3s; }
+    .new-trama-btn:hover .new-trama-icon {
+      border-color: var(--holo);
+      background: rgba(0,255,231,0.05);
+      box-shadow: 0 0 18px rgba(0,255,231,0.3), 0 0 6px rgba(0,255,231,0.5), inset 0 0 10px rgba(0,255,231,0.06);
+    }
     .new-trama-btn:hover .new-trama-icon::before,
     .new-trama-btn:hover .new-trama-icon::after { background: var(--holo); box-shadow: 0 0 8px var(--holo); }
     .new-trama-label {
       font-family: 'Share Tech Mono', monospace; font-size: 8px;
-      letter-spacing: 2px; color: rgba(0,255,231,0.3);
+      letter-spacing: 2px; color: rgba(0,255,231,0.4);
       text-transform: uppercase; transition: color 0.3s;
     }
-    .new-trama-btn:hover .new-trama-label { color: var(--holo); }
+    .new-trama-btn:hover .new-trama-label { color: var(--holo); text-shadow: 0 0 8px rgba(0,255,231,0.5); }
 
     /* ── Hint ── */
     .nav-hint {
-      position: fixed; bottom: 52px; left: 50%; transform: translateX(-50%);
+      position: fixed; bottom: 36px; left: 50%; transform: translateX(-50%);
       font-family: 'Share Tech Mono', monospace; font-size: 9px;
       letter-spacing: 2px; color: rgba(0,255,231,0.2); text-transform: uppercase;
       z-index: 150; pointer-events: all; opacity: 0;
@@ -551,7 +556,7 @@
     }, { passive: false });
 
     scene.addEventListener('touchend', function() {
-      if (isDraggingCard && dragData) saveTramaPos(tramas[dragData.idx]);
+      if (isDraggingCard && dragData && moved) saveTramaPos(tramas[dragData.idx]);
       isDraggingCam = isDraggingCard = false;
       dragData = null; lastTouchDist = null;
     });
@@ -735,6 +740,14 @@
           if (!Array.isArray(rows)) return;
           tramas = rows.map(function(r) {
             return { id: r.trama_id, name: r.name || 'Trama', x: r.pos_x || 0, y: r.pos_y || 0, z: r.pos_z || 0 };
+          });
+          // Auto-corrige tramas presas no centro (pos inválida)
+          tramas.forEach(function(t) {
+            if (Math.sqrt(t.x * t.x + t.y * t.y) < MIN_FROM_NEXUS) {
+              var pos = findValidPos();
+              t.x = pos.x; t.y = pos.y; t.z = pos.z;
+              saveTramaPos(t);
+            }
           });
           tramas.forEach(function(t, i) { renderCard(t, i); });
         })
