@@ -960,17 +960,22 @@
 
     function loadTramaLinks() {
       if (TRAMA_ID === 'default') return;
+      console.log('[VÍNCULO] Carregando links para trama:', TRAMA_ID);
       sbFetch('/rest/v1/trama_links?trama_id=eq.' + TRAMA_ID + '&select=node_id,personagem_id', 'GET')
         .then(function(links) {
+          console.log('[VÍNCULO] Links encontrados:', links);
           if (!Array.isArray(links) || !links.length) return;
           var ids = links.map(function(l) { return l.personagem_id; })
                          .filter(function(v, i, a) { return a.indexOf(v) === i; });
           return sbFetch('/rest/v1/personagens?char_id=in.(' + ids.join(',') + ')&select=char_id,name,img_url', 'GET')
             .then(function(personas) {
+              console.log('[VÍNCULO] Personagens encontrados:', personas);
+              console.log('[VÍNCULO] Nodes disponíveis:', Object.keys(nodes));
               var map = {};
               if (Array.isArray(personas)) personas.forEach(function(p) { map[p.char_id] = p; });
               links.forEach(function(link) {
                 var p = map[link.personagem_id];
+                console.log('[VÍNCULO] Aplicando link node', link.node_id, '→ personagem', link.personagem_id, '| node existe:', !!nodes[link.node_id]);
                 if (p) {
                   tramaLinks[link.node_id] = { personagem_id: link.personagem_id, name: p.name, img_url: p.img_url };
                   if (nodes[link.node_id]) applyLinkToNode(link.node_id, tramaLinks[link.node_id]);
@@ -978,7 +983,7 @@
               });
             });
         })
-        .catch(function() {});
+        .catch(function(err) { console.error('[VÍNCULO] Erro ao carregar links:', err); });
     }
 
     function applyLinkToNode(nodeId, personagem) {
@@ -1077,8 +1082,13 @@
       applyLinkToNode(nodeId, data);
       markDirty();
       var entry = { trama_id: TRAMA_ID, node_id: nodeId, personagem_id: p.char_id };
+      console.log('[VÍNCULO] Salvando:', entry);
       sbFetch('/rest/v1/trama_links', 'POST', entry, { 'Prefer': 'resolution=merge-duplicates,return=minimal' })
-        .catch(function(err) { setStatus('Erro ao vincular: ' + (err && err.message ? err.message : err), true); });
+        .then(function(r) { console.log('[VÍNCULO] Salvo OK:', r); })
+        .catch(function(err) {
+          console.error('[VÍNCULO] Erro ao salvar:', err);
+          setStatus('Erro ao vincular: ' + (err && err.message ? err.message : err), true);
+        });
     }
 
     function unlinkPersonagem(nodeId) {
