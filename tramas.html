@@ -547,11 +547,13 @@
       return { x: Math.cos(a)*520, y: Math.sin(a)*290, z: 0 };
     }
 
-    // ── Deletar trama ──
+    // ── Deletar trama (soft delete — fica 15 dias recuperável no Supabase) ──
     function deleteTrama(tramaId, cardEl) {
-      if (!confirm('Deletar esta trama? Ação irreversível.')) return;
+      if (!confirm('Deletar esta trama?\nEla ficará recuperável por 15 dias no banco de dados.')) return;
       tramas = tramas.filter(function(t) { return t.id !== tramaId; });
-      sbFetch('/rest/v1/tramas?trama_id=eq.' + tramaId, 'DELETE');
+      sbFetch('/rest/v1/tramas?trama_id=eq.' + tramaId, 'PATCH', {
+        deleted_at: new Date().toISOString()
+      });
       cardEl.style.transition = 'opacity 0.3s, transform 0.3s';
       cardEl.style.opacity = '0';
       cardEl.style.transform = cardEl.style.transform + ' scale(0.7)';
@@ -656,7 +658,7 @@
     function init() {
       renderNexus();
       applyCamera();
-      sbFetch('/rest/v1/tramas?select=trama_id,name,pos_x,pos_y,pos_z&pos_x=not.is.null&order=created_at', 'GET')
+      sbFetch('/rest/v1/tramas?select=trama_id,name,pos_x,pos_y,pos_z&pos_x=not.is.null&deleted_at=is.null&order=created_at', 'GET')
         .then(function(rows) {
           if (!Array.isArray(rows)) return;
           tramas = rows.map(function(r) {
