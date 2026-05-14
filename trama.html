@@ -612,6 +612,61 @@
     body.is-mobile #svg-layer,
     body.is-mobile .node { touch-action: none; }
     body.is-mobile { touch-action: none; }
+
+    /* ── Modal Sair sem salvar ── */
+    #exit-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(4,8,16,0.88);
+      backdrop-filter: blur(6px);
+      align-items: center; justify-content: center;
+    }
+    #exit-overlay.open { display: flex; }
+    #exit-box {
+      background: rgba(8,15,30,0.97);
+      border: 1px solid rgba(0,255,231,0.18);
+      border-radius: 6px;
+      padding: 40px 44px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(0,255,231,0.06);
+    }
+    #exit-box .ex-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 14px; letter-spacing: 5px;
+      color: var(--holo); text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    #exit-box .ex-sub {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px; color: rgba(0,255,231,0.4);
+      letter-spacing: 1px; margin-bottom: 32px;
+    }
+    .ex-btns { display: flex; flex-direction: column; gap: 10px; }
+    .ex-btn {
+      background: transparent;
+      border: 1px solid rgba(0,255,231,0.22);
+      color: rgba(0,255,231,0.7);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px; letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 12px 20px; border-radius: 3px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .ex-btn:hover { background: rgba(0,255,231,0.07); border-color: var(--holo); color: var(--holo); }
+    .ex-btn.ex-save { border-color: rgba(0,255,231,0.5); color: var(--holo); }
+    .ex-btn.ex-save:hover { background: rgba(0,255,231,0.12); }
+    .ex-btn.ex-danger { border-color: rgba(255,68,102,0.3); color: rgba(255,68,102,0.6); }
+    .ex-btn.ex-danger:hover { background: rgba(255,68,102,0.08); border-color: var(--danger); color: var(--danger); }
+
+    /* indicador dirty no btn-save */
+    #btn-save.dirty::after {
+      content: ' ●';
+      color: rgba(255,180,0,0.8);
+      font-size: 9px;
+    }
   </style>
 </head>
 <body>
@@ -621,7 +676,20 @@
   <div class="corner corner-bl"></div>
   <div class="corner corner-br"></div>
 
-  <a href="index.html" id="back-btn">← Voltar</a>
+  <a href="tramas.html" id="back-btn">← Voltar</a>
+
+  <!-- Modal: sair sem salvar -->
+  <div id="exit-overlay">
+    <div id="exit-box">
+      <div class="ex-title">Sair sem salvar?</div>
+      <div class="ex-sub">Há alterações não salvas nesta trama.</div>
+      <div class="ex-btns">
+        <button class="ex-btn ex-save" id="ex-save-go">↑ Salvar e sair</button>
+        <button class="ex-btn"         id="ex-stay">Ficar</button>
+        <button class="ex-btn ex-danger" id="ex-go">Sair mesmo assim</button>
+      </div>
+    </div>
+  </div>
 
   <div id="toolbar">
     <button class="tb-btn" id="btn-save">↑ Salvar trama</button>
@@ -738,6 +806,53 @@
     // Esconder separador/deletar fio no desktop
     document.querySelectorAll('.mobile-only').forEach(function(el) {
       if (!IS_MOBILE) el.style.display = 'none';
+    });
+
+    // ══════════════════════════════════════════════════════════
+    //  DIRTY STATE (alterações não salvas)
+    // ══════════════════════════════════════════════════════════
+    var isDirty = false;
+    var exitTarget = 'tramas.html';
+
+    function markDirty() {
+      if (isDirty) return;
+      isDirty = true;
+      var btn = document.getElementById('btn-save');
+      if (btn) btn.classList.add('dirty');
+    }
+    function clearDirty() {
+      isDirty = false;
+      var btn = document.getElementById('btn-save');
+      if (btn) btn.classList.remove('dirty');
+    }
+
+    // ── Interceptar back-btn ──
+    document.getElementById('back-btn').addEventListener('click', function(e) {
+      if (!isDirty) return;
+      e.preventDefault();
+      exitTarget = this.href;
+      document.getElementById('exit-overlay').classList.add('open');
+    });
+
+    // ── Modal de saída ──
+    document.getElementById('ex-stay').addEventListener('click', function() {
+      document.getElementById('exit-overlay').classList.remove('open');
+    });
+    document.getElementById('ex-go').addEventListener('click', function() {
+      isDirty = false;
+      window.location.href = exitTarget;
+    });
+    document.getElementById('ex-save-go').addEventListener('click', function() {
+      var btn = document.getElementById('btn-save');
+      if (btn) btn.click();
+      setTimeout(function() { window.location.href = exitTarget; }, 1200);
+    });
+
+    // ── beforeunload (fechar aba / F5) ──
+    window.addEventListener('beforeunload', function(e) {
+      if (!isDirty) return;
+      e.preventDefault();
+      e.returnValue = '';
     });
 
     // ══════════════════════════════════════════════════════════
@@ -1120,6 +1235,7 @@
 
     function addConnection(from, to, savedColor) {
       if (!IS_MOBILE && !savedColor) pushUndo();
+      if (IS_MOBILE && !savedColor) markDirty();
       var conn = { from: from, to: to, color: savedColor || '#00ffe7', labelWrap: null };
 
       if (!IS_MOBILE) {
@@ -1257,6 +1373,7 @@
             : sbFetch('/rest/v1/tramas', 'POST', entry);
         })
         .then(function() {
+          clearDirty();
           btn.textContent = '✓ Salvo';
           setStatus('Salvo ✓', true);
           setTimeout(function() { btn.textContent = orig; setStatus('Pronto'); }, 2000);
@@ -1471,6 +1588,7 @@
         undoStack.push(snap);
         if (undoStack.length > 10) undoStack.shift();
         redoStack = [];
+        markDirty();
       }
 
       // Selection helpers
@@ -1772,6 +1890,7 @@
           if (now - lastTapTime < 350) {
             var wc = worldCoords(t.clientX, t.clientY);
             var newId = createNode(wc.x - 70, wc.y - 26);
+            markDirty();
             setTimeout(function() {
               var titleEl = nodes[newId] && nodes[newId].querySelector('.node-title');
               if (titleEl) titleEl.focus();
@@ -1790,6 +1909,7 @@
           }
         }
 
+        if (dragNodeId) markDirty();
         dragNodeId = null;
         isPanning  = false;
         if (ghostLine && !connSource) { ghostLine.remove(); ghostLine = null; }

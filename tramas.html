@@ -377,6 +377,25 @@
     var MIN_FROM_NEXUS = 340;
     var MIN_FROM_OTHER = 220;
 
+    // ── Supabase ──
+    var SUPABASE_URL = 'https://mxyqqfsyybluavwlrhsa.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eXFxZnN5eWJsdWF2d2xyaHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTM4MzEsImV4cCI6MjA5MzY2OTgzMX0.b0Ij7UGzbMLpqZjLYxoPEu2kGwEW52U_2NSDtpMGUPM';
+    function sbFetch(path, method, body) {
+      return fetch(SUPABASE_URL + path, {
+        method: method || 'GET',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': method === 'POST' ? 'return=minimal' : ''
+        },
+        body: body ? JSON.stringify(body) : undefined
+      }).then(function(r) {
+        if (r.status === 204 || r.headers.get('content-length') === '0') return {};
+        return r.json().catch(function() { return {}; });
+      });
+    }
+
     // ── Estado ──
     var camX = 0, camY = 0, camZ = 0;
     var isDraggingCam  = false;
@@ -386,7 +405,7 @@
     var lastMouse = { x: 0, y: 0 };
     var lastTouchDist = null;
 
-    var tramas = JSON.parse(localStorage.getItem('ma_tramas') || '[]');
+    var tramas = [];
 
     var scene = document.getElementById('scene');
     var world = document.getElementById('world');
@@ -434,14 +453,13 @@
     });
 
     window.addEventListener('mouseup', function() {
-      if (isDraggingCard) saveTramas();
+      if (isDraggingCard && dragData) saveTramaPos(tramas[dragData.idx]);
       isDraggingCam = isDraggingCard = false;
       dragData = null;
       document.body.classList.remove('dragging');
     });
 
     // Touch
-    var lastTouchDist = null;
     scene.addEventListener('touchstart', function(e) {
       if (modal.classList.contains('open')) return;
       if (e.touches.length === 1) {
@@ -481,7 +499,7 @@
     }, { passive: false });
 
     scene.addEventListener('touchend', function() {
-      if (isDraggingCard) saveTramas();
+      if (isDraggingCard && dragData) saveTramaPos(tramas[dragData.idx]);
       isDraggingCam = isDraggingCard = false;
       dragData = null; lastTouchDist = null;
     });
@@ -500,7 +518,15 @@
       dc.el.style.transform = 'translate3d(' + t.x + 'px,' + t.y + 'px,' + t.z + 'px)';
     }
 
-    function saveTramas() { localStorage.setItem('ma_tramas', JSON.stringify(tramas)); }
+    // ── Salvar posição de uma trama no Supabase ──
+    function saveTramaPos(t) {
+      if (!t) return;
+      sbFetch('/rest/v1/tramas?trama_id=eq.' + t.id, 'PATCH', {
+        pos_x: Math.round(t.x * 100) / 100,
+        pos_y: Math.round(t.y * 100) / 100,
+        pos_z: Math.round(t.z * 100) / 100
+      });
+    }
 
     // ── Posição válida para nova trama ──
     function findValidPos() {
@@ -521,26 +547,11 @@
       return { x: Math.cos(a)*520, y: Math.sin(a)*290, z: 0 };
     }
 
-    // ── KB e tamanho do globo ──
-    function getTramaKB(tramaId) {
-      var total = 0;
-      try {
-        Object.keys(localStorage).forEach(function(k) {
-          if (k.indexOf(tramaId) !== -1) total += (localStorage.getItem(k) || '').length;
-        });
-      } catch(e) {}
-      return total / 1024;
-    }
-    function getGlobeSize(kb) {
-      if (kb <= 0) return 160;
-      return Math.min(Math.round(160 + Math.log2(kb + 1) * 18), 320);
-    }
-
     // ── Deletar trama ──
     function deleteTrama(tramaId, cardEl) {
       if (!confirm('Deletar esta trama? Ação irreversível.')) return;
       tramas = tramas.filter(function(t) { return t.id !== tramaId; });
-      saveTramas();
+      sbFetch('/rest/v1/tramas?trama_id=eq.' + tramaId, 'DELETE');
       cardEl.style.transition = 'opacity 0.3s, transform 0.3s';
       cardEl.style.opacity = '0';
       cardEl.style.transform = cardEl.style.transform + ' scale(0.7)';
@@ -602,8 +613,7 @@
     function renderCard(t, idx) {
       var dur  = ((3.5 + (idx * 0.31) % 2) * 1.2).toFixed(1);
       var del  = ((idx * 0.67) % 4).toFixed(1);
-      var kb   = getTramaKB(t.id);
-      var size = getGlobeSize(kb);
+      var size = 160;
       var proj = Math.round(size * 0.81);
 
       var card = document.createElement('div');
@@ -630,13 +640,32 @@
         deleteTrama(t.id, card);
       });
       card.appendChild(delBtn);
+
+      // ── Clique abre a trama para edição ──
+      card.addEventListener('click', function(e) {
+        if (moved) return;
+        if (e.target.closest('.trama-delete')) return;
+        window.location.href = 'trama.html?id=' + t.id;
+      });
+
       world.appendChild(card);
       return card;
     }
 
-    // ── Init ──
-    renderNexus();
-    tramas.forEach(function(t, i) { renderCard(t, i); });
+    // ── Init: carrega tramas do Supabase ──
+    function init() {
+      renderNexus();
+      applyCamera();
+      sbFetch('/rest/v1/tramas?select=trama_id,name,pos_x,pos_y,pos_z&pos_x=not.is.null&order=created_at', 'GET')
+        .then(function(rows) {
+          if (!Array.isArray(rows)) return;
+          tramas = rows.map(function(r) {
+            return { id: r.trama_id, name: r.name || 'Trama', x: r.pos_x || 0, y: r.pos_y || 0, z: r.pos_z || 0 };
+          });
+          tramas.forEach(function(t, i) { renderCard(t, i); });
+        })
+        .catch(function(err) { console.warn('Erro ao carregar tramas:', err); });
+    }
 
     // ── Modal ──
     document.getElementById('newTramaBtn').addEventListener('click', function() {
@@ -659,11 +688,21 @@
       modal.classList.remove('open');
       var pos = findValidPos();
       var id  = 'trama_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
-      var t   = { id: id, name: 'Trama', x: pos.x, y: pos.y, z: pos.z };
-      tramas.push(t);
-      saveTramas();
-      window.location.href = 'trama.html?id=' + id;
+      sbFetch('/rest/v1/tramas', 'POST', {
+        trama_id: id,
+        name:     'Trama',
+        pos_x:    Math.round(pos.x * 100) / 100,
+        pos_y:    Math.round(pos.y * 100) / 100,
+        pos_z:    Math.round(pos.z * 100) / 100,
+        data:     {}
+      }).then(function() {
+        window.location.href = 'trama.html?id=' + id;
+      }).catch(function() {
+        window.location.href = 'trama.html?id=' + id;
+      });
     }
+
+    init();
   </script>
 
 </body>
