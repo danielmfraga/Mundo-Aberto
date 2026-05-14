@@ -90,6 +90,32 @@
     .tb-btn:active { background: rgba(0,255,231,0.1); }
     .tb-sep { width: 1px; height: 20px; background: rgba(0,255,231,0.1); }
 
+    /* Nome da trama na toolbar */
+    .tb-name-wrap {
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .tb-name-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 8px; letter-spacing: 3px;
+      color: rgba(0,255,231,0.28); text-transform: uppercase;
+      line-height: 1;
+    }
+    #trama-name-input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(0,255,231,0.18);
+      color: rgba(0,255,231,0.85);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px; font-weight: 600;
+      letter-spacing: 2px;
+      width: 180px;
+      padding: 2px 0;
+      outline: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    #trama-name-input::placeholder { color: rgba(0,255,231,0.2); letter-spacing: 1px; }
+    #trama-name-input:focus { border-color: rgba(0,255,231,0.55); color: var(--holo); }
+
     /* Back button */
     #back-btn {
       position: fixed;
@@ -692,6 +718,11 @@
   </div>
 
   <div id="toolbar">
+    <div class="tb-name-wrap">
+      <span class="tb-name-label">Nome da trama</span>
+      <input id="trama-name-input" type="text" placeholder="Sem nome..." maxlength="60" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="tb-sep"></div>
     <button class="tb-btn" id="btn-save">↑ Salvar trama</button>
   </div>
 
@@ -1365,9 +1396,10 @@
       btn.textContent = '...';
       setStatus('Salvando...');
       var state = serializeState();
+      var tramaName = (document.getElementById('trama-name-input').value || '').trim() || 'Trama';
       sbFetch('/rest/v1/tramas?trama_id=eq.' + TRAMA_ID + '&select=id', 'GET')
         .then(function(rows) {
-          var entry = { trama_id: TRAMA_ID, data: state };
+          var entry = { trama_id: TRAMA_ID, name: tramaName, data: state };
           return (rows && rows.length)
             ? sbFetch('/rest/v1/tramas?trama_id=eq.' + TRAMA_ID, 'PATCH', entry)
             : sbFetch('/rest/v1/tramas', 'POST', entry);
@@ -1918,15 +1950,26 @@
 
     } // end IS_MOBILE
 
+    // ── Nome da trama: marcar dirty ao editar ──
+    var nameInput = document.getElementById('trama-name-input');
+    nameInput.addEventListener('input', function() { markDirty(); });
+    // impedir que o input acione atalhos do canvas (ex: DEL, Ctrl+Z)
+    nameInput.addEventListener('keydown', function(e) { e.stopPropagation(); });
+
     // ══════════════════════════════════════════════════════════
     //  INIT
     // ══════════════════════════════════════════════════════════
     setStatus('Carregando...');
-    sbFetch('/rest/v1/tramas?trama_id=eq.' + TRAMA_ID + '&select=data', 'GET')
+    sbFetch('/rest/v1/tramas?trama_id=eq.' + TRAMA_ID + '&select=data,name', 'GET')
       .then(function(rows) {
-        if (rows && rows.length && rows[0].data) {
-          loadState(rows[0].data);
-          setStatus('Trama carregada ✓', true);
+        if (rows && rows.length) {
+          if (rows[0].name) nameInput.value = rows[0].name;
+          if (rows[0].data && Object.keys(rows[0].data).length) {
+            loadState(rows[0].data);
+            setStatus('Trama carregada ✓', true);
+          } else {
+            setStatus('Nova trama');
+          }
         } else {
           setStatus('Nova trama');
         }
