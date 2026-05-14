@@ -336,6 +336,46 @@
       letter-spacing: 3px; color: rgba(0,255,231,0.15);
       text-align: center; line-height: 2.2; pointer-events: none; z-index: 2;
     }
+
+    /* ── Modal confirmar delete ── */
+    #del-overlay {
+      display: none; position: fixed; inset: 0; z-index: 900;
+      background: rgba(4,8,16,0.82); backdrop-filter: blur(6px);
+      align-items: center; justify-content: center;
+    }
+    #del-overlay.open { display: flex; }
+    #del-box {
+      background: rgba(8,15,30,0.97);
+      border: 1px solid rgba(255,68,102,0.2);
+      border-radius: 6px; padding: 36px 44px;
+      max-width: 360px; width: 88%; text-align: center;
+      box-shadow: 0 0 50px rgba(255,68,102,0.06);
+    }
+    #del-box .del-title {
+      font-family: 'Orbitron', monospace; font-size: 13px;
+      letter-spacing: 5px; text-transform: uppercase;
+      color: rgba(255,68,102,0.9); margin-bottom: 10px;
+    }
+    #del-box .del-sub {
+      font-family: 'Rajdhani', sans-serif; font-size: 13px;
+      color: rgba(0,255,231,0.3); letter-spacing: 1px; margin-bottom: 30px;
+    }
+    .del-btns { display: flex; gap: 12px; justify-content: center; }
+    .del-btn {
+      font-family: 'Share Tech Mono', monospace; font-size: 10px;
+      letter-spacing: 2px; text-transform: uppercase;
+      border: 1px solid rgba(0,255,231,0.2); background: transparent;
+      color: rgba(0,255,231,0.5); padding: 10px 24px; border-radius: 3px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .del-btn:hover { border-color: var(--holo); color: var(--holo); background: rgba(0,255,231,0.05); }
+    .del-btn.del-confirm {
+      border-color: rgba(255,68,102,0.35); color: rgba(255,68,102,0.7);
+    }
+    .del-btn.del-confirm:hover {
+      border-color: #ff4466; color: #ff4466; background: rgba(255,68,102,0.07);
+      box-shadow: 0 0 12px rgba(255,68,102,0.2);
+    }
   </style>
 </head>
 <body>
@@ -358,6 +398,18 @@
   </button>
 
   <div class="nav-hint">scroll · zoom &nbsp;|&nbsp; arrastar · navegar</div>
+
+  <!-- Modal confirmar delete -->
+  <div id="del-overlay">
+    <div id="del-box">
+      <div class="del-title">Deletar trama?</div>
+      <div class="del-sub">Essa ação não pode ser desfeita.</div>
+      <div class="del-btns">
+        <button class="del-btn del-confirm" id="del-confirm">Deletar</button>
+        <button class="del-btn" id="del-cancel">Cancelar</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal -->
   <div id="modal">
@@ -547,9 +599,23 @@
       return { x: Math.cos(a)*520, y: Math.sin(a)*290, z: 0 };
     }
 
-    // ── Deletar trama (soft delete — fica 15 dias recuperável no Supabase) ──
-    function deleteTrama(tramaId, cardEl) {
-      if (!confirm('Deletar esta trama? Essa ação não pode ser desfeita.')) return;
+    // ── Modal de confirmação de delete ──
+    var delOverlay = document.getElementById('del-overlay');
+    var pendingDelete = null;
+
+    document.getElementById('del-cancel').addEventListener('click', function() {
+      delOverlay.classList.remove('open');
+      pendingDelete = null;
+    });
+    delOverlay.addEventListener('click', function(e) {
+      if (e.target === delOverlay) { delOverlay.classList.remove('open'); pendingDelete = null; }
+    });
+    document.getElementById('del-confirm').addEventListener('click', function() {
+      delOverlay.classList.remove('open');
+      if (!pendingDelete) return;
+      var tramaId = pendingDelete.id;
+      var cardEl  = pendingDelete.el;
+      pendingDelete = null;
       tramas = tramas.filter(function(t) { return t.id !== tramaId; });
       sbFetch('/rest/v1/tramas?trama_id=eq.' + tramaId, 'PATCH', {
         deleted_at: new Date().toISOString()
@@ -563,6 +629,12 @@
           c.dataset.idx = i;
         });
       }, 300);
+    });
+
+    // ── Deletar trama (soft delete — fica 15 dias recuperável no Supabase) ──
+    function deleteTrama(tramaId, cardEl) {
+      pendingDelete = { id: tramaId, el: cardEl };
+      delOverlay.classList.add('open');
     }
 
     // ── Conteúdo interno do globo (anéis, pontos, core, beam, svg) ──
