@@ -549,7 +549,7 @@
 
     // ── Deletar trama (soft delete — fica 15 dias recuperável no Supabase) ──
     function deleteTrama(tramaId, cardEl) {
-      if (!confirm('Deletar esta trama?\nEla ficará recuperável por 15 dias no banco de dados.')) return;
+      if (!confirm('Deletar esta trama? Essa ação não pode ser desfeita.')) return;
       tramas = tramas.filter(function(t) { return t.id !== tramaId; });
       sbFetch('/rest/v1/tramas?trama_id=eq.' + tramaId, 'PATCH', {
         deleted_at: new Date().toISOString()
