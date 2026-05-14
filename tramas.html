@@ -622,9 +622,8 @@
       var cardEl  = pendingDelete.el;
       pendingDelete = null;
       tramas = tramas.filter(function(t) { return t.id !== tramaId; });
-      sbFetch('/rest/v1/tramas?trama_id=eq.' + tramaId, 'PATCH', {
-        deleted_at: new Date().toISOString()
-      });
+      sbFetch('/rest/v1/tramas?trama_id=eq.' + tramaId, 'PATCH', { deleted_at: new Date().toISOString() });
+      sbFetch('/rest/v1/trama_links?trama_id=eq.' + tramaId, 'DELETE');
       cardEl.style.transition = 'opacity 0.3s, transform 0.3s';
       cardEl.style.opacity = '0';
       cardEl.style.transform = cardEl.style.transform + ' scale(0.7)';
@@ -735,7 +734,7 @@
     function init() {
       renderNexus();
       applyCamera();
-      sbFetch('/rest/v1/tramas?select=trama_id,name,pos_x,pos_y,pos_z&pos_x=not.is.null&deleted_at=is.null&order=created_at', 'GET')
+      sbFetch('/rest/v1/tramas?select=trama_id,name,pos_x,pos_y,pos_z&pos_x=not.is.null&deleted_at=is.null&trama_id=neq.default&order=created_at', 'GET')
         .then(function(rows) {
           if (!Array.isArray(rows)) return;
           tramas = rows.map(function(r) {
