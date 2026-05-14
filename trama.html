@@ -1950,9 +1950,20 @@
 
     } // end IS_MOBILE
 
-    // ── Nome da trama: marcar dirty ao editar ──
+    // ── Nome da trama ──
     var nameInput = document.getElementById('trama-name-input');
-    nameInput.addEventListener('input', function() { markDirty(); });
+
+    // NEXUS: nome fixo, não editável
+    if (TRAMA_ID === 'default') {
+      nameInput.value = 'nexus';
+      nameInput.readOnly = true;
+      nameInput.style.opacity = '0.35';
+      nameInput.style.cursor = 'not-allowed';
+      nameInput.title = 'O NEXUS não pode ser renomeado';
+    } else {
+      nameInput.addEventListener('input', function() { markDirty(); });
+    }
+
     // impedir que o input acione atalhos do canvas (ex: DEL, Ctrl+Z)
     nameInput.addEventListener('keydown', function(e) { e.stopPropagation(); });
 
