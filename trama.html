@@ -1076,14 +1076,9 @@
       tramaLinks[nodeId] = data;
       applyLinkToNode(nodeId, data);
       markDirty();
-      sbFetch('/rest/v1/trama_links?trama_id=eq.' + TRAMA_ID + '&node_id=eq.' + nodeId, 'GET')
-        .then(function(rows) {
-          var entry = { trama_id: TRAMA_ID, node_id: nodeId, personagem_id: p.char_id };
-          return (rows && rows.length)
-            ? sbFetch('/rest/v1/trama_links?trama_id=eq.' + TRAMA_ID + '&node_id=eq.' + nodeId, 'PATCH', entry)
-            : sbFetch('/rest/v1/trama_links', 'POST', entry);
-        })
-        .catch(function() {});
+      var entry = { trama_id: TRAMA_ID, node_id: nodeId, personagem_id: p.char_id };
+      sbFetch('/rest/v1/trama_links', 'POST', entry, { 'Prefer': 'resolution=merge-duplicates,return=minimal' })
+        .catch(function(err) { setStatus('Erro ao vincular: ' + (err && err.message ? err.message : err), true); });
     }
 
     function unlinkPersonagem(nodeId) {
@@ -1092,7 +1087,7 @@
       clearLinkFromNode(nodeId);
       markDirty();
       sbFetch('/rest/v1/trama_links?trama_id=eq.' + TRAMA_ID + '&node_id=eq.' + nodeId, 'DELETE')
-        .catch(function() {});
+        .catch(function(err) { setStatus('Erro ao desvincular: ' + (err && err.message ? err.message : err), true); });
     }
 
     // ══════════════════════════════════════════════════════════
@@ -1149,13 +1144,16 @@
     var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eXFxZnN5eWJsdWF2d2xyaHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTM4MzEsImV4cCI6MjA5MzY2OTgzMX0.b0Ij7UGzbMLpqZjLYxoPEu2kGwEW52U_2NSDtpMGUPM';
     var TRAMA_ID = (new URLSearchParams(window.location.search)).get('id') || 'default';
 
-    function sbFetch(path, method, body) {
+    function sbFetch(path, method, body, extra_headers) {
+      var headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' };
+      if (extra_headers) Object.assign(headers, extra_headers);
       return fetch(SUPABASE_URL + path, {
         method: method || 'GET',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+        headers: headers,
         body: body ? JSON.stringify(body) : undefined
       }).then(function(r) {
-        if (r.status === 204 || r.headers.get('content-length') === '0') return {};
+        if (r.status === 204 || r.status === 201) return {};
+        if (!r.ok) return r.json().then(function(e) { throw new Error((e && e.message) || r.status); });
         return r.json().catch(function() { return {}; });
       });
     }
