@@ -88,8 +88,7 @@
     }
     .tb-btn:hover { color: var(--holo); border-color: var(--holo); box-shadow: 0 0 10px rgba(0,255,231,0.2); }
     .tb-btn:active { background: rgba(0,255,231,0.1); }
-    #btn-add-loc:hover { color: rgba(255,160,50,1); border-color: rgba(255,160,50,0.7); box-shadow: 0 0 10px rgba(255,160,50,0.25); }
-    #btn-add-loc:active { background: rgba(255,160,50,0.08); }
+
     .tb-sep { width: 1px; height: 20px; background: rgba(0,255,231,0.1); }
 
     /* Nome da trama na toolbar */
@@ -139,6 +138,78 @@
     }
     #back-btn .arr { font-size: 14px; font-weight: 900; line-height: 1; }
     #back-btn:hover { color: rgba(0,255,231,0.7); }
+
+    /* ── FABs (Novo nó / Novo local) ── */
+    .trama-fab-group {
+      position: fixed;
+      bottom: 36px;
+      right: 28px;
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .trama-fab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    .trama-fab-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(4,8,16,0.88);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(0,255,231,0.35);
+      box-shadow: 0 0 12px rgba(0,255,231,0.18), 0 0 3px rgba(0,255,231,0.22), inset 0 0 8px rgba(0,255,231,0.04);
+      transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+      position: relative;
+    }
+    .trama-fab-icon::before { content: ''; position: absolute; width: 13px; height: 1px; background: rgba(0,255,231,0.55); transition: background 0.25s, box-shadow 0.25s; }
+    .trama-fab-icon::after  { content: ''; position: absolute; width: 1px; height: 13px; background: rgba(0,255,231,0.55); transition: background 0.25s, box-shadow 0.25s; }
+    .trama-fab:hover .trama-fab-icon {
+      border-color: var(--holo);
+      background: rgba(0,255,231,0.05);
+      box-shadow: 0 0 14px rgba(0,255,231,0.28), 0 0 5px rgba(0,255,231,0.4), inset 0 0 8px rgba(0,255,231,0.06);
+    }
+    .trama-fab:hover .trama-fab-icon::before,
+    .trama-fab:hover .trama-fab-icon::after { background: var(--holo); box-shadow: 0 0 6px var(--holo); }
+    .trama-fab-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 7px;
+      letter-spacing: 2px;
+      color: rgba(0,255,231,0.35);
+      text-transform: uppercase;
+      white-space: nowrap;
+      transition: color 0.25s;
+    }
+    .trama-fab:hover .trama-fab-label { color: var(--holo); }
+
+    /* Local FAB — laranja */
+    .trama-fab.fab-loc .trama-fab-icon {
+      border-color: rgba(255,160,50,0.35);
+      box-shadow: 0 0 12px rgba(255,160,50,0.15), 0 0 3px rgba(255,160,50,0.2), inset 0 0 8px rgba(255,160,50,0.04);
+    }
+    .trama-fab.fab-loc .trama-fab-icon::before,
+    .trama-fab.fab-loc .trama-fab-icon::after { background: rgba(255,160,50,0.55); }
+    .trama-fab.fab-loc .trama-fab-label { color: rgba(255,160,50,0.4); }
+    .trama-fab.fab-loc:hover .trama-fab-icon {
+      border-color: rgba(255,160,50,0.85);
+      background: rgba(255,160,50,0.05);
+      box-shadow: 0 0 14px rgba(255,160,50,0.25), 0 0 5px rgba(255,160,50,0.4), inset 0 0 8px rgba(255,160,50,0.05);
+    }
+    .trama-fab.fab-loc:hover .trama-fab-icon::before,
+    .trama-fab.fab-loc:hover .trama-fab-icon::after { background: rgba(255,160,50,1); box-shadow: 0 0 6px rgba(255,160,50,0.8); }
+    .trama-fab.fab-loc:hover .trama-fab-label { color: rgba(255,160,50,0.9); }
 
     /* Canvas wrapper */
     #viewport {
@@ -877,7 +948,6 @@
       <input id="trama-name-input" type="text" placeholder="Sem nome..." maxlength="60" autocomplete="off" spellcheck="false">
     </div>
     <div class="tb-sep"></div>
-    <button class="tb-btn" id="btn-add-loc" style="border-color:rgba(255,160,50,0.25);color:rgba(255,160,50,0.6);">⊙ Local</button>
     <button class="tb-btn" id="btn-save">↑ Salvar trama</button>
   </div>
 
@@ -898,6 +968,18 @@
         </defs>
       </svg>
     </div>
+  </div>
+
+  <!-- FABs: Novo nó / Novo local -->
+  <div class="trama-fab-group">
+    <button class="trama-fab fab-loc" id="fab-loc">
+      <div class="trama-fab-icon"></div>
+      <div class="trama-fab-label">Novo local</div>
+    </button>
+    <button class="trama-fab" id="fab-npc">
+      <div class="trama-fab-icon"></div>
+      <div class="trama-fab-label">Novo nó</div>
+    </button>
   </div>
 
   <!-- Modal notas -->
@@ -1711,18 +1793,21 @@
     // ══════════════════════════════════════════════════════════
     //  SAVE / LOAD (shared)
     // ══════════════════════════════════════════════════════════
-    document.getElementById('btn-add-loc').addEventListener('click', function() {
+    function createNodeAtCenter(type) {
       var rect = viewport.getBoundingClientRect();
-      var cx = (rect.width  / 2 - panOffset.x) / scale - 60;
-      var cy = (rect.height / 2 - panOffset.y) / scale - 60;
-      var newId = createNode(cx, cy, { type: 'loc' });
+      var offset = type === 'loc' ? 60 : 70;
+      var cx = (rect.width  / 2 - panOffset.x) / scale - offset;
+      var cy = (rect.height / 2 - panOffset.y) / scale - (type === 'loc' ? 60 : 20);
+      var newId = createNode(cx, cy, { type: type });
       markDirty();
       selectNode && selectNode(newId);
       setTimeout(function() {
         var t = nodes[newId] && nodes[newId].querySelector('.node-title');
         if (t) t.focus();
       }, 50);
-    });
+    }
+    document.getElementById('fab-loc').addEventListener('click', function() { createNodeAtCenter('loc'); });
+    document.getElementById('fab-npc').addEventListener('click', function() { createNodeAtCenter('npc'); });
 
     document.getElementById('btn-save').addEventListener('click', function() {
       var btn = document.getElementById('btn-save');
