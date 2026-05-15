@@ -454,7 +454,8 @@
     }
 
     // ── Estado ──
-    var camX = 0, camY = 0, camZ = 0;
+    var isMobileDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    var camX = 0, camY = 0, camZ = isMobileDevice ? -700 : 0;
     var isDraggingCam  = false;
     var isDraggingCard = false;
     var dragData = null;
