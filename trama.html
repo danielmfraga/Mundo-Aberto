@@ -88,6 +88,8 @@
     }
     .tb-btn:hover { color: var(--holo); border-color: var(--holo); box-shadow: 0 0 10px rgba(0,255,231,0.2); }
     .tb-btn:active { background: rgba(0,255,231,0.1); }
+    #btn-add-loc:hover { color: rgba(255,160,50,1); border-color: rgba(255,160,50,0.7); box-shadow: 0 0 10px rgba(255,160,50,0.25); }
+    #btn-add-loc:active { background: rgba(255,160,50,0.08); }
     .tb-sep { width: 1px; height: 20px; background: rgba(0,255,231,0.1); }
 
     /* Nome da trama na toolbar */
@@ -119,7 +121,7 @@
     /* Back button */
     #back-btn {
       position: fixed;
-      top: 20px;
+      top: 72px;
       left: 50%;
       transform: translateX(-50%);
       font-family: 'Share Tech Mono', monospace;
@@ -275,6 +277,29 @@
       -webkit-box-orient: vertical;
     }
     .node-note-preview:empty { display: none; }
+
+    /* ── LOCATION NODES ── */
+    .node.node-loc {
+      border-radius: 50%;
+      width: 120px;
+      height: 120px;
+      min-width: 120px;
+      max-width: 120px;
+      border-color: rgba(255,160,50,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .node.node-loc.selected   { border-color: rgba(255,160,50,0.9); box-shadow: 0 0 14px rgba(255,160,50,0.4); }
+    .node.node-loc.connect-src { border-color: rgba(255,160,50,0.7); box-shadow: 0 0 12px rgba(255,160,50,0.35); }
+    .node.node-loc.multi-selected { border-color: rgba(255,160,50,0.9); box-shadow: 0 0 8px rgba(255,160,50,0.4); }
+    .node.node-loc .node-title {
+      color: rgba(255,160,50,0.9);
+      max-width: 80px;
+      font-size: 11px;
+      text-align: center;
+    }
+    .node.node-loc .node-title:empty::before { color: rgba(255,160,50,0.3); }
 
     /* ── ANCHORS ── */
     .anchor {
@@ -852,6 +877,7 @@
       <input id="trama-name-input" type="text" placeholder="Sem nome..." maxlength="60" autocomplete="off" spellcheck="false">
     </div>
     <div class="tb-sep"></div>
+    <button class="tb-btn" id="btn-add-loc" style="border-color:rgba(255,160,50,0.25);color:rgba(255,160,50,0.6);">⊙ Local</button>
     <button class="tb-btn" id="btn-save">↑ Salvar trama</button>
   </div>
 
@@ -1350,25 +1376,15 @@
       var id = (data && data.id) ? data.id : 'n' + (++nodeCount);
       if (data && data.id) nodeCount = Math.max(nodeCount, parseInt(id.replace('n','')) || nodeCount);
 
+      var nodeType = (data && data.type) ? data.type : 'npc';
+
       var el = document.createElement('div');
-      el.className = 'node';
+      el.className = 'node' + (nodeType === 'loc' ? ' node-loc' : '');
       el.dataset.id = id;
+      el.dataset.type = nodeType;
       el.style.left = (data ? data.x : x) + 'px';
       el.style.top  = (data ? data.y : y) + 'px';
       if (data && data.note) el.dataset.note = data.note;
-
-      var header = document.createElement('div');
-      header.className = 'node-header';
-
-      var dot = document.createElement('div');
-      dot.className = 'node-dot';
-
-      var title = document.createElement('div');
-      title.className = 'node-title';
-      title.contentEditable = true;
-      title.spellcheck = false;
-      title.dataset.ph = 'Nome...';
-      title.textContent = (data && data.name) ? data.name : '';
 
       var acts = document.createElement('div');
       acts.className = 'node-actions';
@@ -1385,15 +1401,36 @@
 
       acts.appendChild(noteBtn);
       acts.appendChild(delBtn);
-      header.appendChild(dot);
-      header.appendChild(title);
-      header.appendChild(acts);
-      el.appendChild(header);
 
-      var preview = document.createElement('div');
-      preview.className = 'node-note-preview';
-      preview.textContent = (data && data.note) ? data.note.slice(0, 60) : '';
-      el.appendChild(preview);
+      var title = document.createElement('div');
+      title.className = 'node-title';
+      title.contentEditable = true;
+      title.spellcheck = false;
+      title.dataset.ph = nodeType === 'loc' ? 'Local...' : 'Nome...';
+      title.textContent = (data && data.name) ? data.name : '';
+
+      if (nodeType === 'loc') {
+        // Location node: circle, just title + actions, no header border, no preview
+        el.appendChild(acts);
+        el.appendChild(title);
+      } else {
+        // Character node (npc): header with pulsing dot + note preview
+        var header = document.createElement('div');
+        header.className = 'node-header';
+
+        var dot = document.createElement('div');
+        dot.className = 'node-dot';
+
+        header.appendChild(dot);
+        header.appendChild(title);
+        header.appendChild(acts);
+        el.appendChild(header);
+
+        var preview = document.createElement('div');
+        preview.className = 'node-note-preview';
+        preview.textContent = (data && data.note) ? data.note.slice(0, 60) : '';
+        el.appendChild(preview);
+      }
 
       // Anchors
       ['top','bottom','left','right'].forEach(function(pos) {
@@ -1581,9 +1618,12 @@
     // ══════════════════════════════════════════════════════════
     function openModal(id) {
       currentNoteNodeId = id;
-      var titleText = nodes[id] ? nodes[id].querySelector('.node-title').textContent : 'NPC';
-      document.getElementById('modal-name').textContent = titleText || 'NPC';
-      document.getElementById('modal-note').value = nodes[id] ? (nodes[id].dataset.note || '') : '';
+      var nodeEl = nodes[id];
+      var isLoc = nodeEl && nodeEl.dataset.type === 'loc';
+      var titleText = nodeEl ? nodeEl.querySelector('.node-title').textContent : '';
+      document.getElementById('modal-name').textContent = titleText || (isLoc ? 'Local' : 'NPC');
+      document.querySelector('.modal-label').textContent = isLoc ? 'Arquivo · Local' : 'Arquivo · NPC';
+      document.getElementById('modal-note').value = nodeEl ? (nodeEl.dataset.note || '') : '';
       renderVincularSection(id);
       document.getElementById('modal-overlay').classList.add('open');
       if (!IS_MOBILE) document.getElementById('modal-note').focus();
@@ -1643,7 +1683,8 @@
       var nodeData = Object.entries(nodes).map(function(entry) {
         var id = entry[0], el = entry[1];
         return { id: id, x: parseFloat(el.style.left), y: parseFloat(el.style.top),
-                 name: el.querySelector('.node-title').textContent, note: el.dataset.note || '' };
+                 name: el.querySelector('.node-title').textContent, note: el.dataset.note || '',
+                 type: el.dataset.type || 'npc' };
       });
       var connData = connections.map(function(c) {
         return { from: c.from, to: c.to, color: c.color || '#00ffe7' };
@@ -1670,6 +1711,19 @@
     // ══════════════════════════════════════════════════════════
     //  SAVE / LOAD (shared)
     // ══════════════════════════════════════════════════════════
+    document.getElementById('btn-add-loc').addEventListener('click', function() {
+      var rect = viewport.getBoundingClientRect();
+      var cx = (rect.width  / 2 - panOffset.x) / scale - 60;
+      var cy = (rect.height / 2 - panOffset.y) / scale - 60;
+      var newId = createNode(cx, cy, { type: 'loc' });
+      markDirty();
+      selectNode && selectNode(newId);
+      setTimeout(function() {
+        var t = nodes[newId] && nodes[newId].querySelector('.node-title');
+        if (t) t.focus();
+      }, 50);
+    });
+
     document.getElementById('btn-save').addEventListener('click', function() {
       var btn = document.getElementById('btn-save');
       var orig = btn.textContent;
