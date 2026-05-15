@@ -541,6 +541,62 @@
     .modal-btn.save { border-color: rgba(0,255,231,0.4); color: var(--holo); }
     .modal-btn.save:hover { background: rgba(0,255,231,0.08); box-shadow: 0 0 10px rgba(0,255,231,0.2); }
 
+    /* ── MODAL NOTAS DA TRAMA ── */
+    #trama-note-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(4,8,16,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+    #trama-note-overlay.open { display: flex; }
+    #trama-note-box {
+      background: rgba(4,8,16,0.98);
+      border: 1px solid rgba(0,255,231,0.25);
+      border-radius: 4px;
+      padding: 24px;
+      width: 90vw;
+      max-width: 440px;
+      animation: modalIn 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #trama-note-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--holo);
+      text-transform: uppercase;
+    }
+    #trama-note-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--holo);
+      text-shadow: 0 0 20px rgba(0,255,231,0.4);
+    }
+    #trama-note-ta {
+      width: 100%;
+      min-height: 180px;
+      background: rgba(0,255,231,0.03);
+      border: 1px solid rgba(0,255,231,0.15);
+      border-radius: 2px;
+      padding: 10px 12px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      color: rgba(207,233,240,0.8);
+      resize: vertical;
+      outline: none;
+      line-height: 1.6;
+      box-sizing: border-box;
+    }
+    #trama-note-ta:focus { border-color: rgba(0,255,231,0.3); }
+    #trama-note-ta::placeholder { color: rgba(207,233,240,0.2); }
+
     /* ── COLOR MENU (connections) ── */
     #conn-menu {
       position: fixed;
@@ -948,6 +1004,8 @@
       <input id="trama-name-input" type="text" placeholder="Sem nome..." maxlength="60" autocomplete="off" spellcheck="false">
     </div>
     <div class="tb-sep"></div>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" id="btn-trama-note">✎ Notas</button>
     <button class="tb-btn" id="btn-save">↑ Salvar trama</button>
   </div>
 
@@ -980,6 +1038,19 @@
       <div class="trama-fab-icon"></div>
       <div class="trama-fab-label">Novo nó</div>
     </button>
+  </div>
+
+  <!-- Modal notas da trama -->
+  <div id="trama-note-overlay">
+    <div id="trama-note-box">
+      <div id="trama-note-label">Notas · Trama</div>
+      <div id="trama-note-title">—</div>
+      <textarea id="trama-note-ta" placeholder="Contexto, arco da história, anotações gerais..."></textarea>
+      <div class="modal-row">
+        <button class="modal-btn" id="trama-note-cancel">Cancelar</button>
+        <button class="modal-btn save" id="trama-note-save">Salvar notas</button>
+      </div>
+    </div>
   </div>
 
   <!-- Modal notas -->
@@ -1303,6 +1374,7 @@
     var nodes       = {};
     var connections = [];
     var nodeCount   = 0;
+    var tramaNote   = '';
     var scale       = 1;
     var panOffset   = { x: 0, y: 0 };
 
@@ -1726,6 +1798,29 @@
       if (e.target === document.getElementById('modal-overlay')) closeModal(false);
     });
 
+    // ── Notas da trama ──
+    var tramaNoteOverlay = document.getElementById('trama-note-overlay');
+    var tramaNoteTa      = document.getElementById('trama-note-ta');
+
+    function openTramaNote() {
+      document.getElementById('trama-note-title').textContent =
+        (document.getElementById('trama-name-input').value || '').trim() || 'Trama';
+      tramaNoteTa.value = tramaNote;
+      tramaNoteOverlay.classList.add('open');
+      if (!IS_MOBILE) tramaNoteTa.focus();
+    }
+    function closeTramaNote(save) {
+      if (save) { tramaNote = tramaNoteTa.value; markDirty(); }
+      tramaNoteOverlay.classList.remove('open');
+    }
+
+    document.getElementById('btn-trama-note').addEventListener('click', openTramaNote);
+    document.getElementById('trama-note-save').addEventListener('click', function() { closeTramaNote(true); });
+    document.getElementById('trama-note-cancel').addEventListener('click', function() { closeTramaNote(false); });
+    tramaNoteOverlay.addEventListener('click', function(e) {
+      if (e.target === tramaNoteOverlay) closeTramaNote(false);
+    });
+
     // ══════════════════════════════════════════════════════════
     //  COLOR MENU (shared)
     // ══════════════════════════════════════════════════════════
@@ -1771,7 +1866,7 @@
       var connData = connections.map(function(c) {
         return { from: c.from, to: c.to, color: c.color || '#00ffe7' };
       });
-      return { nodes: nodeData, connections: connData };
+      return { nodes: nodeData, connections: connData, tramaNote: tramaNote };
     }
 
     function loadState(state) {
@@ -1779,6 +1874,7 @@
       connections.forEach(function(c) { if (c.labelWrap) c.labelWrap.remove(); });
       connections = [];
       svgLayer.querySelectorAll('.conn-path').forEach(function(e) { e.remove(); });
+      tramaNote = state.tramaNote || '';
       if (state.nodes) state.nodes.forEach(function(n) { createNode(0, 0, n); });
       if (state.connections) {
         state.connections.forEach(function(c) {
