@@ -442,6 +442,137 @@
       border-color: #ff5566;
       box-shadow: 0 0 10px rgba(255,85,102,0.4);
     }
+    /* ── Botão Mestre ── */
+    .mestre-btn {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: rgba(255,107,26,0.5);
+      text-transform: uppercase;
+      background: transparent;
+      border: 1px solid rgba(255,107,26,0.25);
+      border-radius: 4px;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      width: 120px;
+      text-align: center;
+    }
+    .mestre-btn:hover {
+      color: var(--orange);
+      border-color: rgba(255,107,26,0.6);
+      box-shadow: 0 0 10px rgba(255,107,26,0.3);
+    }
+    .mestre-btn.active {
+      color: var(--orange);
+      border-color: var(--orange);
+      background: rgba(255,107,26,0.08);
+      box-shadow: var(--glow-o);
+    }
+
+    /* ── Modo Mestre ── */
+    .mestre-mode .char-group .char-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 8px;
+      border: 2px dashed rgba(255,107,26,0.35);
+      z-index: 20;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      pointer-events: none;
+    }
+    .mestre-mode .char-group:hover .char-btn::after {
+      border-color: rgba(255,107,26,0.65);
+      box-shadow: inset 0 0 16px rgba(255,107,26,0.08);
+    }
+    .mestre-mode .char-group.selected .char-btn::after {
+      border: 2px solid var(--orange);
+      box-shadow: inset 0 0 20px rgba(255,107,26,0.15), 0 0 15px rgba(255,107,26,0.35);
+    }
+    .mestre-mode .char-delete-btn { display: none; }
+
+    .mestre-sel-badge {
+      display: none;
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--orange);
+      color: var(--dark);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      font-weight: bold;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+      box-shadow: 0 0 10px rgba(255,107,26,0.7);
+    }
+    .mestre-mode .char-group.selected .mestre-sel-badge { display: flex; }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25%      { transform: translateX(-6px); }
+      75%      { transform: translateX(6px); }
+    }
+    .shake { animation: shake 0.35s ease; }
+
+    /* ── Barra do Mestre ── */
+    .mestre-bar {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      padding: 14px 40px;
+      background: linear-gradient(to top, rgba(4,8,16,0.98), rgba(4,8,16,0.88));
+      border-top: 1px solid rgba(255,107,26,0.3);
+      z-index: 200;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .mestre-bar.visible { display: flex; }
+    .mestre-bar-info {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: rgba(255,107,26,0.65);
+      text-transform: uppercase;
+    }
+    .mestre-bar-count {
+      font-size: 22px;
+      color: var(--orange);
+      text-shadow: var(--glow-o);
+      margin: 0 4px;
+    }
+    .mestre-bar-limit {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: rgba(255,107,26,0.4);
+      text-transform: uppercase;
+      visibility: hidden;
+    }
+    .mestre-bar-limit.show { visibility: visible; }
+    .mestre-open-btn {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--dark);
+      background: var(--orange);
+      border: none;
+      border-radius: 4px;
+      padding: 10px 24px;
+      cursor: pointer;
+      text-transform: uppercase;
+      box-shadow: var(--glow-o);
+      transition: box-shadow 0.2s, transform 0.1s;
+    }
+    .mestre-open-btn:hover:not(:disabled) {
+      box-shadow: 0 0 20px rgba(255,107,26,0.8), 0 0 40px rgba(255,107,26,0.4);
+      transform: scale(1.03);
+    }
+    .mestre-open-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
     /* ── Mobile ── */
     @media (max-width: 600px) {
       .page {
@@ -501,7 +632,7 @@
         Voltar
       </a>
       <div class="page-title">Personagens</div>
-      <div class="header-spacer"></div>
+      <button class="mestre-btn" id="mestreBtn" onclick="toggleMestre()">Mestre</button>
     </div>
 
     <div class="roster" id="roster">
@@ -521,6 +652,15 @@
       </div>
 
     </div>
+  </div>
+
+  <!-- Barra do Mestre -->
+  <div class="mestre-bar" id="mestreBar">
+    <div class="mestre-bar-info">
+      <span class="mestre-bar-count" id="mestreCount">0</span> ficha(s) selecionada(s)
+      <div class="mestre-bar-limit" id="mestreLimitMsg">máximo 6 atingido</div>
+    </div>
+    <button class="mestre-open-btn" id="mestreOpenBtn" disabled onclick="openSelectedFichas()">Abrir fichas</button>
   </div>
 
   <script>
@@ -544,6 +684,8 @@
       const href = 'ficha.html?id=' + charId;
       const group = document.createElement('div');
       group.className = 'char-group';
+      group.dataset.charId = charId;
+      group.dataset.charName = name || 'Personagem';
 
       const btn = document.createElement('a');
       btn.href = href;
@@ -605,9 +747,13 @@
         setTimeout(() => group.remove(), 300);
       });
 
+      const badge = document.createElement('div');
+      badge.className = 'mestre-sel-badge';
+
       group.appendChild(btn);
       group.appendChild(label);
       group.appendChild(delBtn);
+      group.appendChild(badge);
       return group;
     }
 
@@ -629,6 +775,68 @@
     }
 
     loadRoster();
+
+    // ── Modo Mestre ──
+    let mestreMode = false;
+    const selectedChars = [];
+
+    function toggleMestre() {
+      mestreMode = !mestreMode;
+      document.body.classList.toggle('mestre-mode', mestreMode);
+      document.getElementById('mestreBtn').classList.toggle('active', mestreMode);
+      if (!mestreMode) {
+        selectedChars.length = 0;
+        document.querySelectorAll('.char-group.selected').forEach(g => g.classList.remove('selected'));
+        document.querySelectorAll('.mestre-sel-badge').forEach(b => b.textContent = '');
+      }
+      updateMestreBar();
+    }
+
+    function updateMestreBar() {
+      const count = selectedChars.length;
+      document.getElementById('mestreBar').classList.toggle('visible', mestreMode);
+      document.getElementById('mestreCount').textContent = count;
+      document.getElementById('mestreOpenBtn').disabled = count === 0;
+      document.getElementById('mestreLimitMsg').classList.toggle('show', count >= 6);
+    }
+
+    function updateBadges() {
+      document.querySelectorAll('.char-group').forEach(group => {
+        const badge = group.querySelector('.mestre-sel-badge');
+        if (!badge) return;
+        const idx = selectedChars.findIndex(c => c.id === group.dataset.charId);
+        badge.textContent = idx >= 0 ? (idx + 1) : '';
+      });
+    }
+
+    function openSelectedFichas() {
+      selectedChars.forEach(({id}) => window.open('ficha.html?id=' + id, '_blank'));
+    }
+
+    document.getElementById('roster').addEventListener('click', (e) => {
+      if (!mestreMode) return;
+      const btn = e.target.closest('.char-btn');
+      if (!btn) return;
+      e.preventDefault();
+      const group = btn.closest('.char-group');
+      if (!group || !group.dataset.charId) return;
+      const charId = group.dataset.charId;
+      const existingIdx = selectedChars.findIndex(c => c.id === charId);
+      if (existingIdx >= 0) {
+        selectedChars.splice(existingIdx, 1);
+        group.classList.remove('selected');
+      } else {
+        if (selectedChars.length >= 6) {
+          group.classList.add('shake');
+          setTimeout(() => group.classList.remove('shake'), 400);
+          return;
+        }
+        selectedChars.push({ id: charId, name: group.dataset.charName });
+        group.classList.add('selected');
+      }
+      updateBadges();
+      updateMestreBar();
+    });
 
     // ── Novo personagem: gera ID único e abre ficha ──
     document.getElementById('newCharBtn').addEventListener('click', (e) => {
