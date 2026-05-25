@@ -360,8 +360,7 @@
     });
 
     // Busca dados de todos os personagens
-    var query = ids.map(function(id) { return 'char_id=eq.' + id; }).join(',');
-    sbGet('/rest/v1/personagens?or=(' + query + ')&select=char_id,name,img_url,sheet_data')
+    sbGet('/rest/v1/personagens?char_id=in.(' + ids.join(',') + ')&select=char_id,name,img_url,sheet_data')
       .then(function(rows) {
         // Reordena para manter a ordem de seleção
         ids.forEach(function(id, i) {
