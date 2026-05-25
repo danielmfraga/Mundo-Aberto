@@ -810,7 +810,8 @@
     }
 
     function openSelectedFichas() {
-      selectedChars.forEach(({id}) => window.open('ficha.html?id=' + id, '_blank'));
+      const ids = selectedChars.map(c => c.id).join(',');
+      window.open('mestre-view.html?ids=' + ids, '_blank');
     }
 
     document.getElementById('roster').addEventListener('click', (e) => {

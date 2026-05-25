@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mestre · Mundo Aberto</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --holo:   #00ffe7;
+      --orange: #ff6b1a;
+      --dark:   #040810;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--dark);
+      overflow: hidden;
+    }
+
+    .layout {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* ── Header ── */
+    .mestre-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 44px;
+      flex-shrink: 0;
+      background: rgba(4,8,16,0.97);
+      border-bottom: 1px solid rgba(255,107,26,0.35);
+    }
+
+    .back-btn {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: rgba(0,255,231,0.5);
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: var(--holo); }
+
+    .header-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 6px;
+      color: var(--orange);
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(255,107,26,0.5);
+    }
+
+    .header-count {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: rgba(255,107,26,0.55);
+      text-transform: uppercase;
+      min-width: 80px;
+      text-align: right;
+    }
+
+    /* ── Grid de fichas ── */
+    .fichas-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-auto-rows: 1fr;
+      overflow: hidden;
+    }
+
+    /* 1 ficha: coluna única centralizada */
+    .fichas-grid.count-1 {
+      grid-template-columns: minmax(0, 700px);
+      justify-content: center;
+    }
+
+    .ficha-wrap {
+      position: relative;
+      border-right: 1px solid rgba(255,107,26,0.15);
+      border-bottom: 1px solid rgba(255,107,26,0.15);
+      overflow: hidden;
+    }
+
+    .ficha-wrap iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
+    /* separador visual entre pares de linha */
+    .ficha-wrap:nth-child(2n) { border-right: none; }
+
+    /* placeholder enquanto carrega */
+    .ficha-loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--dark);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: rgba(0,255,231,0.25);
+      text-transform: uppercase;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+    .ficha-wrap.loaded .ficha-loading { opacity: 0; }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+
+  <div class="mestre-header">
+    <a href="personagens.html" class="back-btn">← Personagens</a>
+    <div class="header-title">Modo Mestre</div>
+    <div class="header-count" id="headerCount"></div>
+  </div>
+
+  <div class="fichas-grid" id="fichasGrid"></div>
+
+</div>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const ids = (params.get('ids') || '').split(',').filter(Boolean).slice(0, 6);
+  const grid = document.getElementById('fichasGrid');
+  const countEl = document.getElementById('headerCount');
+
+  if (ids.length === 0) {
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;color:rgba(0,255,231,0.3);letter-spacing:4px;text-transform:uppercase">Nenhuma ficha selecionada</div>';
+  } else {
+    if (ids.length === 1) grid.classList.add('count-1');
+    countEl.textContent = ids.length + ' ficha' + (ids.length > 1 ? 's' : '');
+
+    ids.forEach(id => {
+      const wrap = document.createElement('div');
+      wrap.className = 'ficha-wrap';
+
+      const loading = document.createElement('div');
+      loading.className = 'ficha-loading';
+      loading.textContent = 'Carregando...';
+
+      const iframe = document.createElement('iframe');
+      iframe.src = 'ficha.html?id=' + id;
+      iframe.addEventListener('load', () => wrap.classList.add('loaded'));
+
+      wrap.appendChild(loading);
+      wrap.appendChild(iframe);
+      grid.appendChild(wrap);
+    });
+  }
+</script>
+
+</body>
+</html>
