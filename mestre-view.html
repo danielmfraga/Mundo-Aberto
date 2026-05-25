@@ -59,14 +59,57 @@
       text-shadow: 0 0 10px rgba(255,107,26,0.5);
     }
 
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 180px;
+      justify-content: flex-end;
+    }
+
     .header-count {
       font-family: 'Share Tech Mono', monospace;
       font-size: 10px;
       letter-spacing: 2px;
       color: rgba(255,107,26,0.55);
       text-transform: uppercase;
-      min-width: 80px;
-      text-align: right;
+      white-space: nowrap;
+    }
+
+    .zoom-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .zoom-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: rgba(0,255,231,0.35);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .zoom-val {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: rgba(0,255,231,0.55);
+      width: 30px;
+    }
+    input[type=range].zoom-slider {
+      -webkit-appearance: none;
+      width: 80px;
+      height: 2px;
+      background: rgba(0,255,231,0.2);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type=range].zoom-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--holo);
+      box-shadow: 0 0 6px var(--holo);
     }
 
     /* ── Grid de fichas ── */
@@ -127,7 +170,14 @@
   <div class="mestre-header">
     <a href="personagens.html" class="back-btn">← Personagens</a>
     <div class="header-title">Modo Mestre</div>
-    <div class="header-count" id="headerCount"></div>
+    <div class="header-right">
+      <div class="zoom-wrap">
+        <span class="zoom-label">Zoom</span>
+        <input type="range" class="zoom-slider" id="zoomSlider" min="30" max="100" value="60">
+        <span class="zoom-val" id="zoomVal">60%</span>
+      </div>
+      <div class="header-count" id="headerCount"></div>
+    </div>
   </div>
 
   <div class="fichas-grid" id="fichasGrid"></div>
@@ -139,6 +189,33 @@
   const ids = (params.get('ids') || '').split(',').filter(Boolean).slice(0, 6);
   const grid = document.getElementById('fichasGrid');
   const countEl = document.getElementById('headerCount');
+  const slider = document.getElementById('zoomSlider');
+  const zoomVal = document.getElementById('zoomVal');
+
+  let currentZoom = parseInt(slider.value) / 100;
+
+  function applyZoom(iframe, zoom) {
+    try {
+      const doc = iframe.contentDocument;
+      let style = doc.getElementById('__mestre_zoom__');
+      if (!style) {
+        style = doc.createElement('style');
+        style.id = '__mestre_zoom__';
+        doc.head.appendChild(style);
+      }
+      style.textContent = 'html { zoom: ' + zoom + ' !important; }';
+    } catch(e) {}
+  }
+
+  function applyZoomAll(zoom) {
+    document.querySelectorAll('.ficha-wrap iframe').forEach(f => applyZoom(f, zoom));
+  }
+
+  slider.addEventListener('input', () => {
+    currentZoom = parseInt(slider.value) / 100;
+    zoomVal.textContent = slider.value + '%';
+    applyZoomAll(currentZoom);
+  });
 
   if (ids.length === 0) {
     document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;color:rgba(0,255,231,0.3);letter-spacing:4px;text-transform:uppercase">Nenhuma ficha selecionada</div>';
@@ -156,7 +233,10 @@
 
       const iframe = document.createElement('iframe');
       iframe.src = 'ficha.html?id=' + id;
-      iframe.addEventListener('load', () => wrap.classList.add('loaded'));
+      iframe.addEventListener('load', () => {
+        applyZoom(iframe, currentZoom);
+        wrap.classList.add('loaded');
+      });
 
       wrap.appendChild(loading);
       wrap.appendChild(iframe);
