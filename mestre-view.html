@@ -384,7 +384,11 @@
 
   function renderCard(card, row) {
     var d = {};
-    try { d = JSON.parse(row.sheet_data || '{}'); } catch(e) {}
+    if (row.sheet_data && typeof row.sheet_data === 'object') {
+      d = row.sheet_data;
+    } else if (typeof row.sheet_data === 'string') {
+      try { d = JSON.parse(row.sheet_data); } catch(e) {}
+    }
 
     var name = row.name || (d.fields && d.fields.name) || 'Personagem';
     var principio = (d.fields && d.fields.principle) || '';
