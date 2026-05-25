@@ -234,29 +234,40 @@
     }
     .desp-zero { color: rgba(0,255,231,0.2); text-shadow: none; font-size: 14px; }
 
-    /* ── Dots (atributos, habilidades e cosmologia) ── */
-    .dots-grid {
+    /* ── Stats: 3 blocos lado a lado ── */
+    .stats-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2px 8px;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
     }
-    .dot-row { display: flex; align-items: center; gap: 5px; min-width: 0; }
+    .stats-block { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .stats-block-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 7px;
+      letter-spacing: 3px;
+      color: rgba(255,107,26,0.55);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid rgba(255,107,26,0.15);
+    }
+    .dot-row { display: flex; align-items: center; gap: 4px; min-width: 0; }
     .dot-name {
       font-family: 'Share Tech Mono', monospace;
-      font-size: 8px;
-      letter-spacing: 1px;
-      color: rgba(0,255,231,0.4);
+      font-size: 7px;
+      letter-spacing: 0.5px;
+      color: rgba(0,255,231,0.45);
       text-transform: uppercase;
-      width: 60px;
-      flex-shrink: 0;
+      flex: 1;
+      min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .dot-name.cosmo { color: rgba(123,47,255,0.7); }
-    .dots-row { display: flex; gap: 2px; flex-wrap: nowrap; }
+    .dots-row { display: flex; gap: 2px; flex-wrap: nowrap; flex-shrink: 0; }
     .dot {
-      width: 7px; height: 7px;
+      width: 6px; height: 6px;
       border-radius: 50%;
       border: 1px solid rgba(0,255,231,0.2);
       background: rgba(0,255,231,0.03);
@@ -400,10 +411,14 @@
     var fdv = (d.vitals && d.vitals['fdv-boxes']) || {};
     var desp = (d.vitals && d.vitals['desp-boxes'] && d.vitals['desp-boxes'].desp) || 0;
 
-    // Dots — todos com filled > 0, cosmologia separada
+    // Separa dots em cosmologia / atributos / habilidades
+    var ATTR_NAMES = ['Força','Destreza','Vigor','Carisma','Manipulação','Autocontrole','Inteligência','Raciocínio','Determinação'];
     var allDots  = d.dots || [];
     var cosmoDot = allDots.find(function(x) { return x.name && x.name.toLowerCase() === 'cosmologia'; });
-    var attrDots = allDots.filter(function(x) { return x.name && x.name.toLowerCase() !== 'cosmologia' && x.filled > 0; });
+    var attrDots = allDots.filter(function(x) { return ATTR_NAMES.indexOf(x.name) !== -1 && x.filled > 0; });
+    var skillDots = allDots.filter(function(x) { return ATTR_NAMES.indexOf(x.name) === -1 && x.name && x.name.toLowerCase() !== 'cosmologia' && x.filled > 0; });
+    var skillsA = skillDots.slice(0, Math.ceil(skillDots.length / 2));
+    var skillsB = skillDots.slice(Math.ceil(skillDots.length / 2));
 
     // Trunfos
     var trunfos = (d.trunfos || []).slice(0, 4);
@@ -462,18 +477,41 @@
       html += '</div></div>';
     }
 
-    // Atributos & Habilidades em grid 2 colunas
-    if (attrDots.length) {
-      html += '<div class="card-divider"></div><div>';
-      html += '<div class="section-label">Atributos & Habilidades</div>';
-      html += '<div class="dots-grid">';
+    // Atributos + Habilidades em 3 blocos
+    if (attrDots.length || skillDots.length) {
+      html += '<div class="card-divider"></div>';
+      html += '<div class="stats-row">';
+
+      // Bloco 1: Atributos
+      html += '<div class="stats-block">';
+      html += '<div class="stats-block-title">Atributos</div>';
       attrDots.forEach(function(a) {
-        html += '<div class="dot-row">';
-        html += '<span class="dot-name" title="' + a.name + '">' + a.name + '</span>';
-        html += '<div class="dots-row">' + renderDots(a.filled, a.max, '') + '</div>';
-        html += '</div>';
+        html += '<div class="dot-row"><span class="dot-name" title="' + a.name + '">' + a.name + '</span>';
+        html += '<div class="dots-row">' + renderDots(a.filled, a.max, '') + '</div></div>';
       });
-      html += '</div></div>';
+      if (!attrDots.length) html += '<span style="font-family:\'Share Tech Mono\',monospace;font-size:7px;color:rgba(0,255,231,0.15)">—</span>';
+      html += '</div>';
+
+      // Bloco 2: Habilidades A
+      html += '<div class="stats-block">';
+      html += '<div class="stats-block-title">Habilidades</div>';
+      skillsA.forEach(function(s) {
+        html += '<div class="dot-row"><span class="dot-name" title="' + s.name + '">' + s.name + '</span>';
+        html += '<div class="dots-row">' + renderDots(s.filled, s.max, '') + '</div></div>';
+      });
+      if (!skillsA.length) html += '<span style="font-family:\'Share Tech Mono\',monospace;font-size:7px;color:rgba(0,255,231,0.15)">—</span>';
+      html += '</div>';
+
+      // Bloco 3: Habilidades B
+      html += '<div class="stats-block">';
+      html += '<div class="stats-block-title">&nbsp;</div>';
+      skillsB.forEach(function(s) {
+        html += '<div class="dot-row"><span class="dot-name" title="' + s.name + '">' + s.name + '</span>';
+        html += '<div class="dots-row">' + renderDots(s.filled, s.max, '') + '</div></div>';
+      });
+      html += '</div>';
+
+      html += '</div>'; // stats-row
     }
 
     // Trunfos
