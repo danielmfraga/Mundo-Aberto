@@ -434,6 +434,110 @@
       box-shadow: 0 0 10px rgba(255,85,102,0.4);
     }
 
+    /* ── Kebab button ── */
+    .char-kebab-btn {
+      position: absolute;
+      bottom: -8px; right: -8px;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: rgba(4,8,16,0.9);
+      border: 1px solid rgba(123,47,255,0.3);
+      color: rgba(160,80,255,0.55);
+      font-size: 13px; line-height: 1;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+      z-index: 10;
+    }
+    .char-group:hover .char-kebab-btn { opacity: 1; }
+    @media (hover: none) { .char-kebab-btn { opacity: 0.3; } }
+    .char-kebab-btn:hover {
+      color: var(--holo);
+      border-color: rgba(160,80,255,0.65);
+      box-shadow: 0 0 10px rgba(123,47,255,0.4);
+    }
+    .mestre-mode .char-kebab-btn { display: none; }
+
+    /* ── Animação de transmissão ── */
+    @keyframes charTransmitOut {
+      0%   { opacity: 1;   transform: scale(1)    translateY(0);     filter: brightness(1)   blur(0px); }
+      20%  { opacity: 1;   transform: scale(1.06) translateY(-6px);  filter: brightness(2.5) blur(0px); }
+      60%  { opacity: 0.5; transform: scale(0.65) translateY(-24px); filter: brightness(5)   blur(2px); }
+      100% { opacity: 0;   transform: scale(0.15) translateY(-55px); filter: brightness(9)   blur(8px); }
+    }
+    @keyframes charDupeFlash {
+      0%   { outline-color: var(--holo); outline-offset: 2px; }
+      50%  { outline-color: var(--holo); outline-offset: 8px; box-shadow: 0 0 30px rgba(160,80,255,0.6); }
+      100% { outline-color: transparent; outline-offset: 2px; box-shadow: none; }
+    }
+    .char-group.transmit-out {
+      animation: charTransmitOut 0.65s cubic-bezier(0.55,0,1,1) forwards;
+      pointer-events: none;
+    }
+    .char-group.dupe-flash {
+      outline: 2px solid var(--holo);
+      animation: charDupeFlash 0.9s ease forwards;
+    }
+
+    /* ── Context menu ── */
+    .ctx-menu {
+      position: fixed;
+      background: rgba(4,8,16,0.97);
+      border: 1px solid rgba(123,47,255,0.25);
+      border-radius: 6px;
+      padding: 4px 0;
+      z-index: 1000;
+      min-width: 220px;
+      box-shadow: 0 0 20px rgba(123,47,255,0.1), 0 8px 32px rgba(0,0,0,0.85);
+      display: none;
+    }
+    .ctx-menu.open { display: block; animation: ctxFadeIn 0.12s ease; }
+    @keyframes ctxFadeIn {
+      from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+      to   { opacity: 1; transform: scale(1)    translateY(0); }
+    }
+    .ctx-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 8px; letter-spacing: 3px;
+      color: rgba(160,80,255,0.3);
+      padding: 8px 16px 2px;
+      text-transform: uppercase; user-select: none;
+    }
+    .ctx-item {
+      padding: 10px 16px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px; letter-spacing: 2px;
+      color: rgba(160,80,255,0.65);
+      cursor: pointer;
+      display: flex; align-items: center; gap: 10px;
+      text-transform: uppercase;
+      transition: background 0.1s, color 0.1s;
+      user-select: none; white-space: nowrap;
+    }
+    .ctx-item:hover { background: rgba(123,47,255,0.08); color: var(--holo); }
+    .ctx-icon { font-size: 13px; opacity: 0.8; width: 16px; text-align: center; flex-shrink: 0; }
+    .ctx-divider { border-top: 1px solid rgba(123,47,255,0.15); margin: 3px 0; }
+
+    /* ── Toast ── */
+    .ctx-toast {
+      position: fixed;
+      bottom: 80px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(4,8,16,0.95);
+      border: 1px solid rgba(123,47,255,0.35);
+      border-radius: 4px;
+      padding: 10px 22px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px; letter-spacing: 2px;
+      color: var(--holo);
+      z-index: 600;
+      pointer-events: none; white-space: nowrap;
+      animation: toastIn 0.2s ease, toastOut 0.4s ease 2s forwards;
+    }
+    @keyframes toastIn  { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+    @keyframes toastOut { from { opacity:1; } to { opacity:0; } }
+
     /* ── Botão Mestre ── */
     .mestre-btn {
       font-family: 'Share Tech Mono', monospace;
@@ -619,6 +723,14 @@
     </div>
   </div>
 
+  <!-- Menu contextual -->
+  <div class="ctx-menu" id="ctxMenu">
+    <div class="ctx-label">N P C</div>
+    <div class="ctx-item" id="ctxDuplicate"><span class="ctx-icon">⊕</span> Duplicar</div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item" id="ctxMove"><span class="ctx-icon">⇄</span> Mover para Personagens</div>
+  </div>
+
   <!-- Barra do Mestre -->
   <div class="mestre-bar" id="mestreBar">
     <div class="mestre-bar-info">
@@ -710,12 +822,24 @@
         setTimeout(() => group.remove(), 300);
       });
 
+      // ── Kebab ──
+      const kebabBtn = document.createElement('button');
+      kebabBtn.className = 'char-kebab-btn';
+      kebabBtn.title = 'Mais opções';
+      kebabBtn.textContent = '⋮';
+      kebabBtn.addEventListener('click', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        const r = kebabBtn.getBoundingClientRect();
+        showCtxMenu(r.left, r.bottom + 6, charId, name, group);
+      });
+
       const badge = document.createElement('div');
       badge.className = 'mestre-sel-badge';
 
       group.appendChild(btn);
       group.appendChild(label);
       group.appendChild(delBtn);
+      group.appendChild(kebabBtn);
       group.appendChild(badge);
       return group;
     }
@@ -801,6 +925,113 @@
       }
       updateBadges();
       updateMestreBar();
+    });
+
+    // ── Context menu ──────────────────────────────────────────
+    let ctxCharId = null, ctxCharGroup = null, ctxOpenedAt = 0;
+    let ctxBusy = false;
+    const ctxMenu = document.getElementById('ctxMenu');
+
+    function showCtxMenu(x, y, charId, name, group) {
+      ctxCharId = charId; ctxCharGroup = group;
+      ctxOpenedAt = Date.now();
+      ctxMenu.style.left = '0px'; ctxMenu.style.top = '0px';
+      ctxMenu.classList.add('open');
+      requestAnimationFrame(() => {
+        const mw = ctxMenu.offsetWidth, mh = ctxMenu.offsetHeight;
+        ctxMenu.style.left = Math.max(8, Math.min(x, window.innerWidth  - mw - 8)) + 'px';
+        ctxMenu.style.top  = Math.max(8, Math.min(y, window.innerHeight - mh - 8)) + 'px';
+      });
+    }
+    function closeCtxMenu() {
+      ctxMenu.classList.remove('open');
+      ctxCharId = null; ctxCharGroup = null;
+    }
+    function showToast(msg) {
+      const t = document.createElement('div');
+      t.className = 'ctx-toast'; t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 2600);
+    }
+
+    document.addEventListener('click', (e) => { if (!e.target.closest('#ctxMenu')) closeCtxMenu(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCtxMenu(); });
+
+    document.getElementById('roster').addEventListener('contextmenu', (e) => {
+      const btn = e.target.closest('.char-btn');
+      if (!btn) return;
+      e.preventDefault();
+      const g = btn.closest('.char-group');
+      if (!g || !g.dataset.charId) return;
+      showCtxMenu(e.clientX, e.clientY, g.dataset.charId, g.dataset.charName, g);
+    });
+
+    let lpTimer = null, lpTriggered = false;
+    document.getElementById('roster').addEventListener('touchstart', (e) => {
+      const btn = e.target.closest('.char-btn');
+      if (!btn) return;
+      const g = btn.closest('.char-group');
+      if (!g || !g.dataset.charId) return;
+      const t = e.touches[0];
+      lpTimer = setTimeout(() => {
+        lpTriggered = true;
+        navigator.vibrate && navigator.vibrate(50);
+        showCtxMenu(t.clientX, t.clientY + 20, g.dataset.charId, g.dataset.charName, g);
+      }, 400);
+    }, { passive: true });
+    document.getElementById('roster').addEventListener('touchmove',  () => clearTimeout(lpTimer), { passive: true });
+    document.getElementById('roster').addEventListener('touchend',   () => clearTimeout(lpTimer), { passive: true });
+    document.getElementById('roster').addEventListener('click', (e) => {
+      if (!lpTriggered) return;
+      lpTriggered = false; e.preventDefault(); e.stopPropagation();
+    }, true);
+
+    // ── Duplicar ──
+    document.getElementById('ctxDuplicate').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (Date.now() - ctxOpenedAt < 300 || !ctxCharId || ctxBusy) return;
+      ctxBusy = true;
+      const id = ctxCharId, grp = ctxCharGroup;
+      closeCtxMenu();
+      try {
+        const rows = await sbFetch('/rest/v1/personagens?char_id=eq.' + id + '&select=*');
+        if (!rows || !rows[0]) return;
+        const src = rows[0];
+        const newId   = 'npc_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+        const newName = (src.name || 'NPC') + ' (Cópia)';
+        const newData = JSON.parse(JSON.stringify(src.sheet_data || {}));
+        if (newData.fields) newData.fields.name = newName;
+        await sbFetch('/rest/v1/personagens', 'POST', {
+          char_id: newId, name: newName, img_url: src.img_url || null, sheet_data: newData
+        });
+        const card = createHoloCard(newId, newName, src.img_url);
+        document.getElementById('roster').insertBefore(card, document.querySelector('.new-char-group'));
+        requestAnimationFrame(() => card.classList.add('dupe-flash'));
+        setTimeout(() => card.classList.remove('dupe-flash'), 950);
+        showToast('⊕  Cópia criada');
+      } finally { ctxBusy = false; }
+    });
+
+    // ── Mover para Personagens ──
+    document.getElementById('ctxMove').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (Date.now() - ctxOpenedAt < 300 || !ctxCharId || ctxBusy) return;
+      ctxBusy = true;
+      const id = ctxCharId, grp = ctxCharGroup;
+      closeCtxMenu();
+      try {
+        const rows = await sbFetch('/rest/v1/personagens?char_id=eq.' + id + '&select=*');
+        if (!rows || !rows[0]) return;
+        const src = rows[0];
+        const newId = 'char_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+        if (grp) grp.classList.add('transmit-out');
+        await sbFetch('/rest/v1/personagens', 'POST', {
+          char_id: newId, name: src.name, img_url: src.img_url || null, sheet_data: src.sheet_data
+        });
+        await sbFetch('/rest/v1/personagens?char_id=eq.' + id, 'DELETE');
+        setTimeout(() => grp && grp.remove(), 680);
+        showToast('⇄  Movido para Personagens');
+      } finally { ctxBusy = false; }
     });
 
     // ── Novo NPC: gera ID com prefixo "npc_" ──
