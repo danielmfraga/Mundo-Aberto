@@ -278,3 +278,103 @@ document.addEventListener('DOMContentLoaded', async function() {
   setTimeout(function() { tryInject(0); }, 600);
 })();
 </script>
+<script>
+(function() {
+  var __dirty = false;
+  function markDirty() { __dirty = true; }
+  function markClean() { __dirty = false; }
+
+  var CSS = [
+    '#__ma-unsvd-ov{position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:999999;display:flex;align-items:center;justify-content:center;}',
+    '#__ma-unsvd-box{background:#040810;border:1px solid rgba(0,255,231,0.28);border-radius:4px;padding:36px 40px;max-width:340px;width:90%;text-align:center;font-family:"Share Tech Mono",monospace;box-shadow:0 0 40px rgba(0,255,231,0.07);}',
+    '#__ma-unsvd-box h2{color:rgba(0,255,231,0.85);font-size:10px;letter-spacing:4px;text-transform:uppercase;margin-bottom:12px;}',
+    '#__ma-unsvd-box p{color:rgba(207,233,240,0.5);font-size:12px;line-height:1.75;margin-bottom:28px;}',
+    '#__ma-unsvd-box .row{display:flex;gap:12px;justify-content:center;}',
+    '#__ma-unsvd-box button{background:transparent;font-family:"Share Tech Mono",monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:8px 20px;cursor:pointer;border-radius:2px;transition:all .18s;}',
+    '#__ma-sv{border:1px solid rgba(0,255,231,0.4);color:rgba(0,255,231,0.7);}',
+    '#__ma-sv:hover{border-color:#00ffe7;color:#00ffe7;box-shadow:0 0 12px rgba(0,255,231,0.3);}',
+    '#__ma-dc{border:1px solid rgba(255,107,26,0.35);color:rgba(255,107,26,0.5);}',
+    '#__ma-dc:hover{border-color:rgba(255,107,26,0.75);color:rgba(255,107,26,0.9);}'
+  ].join('');
+
+  function showModal(onSave, onDiscard) {
+    var ov = document.createElement('div');
+    ov.id = '__ma-unsvd-ov';
+    ov.innerHTML =
+      '<div id="__ma-unsvd-box">' +
+        '<h2>Alterações não salvas</h2>' +
+        '<p>A ficha foi modificada.<br>O que deseja fazer?</p>' +
+        '<div class="row">' +
+          '<button id="__ma-sv">Salvar</button>' +
+          '<button id="__ma-dc">Não salvar</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(ov);
+    document.getElementById('__ma-sv').onclick  = function() { ov.remove(); onSave(); };
+    document.getElementById('__ma-dc').onclick  = function() { ov.remove(); onDiscard(); };
+  }
+
+  function injectDirty() {
+    if (window.__ma_dirty_ok) return;
+    var saveBtn  = document.getElementById('saveSheetBtn');
+    var sheet    = document.querySelector('.sheet');
+    var backLink = document.querySelector('a[href="personagens.html"]');
+    if (!saveBtn || !sheet || !backLink) return;
+    window.__ma_dirty_ok = true;
+
+    // CSS
+    var s = document.createElement('style');
+    s.textContent = CSS;
+    document.head.appendChild(s);
+
+    // Marcar dirty em qualquer alteracao de campo
+    sheet.addEventListener('input',  markDirty, true);
+    sheet.addEventListener('change', markDirty, true);
+
+    // Marcar clean quando o botao mostrar "Salvo"
+    new MutationObserver(function() {
+      if (saveBtn.textContent.indexOf('Salvo') !== -1) markClean();
+    }).observe(saveBtn, { childList: true, subtree: true, characterData: true });
+
+    // Interceptar botao voltar
+    backLink.onclick = function(e) {
+      e.preventDefault();
+      var id   = new URLSearchParams(location.search).get('id');
+      var dest = (id && id.startsWith('npc_')) ? 'npcs.html' : 'personagens.html';
+      if (!__dirty) { window.location.href = dest; return; }
+      showModal(
+        function() {
+          // Salvar e depois navegar
+          saveBtn.click();
+          var t = Date.now();
+          var iv = setInterval(function() {
+            if (!__dirty || Date.now() - t > 5000) {
+              clearInterval(iv);
+              setTimeout(function() { window.location.href = dest; }, 350);
+            }
+          }, 150);
+        },
+        function() { window.location.href = dest; }
+      );
+    };
+
+    // beforeunload: aviso nativo do browser ao fechar aba / recarregar
+    window.addEventListener('beforeunload', function(e) {
+      if (!__dirty) return;
+      e.preventDefault();
+      e.returnValue = '';
+    });
+  }
+
+  function tryInjectDirty(n) {
+    if (window.__ma_dirty_ok) return;
+    if (document.getElementById('saveSheetBtn') && document.querySelector('.sheet')) {
+      injectDirty();
+    } else if (n < 25) {
+      setTimeout(function() { tryInjectDirty(n + 1); }, 300);
+    }
+  }
+
+  setTimeout(function() { tryInjectDirty(0); }, 500);
+})();
+</script>
