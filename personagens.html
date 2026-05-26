@@ -929,7 +929,7 @@
           'Content-Type': 'application/json'
         },
         body: body ? JSON.stringify(body) : undefined
-      }).then(function(r) { return r.json(); });
+      }).then(function(r) { return r.status === 204 ? null : r.json(); });
     }
 
     // ── Holograma reutilizável ──
