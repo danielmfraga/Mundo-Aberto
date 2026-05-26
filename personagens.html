@@ -442,6 +442,72 @@
       border-color: #ff5566;
       box-shadow: 0 0 10px rgba(255,85,102,0.4);
     }
+
+    /* ── Kebab menu button ── */
+    .char-kebab-btn {
+      position: absolute;
+      bottom: -8px; right: -8px;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: rgba(4,8,16,0.9);
+      border: 1px solid rgba(0,255,231,0.25);
+      color: rgba(0,255,231,0.5);
+      font-size: 13px; line-height: 1;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+      z-index: 10;
+    }
+    .char-group:hover .char-kebab-btn { opacity: 1; }
+    @media (hover: none) { .char-kebab-btn { opacity: 0.3; } }
+    .char-kebab-btn:hover {
+      color: var(--holo);
+      border-color: rgba(0,255,231,0.6);
+      box-shadow: 0 0 10px rgba(0,255,231,0.3);
+    }
+    .mestre-mode .char-kebab-btn { display: none; }
+
+    /* ── Context menu ── */
+    .ctx-menu {
+      position: fixed;
+      background: rgba(4,8,16,0.97);
+      border: 1px solid rgba(0,255,231,0.2);
+      border-radius: 6px;
+      padding: 4px 0;
+      z-index: 1000;
+      min-width: 200px;
+      box-shadow: 0 0 20px rgba(0,255,231,0.08), 0 8px 32px rgba(0,0,0,0.85);
+      display: none;
+    }
+    .ctx-menu.open { display: block; animation: ctxFadeIn 0.12s ease; }
+    @keyframes ctxFadeIn {
+      from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+      to   { opacity: 1; transform: scale(1)    translateY(0); }
+    }
+    .ctx-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 8px; letter-spacing: 3px;
+      color: rgba(0,255,231,0.25);
+      padding: 8px 16px 2px;
+      text-transform: uppercase;
+      user-select: none;
+    }
+    .ctx-item {
+      padding: 10px 16px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px; letter-spacing: 2px;
+      color: rgba(0,255,231,0.65);
+      cursor: pointer;
+      display: flex; align-items: center; gap: 10px;
+      text-transform: uppercase;
+      transition: background 0.1s, color 0.1s;
+      user-select: none; white-space: nowrap;
+    }
+    .ctx-item:hover { background: rgba(0,255,231,0.07); color: var(--holo); }
+    .ctx-icon { font-size: 13px; opacity: 0.8; width: 16px; text-align: center; flex-shrink: 0; }
+    .ctx-divider { border-top: 1px solid rgba(0,255,231,0.1); margin: 3px 0; }
+
     /* ── Portal Buraco Negro (NPCs) ── */
     .portal-group {
       display: flex;
@@ -792,6 +858,14 @@
     </div>
   </div>
 
+  <!-- Menu contextual de ficha -->
+  <div class="ctx-menu" id="ctxMenu">
+    <div class="ctx-label">Ficha</div>
+    <div class="ctx-item" id="ctxDuplicate"><span class="ctx-icon">⊕</span> Duplicar</div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item" id="ctxMove"><span class="ctx-icon">⇄</span> Mover para N P C S</div>
+  </div>
+
   <!-- Barra do Mestre -->
   <div class="mestre-bar" id="mestreBar">
     <div class="mestre-bar-info">
@@ -885,12 +959,24 @@
         setTimeout(() => group.remove(), 300);
       });
 
+      // ── Botão kebab (⋮ mais opções) ──
+      const kebabBtn = document.createElement('button');
+      kebabBtn.className = 'char-kebab-btn';
+      kebabBtn.title = 'Mais opções';
+      kebabBtn.textContent = '⋮';
+      kebabBtn.addEventListener('click', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        const r = kebabBtn.getBoundingClientRect();
+        showCtxMenu(r.left, r.bottom + 6, charId, name, group);
+      });
+
       const badge = document.createElement('div');
       badge.className = 'mestre-sel-badge';
 
       group.appendChild(btn);
       group.appendChild(label);
       group.appendChild(delBtn);
+      group.appendChild(kebabBtn);
       group.appendChild(badge);
       return group;
     }
@@ -994,6 +1080,107 @@
       });
       const id = 'char_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
       window.location.href = 'ficha.html?id=' + id;
+    });
+    // ── Context menu ──────────────────────────────────────────
+    let ctxCharId = null, ctxCharGroup = null;
+    const ctxMenu = document.getElementById('ctxMenu');
+
+    function showCtxMenu(x, y, charId, name, group) {
+      ctxCharId = charId; ctxCharGroup = group;
+      ctxMenu.style.left = '0px'; ctxMenu.style.top = '0px';
+      ctxMenu.classList.add('open');
+      requestAnimationFrame(() => {
+        const mw = ctxMenu.offsetWidth, mh = ctxMenu.offsetHeight;
+        ctxMenu.style.left = Math.max(8, Math.min(x, window.innerWidth  - mw - 8)) + 'px';
+        ctxMenu.style.top  = Math.max(8, Math.min(y, window.innerHeight - mh - 8)) + 'px';
+      });
+    }
+
+    function closeCtxMenu() {
+      ctxMenu.classList.remove('open');
+      ctxCharId = null; ctxCharGroup = null;
+    }
+
+    document.addEventListener('click', (e) => { if (!e.target.closest('#ctxMenu')) closeCtxMenu(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCtxMenu(); });
+
+    // Right-click on card
+    document.getElementById('roster').addEventListener('contextmenu', (e) => {
+      const btn = e.target.closest('.char-btn');
+      if (!btn) return;
+      e.preventDefault();
+      const g = btn.closest('.char-group');
+      if (!g || !g.dataset.charId) return;
+      showCtxMenu(e.clientX, e.clientY, g.dataset.charId, g.dataset.charName, g);
+    });
+
+    // Long press (mobile)
+    let lpTimer = null, lpTriggered = false;
+    document.getElementById('roster').addEventListener('touchstart', (e) => {
+      const btn = e.target.closest('.char-btn');
+      if (!btn) return;
+      const g = btn.closest('.char-group');
+      if (!g || !g.dataset.charId) return;
+      const t = e.touches[0];
+      lpTimer = setTimeout(() => {
+        lpTriggered = true;
+        navigator.vibrate && navigator.vibrate(50);
+        showCtxMenu(t.clientX, t.clientY + 20, g.dataset.charId, g.dataset.charName, g);
+      }, 400);
+    }, { passive: true });
+    document.getElementById('roster').addEventListener('touchmove',  () => clearTimeout(lpTimer), { passive: true });
+    document.getElementById('roster').addEventListener('touchend',   () => clearTimeout(lpTimer), { passive: true });
+    // Prevent tap navigation after long-press
+    document.getElementById('roster').addEventListener('click', (e) => {
+      if (!lpTriggered) return;
+      lpTriggered = false;
+      e.preventDefault(); e.stopPropagation();
+    }, true);
+
+    // ── Duplicar ──
+    document.getElementById('ctxDuplicate').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!ctxCharId) return closeCtxMenu();
+      const id = ctxCharId, grp = ctxCharGroup;
+      closeCtxMenu();
+      const rows = await sbFetch('/rest/v1/personagens?char_id=eq.' + id + '&select=*');
+      if (!rows || !rows[0]) return;
+      const src = rows[0];
+      const prefix = id.startsWith('npc_') ? 'npc_' : 'char_';
+      const newId   = prefix + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+      const newName = (src.name || 'Personagem') + ' (Cópia)';
+      const newData = JSON.parse(JSON.stringify(src.sheet_data || {}));
+      if (newData.fields) newData.fields.name = newName;
+      await sbFetch('/rest/v1/personagens', 'POST', {
+        char_id: newId, name: newName, img_url: src.img_url || null, sheet_data: newData
+      });
+      const card = createHoloCard(newId, newName, src.img_url);
+      document.getElementById('roster').insertBefore(card, document.querySelector('.new-char-group'));
+      card.style.outline = '2px solid var(--holo)';
+      card.style.outlineOffset = '4px';
+      setTimeout(() => { card.style.transition = 'outline 0.8s'; card.style.outline = '2px solid transparent'; }, 900);
+    });
+
+    // ── Mover para NPCs ──
+    document.getElementById('ctxMove').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!ctxCharId) return closeCtxMenu();
+      const id = ctxCharId, grp = ctxCharGroup;
+      closeCtxMenu();
+      const rows = await sbFetch('/rest/v1/personagens?char_id=eq.' + id + '&select=*');
+      if (!rows || !rows[0]) return;
+      const src = rows[0];
+      const newId = 'npc_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+      await sbFetch('/rest/v1/personagens', 'POST', {
+        char_id: newId, name: src.name, img_url: src.img_url || null, sheet_data: src.sheet_data
+      });
+      await sbFetch('/rest/v1/personagens?char_id=eq.' + id, 'DELETE');
+      if (grp) {
+        grp.style.transition = 'opacity 0.35s, transform 0.35s';
+        grp.style.opacity = '0';
+        grp.style.transform = 'scale(0.8) translateY(-10px)';
+        setTimeout(() => grp.remove(), 360);
+      }
     });
   </script>
 
