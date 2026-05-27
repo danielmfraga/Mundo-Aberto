@@ -95,6 +95,9 @@
     }
 
     .back-btn {
+      position: absolute;
+      top: 48px;
+      left: 60px;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -809,19 +812,37 @@
         padding: 28px 20px 60px;
       }
 
-      /* Header: voltar em cima, título centralizado abaixo */
+      /* Header: Modo Mestre acima do título, centralizado */
       .page-header {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
+        align-items: center;
+        gap: 12px;
         margin-bottom: 36px;
       }
+      .mestre-btn { order: -1; }
       .page-title {
-        align-self: center;
+        order: 0;
         font-size: 11px;
         letter-spacing: 6px;
       }
       .header-spacer { display: none; }
+
+      /* Voltar: abaixo dos cards, centralizado, neon leve */
+      .back-btn {
+        position: static;
+        align-self: center;
+        margin-top: 40px;
+        color: rgba(0,255,231,0.6);
+        text-shadow: 0 0 8px rgba(0,255,231,0.45), 0 0 20px rgba(0,255,231,0.18);
+        border: 1px solid rgba(0,255,231,0.22);
+        border-radius: 4px;
+        padding: 8px 20px;
+      }
+      .back-btn:hover {
+        color: var(--holo);
+        text-shadow: 0 0 12px rgba(0,255,231,0.75), 0 0 28px rgba(0,255,231,0.35);
+        border-color: rgba(0,255,231,0.5);
+      }
 
       /* Roster: coluna centralizada */
       .roster {
@@ -857,10 +878,7 @@
   <div class="page">
 
     <div class="page-header">
-      <a href="index.html" class="back-btn">
-        <span class="back-arrow">←</span>
-        Voltar
-      </a>
+      <div class="header-spacer"></div>
       <div class="page-title">Personagens</div>
       <button class="mestre-btn" id="mestreBtn" onclick="toggleMestre()">Modo Mestre</button>
     </div>
@@ -897,6 +915,12 @@
       </div>
 
     </div>
+
+    <a href="index.html" class="back-btn">
+      <span class="back-arrow">←</span>
+      Voltar
+    </a>
+
   </div>
 
   <!-- Menu contextual -->
