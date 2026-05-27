@@ -2135,11 +2135,13 @@ function restoreSheet(data) {
 (function() {
   'use strict';
 
-  // ── Snapshot: compara estado real do DOM ──────────────────────────────
-  var snapshot = null;
-  function getSnap() { var s = document.querySelector('.sheet'); return s ? s.innerHTML : ''; }
-  function takeSnap() { snapshot = getSnap(); }
-  function isDirty()  { return snapshot !== null && getSnap() !== snapshot; }
+  // ── Flag de alteração (event-based — sem comparar innerHTML) ──────────
+  var dirty  = false;
+  var loaded = false;   // ignora eventos durante carga inicial do Supabase
+
+  function markDirty()  { dirty = true; }
+  function clearDirty() { dirty = false; }
+  function isDirty()    { return dirty; }
 
   // ── Modal ─────────────────────────────────────────────────────────────
   function showModal(dest) {
@@ -2188,23 +2190,43 @@ function restoreSheet(data) {
     };
   }
 
-  // ── Snapshot após dados carregarem (debounce 800ms) ───────────────────
+  // ── Detecta interações do usuário após carregamento ───────────────────
+  var sh = document.querySelector('.sheet');
+  if (sh) {
+    // Digitação em qualquer contenteditable / input / textarea
+    sh.addEventListener('input', function() {
+      if (loaded) markDirty();
+    });
+
+    // Cliques que alteram estado: dots, vitais, add/del linhas, toggles
+    sh.addEventListener('click', function(e) {
+      if (!loaded) return;
+      var t = e.target;
+      if (t.matches('.dot,.vbox,.quality-toggle,.quality-del,.trunfo-del,.distinct-del,.distinct-add,.equip-del') ||
+          t.closest('.dot') || t.closest('.vbox') ||
+          t.id === 'quality-add' || t.id === 'equip-add' || t.id === 'trunfo-add') {
+        markDirty();
+      }
+    });
+  }
+
+  // ── Aguarda DOM estabilizar antes de aceitar eventos ─────────────────
+  // (mesmo debounce de antes, mas só liga `loaded` em vez de tirar snapshot)
   var settleTimer = null;
   var obs = new MutationObserver(function() {
     clearTimeout(settleTimer);
-    settleTimer = setTimeout(function() { takeSnap(); obs.disconnect(); }, 800);
+    settleTimer = setTimeout(function() { obs.disconnect(); loaded = true; }, 800);
   });
-  var sh = document.querySelector('.sheet');
   if (sh) {
     obs.observe(sh, { subtree: true, childList: true, attributes: true, characterData: true });
-    settleTimer = setTimeout(function() { takeSnap(); obs.disconnect(); }, 4000);
+    settleTimer = setTimeout(function() { obs.disconnect(); loaded = true; }, 4000);
   }
 
-  // ── Renovar snapshot após salvar com sucesso ──────────────────────────
+  // ── Limpa flag após salvar com sucesso ────────────────────────────────
   var saveBtn = document.getElementById('saveSheetBtn');
   if (saveBtn) {
     new MutationObserver(function() {
-      if (saveBtn.textContent.indexOf('Salvo') !== -1) setTimeout(takeSnap, 100);
+      if (saveBtn.textContent.indexOf('Salvo') !== -1) setTimeout(clearDirty, 100);
     }).observe(saveBtn, { childList: true, subtree: true, characterData: true });
   }
 
