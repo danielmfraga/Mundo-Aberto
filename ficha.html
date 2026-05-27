@@ -1034,7 +1034,7 @@ body::after {
 <body>
 
 <div class="sheet">
-<a href="personagens.html" onclick="var id=new URLSearchParams(location.search).get('id');window.location.href=(id&&id.startsWith('npc_'))?'npcs.html':'personagens.html';return false;" style="position:fixed;top:20px;left:24px;display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:10px;letter-spacing:0.25em;color:rgba(207,233,240,0.3);text-decoration:none;text-transform:uppercase;transition:color 0.2s;z-index:200;" onmouseover="this.style.color='rgba(207,233,240,0.7)'" onmouseout="this.style.color='rgba(207,233,240,0.3)'"><span style="font-size:14px;line-height:1;">&#8592;</span>Voltar</a>
+<a id="backBtn" href="personagens.html" style="position:fixed;top:20px;left:24px;display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:10px;letter-spacing:0.25em;color:rgba(207,233,240,0.3);text-decoration:none;text-transform:uppercase;transition:color 0.2s;z-index:200;" onmouseover="this.style.color='rgba(207,233,240,0.7)'" onmouseout="this.style.color='rgba(207,233,240,0.3)'"><span style="font-size:14px;line-height:1;">&#8592;</span>Voltar</a>
 
   <!-- HEADER -->
   <header class="header">
@@ -2115,6 +2115,105 @@ function restoreSheet(data) {
   }
 
   setTimeout(function() { tryInject(0); }, 600);
+})();
+</script>
+
+<!-- ── Aviso de alterações não salvas ── -->
+<style>
+#__ud-ov{position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:999999;display:flex;align-items:center;justify-content:center;}
+#__ud-box{background:#040810;border:1px solid rgba(0,255,231,0.28);border-radius:4px;padding:36px 40px;max-width:340px;width:90%;text-align:center;font-family:'JetBrains Mono',monospace;box-shadow:0 0 40px rgba(0,255,231,0.07);}
+#__ud-box h2{color:rgba(0,255,231,0.85);font-size:10px;letter-spacing:4px;text-transform:uppercase;margin-bottom:12px;}
+#__ud-box p{color:rgba(207,233,240,0.5);font-size:12px;line-height:1.75;margin-bottom:28px;}
+#__ud-box .row{display:flex;gap:12px;justify-content:center;}
+#__ud-box button{background:transparent;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:8px 20px;cursor:pointer;border-radius:2px;transition:all .18s;}
+#__ud-sv{border:1px solid rgba(0,255,231,0.4);color:rgba(0,255,231,0.7);}
+#__ud-sv:hover{border-color:#00ffe7;color:#00ffe7;box-shadow:0 0 12px rgba(0,255,231,0.3);}
+#__ud-dc{border:1px solid rgba(255,107,26,0.35);color:rgba(255,107,26,0.5);}
+#__ud-dc:hover{border-color:rgba(255,107,26,0.75);color:rgba(255,107,26,0.9);}
+</style>
+<script>
+(function() {
+  'use strict';
+
+  // ── Snapshot: compara estado real do DOM ──────────────────────────────
+  var snapshot = null;
+  function getSnap() { var s = document.querySelector('.sheet'); return s ? s.innerHTML : ''; }
+  function takeSnap() { snapshot = getSnap(); }
+  function isDirty()  { return snapshot !== null && getSnap() !== snapshot; }
+
+  // ── Modal ─────────────────────────────────────────────────────────────
+  function showModal(dest) {
+    var ov = document.createElement('div');
+    ov.id = '__ud-ov';
+    ov.innerHTML =
+      '<div id="__ud-box">' +
+        '<h2>Alterações não salvas</h2>' +
+        '<p>A ficha foi modificada.<br>O que deseja fazer?</p>' +
+        '<div class="row">' +
+          '<button id="__ud-sv">Salvar</button>' +
+          '<button id="__ud-dc">Não salvar</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(ov);
+
+    document.getElementById('__ud-sv').onclick = function() {
+      ov.remove();
+      var btn = document.getElementById('saveSheetBtn');
+      if (!btn) { window.location.href = dest; return; }
+      btn.click();
+      var t = Date.now();
+      var iv = setInterval(function() {
+        if (!isDirty() || Date.now() - t > 5000) {
+          clearInterval(iv);
+          setTimeout(function() { window.location.href = dest; }, 350);
+        }
+      }, 150);
+    };
+
+    document.getElementById('__ud-dc').onclick = function() {
+      ov.remove();
+      window.location.href = dest;
+    };
+  }
+
+  // ── Botão voltar ──────────────────────────────────────────────────────
+  var back = document.getElementById('backBtn');
+  if (back) {
+    back.onclick = function(e) {
+      e.preventDefault();
+      var id   = new URLSearchParams(location.search).get('id');
+      var dest = (id && id.startsWith('npc_')) ? 'npcs.html' : 'personagens.html';
+      if (!isDirty()) { window.location.href = dest; return; }
+      showModal(dest);
+    };
+  }
+
+  // ── Snapshot após dados carregarem (debounce 800ms) ───────────────────
+  var settleTimer = null;
+  var obs = new MutationObserver(function() {
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(function() { takeSnap(); obs.disconnect(); }, 800);
+  });
+  var sh = document.querySelector('.sheet');
+  if (sh) {
+    obs.observe(sh, { subtree: true, childList: true, attributes: true, characterData: true });
+    settleTimer = setTimeout(function() { takeSnap(); obs.disconnect(); }, 4000);
+  }
+
+  // ── Renovar snapshot após salvar com sucesso ──────────────────────────
+  var saveBtn = document.getElementById('saveSheetBtn');
+  if (saveBtn) {
+    new MutationObserver(function() {
+      if (saveBtn.textContent.indexOf('Salvo') !== -1) setTimeout(takeSnap, 100);
+    }).observe(saveBtn, { childList: true, subtree: true, characterData: true });
+  }
+
+  // ── Fechar aba / recarregar com alterações ────────────────────────────
+  window.addEventListener('beforeunload', function(e) {
+    if (!isDirty()) return;
+    e.preventDefault();
+    e.returnValue = '';
+  });
 })();
 </script>
 </body></html>
