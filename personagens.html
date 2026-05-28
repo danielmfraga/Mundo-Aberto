@@ -1576,13 +1576,21 @@
       closeCtxMenu();
       try {
         if (grp) grp.classList.add('transmit-out');
-        await sbFetch('/rest/v1/personagens?char_id=eq.' + id, 'PATCH', { space_id: destId });
+        const res = await sbFetch('/rest/v1/personagens?char_id=eq.' + id, 'PATCH', { space_id: destId });
+        // PATCH bem-sucedido devolve 204 → null; qualquer objeto é erro do Supabase
+        if (res !== null && res !== undefined) {
+          grp && grp.classList.remove('transmit-out');
+          const msg = (res && res.message) ? res.message : 'Erro ao mover';
+          showToast('⚠ ' + msg);
+          return;
+        }
         setTimeout(() => grp && grp.remove(), 680);
         const destLabel = destId
           ? (spLoad().find(function(s){ return s.id === destId; }) || { name: destId }).name
           : 'Início';
         showToast('⇢  Movido para ' + destLabel);
       } catch(err) {
+        grp && grp.classList.remove('transmit-out');
         showToast('Erro ao mover');
       } finally {
         ctxBusy = false;
