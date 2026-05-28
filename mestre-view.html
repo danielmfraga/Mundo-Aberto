@@ -172,13 +172,23 @@
     a.card-head:hover { background: rgba(0,255,231,0.04); }
     .open-ficha-hint {
       font-family: 'Share Tech Mono', monospace;
-      font-size: 14px;
-      color: rgba(0,255,231,0.2);
-      transition: color 0.2s;
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(0,255,231,0.4);
+      border: 1px solid rgba(0,255,231,0.2);
+      border-radius: 3px;
+      padding: 4px 8px;
+      white-space: nowrap;
       flex-shrink: 0;
-      line-height: 1;
+      transition: color 0.2s, border-color 0.2s, text-shadow 0.2s, box-shadow 0.2s;
     }
-    a.card-head:hover .open-ficha-hint { color: rgba(0,255,231,0.7); }
+    a.card-head:hover .open-ficha-hint {
+      color: var(--holo);
+      border-color: rgba(0,255,231,0.6);
+      text-shadow: 0 0 8px rgba(0,255,231,0.7);
+      box-shadow: 0 0 10px rgba(0,255,231,0.15);
+    }
 
     /* ── Card Body ── */
     .card-body {
@@ -445,7 +455,7 @@
     html += '<div class="card-name">' + name + '</div>';
     if (sub) html += '<div class="card-sub">' + sub + '</div>';
     html += '</div>';
-    html += '<span class="open-ficha-hint">↗</span>';
+    html += '<span class="open-ficha-hint">Ficha ↗</span>';
     html += '</a>';
 
     html += '<div class="card-body">';
