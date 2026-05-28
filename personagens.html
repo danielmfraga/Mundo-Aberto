@@ -769,6 +769,73 @@
       text-shadow: 0 0 12px rgba(0,255,231,.45);
     }
 
+    /* ── Botão combinado: Novo Espaço (↖) + Novo Personagem (↘) ── */
+    .combo-group {
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      animation: fadeUp 0.5s ease both;
+    }
+    .combo-card {
+      position: relative; width: 200px; height: 200px;
+      border: 1px dashed rgba(0,255,231,.38); border-radius: 8px; overflow: hidden;
+      background: rgba(0,255,231,.018);
+      box-shadow: 0 0 16px rgba(0,255,231,.07), inset 0 0 28px rgba(0,255,231,.04);
+    }
+    /* Linha diagonal tracejada: top-right → bottom-left */
+    .combo-card::after {
+      content: '';
+      position: absolute; top: 50%; left: 50%;
+      width: 141.4%; height: 1px; /* √2 × largura, escala no mobile */
+      background: repeating-linear-gradient(
+        to right,
+        rgba(0,255,231,.28) 0px, rgba(0,255,231,.28) 5px,
+        transparent 5px, transparent 11px
+      );
+      box-shadow: 0 0 4px rgba(0,255,231,.12);
+      transform: translate(-50%,-50%) rotate(135deg);
+      pointer-events: none; z-index: 6;
+    }
+    .combo-half {
+      position: absolute; inset: 0; display: flex;
+      cursor: pointer; border: none; background: transparent;
+      text-decoration: none; transition: background .25s; z-index: 2;
+      touch-action: manipulation;
+    }
+    .combo-space {
+      clip-path: polygon(0 0, 100% 0, 0 100%);
+      align-items: flex-start; justify-content: flex-start;
+      padding: 24px 0 0 24px;
+    }
+    .combo-char {
+      clip-path: polygon(100% 0, 100% 100%, 0 100%);
+      align-items: flex-end; justify-content: flex-end;
+      padding: 0 24px 24px 0;
+    }
+    .combo-space:hover { background: rgba(0,255,231,.08); }
+    .combo-char:hover  { background: rgba(0,255,231,.08); }
+    .combo-icon-wrap {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 5px; pointer-events: none;
+    }
+    .combo-space .orbit-icon { width: 36px; height: 36px; }
+    .combo-char  .plus-icon  { width: 36px; height: 36px; }
+    .combo-sub-label {
+      font-family: 'Share Tech Mono', monospace; font-size: 7px;
+      letter-spacing: 2px; color: rgba(0,255,231,.4);
+      text-transform: uppercase; white-space: nowrap;
+      transition: color .2s;
+    }
+    /* Hover: metade Espaço */
+    .combo-space:hover .orbit-ring   { border-color: rgba(0,255,231,.65); }
+    .combo-space:hover .orbit-ring-2 { border-color: rgba(0,255,231,.45); }
+    .combo-space:hover .orbit-plus::before,
+    .combo-space:hover .orbit-plus::after { background: var(--holo); box-shadow: 0 0 8px rgba(0,255,231,.5); }
+    .combo-space:hover .combo-sub-label  { color: rgba(0,255,231,.8); }
+    /* Hover: metade Personagem */
+    .combo-char:hover .plus-icon::before,
+    .combo-char:hover .plus-icon::after  { background: var(--holo); box-shadow: 0 0 14px rgba(0,255,231,.6); }
+    .combo-char:hover .plus-corner       { border-color: var(--holo); }
+    .combo-char:hover .combo-sub-label   { color: rgba(0,255,231,.8); }
+
     /* ── Modal criar espaço ── */
     .__sp-ov {
       position: fixed; inset: 0; background: rgba(0,0,0,.75);
@@ -862,8 +929,8 @@
     .mestre-mode .portal-name {
       font-size: 7px; letter-spacing: 2px;
     }
-    .mestre-mode .new-space-group { display: none !important; }
-    .mestre-mode .sp-del-btn      { display: none !important; }
+    .mestre-mode .combo-group { display: none !important; }
+    .mestre-mode .sp-del-btn  { display: none !important; }
 
     .mestre-sel-badge {
       display: none;
@@ -1013,10 +1080,9 @@
       box-shadow: 0 0 10px rgba(160,80,255,0.7);
     }
 
-    /* ── Modo espaço: oculta portais e botão novo espaço ── */
+    /* ── Modo espaço: oculta portais ── */
     .space-mode .portal-group,
-    .space-mode .sp-portal-group,
-    .space-mode .new-space-group { display: none !important; }
+    .space-mode .sp-portal-group { display: none !important; }
 
     /* ── Mobile ── */
     @media (max-width: 600px) {
@@ -1065,10 +1131,9 @@
 
       /* Cards menores no mobile */
       .char-btn,
-      .new-char-btn,
-      .portal-btn,
-      .new-space-btn { width: 155px; height: 155px; }
+      .portal-btn { width: 155px; height: 155px; }
       .sp-portal-btn { width: 155px; height: 155px; }
+      .combo-card { width: 155px; height: 155px; }
       .char-projection { width: 120px; height: 120px; }
     }
     </style>
@@ -1109,33 +1174,40 @@
         <div class="portal-name">N P C S</div>
       </div>
 
-      <!-- Botão novo espaço (col 2, linha 1 no mobile) -->
-      <div class="new-space-group" id="newSpaceGroup">
-        <button class="new-space-btn" id="newSpaceBtn">
-          <div class="orbit-icon">
-            <div class="orbit-ring orbit-ring-1"></div>
-            <div class="orbit-ring orbit-ring-2"></div>
-            <div class="orbit-plus"></div>
-          </div>
-        </button>
-        <div class="new-space-label">Novo Espaço</div>
+      <!-- Botão combinado Espaço + Personagem (col 2, linha 1 no mobile) -->
+      <div class="combo-group" id="comboGroup">
+        <div class="combo-card">
+          <!-- ↖ Novo Espaço -->
+          <button class="combo-half combo-space" id="newSpaceBtn">
+            <div class="combo-icon-wrap">
+              <div class="orbit-icon">
+                <div class="orbit-ring orbit-ring-1"></div>
+                <div class="orbit-ring orbit-ring-2"></div>
+                <div class="orbit-plus"></div>
+              </div>
+              <span class="combo-sub-label">Espaço</span>
+            </div>
+          </button>
+          <!-- ↘ Novo Personagem -->
+          <a class="combo-half combo-char" href="ficha.html" id="newCharBtn">
+            <div class="combo-icon-wrap">
+              <div class="plus-icon">
+                <span class="plus-corner tl"></span>
+                <span class="plus-corner tr"></span>
+                <span class="plus-corner bl"></span>
+                <span class="plus-corner br"></span>
+              </div>
+              <span class="combo-sub-label">Personagem</span>
+            </div>
+          </a>
+        </div>
       </div>
 
       <!-- Espaços personalizados injetados aqui via JS (antes de charAnchor) -->
       <div id="charAnchor" style="display:none"></div>
 
-      <!-- Botão novo personagem -->
-      <div class="new-char-group">
-        <a href="ficha.html" class="new-char-btn" id="newCharBtn">
-          <div class="plus-icon">
-            <span class="plus-corner tl"></span>
-            <span class="plus-corner tr"></span>
-            <span class="plus-corner bl"></span>
-            <span class="plus-corner br"></span>
-          </div>
-        </a>
-        <div class="new-char-label">Novo Personagem</div>
-      </div>
+      <!-- Âncora de fim: personagens e NPCs inline inseridos antes daqui -->
+      <div id="charEnd" style="display:none"></div>
 
     </div>
 
@@ -1299,7 +1371,7 @@
     // ── Carrega personagens do Supabase ──
     function loadRoster() {
       const rosterEl = document.getElementById('roster');
-      const newCharGroup = rosterEl.querySelector('.new-char-group');
+      const newCharGroup = document.getElementById('charEnd');
 
       function renderChars(chars) {
         if (!Array.isArray(chars)) return;
@@ -1355,7 +1427,7 @@
       npcsLoading = true;
 
       var rosterEl   = document.getElementById('roster');
-      var newCharGrp = rosterEl.querySelector('.new-char-group');
+      var newCharGrp = document.getElementById('charEnd');
       var portal     = rosterEl.querySelector('.portal-group');
       if (portal) portal.style.display = 'none';
 
@@ -1405,7 +1477,7 @@
       if (!spaces.length) { spaceCharsLoading = false; return; }
 
       var roster    = document.getElementById('roster');
-      var newCharGrp = roster.querySelector('.new-char-group');
+      var newCharGrp = document.getElementById('charEnd');
 
       spaces.forEach(function(sp) {
         sbFetch('/rest/v1/personagens?select=*&order=created_at.asc&space_id=eq.' + encodeURIComponent(sp.id), 'GET')
@@ -1631,7 +1703,7 @@
           char_id: newId, name: newName, img_url: src.img_url || null, sheet_data: newData
         });
         const card = createHoloCard(newId, newName, src.img_url);
-        document.getElementById('roster').insertBefore(card, document.querySelector('.new-char-group'));
+        document.getElementById('roster').insertBefore(card, document.getElementById('charEnd'));
         requestAnimationFrame(() => card.classList.add('dupe-flash'));
         setTimeout(() => card.classList.remove('dupe-flash'), 950);
         showToast('⊕  Cópia criada');
