@@ -1569,16 +1569,38 @@ document.getElementById('clearSheetBtn').addEventListener('mouseleave', (e) => {
   e.target.style.borderColor = 'var(--line)';
 });
 
-// Image upload
+// Image upload — comprime para ≤ 480 px / JPEG 0.78 antes de exibir e salvar
+// Foto típica de celular: 4000×3000 ~5 MB → após compressão: ~480×360 ~50 KB (≈ 100× menor)
 document.getElementById('fileInput').addEventListener('change', function(e) {
-  const file = e.target.files[0];
+  var file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
+
+  var MAX_PX  = 480;   // lado maior em px — suficiente para todos os formatos de exibição
+  var QUALITY = 0.78;  // qualidade JPEG — bom visual, arquivo leve
+
+  var reader = new FileReader();
   reader.onload = function(ev) {
-    const img = document.getElementById('holoImg');
-    img.src = ev.target.result;
-    img.style.display = 'block';
-    document.getElementById('uploadPh').style.display = 'none';
+    var original = new Image();
+    original.onload = function() {
+      // Calcula escala mantendo proporção
+      var scale = Math.min(1, MAX_PX / Math.max(original.width, original.height));
+      var w = Math.round(original.width  * scale);
+      var h = Math.round(original.height * scale);
+
+      // Renderiza no canvas e exporta como JPEG comprimido
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(original, 0, 0, w, h);
+      var compressed = canvas.toDataURL('image/jpeg', QUALITY);
+      canvas.width = 0; canvas.height = 0; // libera memória do canvas
+
+      // Mostra preview já comprimido; o fluxo de save vai usar esse base64 enxuto
+      var img = document.getElementById('holoImg');
+      img.src = compressed;
+      img.style.display = 'block';
+      document.getElementById('uploadPh').style.display = 'none';
+    };
+    original.src = ev.target.result;
   };
   reader.readAsDataURL(file);
 });
