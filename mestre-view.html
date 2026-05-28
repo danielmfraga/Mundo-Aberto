@@ -572,5 +572,20 @@
   }
 </script>
 
+<!-- ── Duplo clique/toque para voltar ── -->
+<script>
+(function(){
+  'use strict';
+  var DEST = 'personagens.html';
+  var IA = 'button,a,input,textarea,select,[contenteditable]';
+  function nav(){ window.location.href = DEST; }
+  document.addEventListener('dblclick', function(e){ if(e.target.closest(IA)) return; nav(); });
+  var _t = 0;
+  document.addEventListener('touchend', function(e){
+    var el = e.target; if(el.closest(IA)){ _t=0; return; }
+    var n = Date.now(); if(n-_t<300){ _t=0; nav(); return; } _t=n;
+  },{passive:true});
+})();
+</script>
 </body>
 </html>

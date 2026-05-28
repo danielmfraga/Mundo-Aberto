@@ -829,12 +829,12 @@
       .back-btn {
         order: 1;
         align-self: center;
-        color: rgba(0,255,231,0.6);
-        text-shadow: 0 0 8px rgba(0,255,231,0.5), 0 0 20px rgba(0,255,231,0.2);
+        color: rgba(0,255,231,0.8);
+        text-shadow: 0 0 6px rgba(0,255,231,0.7), 0 0 16px rgba(0,255,231,0.35);
       }
       .back-btn:hover {
         color: var(--holo);
-        text-shadow: 0 0 12px rgba(0,255,231,0.8), 0 0 28px rgba(0,255,231,0.35);
+        text-shadow: 0 0 10px rgba(0,255,231,0.9), 0 0 24px rgba(0,255,231,0.5);
       }
 
       /* Roster: coluna centralizada */
@@ -1253,5 +1253,20 @@
     });
   </script>
 
+<!-- ── Duplo clique/toque para voltar ── -->
+<script>
+(function(){
+  'use strict';
+  var DEST = 'index.html';
+  var IA = 'button,a,input,textarea,select,[contenteditable]';
+  function nav(){ window.location.href = DEST; }
+  document.addEventListener('dblclick', function(e){ if(e.target.closest(IA)) return; nav(); });
+  var _t = 0;
+  document.addEventListener('touchend', function(e){
+    var el = e.target; if(el.closest(IA)){ _t=0; return; }
+    var n = Date.now(); if(n-_t<300){ _t=0; nav(); return; } _t=n;
+  },{passive:true});
+})();
+</script>
 </body>
 </html>
