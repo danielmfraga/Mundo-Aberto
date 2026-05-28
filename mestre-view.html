@@ -112,12 +112,20 @@
     /* ── Card Header ── */
     .card-head {
       display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 14px 10px;
+      align-items: stretch;
       border-bottom: 1px solid var(--line);
       flex-shrink: 0;
     }
+    .card-head-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 10px 10px 14px;
+      flex: 1; min-width: 0;
+      text-decoration: none; color: inherit;
+      transition: background 0.2s;
+    }
+    .card-head-link:hover { background: rgba(0,255,231,0.04); }
     .card-avatar {
       width: 44px; height: 44px;
       border-radius: 50%;
@@ -162,33 +170,107 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    /* card-head clicável */
-    a.card-head {
-      text-decoration: none;
-      color: inherit;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    a.card-head:hover { background: rgba(0,255,231,0.04); }
     .open-ficha-hint {
       font-family: 'Share Tech Mono', monospace;
       font-size: 9px;
       letter-spacing: 2px;
       text-transform: uppercase;
       color: rgba(0,255,231,0.4);
-      border: 1px solid rgba(0,255,231,0.2);
-      border-radius: 3px;
-      padding: 4px 8px;
+      border-left: 1px solid var(--line);
+      padding: 0 10px;
+      display: flex; align-items: center;
       white-space: nowrap;
       flex-shrink: 0;
-      transition: color 0.2s, border-color 0.2s, text-shadow 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      transition: color 0.2s, background 0.2s, text-shadow 0.2s;
     }
-    a.card-head:hover .open-ficha-hint {
+    .open-ficha-hint:hover {
       color: var(--holo);
-      border-color: rgba(0,255,231,0.6);
+      background: rgba(0,255,231,0.04);
       text-shadow: 0 0 8px rgba(0,255,231,0.7);
-      box-shadow: 0 0 10px rgba(0,255,231,0.15);
     }
+    .card-extract-btn {
+      background: transparent;
+      border: none;
+      border-left: 1px solid var(--line);
+      color: rgba(255,85,102,0.3);
+      font-size: 13px; line-height: 1;
+      padding: 0 10px;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex; align-items: center;
+      transition: color 0.2s, background 0.2s;
+    }
+    .card-extract-btn:hover { color: #ff5566; background: rgba(255,85,102,0.08); }
+
+    /* ── Add card ── */
+    .add-card {
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .add-card:hover { background: rgba(0,255,231,0.025); }
+    .add-card-inner {
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      pointer-events: none;
+    }
+    .add-plus {
+      font-size: 30px; line-height: 1;
+      color: rgba(0,255,231,0.15);
+      font-family: 'Share Tech Mono', monospace;
+      transition: color 0.2s, text-shadow 0.2s;
+    }
+    .add-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px; letter-spacing: 4px;
+      color: rgba(0,255,231,0.15); text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .add-card:hover .add-plus { color: rgba(0,255,231,0.5); text-shadow: 0 0 14px rgba(0,255,231,0.3); }
+    .add-card:hover .add-label { color: rgba(0,255,231,0.4); }
+
+    /* ── Picker modal ── */
+    .picker-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+      z-index: 9999; display: flex; align-items: center; justify-content: center;
+    }
+    .picker-box {
+      background: #040810; border: 1px solid rgba(0,255,231,0.2);
+      border-radius: 4px; max-width: 300px; width: 90%;
+      max-height: 60vh; display: flex; flex-direction: column;
+      box-shadow: 0 0 40px rgba(0,255,231,0.06); overflow: hidden;
+    }
+    .picker-head {
+      font-family: 'Share Tech Mono', monospace; font-size: 9px;
+      letter-spacing: 4px; color: rgba(0,255,231,0.4);
+      text-transform: uppercase; padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(0,255,231,0.08); flex-shrink: 0;
+    }
+    .picker-list { overflow-y: auto; flex: 1; }
+    .picker-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px; cursor: pointer;
+      border-bottom: 1px solid rgba(0,255,231,0.04);
+      transition: background 0.1s;
+    }
+    .picker-item:hover { background: rgba(0,255,231,0.05); }
+    .picker-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 1px solid rgba(0,255,231,0.2); object-fit: cover; flex-shrink: 0;
+      filter: hue-rotate(180deg) saturate(1.4) brightness(0.9); mix-blend-mode: screen;
+      background: rgba(0,255,231,0.04);
+    }
+    .picker-name {
+      font-family: 'Share Tech Mono', monospace; font-size: 10px;
+      letter-spacing: 1px; color: rgba(0,255,231,0.65); text-transform: uppercase;
+    }
+    .picker-cancel {
+      padding: 10px 16px; font-family: 'Share Tech Mono', monospace;
+      font-size: 9px; letter-spacing: 2px; color: rgba(207,233,240,0.25);
+      text-transform: uppercase; cursor: pointer; text-align: center;
+      border-top: 1px solid rgba(0,255,231,0.06); transition: color 0.15s; flex-shrink: 0;
+    }
+    .picker-cancel:hover { color: rgba(207,233,240,0.5); }
 
     /* ── Card Body ── */
     .card-body {
@@ -375,12 +457,6 @@
   if (ids.length === 0) {
     document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;color:rgba(0,255,231,0.3);letter-spacing:4px;text-transform:uppercase">Nenhuma ficha selecionada</div>';
   } else {
-    // Aplica classe de layout conforme quantidade
-    if (ids.length === 1) grid.classList.add('count-1');
-    if (ids.length === 2) grid.classList.add('count-2');
-    if (ids.length === 4) grid.classList.add('count-4');
-    countEl.textContent = ids.length + ' personage' + (ids.length > 1 ? 'ns' : 'm');
-
     // Cria placeholder pra cada card
     var placeholders = ids.map(function(id, i) {
       var card = document.createElement('div');
@@ -400,9 +476,13 @@
           if (row) renderCard(placeholders[i], row);
           else placeholders[i].innerHTML = '<div class="card-loading">Não encontrado</div>';
         });
+        createAddCard();
+        updateGridLayout();
       })
       .catch(function() {
         placeholders.forEach(function(p) { p.innerHTML = '<div class="card-loading">Erro ao carregar</div>'; });
+        createAddCard();
+        updateGridLayout();
       });
   }
 
@@ -442,10 +522,11 @@
     // ── Monta o HTML ──
     var html = '';
 
-    // Head — clicável, volta para esta view via returnTo
+    // Head
     var returnTo = encodeURIComponent('mestre-view.html?' + location.search.slice(1));
     var fichaUrl = 'ficha.html?id=' + row.char_id + '&returnTo=' + returnTo;
-    html += '<a class="card-head" href="' + fichaUrl + '">';
+    html += '<div class="card-head">';
+    html += '<a class="card-head-link" href="' + fichaUrl + '">';
     if (row.img_url) {
       html += '<img class="card-avatar" src="' + row.img_url + '" alt="' + name + '">';
     } else {
@@ -455,8 +536,9 @@
     html += '<div class="card-name">' + name + '</div>';
     if (sub) html += '<div class="card-sub">' + sub + '</div>';
     html += '</div>';
-    html += '<span class="open-ficha-hint">Ficha ↗</span>';
     html += '</a>';
+    html += '<a class="open-ficha-hint" href="' + fichaUrl + '">Ficha ↗</a>';
+    html += '</div>';
 
     html += '<div class="card-body">';
 
@@ -561,6 +643,23 @@
     html += '</div>'; // card-body
 
     card.innerHTML = html;
+
+    // Inject extract button via DOM so event closure captures correct card reference
+    card.dataset.charId = row.char_id;
+    var extractBtn = document.createElement('button');
+    extractBtn.className = 'card-extract-btn';
+    extractBtn.title = 'Extrair da view';
+    extractBtn.textContent = '✕';
+    (function(c) {
+      extractBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        c.style.transition = 'opacity 0.3s, transform 0.3s';
+        c.style.opacity = '0';
+        c.style.transform = 'scale(0.92)';
+        setTimeout(function() { c.remove(); updateGridLayout(); }, 300);
+      });
+    })(card);
+    card.querySelector('.card-head').appendChild(extractBtn);
   }
 
   function renderVboxes(vital) {
@@ -584,6 +683,126 @@
       html += '<div class="' + cls + '"></div>';
     }
     return html;
+  }
+
+  // ── Layout helper ──────────────────────────────────────────────
+  function updateGridLayout() {
+    var cards = grid.querySelectorAll('.pj-card');
+    var n = cards.length;
+    grid.classList.remove('count-1', 'count-2', 'count-4');
+    // total cells = n pj-cards + 1 add-card
+    if (n === 0) grid.classList.add('count-1');
+    else if (n === 1) grid.classList.add('count-2');
+    else if (n === 3) grid.classList.add('count-4');
+    // 2 or 5+ → 3-col default; 4 → 3-col (add-card wraps to next row)
+    countEl.textContent = n + ' personage' + (n !== 1 ? 'ns' : 'm');
+  }
+
+  // ── Add card ───────────────────────────────────────────────────
+  function createAddCard() {
+    var existing = grid.querySelector('.add-card');
+    if (existing) existing.remove();
+    var add = document.createElement('div');
+    add.className = 'add-card';
+    add.innerHTML = '<div class="add-card-inner"><span class="add-plus">+</span><span class="add-label">Adicionar</span></div>';
+    add.addEventListener('click', openPicker);
+    grid.appendChild(add);
+  }
+
+  // ── Picker ─────────────────────────────────────────────────────
+  function openPicker() {
+    var currentIds = Array.from(grid.querySelectorAll('.pj-card'))
+      .map(function(c) { return c.dataset.charId; }).filter(Boolean);
+    sbGet('/rest/v1/personagens?select=char_id,name,img_url&order=name.asc')
+      .then(function(rows) {
+        var available = (rows || []).filter(function(r) {
+          return !r.char_id.startsWith('npc_') && currentIds.indexOf(r.char_id) === -1;
+        });
+        showPickerModal(available);
+      });
+  }
+
+  function showPickerModal(rows) {
+    var existing = document.querySelector('.picker-overlay');
+    if (existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.className = 'picker-overlay';
+
+    var box = document.createElement('div');
+    box.className = 'picker-box';
+
+    var head = document.createElement('div');
+    head.className = 'picker-head';
+    head.textContent = 'Adicionar à view';
+    box.appendChild(head);
+
+    var list = document.createElement('div');
+    list.className = 'picker-list';
+
+    if (!rows.length) {
+      var empty = document.createElement('div');
+      empty.style.cssText = 'padding:20px;text-align:center;font-family:\'Share Tech Mono\',monospace;font-size:9px;letter-spacing:2px;color:rgba(0,255,231,0.2);text-transform:uppercase';
+      empty.textContent = 'Nenhum disponível';
+      list.appendChild(empty);
+    } else {
+      rows.forEach(function(row) {
+        var item = document.createElement('div');
+        item.className = 'picker-item';
+        if (row.img_url) {
+          var img = document.createElement('img');
+          img.className = 'picker-avatar';
+          img.src = row.img_url;
+          img.alt = row.name || '';
+          item.appendChild(img);
+        } else {
+          var ph = document.createElement('div');
+          ph.className = 'picker-avatar';
+          ph.style.cssText = 'display:flex;align-items:center;justify-content:center;font-size:12px;color:rgba(0,255,231,0.3)';
+          ph.textContent = '⬡';
+          item.appendChild(ph);
+        }
+        var nameEl = document.createElement('span');
+        nameEl.className = 'picker-name';
+        nameEl.textContent = row.name || row.char_id;
+        item.appendChild(nameEl);
+        item.addEventListener('click', (function(r) { return function() {
+          overlay.remove();
+          addCharToView(r);
+        }; })(row));
+        list.appendChild(item);
+      });
+    }
+
+    box.appendChild(list);
+
+    var cancel = document.createElement('div');
+    cancel.className = 'picker-cancel';
+    cancel.textContent = 'Cancelar';
+    cancel.addEventListener('click', function() { overlay.remove(); });
+    box.appendChild(cancel);
+
+    overlay.appendChild(box);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+  }
+
+  // ── Add char to view ───────────────────────────────────────────
+  function addCharToView(row) {
+    var card = document.createElement('div');
+    card.className = 'pj-card';
+    card.innerHTML = '<div class="card-loading">Carregando...</div>';
+    var addCard = grid.querySelector('.add-card');
+    if (addCard) grid.insertBefore(card, addCard);
+    else grid.appendChild(card);
+    updateGridLayout();
+    sbGet('/rest/v1/personagens?char_id=eq.' + encodeURIComponent(row.char_id) + '&select=char_id,name,img_url,sheet_data')
+      .then(function(rows) {
+        var data = rows && rows[0];
+        if (data) renderCard(card, data);
+        else card.innerHTML = '<div class="card-loading">Não encontrado</div>';
+      })
+      .catch(function() { card.innerHTML = '<div class="card-loading">Erro</div>'; });
   }
 </script>
 
