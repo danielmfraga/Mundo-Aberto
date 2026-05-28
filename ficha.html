@@ -2178,17 +2178,37 @@ function restoreSheet(data) {
     };
   }
 
+  // ── Navegação de volta (compartilhada) ───────────────────────────────
+  function goBack() {
+    var id   = new URLSearchParams(location.search).get('id');
+    var dest = (id && id.startsWith('npc_')) ? 'npcs.html' : 'personagens.html';
+    if (!isDirty()) { window.location.href = dest; return; }
+    showModal(dest);
+  }
+
   // ── Botão voltar ──────────────────────────────────────────────────────
   var back = document.getElementById('backBtn');
   if (back) {
-    back.onclick = function(e) {
-      e.preventDefault();
-      var id   = new URLSearchParams(location.search).get('id');
-      var dest = (id && id.startsWith('npc_')) ? 'npcs.html' : 'personagens.html';
-      if (!isDirty()) { window.location.href = dest; return; }
-      showModal(dest);
-    };
+    back.onclick = function(e) { e.preventDefault(); goBack(); };
   }
+
+  // ── Duplo clique / duplo toque para fechar ────────────────────────────
+  var INTERACTIVE = 'button,a,input,textarea,select,[contenteditable],.dot,.vbox';
+
+  document.addEventListener('dblclick', function(e) {
+    if (e.target.closest(INTERACTIVE)) return;
+    goBack();
+  });
+
+  // double-tap mobile (dois toques < 300ms na mesma área não-interativa)
+  var _lastTap = 0;
+  document.addEventListener('touchend', function(e) {
+    var t = e.target;
+    if (t.closest(INTERACTIVE)) { _lastTap = 0; return; }
+    var now = Date.now();
+    if (now - _lastTap < 300) { _lastTap = 0; goBack(); return; }
+    _lastTap = now;
+  }, { passive: true });
 
   // ── Detecta interações do usuário após carregamento ───────────────────
   var sh = document.querySelector('.sheet');
