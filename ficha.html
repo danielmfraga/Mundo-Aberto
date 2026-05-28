@@ -2199,6 +2199,7 @@ function restoreSheet(data) {
     });
 
     // Cliques que alteram estado: dots, vitais, add/del linhas, toggles
+    // true = capture: intercepta antes do stopPropagation() nos dots
     sh.addEventListener('click', function(e) {
       if (!loaded) return;
       var t = e.target;
@@ -2207,7 +2208,7 @@ function restoreSheet(data) {
           t.id === 'quality-add' || t.id === 'equip-add' || t.id === 'trunfo-add') {
         markDirty();
       }
-    });
+    }, true);
   }
 
   // ── Aguarda DOM estabilizar antes de aceitar eventos ─────────────────
