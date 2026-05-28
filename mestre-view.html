@@ -162,20 +162,23 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .open-ficha-btn {
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 8px;
-      letter-spacing: 2px;
-      color: rgba(255,107,26,0.5);
+    /* card-head clicável */
+    a.card-head {
       text-decoration: none;
-      text-transform: uppercase;
-      border: 1px solid rgba(255,107,26,0.2);
-      border-radius: 3px;
-      padding: 3px 7px;
-      transition: color 0.2s, border-color 0.2s;
-      flex-shrink: 0;
+      color: inherit;
+      cursor: pointer;
+      transition: background 0.2s;
     }
-    .open-ficha-btn:hover { color: var(--orange); border-color: rgba(255,107,26,0.5); }
+    a.card-head:hover { background: rgba(0,255,231,0.04); }
+    .open-ficha-hint {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 14px;
+      color: rgba(0,255,231,0.2);
+      transition: color 0.2s;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    a.card-head:hover .open-ficha-hint { color: rgba(0,255,231,0.7); }
 
     /* ── Card Body ── */
     .card-body {
@@ -429,8 +432,10 @@
     // ── Monta o HTML ──
     var html = '';
 
-    // Head
-    html += '<div class="card-head">';
+    // Head — clicável, volta para esta view via returnTo
+    var returnTo = encodeURIComponent('mestre-view.html?' + location.search.slice(1));
+    var fichaUrl = 'ficha.html?id=' + row.char_id + '&returnTo=' + returnTo;
+    html += '<a class="card-head" href="' + fichaUrl + '">';
     if (row.img_url) {
       html += '<img class="card-avatar" src="' + row.img_url + '" alt="' + name + '">';
     } else {
@@ -440,8 +445,8 @@
     html += '<div class="card-name">' + name + '</div>';
     if (sub) html += '<div class="card-sub">' + sub + '</div>';
     html += '</div>';
-    html += '<a class="open-ficha-btn" href="ficha.html?id=' + row.char_id + '" target="_blank">Ficha ↗</a>';
-    html += '</div>';
+    html += '<span class="open-ficha-hint">↗</span>';
+    html += '</a>';
 
     html += '<div class="card-body">';
 

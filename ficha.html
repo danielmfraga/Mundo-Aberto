@@ -2180,8 +2180,12 @@ function restoreSheet(data) {
 
   // ── Navegação de volta (compartilhada) ───────────────────────────────
   function goBack() {
-    var id   = new URLSearchParams(location.search).get('id');
-    var dest = (id && id.startsWith('npc_')) ? 'npcs.html' : 'personagens.html';
+    var params   = new URLSearchParams(location.search);
+    var id       = params.get('id');
+    var returnTo = params.get('returnTo');
+    var dest = returnTo
+      ? returnTo
+      : ((id && id.startsWith('npc_')) ? 'npcs.html' : 'personagens.html');
     if (!isDirty()) { window.location.href = dest; return; }
     showModal(dest);
   }
