@@ -263,7 +263,23 @@
     .picker-name {
       font-family: 'Share Tech Mono', monospace; font-size: 10px;
       letter-spacing: 1px; color: rgba(0,255,231,0.65); text-transform: uppercase;
+      flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
+    .picker-tag {
+      font-family: 'Share Tech Mono', monospace; font-size: 7px; letter-spacing: 2px;
+      text-transform: uppercase; color: rgba(255,107,26,0.5);
+      border: 1px solid rgba(255,107,26,0.25); border-radius: 2px;
+      padding: 1px 4px; flex-shrink: 0; margin-left: 6px;
+    }
+    .picker-search {
+      display: block; width: 100%; padding: 9px 16px;
+      background: rgba(0,255,231,0.02); border: none;
+      border-bottom: 1px solid rgba(0,255,231,0.08);
+      color: rgba(0,255,231,0.7); font-family: 'Share Tech Mono', monospace;
+      font-size: 10px; letter-spacing: 1px; outline: none;
+    }
+    .picker-search::placeholder { color: rgba(0,255,231,0.2); }
+    .picker-search:focus { background: rgba(0,255,231,0.04); border-bottom-color: rgba(0,255,231,0.2); }
     .picker-cancel {
       padding: 10px 16px; font-family: 'Share Tech Mono', monospace;
       font-size: 9px; letter-spacing: 2px; color: rgba(207,233,240,0.25);
@@ -716,7 +732,7 @@
     sbGet('/rest/v1/personagens?select=char_id,name,img_url&order=name.asc')
       .then(function(rows) {
         var available = (rows || []).filter(function(r) {
-          return !r.char_id.startsWith('npc_') && currentIds.indexOf(r.char_id) === -1;
+          return currentIds.indexOf(r.char_id) === -1;
         });
         showPickerModal(available);
       });
@@ -737,6 +753,14 @@
     head.textContent = 'Adicionar à view';
     box.appendChild(head);
 
+    // ── Search input ──
+    var search = document.createElement('input');
+    search.className = 'picker-search';
+    search.type = 'text';
+    search.placeholder = 'Buscar...';
+    search.autocomplete = 'off';
+    box.appendChild(search);
+
     var list = document.createElement('div');
     list.className = 'picker-list';
 
@@ -749,6 +773,10 @@
       rows.forEach(function(row) {
         var item = document.createElement('div');
         item.className = 'picker-item';
+        var isNpc = !!(row.char_id && row.char_id.startsWith('npc_'));
+        // data-name para filtro ao vivo
+        item.dataset.name = (row.name || row.char_id || '').toLowerCase();
+
         if (row.img_url) {
           var img = document.createElement('img');
           img.className = 'picker-avatar';
@@ -762,15 +790,32 @@
           ph.textContent = '⬡';
           item.appendChild(ph);
         }
+
         var nameEl = document.createElement('span');
         nameEl.className = 'picker-name';
         nameEl.textContent = row.name || row.char_id;
         item.appendChild(nameEl);
+
+        if (isNpc) {
+          var tag = document.createElement('span');
+          tag.className = 'picker-tag';
+          tag.textContent = 'NPC';
+          item.appendChild(tag);
+        }
+
         item.addEventListener('click', (function(r) { return function() {
           overlay.remove();
           addCharToView(r);
         }; })(row));
         list.appendChild(item);
+      });
+
+      // Filtro ao vivo
+      search.addEventListener('input', function() {
+        var q = search.value.toLowerCase().trim();
+        list.querySelectorAll('.picker-item').forEach(function(el) {
+          el.style.display = (!q || el.dataset.name.indexOf(q) !== -1) ? '' : 'none';
+        });
       });
     }
 
@@ -785,6 +830,9 @@
     overlay.appendChild(box);
     overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
     document.body.appendChild(overlay);
+
+    // Foca o campo de busca automaticamente
+    setTimeout(function() { search.focus(); }, 60);
   }
 
   // ── Add char to view ───────────────────────────────────────────
