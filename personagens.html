@@ -1799,6 +1799,8 @@
       group.querySelector('.sp-del-btn').addEventListener('click', async function(e) {
         e.stopPropagation();
         if (!confirm('Remover espaço "' + sp.name + '"?')) return;
+        // Move personagens do espaço de volta para a raiz antes de deletar
+        await sbFetch('/rest/v1/personagens?space_id=eq.' + encodeURIComponent(sp.id), 'PATCH', { space_id: null });
         await sbFetch('/rest/v1/spaces?id=eq.' + encodeURIComponent(sp.id), 'DELETE');
         _spacesCache = _spacesCache.filter(function(s){ return s.id !== sp.id; });
         group.style.transition = 'opacity .3s, transform .3s';
