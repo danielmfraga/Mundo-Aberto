@@ -985,6 +985,11 @@
       box-shadow: 0 0 10px rgba(160,80,255,0.7);
     }
 
+    /* ── Modo espaço: oculta portais e botão novo espaço ── */
+    .space-mode .portal-group,
+    .space-mode .sp-portal-group,
+    .space-mode .new-space-group { display: none !important; }
+
     /* ── Mobile ── */
     @media (max-width: 600px) {
       .page {
@@ -1115,6 +1120,8 @@
     <div class="ctx-item" id="ctxDuplicate"><span class="ctx-icon">⊕</span> Duplicar</div>
     <div class="ctx-divider"></div>
     <div class="ctx-item" id="ctxMove"><span class="ctx-icon">⇄</span> Mover para N P C S</div>
+    <div class="ctx-divider" id="ctxSpaceDivider" style="display:none"></div>
+    <div id="ctxSpaceItems"></div>
   </div>
 
   <!-- Barra do Mestre -->
@@ -1130,6 +1137,18 @@
     var SUPABASE_URL = 'https://mxyqqfsyybluavwlrhsa.supabase.co';
     var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eXFxZnN5eWJsdWF2d2xyaHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTM4MzEsImV4cCI6MjA5MzY2OTgzMX0.b0Ij7UGzbMLpqZjLYxoPEu2kGwEW52U_2NSDtpMGUPM';
 
+    // ── Espaço atual (leitura antecipada p/ uso em loadRoster) ──────────
+    var SP_KEY = 'ma_spaces';
+    function spLoad() { try { return JSON.parse(localStorage.getItem(SP_KEY)||'[]'); } catch(e){ return []; } }
+    function spSave(list) { localStorage.setItem(SP_KEY, JSON.stringify(list)); }
+    var ESP_PARAM    = new URLSearchParams(location.search).get('esp');
+    var CURRENT_SPACE = (function(){
+      if (!ESP_PARAM) return null;
+      var list = spLoad();
+      for (var i = 0; i < list.length; i++) if (list[i].id === ESP_PARAM) return list[i];
+      return null;
+    })();
+
     function sbFetch(path, method, body) {
       return fetch(SUPABASE_URL + path, {
         method: method || 'GET',
@@ -1144,7 +1163,7 @@
 
     // ── Holograma reutilizável ──
     function createHoloCard(charId, name, imgSrc, ledLabel) {
-      const href = 'ficha.html?id=' + charId;
+      const href = 'ficha.html?id=' + charId + (ESP_PARAM ? '&esp=' + encodeURIComponent(ESP_PARAM) : '');
       const group = document.createElement('div');
       group.className = 'char-group';
       group.dataset.charId = charId;
@@ -1237,10 +1256,12 @@
       const rosterEl = document.getElementById('roster');
       const newCharGroup = rosterEl.querySelector('.new-char-group');
 
-      sbFetch('/rest/v1/personagens?select=*&order=created_at.asc', 'GET')
+      var spFilter = CURRENT_SPACE
+        ? ('&space_id=eq.' + encodeURIComponent(CURRENT_SPACE.id))
+        : '&space_id=is.null';
+      sbFetch('/rest/v1/personagens?select=*&order=created_at.asc' + spFilter, 'GET')
         .then(function(chars) {
           if (!Array.isArray(chars)) return;
-          // exclui NPCs (char_id começa com "npc_")
           chars.filter(c => !c.char_id.startsWith('npc_')).forEach(function(char, i) {
             const card = createHoloCard(char.char_id, char.name, char.img_url);
             card.style.animationDelay = (i * 80) + 'ms';
@@ -1251,6 +1272,21 @@
     }
 
     loadRoster();
+
+    // ── Modo espaço: aplica tema e restringe UI ─────────────────────────
+    if (CURRENT_SPACE) {
+      document.body.classList.add('space-mode');
+      var titleEl = document.querySelector('.page-title');
+      if (titleEl) {
+        titleEl.textContent = CURRENT_SPACE.name;
+        titleEl.style.color = 'rgba(' + CURRENT_SPACE.rgb + ',0.55)';
+        titleEl.style.textShadow = '0 0 24px rgba(' + CURRENT_SPACE.rgb + ',0.2)';
+      }
+      var backEl = document.querySelector('.back-btn');
+      if (backEl) { backEl.href = 'personagens.html'; }
+      var newCharBtn2 = document.getElementById('newCharBtn');
+      if (newCharBtn2) newCharBtn2.href = 'ficha.html?esp=' + encodeURIComponent(ESP_PARAM);
+    }
 
     // ── NPCs inline no Modo Mestre ──
     var npcsLoading = false;
@@ -1379,7 +1415,7 @@
         }
       });
       const id = 'char_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-      window.location.href = 'ficha.html?id=' + id;
+      window.location.href = 'ficha.html?id=' + id + (ESP_PARAM ? '&esp=' + encodeURIComponent(ESP_PARAM) : '');
     });
     // ── Context menu ──────────────────────────────────────────
     let ctxCharId = null, ctxCharGroup = null, ctxOpenedAt = 0;
@@ -1389,6 +1425,26 @@
     function showCtxMenu(x, y, charId, name, group) {
       ctxCharId = charId; ctxCharGroup = group;
       ctxOpenedAt = Date.now();
+
+      // Itens dinâmicos de mover para espaço
+      var spItems = document.getElementById('ctxSpaceItems');
+      var spDiv   = document.getElementById('ctxSpaceDivider');
+      spItems.innerHTML = '';
+      var dests = [];
+      if (CURRENT_SPACE) dests.push({ label: '← Início', id: null });
+      spLoad().forEach(function(sp) {
+        if (!CURRENT_SPACE || sp.id !== CURRENT_SPACE.id)
+          dests.push({ label: sp.name, id: sp.id });
+      });
+      spDiv.style.display = dests.length ? '' : 'none';
+      dests.forEach(function(dest) {
+        var item = document.createElement('div');
+        item.className = 'ctx-item';
+        item.dataset.destSpId = (dest.id === null) ? '__null__' : dest.id;
+        item.innerHTML = '<span class="ctx-icon">⇢</span> ' + dest.label;
+        spItems.appendChild(item);
+      });
+
       ctxMenu.style.left = '0px'; ctxMenu.style.top = '0px';
       ctxMenu.classList.add('open');
       requestAnimationFrame(() => {
@@ -1496,8 +1552,33 @@
       } finally { ctxBusy = false; }
     });
 
+    // ── Mover para espaço ────────────────────────────────────────────────
+    document.getElementById('ctxSpaceItems').addEventListener('click', async (e) => {
+      const item = e.target.closest('[data-dest-sp-id]');
+      if (!item) return;
+      e.stopPropagation();
+      if (Date.now() - ctxOpenedAt < 300 || !ctxCharId || ctxBusy) return;
+      ctxBusy = true;
+      const rawId  = item.dataset.destSpId;
+      const destId = rawId === '__null__' ? null : rawId;
+      const id = ctxCharId, grp = ctxCharGroup;
+      closeCtxMenu();
+      try {
+        if (grp) grp.classList.add('transmit-out');
+        await sbFetch('/rest/v1/personagens?char_id=eq.' + id, 'PATCH', { space_id: destId });
+        setTimeout(() => grp && grp.remove(), 680);
+        const destLabel = destId
+          ? (spLoad().find(function(s){ return s.id === destId; }) || { name: destId }).name
+          : 'Início';
+        showToast('⇢  Movido para ' + destLabel);
+      } catch(err) {
+        showToast('Erro ao mover');
+      } finally {
+        ctxBusy = false;
+      }
+    });
+
     // ── Espaços personalizados ──────────────────────────────────────────
-    const SP_KEY = 'ma_spaces';
     const SP_PALETTE = [
       {hex:'#ff2d78',rgb:'255,45,120'},
       {hex:'#0088ff',rgb:'0,136,255'},
@@ -1509,10 +1590,6 @@
       {hex:'#ff9900',rgb:'255,153,0'},
     ];
 
-    function spLoad() {
-      try { return JSON.parse(localStorage.getItem(SP_KEY) || '[]'); } catch(e) { return []; }
-    }
-    function spSave(list) { localStorage.setItem(SP_KEY, JSON.stringify(list)); }
     function spRandColor() { return SP_PALETTE[Math.floor(Math.random() * SP_PALETTE.length)]; }
 
     function spCreateCard(sp) {

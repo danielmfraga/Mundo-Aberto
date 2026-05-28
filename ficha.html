@@ -1602,7 +1602,9 @@ function sbFetch(path, method, body) {
   });
 }
 
-var CHAR_ID = (new URLSearchParams(window.location.search)).get('id') || 'default';
+var CHAR_ID      = (new URLSearchParams(window.location.search)).get('id')  || 'default';
+var ESP_PARAM    = (new URLSearchParams(window.location.search)).get('esp') || null;
+var CHAR_SPACE_ID = null; // preenchido em loadCharData quando personagem pertence a um espaço
 
 // ── Serializa estado completo da ficha ──
 function captureSheet() {
@@ -1828,6 +1830,9 @@ function restoreSheet(data) {
       if (!data || !data.length) return;
       var c = data[0];
 
+      // Espaço ao qual o personagem pertence
+      if (c.space_id) CHAR_SPACE_ID = c.space_id;
+
       // Nome
       var nameEl = document.querySelector('[data-field="name"]');
       if (nameEl && c.name) nameEl.textContent = c.name;
@@ -1887,7 +1892,8 @@ function restoreSheet(data) {
       // First fetch current to rotate versions
       sbFetch('/rest/v1/personagens?char_id=eq.' + CHAR_ID + '&select=id,sheet_data,sheet_data_v1', 'GET')
         .then(function(rows) {
-          var entry = { char_id: CHAR_ID, name: name, img_url: imgUrl || null, sheet_data: sheetData };
+          var entry = { char_id: CHAR_ID, name: name, img_url: imgUrl || null, sheet_data: sheetData,
+                        space_id: ESP_PARAM || CHAR_SPACE_ID || null };
           if (rows && rows.length) {
             // Rotate: current → v1, v1 → v2
             var cur = rows[0];
@@ -2183,9 +2189,12 @@ function restoreSheet(data) {
     var params   = new URLSearchParams(location.search);
     var id       = params.get('id');
     var returnTo = params.get('returnTo');
+    var espId    = ESP_PARAM || CHAR_SPACE_ID;
     var dest = returnTo
       ? returnTo
-      : ((id && id.startsWith('npc_')) ? 'npcs.html' : 'personagens.html');
+      : ((id && id.startsWith('npc_'))
+          ? 'npcs.html'
+          : (espId ? 'personagens.html?esp=' + encodeURIComponent(espId) : 'personagens.html'));
     if (!isDirty()) { window.location.href = dest; return; }
     showModal(dest);
   }
