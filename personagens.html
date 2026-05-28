@@ -1775,7 +1775,8 @@
 <script>
 (function(){
   'use strict';
-  var DEST = 'index.html';
+  var _esp = new URLSearchParams(location.search).get('esp');
+  var DEST = _esp ? 'personagens.html' : 'index.html';
   var IA = 'button,a,input,textarea,select,[contenteditable]';
   function nav(){ window.location.href = DEST; }
   document.addEventListener('dblclick', function(e){ if(e.target.closest(IA)) return; nav(); });
