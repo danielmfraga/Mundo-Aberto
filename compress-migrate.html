@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Migrar Fotos · Mundo Aberto</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #04080f;
+      color: #cfe9f0;
+      font-family: 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .box {
+      max-width: 520px;
+      width: 100%;
+      border: 1px solid rgba(0,255,231,0.2);
+      border-radius: 6px;
+      padding: 32px;
+      background: rgba(0,255,231,0.02);
+    }
+    h1 {
+      font-size: 13px;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: rgba(0,255,231,0.7);
+      margin-bottom: 10px;
+    }
+    .sub {
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: rgba(207,233,240,0.35);
+      margin-bottom: 28px;
+      line-height: 1.7;
+    }
+    #startBtn {
+      width: 100%;
+      padding: 13px;
+      background: transparent;
+      border: 1px solid rgba(0,255,231,0.35);
+      color: rgba(0,255,231,0.7);
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: all 0.2s;
+    }
+    #startBtn:hover:not(:disabled) {
+      background: rgba(0,255,231,0.06);
+      color: #00ffe7;
+      border-color: #00ffe7;
+      box-shadow: 0 0 14px rgba(0,255,231,0.2);
+    }
+    #startBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .progress-bar-wrap {
+      margin-top: 24px;
+      height: 3px;
+      background: rgba(0,255,231,0.08);
+      border-radius: 2px;
+      overflow: hidden;
+      display: none;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: #00ffe7;
+      width: 0%;
+      transition: width 0.3s;
+      box-shadow: 0 0 8px rgba(0,255,231,0.5);
+    }
+
+    #log {
+      margin-top: 20px;
+      max-height: 320px;
+      overflow-y: auto;
+      font-size: 10px;
+      line-height: 1.8;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0,255,231,0.15) transparent;
+    }
+    #log::-webkit-scrollbar { width: 3px; }
+    #log::-webkit-scrollbar-thumb { background: rgba(0,255,231,0.15); }
+
+    .log-line { color: rgba(207,233,240,0.4); }
+    .log-ok   { color: rgba(0,255,231,0.65); }
+    .log-skip { color: rgba(207,233,240,0.2); }
+    .log-err  { color: rgba(255,85,102,0.7); }
+    .log-done { color: #00ffe7; font-weight: bold; letter-spacing: 2px; }
+
+    .stats {
+      margin-top: 20px;
+      display: none;
+      gap: 16px;
+      justify-content: space-between;
+    }
+    .stat {
+      text-align: center;
+      flex: 1;
+      border: 1px solid rgba(0,255,231,0.1);
+      border-radius: 4px;
+      padding: 10px 6px;
+    }
+    .stat-val {
+      font-size: 22px;
+      color: rgba(0,255,231,0.8);
+      display: block;
+    }
+    .stat-lbl {
+      font-size: 8px;
+      letter-spacing: 2px;
+      color: rgba(207,233,240,0.3);
+      text-transform: uppercase;
+      margin-top: 4px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<div class="box">
+  <h1>Migrar Fotos</h1>
+  <p class="sub">
+    Baixa cada foto já salva no Storage, comprime para ≤ 480 px / JPEG 0.78,
+    re-sobe no mesmo path e atualiza o registro.<br>
+    Ferramenta de uso único — pode fechar após concluir.
+  </p>
+
+  <button id="startBtn">▶ Iniciar Migração</button>
+
+  <div class="progress-bar-wrap" id="progressWrap">
+    <div class="progress-bar-fill" id="progressFill"></div>
+  </div>
+
+  <div class="stats" id="stats">
+    <div class="stat"><span class="stat-val" id="stTotal">0</span><span class="stat-lbl">Total</span></div>
+    <div class="stat"><span class="stat-val" id="stOk">0</span><span class="stat-lbl">Comprimidos</span></div>
+    <div class="stat"><span class="stat-val" id="stSkip">0</span><span class="stat-lbl">Ignorados</span></div>
+    <div class="stat"><span class="stat-val" id="stErr">0</span><span class="stat-lbl">Erros</span></div>
+  </div>
+
+  <div id="log"></div>
+</div>
+
+<script>
+  var SB_URL = 'https://mxyqqfsyybluavwlrhsa.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eXFxZnN5eWJsdWF2d2xyaHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTM4MzEsImV4cCI6MjA5MzY2OTgzMX0.b0Ij7UGzbMLpqZjLYxoPEu2kGwEW52U_2NSDtpMGUPM';
+
+  var MAX_PX  = 480;
+  var QUALITY = 0.78;
+  // Fotos menores que esse limite (em bytes) já são consideradas comprimidas — pula
+  var SKIP_IF_BELOW_KB = 120;
+
+  var logEl      = document.getElementById('log');
+  var progressWrap = document.getElementById('progressWrap');
+  var progressFill = document.getElementById('progressFill');
+  var statsEl    = document.getElementById('stats');
+
+  var counters = { total: 0, ok: 0, skip: 0, err: 0 };
+
+  function log(msg, cls) {
+    var line = document.createElement('div');
+    line.className = 'log-line ' + (cls || '');
+    line.textContent = msg;
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function updateStats() {
+    document.getElementById('stTotal').textContent = counters.total;
+    document.getElementById('stOk').textContent    = counters.ok;
+    document.getElementById('stSkip').textContent  = counters.skip;
+    document.getElementById('stErr').textContent   = counters.err;
+  }
+
+  // Fetch com autenticação Supabase
+  function sbFetch(path, method, body) {
+    return fetch(SB_URL + path, {
+      method: method || 'GET',
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
+  }
+
+  // Baixa a imagem de uma URL pública como Blob
+  function fetchImageBlob(url) {
+    // Remove query string para buscar o arquivo original
+    var cleanUrl = url.split('?')[0];
+    return fetch(cleanUrl).then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.blob();
+    });
+  }
+
+  // Comprime blob de imagem para max 480px / JPEG 0.78
+  function compressBlob(blob) {
+    return new Promise(function(resolve, reject) {
+      var objectUrl = URL.createObjectURL(blob);
+      var img = new Image();
+      img.onload = function() {
+        URL.revokeObjectURL(objectUrl);
+        var scale = Math.min(1, MAX_PX / Math.max(img.width, img.height));
+        var w = Math.round(img.width  * scale);
+        var h = Math.round(img.height * scale);
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob(function(compressed) {
+          canvas.width = 0; canvas.height = 0;
+          resolve({ blob: compressed, w: w, h: h });
+        }, 'image/jpeg', QUALITY);
+      };
+      img.onerror = function() { URL.revokeObjectURL(objectUrl); reject(new Error('Falha ao decodificar imagem')); };
+      img.src = objectUrl;
+    });
+  }
+
+  // Extrai o path de Storage a partir do URL público
+  // Ex: .../storage/v1/object/public/personagens/foo.jpg → personagens/foo.jpg
+  function extractStoragePath(url) {
+    var m = url.match(/\/storage\/v1\/object\/public\/(.+?)(\?|$)/);
+    return m ? m[1] : null;
+  }
+
+  // Re-sobe o blob comprimido, atualiza img_url no DB com cache-bust
+  async function reuploadAndUpdate(charId, storagePath, compressedBlob) {
+    // Upload (sobrescreve)
+    var uploadRes = await fetch(SB_URL + '/storage/v1/object/' + storagePath, {
+      method: 'POST',
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'image/jpeg',
+        'x-upsert': 'true'
+      },
+      body: compressedBlob
+    });
+    if (!uploadRes.ok) {
+      var err = await uploadRes.text().catch(function() { return uploadRes.status; });
+      throw new Error('Upload falhou: ' + err);
+    }
+
+    // Novo URL com cache-bust para forçar browsers a re-baixar
+    var newUrl = SB_URL + '/storage/v1/object/public/' + storagePath + '?v=' + Date.now();
+
+    // Atualiza registro
+    var patchRes = await sbFetch('/rest/v1/personagens?char_id=eq.' + encodeURIComponent(charId), 'PATCH', { img_url: newUrl });
+    if (!patchRes.ok && patchRes.status !== 204) {
+      throw new Error('PATCH falhou: ' + patchRes.status);
+    }
+
+    return newUrl;
+  }
+
+  document.getElementById('startBtn').addEventListener('click', async function() {
+    var btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Carregando personagens...';
+    progressWrap.style.display = 'block';
+    statsEl.style.display = 'flex';
+    logEl.innerHTML = '';
+
+    // 1. Busca todos os personagens com foto
+    var res = await sbFetch('/rest/v1/personagens?select=char_id,name,img_url&order=created_at.asc');
+    var rows = await res.json().catch(function() { return []; });
+    var withPhoto = (rows || []).filter(function(r) {
+      return r.img_url && r.img_url.startsWith('http');
+    });
+
+    counters.total = withPhoto.length;
+    updateStats();
+    log('Encontrados ' + withPhoto.length + ' personagens com foto.');
+
+    if (!withPhoto.length) {
+      log('Nada a fazer.', 'log-skip');
+      btn.textContent = 'Nada a migrar';
+      return;
+    }
+
+    btn.textContent = 'Processando...';
+
+    for (var i = 0; i < withPhoto.length; i++) {
+      var row = withPhoto[i];
+      var label = (row.name || row.char_id);
+      progressFill.style.width = Math.round((i / withPhoto.length) * 100) + '%';
+
+      // Verifica se já é uma URL com ?v= (já migrada recentemente) — pula
+      var alreadyMigrated = row.img_url.includes('?v=');
+
+      try {
+        // Baixa a imagem
+        log('↓ ' + label + ' — baixando...', 'log-line');
+        var blob = await fetchImageBlob(row.img_url);
+
+        // Se já é pequena, provavelmente já foi comprimida
+        if (blob.size < SKIP_IF_BELOW_KB * 1024 && alreadyMigrated) {
+          log('✓ ' + label + ' — já está comprimida (' + Math.round(blob.size/1024) + ' KB), ignorando.', 'log-skip');
+          counters.skip++; updateStats();
+          continue;
+        }
+
+        var originalKB = Math.round(blob.size / 1024);
+
+        // Comprime
+        var result = await compressBlob(blob);
+        var compressedKB = Math.round(result.blob.size / 1024);
+
+        // Se a compressão não reduziu muito (já era pequena), pula o re-upload
+        if (compressedKB >= originalKB * 0.9 && alreadyMigrated) {
+          log('✓ ' + label + ' — já é leve (' + originalKB + ' KB), ignorando.', 'log-skip');
+          counters.skip++; updateStats();
+          continue;
+        }
+
+        // Extrai path do Storage
+        var path = extractStoragePath(row.img_url);
+        if (!path) {
+          // URL externa (não é Storage do Supabase) — pula
+          log('⚠ ' + label + ' — URL externa, ignorando.', 'log-skip');
+          counters.skip++; updateStats();
+          continue;
+        }
+
+        // Garante extensão .jpg no path (re-upload sempre como JPEG)
+        path = path.replace(/\.[^.]+$/, '') + '.jpg';
+
+        // Re-sobe e atualiza
+        await reuploadAndUpdate(row.char_id, path, result.blob);
+
+        log('✓ ' + label + ' — ' + result.w + '×' + result.h + 'px · ' + originalKB + ' KB → ' + compressedKB + ' KB', 'log-ok');
+        counters.ok++; updateStats();
+
+      } catch(err) {
+        log('✗ ' + label + ' — ' + err.message, 'log-err');
+        counters.err++; updateStats();
+      }
+
+      // Pequena pausa para não sobrecarregar o browser
+      await new Promise(function(r) { setTimeout(r, 80); });
+    }
+
+    progressFill.style.width = '100%';
+    log('');
+    log('CONCLUÍDO — ' + counters.ok + ' comprimido(s), ' + counters.skip + ' ignorado(s), ' + counters.err + ' erro(s).', 'log-done');
+    btn.textContent = 'Concluído ✓';
+    btn.style.borderColor = '#00ffe7';
+    btn.style.color = '#00ffe7';
+  });
+</script>
+</body>
+</html>
