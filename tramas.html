@@ -624,7 +624,7 @@
       pendingDelete = null;
       tramas = tramas.filter(function(t) { return t.id !== tramaId; });
       sbFetch('/rest/v1/tramas?trama_id=eq.' + tramaId, 'PATCH', { deleted_at: new Date().toISOString() });
-      sbFetch('/rest/v1/trama_links?trama_id=eq.' + tramaId, 'DELETE');
+      // trama_links ficam órfãos — a query já filtra deleted_at=is.null na trama, nunca aparecem
       cardEl.style.transition = 'opacity 0.3s, transform 0.3s';
       cardEl.style.opacity = '0';
       cardEl.style.transform = cardEl.style.transform + ' scale(0.7)';

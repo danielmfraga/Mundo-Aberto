@@ -815,8 +815,8 @@
       delBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!confirm('Excluir "' + (name || 'NPC') + '"? Esta ação não pode ser desfeita.')) return;
-        sbFetch('/rest/v1/personagens?char_id=eq.' + charId, 'DELETE');
+        if (!confirm('Excluir "' + (name || 'NPC') + '"?')) return;
+        sbFetch('/rest/v1/personagens?char_id=eq.' + charId, 'PATCH', { deleted_at: new Date().toISOString() });
         group.style.transition = 'opacity 0.3s, transform 0.3s';
         group.style.opacity = '0';
         group.style.transform = 'scale(0.85)';
@@ -850,7 +850,7 @@
       const rosterEl = document.getElementById('roster');
       const newCharGroup = rosterEl.querySelector('.new-char-group');
 
-      sbFetch('/rest/v1/personagens?select=*&order=created_at.asc', 'GET')
+      sbFetch('/rest/v1/personagens?select=*&order=created_at.asc&deleted_at=is.null', 'GET')
         .then(function(chars) {
           if (!Array.isArray(chars)) return;
           // apenas NPCs (char_id começa com "npc_")
@@ -1029,7 +1029,7 @@
         await sbFetch('/rest/v1/personagens', 'POST', {
           char_id: newId, name: src.name, img_url: src.img_url || null, sheet_data: src.sheet_data
         });
-        await sbFetch('/rest/v1/personagens?char_id=eq.' + id, 'DELETE');
+        await sbFetch('/rest/v1/personagens?char_id=eq.' + id, 'PATCH', { deleted_at: new Date().toISOString() });
         setTimeout(() => grp && grp.remove(), 680);
         showToast('⇄  Movido para Personagens');
       } finally { ctxBusy = false; }

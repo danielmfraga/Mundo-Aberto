@@ -1414,9 +1414,9 @@
       delBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!confirm('Excluir "' + (name || 'Personagem') + '"? Esta ação não pode ser desfeita.')) return;
-        // Remove do Supabase
-        sbFetch('/rest/v1/personagens?char_id=eq.' + charId, 'DELETE');
+        if (!confirm('Excluir "' + (name || 'Personagem') + '"?')) return;
+        // Soft delete — marca como deletado, não remove do banco
+        sbFetch('/rest/v1/personagens?char_id=eq.' + charId, 'PATCH', { deleted_at: new Date().toISOString() });
         // Anima saída
         group.style.transition = 'opacity 0.3s, transform 0.3s';
         group.style.opacity = '0';
@@ -1466,11 +1466,11 @@
         ? ('&space_id=eq.' + encodeURIComponent(CURRENT_SPACE.id))
         : '&space_id=is.null';
 
-      sbFetch('/rest/v1/personagens?select=*&order=created_at.asc' + spFilter, 'GET')
+      sbFetch('/rest/v1/personagens?select=*&order=created_at.asc&deleted_at=is.null' + spFilter, 'GET')
         .then(function(chars) {
           if (!Array.isArray(chars) && !CURRENT_SPACE) {
             // coluna space_id ainda não existe — busca sem filtro (fallback)
-            return sbFetch('/rest/v1/personagens?select=*&order=created_at.asc', 'GET')
+            return sbFetch('/rest/v1/personagens?select=*&order=created_at.asc&deleted_at=is.null', 'GET')
               .then(renderChars);
           }
           renderChars(chars);
@@ -1515,7 +1515,7 @@
       divider.textContent = '— N P C S —';
       rosterEl.insertBefore(divider, newCharGrp);
 
-      sbFetch('/rest/v1/personagens?select=*&order=created_at.asc')
+      sbFetch('/rest/v1/personagens?select=*&order=created_at.asc&deleted_at=is.null')
         .then(function(chars) {
           if (!Array.isArray(chars)) return;
           chars.filter(function(c) { return c.char_id.startsWith('npc_'); })
@@ -1558,7 +1558,7 @@
       var newCharGrp = document.getElementById('charEnd');
 
       spaces.forEach(function(sp) {
-        sbFetch('/rest/v1/personagens?select=*&order=created_at.asc&space_id=eq.' + encodeURIComponent(sp.id), 'GET')
+        sbFetch('/rest/v1/personagens?select=*&order=created_at.asc&deleted_at=is.null&space_id=eq.' + encodeURIComponent(sp.id), 'GET')
           .then(function(chars) {
             if (!Array.isArray(chars) || !chars.length) return;
 
@@ -1805,7 +1805,7 @@
         await sbFetch('/rest/v1/personagens', 'POST', {
           char_id: newId, name: src.name, img_url: src.img_url || null, sheet_data: src.sheet_data
         });
-        await sbFetch('/rest/v1/personagens?char_id=eq.' + id, 'DELETE');
+        await sbFetch('/rest/v1/personagens?char_id=eq.' + id, 'PATCH', { deleted_at: new Date().toISOString() });
         setTimeout(() => grp && grp.remove(), 680);
         showToast('⇄  Movido para N P C S');
       } finally { ctxBusy = false; }
@@ -1879,7 +1879,7 @@
         if (!confirm('Remover espaço "' + sp.name + '"?')) return;
         // Move personagens do espaço de volta para a raiz antes de deletar
         await sbFetch('/rest/v1/personagens?space_id=eq.' + encodeURIComponent(sp.id), 'PATCH', { space_id: null });
-        await sbFetch('/rest/v1/spaces?id=eq.' + encodeURIComponent(sp.id), 'DELETE');
+        await sbFetch('/rest/v1/spaces?id=eq.' + encodeURIComponent(sp.id), 'PATCH', { deleted_at: new Date().toISOString() });
         _spacesCache = _spacesCache.filter(function(s){ return s.id !== sp.id; });
         group.style.transition = 'opacity .3s, transform .3s';
         group.style.opacity = '0'; group.style.transform = 'scale(.85)';
