@@ -1256,17 +1256,28 @@
       const rosterEl = document.getElementById('roster');
       const newCharGroup = rosterEl.querySelector('.new-char-group');
 
+      function renderChars(chars) {
+        if (!Array.isArray(chars)) return;
+        chars.filter(function(c) { return !c.char_id.startsWith('npc_'); })
+             .forEach(function(char, i) {
+          const card = createHoloCard(char.char_id, char.name, char.img_url);
+          card.style.animationDelay = (i * 80) + 'ms';
+          rosterEl.insertBefore(card, newCharGroup);
+        });
+      }
+
       var spFilter = CURRENT_SPACE
         ? ('&space_id=eq.' + encodeURIComponent(CURRENT_SPACE.id))
         : '&space_id=is.null';
+
       sbFetch('/rest/v1/personagens?select=*&order=created_at.asc' + spFilter, 'GET')
         .then(function(chars) {
-          if (!Array.isArray(chars)) return;
-          chars.filter(c => !c.char_id.startsWith('npc_')).forEach(function(char, i) {
-            const card = createHoloCard(char.char_id, char.name, char.img_url);
-            card.style.animationDelay = (i * 80) + 'ms';
-            rosterEl.insertBefore(card, newCharGroup);
-          });
+          if (!Array.isArray(chars) && !CURRENT_SPACE) {
+            // coluna space_id ainda não existe — busca sem filtro (fallback)
+            return sbFetch('/rest/v1/personagens?select=*&order=created_at.asc', 'GET')
+              .then(renderChars);
+          }
+          renderChars(chars);
         })
         .catch(function(e) { console.error('Erro ao carregar personagens:', e); });
     }
