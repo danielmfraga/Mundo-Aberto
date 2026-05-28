@@ -1469,8 +1469,8 @@
       sbFetch('/rest/v1/personagens?select=*&order=created_at.asc&deleted_at=is.null' + spFilter, 'GET')
         .then(function(chars) {
           if (!Array.isArray(chars) && !CURRENT_SPACE) {
-            // coluna space_id ainda não existe — busca sem filtro (fallback)
-            return sbFetch('/rest/v1/personagens?select=*&order=created_at.asc&deleted_at=is.null', 'GET')
+            // coluna deleted_at ou space_id ainda não existe — fallback sem filtros
+            return sbFetch('/rest/v1/personagens?select=*&order=created_at.asc', 'GET')
               .then(renderChars);
           }
           renderChars(chars);
