@@ -139,6 +139,7 @@
 
   <div class="stats" id="stats">
     <div class="stat"><span class="stat-val" id="stTotal">0</span><span class="stat-lbl">Total</span></div>
+    <div class="stat"><span class="stat-val" id="stBak">0</span><span class="stat-lbl">Backup</span></div>
     <div class="stat"><span class="stat-val" id="stOk">0</span><span class="stat-lbl">Comprimidos</span></div>
     <div class="stat"><span class="stat-val" id="stSkip">0</span><span class="stat-lbl">Ignorados</span></div>
     <div class="stat"><span class="stat-val" id="stErr">0</span><span class="stat-lbl">Erros</span></div>
@@ -161,7 +162,7 @@
   var progressFill = document.getElementById('progressFill');
   var statsEl    = document.getElementById('stats');
 
-  var counters = { total: 0, ok: 0, skip: 0, err: 0 };
+  var counters = { total: 0, backed: 0, ok: 0, skip: 0, err: 0 };
 
   function log(msg, cls) {
     var line = document.createElement('div');
@@ -173,6 +174,7 @@
 
   function updateStats() {
     document.getElementById('stTotal').textContent = counters.total;
+    document.getElementById('stBak').textContent   = counters.backed;
     document.getElementById('stOk').textContent    = counters.ok;
     document.getElementById('stSkip').textContent  = counters.skip;
     document.getElementById('stErr').textContent   = counters.err;
@@ -230,6 +232,24 @@
   function extractStoragePath(url) {
     var m = url.match(/\/storage\/v1\/object\/public\/(.+?)(\?|$)/);
     return m ? m[1] : null;
+  }
+
+  // Salva o blob original em personagens/originals/  (preserva extensão)
+  async function saveOriginalBlob(backupPath, blob) {
+    var res = await fetch(SB_URL + '/storage/v1/object/' + backupPath, {
+      method: 'POST',
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': blob.type || 'image/jpeg',
+        'x-upsert': 'true'
+      },
+      body: blob
+    });
+    if (!res.ok) {
+      var txt = await res.text().catch(function() { return res.status; });
+      throw new Error(txt);
+    }
   }
 
   // Re-sobe o blob comprimido, atualiza img_url no DB com cache-bust
@@ -323,16 +343,26 @@
         }
 
         // Extrai path do Storage
-        var path = extractStoragePath(row.img_url);
-        if (!path) {
+        var originalPath = extractStoragePath(row.img_url);
+        if (!originalPath) {
           // URL externa (não é Storage do Supabase) — pula
           log('⚠ ' + label + ' — URL externa, ignorando.', 'log-skip');
           counters.skip++; updateStats();
           continue;
         }
 
-        // Garante extensão .jpg no path (re-upload sempre como JPEG)
-        path = path.replace(/\.[^.]+$/, '') + '.jpg';
+        // Salva original em /originals/ ANTES de sobrescrever (preserva extensão)
+        var backupPath = originalPath.replace(/^([^/]+\/)/, '$1originals/');
+        try {
+          await saveOriginalBlob(backupPath, blob);
+          counters.backed++; updateStats();
+          log('  ☁ original salvo → ' + backupPath, 'log-ok');
+        } catch(backupErr) {
+          log('  ⚠ backup falhou (' + backupErr.message + ') — continuando.', 'log-err');
+        }
+
+        // Garante extensão .jpg para o arquivo comprimido
+        var path = originalPath.replace(/\.[^.]+$/, '') + '.jpg';
 
         // Re-sobe e atualiza
         await reuploadAndUpdate(row.char_id, path, result.blob);
