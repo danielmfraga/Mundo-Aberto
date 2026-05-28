@@ -837,6 +837,23 @@
     }
     .mestre-mode .char-delete-btn { display: none; }
 
+    /* ── Modo Mestre: portais menores, sem botão de criação/deleção ── */
+    .mestre-mode .sp-portal-btn,
+    .mestre-mode .portal-btn {
+      width: 100px;
+      height: 100px;
+    }
+    .mestre-mode .sp-portal-group .sp-core,
+    .mestre-mode .portal-group .bh-core {
+      width: 36px; height: 36px;
+    }
+    .mestre-mode .sp-portal-name,
+    .mestre-mode .portal-name {
+      font-size: 7px; letter-spacing: 2px;
+    }
+    .mestre-mode .new-space-group { display: none !important; }
+    .mestre-mode .sp-del-btn      { display: none !important; }
+
     .mestre-sel-badge {
       display: none;
       position: absolute;
@@ -1345,6 +1362,53 @@
       });
     }
 
+    // ── Personagens de espaços inline no Modo Mestre ──
+    var spaceCharsLoading = false;
+
+    function loadSpaceCharsInline() {
+      if (spaceCharsLoading || CURRENT_SPACE) return;
+      spaceCharsLoading = true;
+
+      var spaces = spLoad();
+      if (!spaces.length) { spaceCharsLoading = false; return; }
+
+      var roster    = document.getElementById('roster');
+      var newCharGrp = roster.querySelector('.new-char-group');
+
+      spaces.forEach(function(sp) {
+        sbFetch('/rest/v1/personagens?select=*&order=created_at.asc&space_id=eq.' + encodeURIComponent(sp.id), 'GET')
+          .then(function(chars) {
+            if (!Array.isArray(chars) || !chars.length) return;
+
+            var divider = document.createElement('div');
+            divider.id = 'spInline_' + sp.id;
+            divider.className = 'npc-section-label';
+            divider.textContent = '— ' + sp.name + ' —';
+            divider.style.color = 'rgba(' + sp.rgb + ',0.6)';
+            divider.style.borderTopColor = 'rgba(' + sp.rgb + ',0.14)';
+            roster.insertBefore(divider, newCharGrp);
+
+            chars.filter(function(c) { return !c.char_id.startsWith('npc_'); })
+                 .forEach(function(char, i) {
+              var card = createHoloCard(char.char_id, char.name, char.img_url);
+              card.classList.add('sp-inline-char');
+              card.style.animationDelay = (i * 80) + 'ms';
+              roster.insertBefore(card, newCharGrp);
+            });
+          });
+      });
+    }
+
+    function removeSpaceCharsInline() {
+      spaceCharsLoading = false;
+      document.querySelectorAll('[id^="spInline_"]').forEach(function(el) { el.remove(); });
+      document.querySelectorAll('.char-group.sp-inline-char').forEach(function(el) {
+        var idx = selectedChars.findIndex(function(c) { return c.id === el.dataset.charId; });
+        if (idx >= 0) selectedChars.splice(idx, 1);
+        el.remove();
+      });
+    }
+
     // ── Modo Mestre ──
     let mestreMode = false;
     const selectedChars = [];
@@ -1355,8 +1419,10 @@
       document.getElementById('mestreBtn').classList.toggle('active', mestreMode);
       if (mestreMode) {
         loadNpcsInline();
+        loadSpaceCharsInline();
       } else {
         removeNpcsInline();
+        removeSpaceCharsInline();
         selectedChars.length = 0;
         document.querySelectorAll('.char-group.selected').forEach(g => g.classList.remove('selected'));
         document.querySelectorAll('.mestre-sel-badge').forEach(b => b.textContent = '');
