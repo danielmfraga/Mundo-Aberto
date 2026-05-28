@@ -1154,17 +1154,35 @@
     var SUPABASE_URL = 'https://mxyqqfsyybluavwlrhsa.supabase.co';
     var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eXFxZnN5eWJsdWF2d2xyaHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTM4MzEsImV4cCI6MjA5MzY2OTgzMX0.b0Ij7UGzbMLpqZjLYxoPEu2kGwEW52U_2NSDtpMGUPM';
 
-    // ── Espaço atual (leitura antecipada p/ uso em loadRoster) ──────────
-    var SP_KEY = 'ma_spaces';
-    function spLoad() { try { return JSON.parse(localStorage.getItem(SP_KEY)||'[]'); } catch(e){ return []; } }
-    function spSave(list) { localStorage.setItem(SP_KEY, JSON.stringify(list)); }
-    var ESP_PARAM    = new URLSearchParams(location.search).get('esp');
-    var CURRENT_SPACE = (function(){
-      if (!ESP_PARAM) return null;
-      var list = spLoad();
-      for (var i = 0; i < list.length; i++) if (list[i].id === ESP_PARAM) return list[i];
-      return null;
-    })();
+    // ── Espaços (Supabase, cache em memória) ────────────────────────────
+    var ESP_PARAM     = new URLSearchParams(location.search).get('esp');
+    var CURRENT_SPACE = null;  // preenchido em spInit()
+    var _spacesCache  = [];    // cache em memória carregado do Supabase
+
+    function spLoad() { return _spacesCache; }  // síncrono — usa cache
+
+    async function spInit() {
+      var data = await sbFetch('/rest/v1/spaces?select=*&order=created_at.asc', 'GET');
+      _spacesCache = Array.isArray(data) ? data : [];
+
+      // Migração única: localStorage → Supabase (roda só uma vez)
+      var OLD_KEY = 'ma_spaces';
+      try {
+        var local = JSON.parse(localStorage.getItem(OLD_KEY) || '[]');
+        if (local.length && !_spacesCache.length) {
+          await Promise.all(local.map(function(sp) {
+            return sbFetch('/rest/v1/spaces', 'POST', sp);
+          }));
+          _spacesCache = local;
+          localStorage.removeItem(OLD_KEY);
+        }
+      } catch(e) {}
+
+      // Resolve espaço atual a partir da URL
+      if (ESP_PARAM) {
+        CURRENT_SPACE = _spacesCache.find(function(s) { return s.id === ESP_PARAM; }) || null;
+      }
+    }
 
     function sbFetch(path, method, body) {
       return fetch(SUPABASE_URL + path, {
@@ -1299,22 +1317,24 @@
         .catch(function(e) { console.error('Erro ao carregar personagens:', e); });
     }
 
-    loadRoster();
-
-    // ── Modo espaço: aplica tema e restringe UI ─────────────────────────
-    if (CURRENT_SPACE) {
-      document.body.classList.add('space-mode');
-      var titleEl = document.querySelector('.page-title');
-      if (titleEl) {
-        titleEl.textContent = CURRENT_SPACE.name;
-        titleEl.style.color = 'rgba(' + CURRENT_SPACE.rgb + ',0.55)';
-        titleEl.style.textShadow = '0 0 24px rgba(' + CURRENT_SPACE.rgb + ',0.2)';
+    // Inicializa espaços do Supabase → depois renderiza portais e roster
+    spInit().then(function() {
+      spRender();
+      loadRoster();
+      if (CURRENT_SPACE) {
+        document.body.classList.add('space-mode');
+        var titleEl = document.querySelector('.page-title');
+        if (titleEl) {
+          titleEl.textContent = CURRENT_SPACE.name;
+          titleEl.style.color = 'rgba(' + CURRENT_SPACE.rgb + ',0.55)';
+          titleEl.style.textShadow = '0 0 24px rgba(' + CURRENT_SPACE.rgb + ',0.2)';
+        }
+        var backEl = document.querySelector('.back-btn');
+        if (backEl) { backEl.href = 'personagens.html'; }
+        var newCharBtn2 = document.getElementById('newCharBtn');
+        if (newCharBtn2) newCharBtn2.href = 'ficha.html?esp=' + encodeURIComponent(ESP_PARAM);
       }
-      var backEl = document.querySelector('.back-btn');
-      if (backEl) { backEl.href = 'personagens.html'; }
-      var newCharBtn2 = document.getElementById('newCharBtn');
-      if (newCharBtn2) newCharBtn2.href = 'ficha.html?esp=' + encodeURIComponent(ESP_PARAM);
-    }
+    });
 
     // ── NPCs inline no Modo Mestre ──
     var npcsLoading = false;
@@ -1692,10 +1712,11 @@
         '</a>' +
         '<div class="sp-portal-name">' + sp.name + '</div>' +
         '<button class="sp-del-btn" title="Remover espaço">✕</button>';
-      group.querySelector('.sp-del-btn').addEventListener('click', function(e) {
+      group.querySelector('.sp-del-btn').addEventListener('click', async function(e) {
         e.stopPropagation();
         if (!confirm('Remover espaço "' + sp.name + '"?')) return;
-        spSave(spLoad().filter(function(s){ return s.id !== sp.id; }));
+        await sbFetch('/rest/v1/spaces?id=eq.' + encodeURIComponent(sp.id), 'DELETE');
+        _spacesCache = _spacesCache.filter(function(s){ return s.id !== sp.id; });
         group.style.transition = 'opacity .3s, transform .3s';
         group.style.opacity = '0'; group.style.transform = 'scale(.85)';
         setTimeout(function(){ group.remove(); }, 300);
@@ -1728,12 +1749,13 @@
       document.body.appendChild(ov);
       const inp = document.getElementById('__sp-inp');
       setTimeout(function(){ inp.focus(); }, 50);
-      function spConfirm() {
+      async function spConfirm() {
         const name = inp.value.trim().toUpperCase();
         if (!name) { inp.focus(); return; }
         const color = spRandColor();
         const sp = { id:'esp_'+Date.now().toString(36), name:name, hex:color.hex, rgb:color.rgb };
-        const list = spLoad(); list.push(sp); spSave(list);
+        await sbFetch('/rest/v1/spaces', 'POST', sp);
+        _spacesCache.push(sp);
         ov.remove(); spRender();
       }
       document.getElementById('__sp-ok').addEventListener('click', spConfirm);
@@ -1747,7 +1769,6 @@
     document.getElementById('newSpaceBtn').addEventListener('click', function(e){
       e.stopPropagation(); spShowModal();
     });
-    spRender();
   </script>
 
 <!-- ── Duplo clique/toque para voltar ── -->
