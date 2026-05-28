@@ -816,25 +816,94 @@
       display: flex; flex-direction: column; align-items: center;
       gap: 5px; pointer-events: none;
     }
-    .combo-space .orbit-icon { width: 36px; height: 36px; }
-    .combo-char  .plus-icon  { width: 36px; height: 36px; }
     .combo-sub-label {
-      font-family: 'Share Tech Mono', monospace; font-size: 7px;
-      letter-spacing: 2px; color: rgba(0,255,231,.4);
-      text-transform: uppercase; white-space: nowrap;
+      font-family: 'Share Tech Mono', monospace; font-size: 6.5px;
+      letter-spacing: 1.5px; color: rgba(0,255,231,.42);
+      text-transform: uppercase; white-space: normal;
+      text-align: center; line-height: 1.5;
       transition: color .2s;
     }
-    /* Hover: metade Espaço */
-    .combo-space:hover .orbit-ring   { border-color: rgba(0,255,231,.65); }
-    .combo-space:hover .orbit-ring-2 { border-color: rgba(0,255,231,.45); }
-    .combo-space:hover .orbit-plus::before,
-    .combo-space:hover .orbit-plus::after { background: var(--holo); box-shadow: 0 0 8px rgba(0,255,231,.5); }
-    .combo-space:hover .combo-sub-label  { color: rgba(0,255,231,.8); }
-    /* Hover: metade Personagem */
-    .combo-char:hover .plus-icon::before,
-    .combo-char:hover .plus-icon::after  { background: var(--holo); box-shadow: 0 0 14px rgba(0,255,231,.6); }
-    .combo-char:hover .plus-corner       { border-color: var(--holo); }
-    .combo-char:hover .combo-sub-label   { color: rgba(0,255,231,.8); }
+    .combo-space:hover .combo-sub-label,
+    .combo-char:hover  .combo-sub-label { color: rgba(0,255,231,.85); }
+
+    /* ── Mini Buraco Negro (metade Espaço) ── */
+    .combo-mini-bh {
+      position: relative; width: 52px; height: 52px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .combo-bh-r1 {
+      position: absolute; width: 100%; height: 100%; border-radius: 50%;
+      border: 1px solid rgba(0,255,231,.28);
+      animation: bhRotate 14s linear infinite;
+    }
+    .combo-bh-r2 {
+      position: absolute; width: 100%; height: 38%; border-radius: 50%;
+      border: 1px solid rgba(0,255,231,.4);
+      animation: bhRotateFlat 9s linear infinite;
+    }
+    .combo-bh-r3 {
+      position: absolute; width: 68%; height: 68%; border-radius: 50%;
+      border: 1px dashed rgba(0,136,255,.22);
+      animation: bhRotate 22s linear infinite reverse;
+    }
+    .combo-bh-core {
+      width: 20px; height: 20px; border-radius: 50%; z-index: 2;
+      background: radial-gradient(circle, #000 38%, rgba(0,255,231,.12) 80%, transparent);
+      border: 1px solid rgba(0,255,231,.38);
+      box-shadow: 0 0 8px rgba(0,255,231,.25), inset 0 0 8px rgba(0,0,0,.95);
+    }
+    .combo-space:hover .combo-bh-r1 { border-color: rgba(0,255,231,.55); }
+    .combo-space:hover .combo-bh-r2 { border-color: rgba(0,255,231,.68); }
+    .combo-space:hover .combo-bh-r3 { border-color: rgba(0,136,255,.42); }
+    .combo-space:hover .combo-bh-core {
+      border-color: rgba(0,255,231,.65);
+      box-shadow: 0 0 14px rgba(0,255,231,.45), inset 0 0 8px rgba(0,0,0,.95);
+    }
+
+    /* ── Mini Holograma (metade Personagem) ── */
+    .combo-mini-holo {
+      position: relative; width: 52px; height: 52px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .combo-holo-ring {
+      position: absolute; width: 88%; height: 88%; border-radius: 50%;
+      border: 1px solid rgba(0,255,231,.25);
+      animation: ringRotate 12s linear infinite;
+    }
+    .combo-holo-core {
+      width: 30px; height: 30px; border-radius: 50%; z-index: 2;
+      border: 1.5px solid rgba(0,255,231,.38);
+      box-shadow: 0 0 8px rgba(0,255,231,.22), inset 0 0 10px rgba(0,255,231,.04);
+      background: rgba(0,255,231,.02);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; position: relative;
+    }
+    .combo-holo-core::after {
+      content: ''; position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,255,231,.07) 2px, rgba(0,255,231,.07) 3px
+      );
+      animation: scanMove 4s linear infinite;
+    }
+    .combo-holo-icon {
+      font-size: 13px; opacity: 0.4; position: relative; z-index: 1;
+      animation: iconPulse 3s ease-in-out infinite;
+    }
+    .combo-holo-beam {
+      position: absolute; bottom: -5px; left: 50%;
+      transform: translateX(-50%);
+      width: 1px; height: 18px;
+      background: linear-gradient(to top, var(--holo), transparent);
+      box-shadow: 0 0 4px rgba(0,255,231,.6);
+      animation: beamPulse 3s ease-in-out infinite;
+    }
+    .combo-char:hover .combo-holo-ring { border-color: rgba(0,255,231,.52); }
+    .combo-char:hover .combo-holo-core {
+      border-color: rgba(0,255,231,.65);
+      box-shadow: 0 0 14px rgba(0,255,231,.42), inset 0 0 10px rgba(0,255,231,.08);
+    }
+    .combo-char:hover .combo-holo-icon { opacity: 0.78; }
 
     /* ── Modal criar espaço ── */
     .__sp-ov {
@@ -1134,6 +1203,11 @@
       .portal-btn { width: 155px; height: 155px; }
       .sp-portal-btn { width: 155px; height: 155px; }
       .combo-card { width: 155px; height: 155px; }
+      .combo-space { padding: 16px 0 0 16px; }
+      .combo-char  { padding: 0 16px 16px 0; }
+      .combo-mini-bh, .combo-mini-holo { width: 42px; height: 42px; }
+      .combo-bh-core   { width: 16px; height: 16px; }
+      .combo-holo-core { width: 24px; height: 24px; }
       .char-projection { width: 120px; height: 120px; }
     }
     </style>
@@ -1180,24 +1254,26 @@
           <!-- ↖ Novo Espaço -->
           <button class="combo-half combo-space" id="newSpaceBtn">
             <div class="combo-icon-wrap">
-              <div class="orbit-icon">
-                <div class="orbit-ring orbit-ring-1"></div>
-                <div class="orbit-ring orbit-ring-2"></div>
-                <div class="orbit-plus"></div>
+              <div class="combo-mini-bh">
+                <div class="combo-bh-r1"></div>
+                <div class="combo-bh-r2"></div>
+                <div class="combo-bh-r3"></div>
+                <div class="combo-bh-core"></div>
               </div>
-              <span class="combo-sub-label">Espaço</span>
+              <span class="combo-sub-label">Abra um<br>Espaço</span>
             </div>
           </button>
           <!-- ↘ Novo Personagem -->
           <a class="combo-half combo-char" href="ficha.html" id="newCharBtn">
             <div class="combo-icon-wrap">
-              <div class="plus-icon">
-                <span class="plus-corner tl"></span>
-                <span class="plus-corner tr"></span>
-                <span class="plus-corner bl"></span>
-                <span class="plus-corner br"></span>
+              <div class="combo-mini-holo">
+                <div class="combo-holo-ring"></div>
+                <div class="combo-holo-core">
+                  <div class="combo-holo-icon">⬡</div>
+                </div>
+                <div class="combo-holo-beam"></div>
               </div>
-              <span class="combo-sub-label">Personagem</span>
+              <span class="combo-sub-label">Novo<br>Personagem</span>
             </div>
           </a>
         </div>
