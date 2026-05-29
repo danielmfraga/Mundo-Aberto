@@ -1243,13 +1243,15 @@ body::after {
   <footer class="signature">
     <div>Mundo Aberto</div>
     <div style="display:flex;align-items:center;gap:14px;">
-      <button id="saveSheetBtn" type="button" style="background:transparent;border:1px solid rgba(0,255,231,0.35);color:rgba(0,255,231,0.6);font-family:var(--font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:6px 12px;cursor:pointer;border-radius:2px;transition:all 0.18s;">Salvar Personagem</button><button id="restoreSheetBtn" type="button" style="background:transparent;border:1px solid rgba(255,107,26,0.35);color:rgba(255,107,26,0.5);font-family:var(--font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:6px 12px;cursor:pointer;border-radius:2px;transition:all 0.18s;">Restaurar</button><button id="clearSheetBtn" type="button" style="background:transparent;border:1px solid var(--line);color:var(--fg-faint);font-family:var(--font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:6px 12px;cursor:pointer;border-radius:2px;transition:all 0.18s;">Limpar ficha</button>
+      <button id="saveSheetBtn" type="button" style="display:none;">Salvar Personagem</button><button id="restoreSheetBtn" type="button" style="background:transparent;border:1px solid rgba(255,107,26,0.35);color:rgba(255,107,26,0.5);font-family:var(--font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:6px 12px;cursor:pointer;border-radius:2px;transition:all 0.18s;">Restaurar</button><button id="clearSheetBtn" type="button" style="background:transparent;border:1px solid var(--line);color:var(--fg-faint);font-family:var(--font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:6px 12px;cursor:pointer;border-radius:2px;transition:all 0.18s;">Limpar ficha</button>
       <span>06.05.2026 · Alpha</span>
     </div>
   </footer>
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sheet-sync.js"></script>
 <script>
 // Build dot rows (factored out so dynamic rows can use it)
 function buildDots(container) {
@@ -1605,16 +1607,38 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
       var compressed = canvas.toDataURL('image/jpeg', QUALITY);
       canvas.width = 0; canvas.height = 0; // libera memória do canvas
 
-      // Mostra preview já comprimido; o fluxo de save vai usar esse base64 enxuto
+      // Mostra preview já comprimido enquanto faz upload
       var img = document.getElementById('holoImg');
       img.src = compressed;
       img.style.display = 'block';
       document.getElementById('uploadPh').style.display = 'none';
+      // Upload imediato pro storage + auto-save com a URL HTTP
+      if (CHAR_ID !== 'default') uploadCharImg(compressed);
     };
     original.src = ev.target.result;
   };
   reader.readAsDataURL(file);
 });
+
+// Upload da foto comprimida pro storage e troca o src do <img> pra URL HTTP.
+// Depois aciona markDirtyNow() pra o auto-save persistir img_url no DB.
+function uploadCharImg(b64Src) {
+  var m = b64Src.match(/data:([^;]+);base64,(.+)/);
+  if (!m) return;
+  var mime = m[1], bin = atob(m[2]), arr = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  var path = CHAR_ID + '.' + (mime.split('/')[1] || 'jpg');
+  fetch(SB_URL + '/storage/v1/object/personagens/' + path, {
+    method: 'POST',
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': mime, 'x-upsert': 'true' },
+    body: new Blob([arr], { type: mime })
+  }).then(function() {
+    var url = SB_URL + '/storage/v1/object/public/personagens/' + path + '?t=' + Date.now();
+    var imgEl = document.getElementById('holoImg');
+    if (imgEl) imgEl.src = url;
+    if (typeof markDirtyNow === 'function') markDirtyNow();
+  }).catch(function() {});
+}
 
 // ── Supabase ──
 var SB_URL = 'https://mxyqqfsyybluavwlrhsa.supabase.co';
@@ -2059,6 +2083,85 @@ function restoreSheet(data) {
       });
   });
 })();
+
+// ── Auto-save + Realtime ──────────────────────────────────────────────
+// Aplica update remoto (mestre ou outra aba editando a mesma ficha).
+// Se algum contenteditable está focado, aplica só vitals/dots — não
+// re-renderiza texto pra não perder o cursor.
+function applyRemoteSheet(data) {
+  if (!data) return;
+  var active = document.activeElement;
+  var isEditing = active && (
+    (active.matches && active.matches('[contenteditable]')) ||
+    active.tagName === 'INPUT' || active.tagName === 'TEXTAREA'
+  );
+
+  if (!isEditing) {
+    // Sem foco: limpa seções dinâmicas e re-renderiza tudo (reusa restoreSheet)
+    var qList = document.getElementById('quality-list');
+    var tGrid = document.getElementById('trunfos-grid');
+    var eList = document.getElementById('equip-list');
+    var tAdd  = document.getElementById('trunfo-add');
+    var eAdd  = document.getElementById('equip-add');
+    if (qList) qList.innerHTML = '';
+    if (tGrid && tAdd) { tGrid.innerHTML = ''; tGrid.appendChild(tAdd); }
+    if (eList && eAdd) { eList.innerHTML = ''; eList.appendChild(eAdd); }
+    restoreSheet(data);
+    return;
+  }
+
+  // Com foco: aplica só vitals + dots (não causa loss de foco)
+  if (data.vitals) {
+    Object.keys(data.vitals).forEach(function(id) {
+      var v = data.vitals[id];
+      if (id === 'desp-boxes') buildDesp(v.desp || 0);
+      else buildVital(id, v.total, v.filled, v.aggravated || 0, false);
+    });
+  }
+  if (data.dots) {
+    data.dots.forEach(function(d) {
+      document.querySelectorAll('.row').forEach(function(row) {
+        if (row.contains(active)) return;
+        var nameEl = row.querySelector('.row-name');
+        if (!nameEl || nameEl.textContent.trim() !== d.name) return;
+        var dotsEl = row.querySelector('.dots');
+        if (!dotsEl) return;
+        dotsEl.querySelectorAll('.dot').forEach(function(dot, i) {
+          dot.classList.toggle('filled', i < d.filled);
+        });
+      });
+    });
+  }
+}
+
+(function setupAutoSync() {
+  if (!window.SheetSync || CHAR_ID === 'default') return;
+  SheetSync.init(CHAR_ID);
+  SheetSync.enableSnapshots(5 * 60 * 1000);
+  SheetSync.subscribe(function(row) {
+    SheetSync.flag('applyingRemote', true);
+    try {
+      if (row.name) {
+        var nameEl = document.querySelector('[data-field="name"]');
+        if (nameEl && document.activeElement !== nameEl && nameEl.textContent !== row.name) {
+          nameEl.textContent = row.name;
+        }
+      }
+      if (row.img_url) {
+        var imgEl = document.getElementById('holoImg');
+        var ph    = document.getElementById('uploadPh');
+        if (imgEl && imgEl.src !== row.img_url) {
+          imgEl.src = row.img_url;
+          imgEl.style.display = 'block';
+          if (ph) ph.style.display = 'none';
+        }
+      }
+      if (row.sheet_data) applyRemoteSheet(row.sheet_data);
+    } finally {
+      setTimeout(function() { SheetSync.flag('applyingRemote', false); }, 200);
+    }
+  });
+})();
 </script>
 
 
@@ -2174,13 +2277,34 @@ function restoreSheet(data) {
 (function() {
   'use strict';
 
-  // ── Flag de alteração (event-based — sem comparar innerHTML) ──────────
+  // ── Flag de alteração + dispatch do auto-save ─────────────────────────
   var dirty  = false;
   var loaded = false;   // ignora eventos durante carga inicial do Supabase
 
-  function markDirty()  { dirty = true; }
-  function clearDirty() { dirty = false; }
-  function isDirty()    { return dirty; }
+  function buildEntry() {
+    var nameEl = document.querySelector('[data-field="name"]');
+    var imgEl  = document.getElementById('holoImg');
+    var imgUrl = (imgEl && imgEl.style.display !== 'none' && imgEl.src && imgEl.src.startsWith('http')) ? imgEl.src : null;
+    return {
+      sheet_data: (typeof captureSheet === 'function') ? captureSheet() : {},
+      name: (nameEl ? nameEl.textContent.trim() : '') || 'Sem nome',
+      img_url: imgUrl,
+      space_id: (window.ESP_PARAM || window.CHAR_SPACE_ID || null)
+    };
+  }
+  function triggerSave(immediate) {
+    if (!loaded || !window.SheetSync) return;
+    if (window.SheetSync.flag && window.SheetSync.flag('applyingRemote')) return;
+    window.SheetSync.save(buildEntry(), { immediate: !!immediate });
+  }
+  function markDirty()    { dirty = true; triggerSave(false); }
+  function markDirtyNow() { dirty = true; triggerSave(true); }
+  function clearDirty()   { dirty = false; }
+  function isDirty()      { return dirty; }
+
+  // Expõe pra upload de imagem / outros scripts dispararem save imediato
+  window.markDirtyNow = markDirtyNow;
+  window.markDirty    = markDirty;
 
   // ── Modal ─────────────────────────────────────────────────────────────
   function showModal(dest) {
@@ -2218,6 +2342,7 @@ function restoreSheet(data) {
   }
 
   // ── Navegação de volta (compartilhada) ───────────────────────────────
+  // Auto-save em tudo: faz flush do debounce pendente antes de sair.
   function goBack() {
     var params   = new URLSearchParams(location.search);
     var id       = params.get('id');
@@ -2228,8 +2353,12 @@ function restoreSheet(data) {
       : ((id && id.startsWith('npc_'))
           ? 'npcs.html'
           : (espId ? 'personagens.html?esp=' + encodeURIComponent(espId) : 'personagens.html'));
-    if (!isDirty()) { window.location.href = dest; return; }
-    showModal(dest);
+    var nav = function() { window.location.href = dest; };
+    if (window.SheetSync && typeof window.SheetSync.flush === 'function') {
+      window.SheetSync.flush().then(nav, nav);
+    } else {
+      nav();
+    }
   }
 
   // ── Botão voltar ──────────────────────────────────────────────────────
@@ -2271,13 +2400,14 @@ function restoreSheet(data) {
 
     // Cliques que alteram estado: dots, vitais, add/del linhas, toggles
     // true = capture: intercepta antes do stopPropagation() nos dots
+    // setTimeout(0) garante que o save vê o DOM JÁ alterado pelos handlers internos
     sh.addEventListener('click', function(e) {
       if (!loaded) return;
       var t = e.target;
       if (t.matches('.dot,.vbox,.quality-toggle,.quality-del,.trunfo-del,.distinct-del,.distinct-add,.equip-del') ||
           t.closest('.dot') || t.closest('.vbox') ||
           t.id === 'quality-add' || t.id === 'equip-add' || t.id === 'trunfo-add') {
-        markDirty();
+        setTimeout(markDirtyNow, 0);
       }
     }, true);
   }
@@ -2294,20 +2424,9 @@ function restoreSheet(data) {
     settleTimer = setTimeout(function() { obs.disconnect(); loaded = true; }, 4000);
   }
 
-  // ── Limpa flag após salvar com sucesso ────────────────────────────────
-  var saveBtn = document.getElementById('saveSheetBtn');
-  if (saveBtn) {
-    new MutationObserver(function() {
-      if (saveBtn.textContent.indexOf('Salvo') !== -1) setTimeout(clearDirty, 100);
-    }).observe(saveBtn, { childList: true, subtree: true, characterData: true });
-  }
-
-  // ── Fechar aba / recarregar com alterações ────────────────────────────
-  window.addEventListener('beforeunload', function(e) {
-    if (!isDirty()) return;
-    e.preventDefault();
-    e.returnValue = '';
-  });
+  // Auto-save tira a necessidade do modal de "alterações não salvas" e
+  // do aviso beforeunload. O debounce de 800ms é o único intervalo
+  // potencialmente perdido ao fechar; aceitável.
 })();
 </script>
 </body></html>
