@@ -55,6 +55,11 @@
     _snapshotTimer: null,
     _hasChangesSinceSnapshot: false,
 
+    // Estado por-char p/ múltiplas fichas (mestre-view):
+    //   _byChar[charId] = { hash, sentAt, channel, onRemote }
+    _byChar: {},
+    _sharedClient: null,
+
     init: function(charId) {
       this.charId = charId;
       return this;
@@ -222,6 +227,82 @@
         this._channel = null;
       }
       return this;
+    },
+
+    // ─── Modo multi-personagem (mestre-view) ────────────────────────
+    // Não compartilha estado com init/save/subscribe. Salva e escuta
+    // pra um char_id arbitrário sem precisar mudar o `this.charId`.
+
+    _getClient: function() {
+      if (!global.supabase || !global.supabase.createClient) return null;
+      if (!this._sharedClient) {
+        this._sharedClient = global.supabase.createClient(SB_URL, SB_KEY);
+      }
+      return this._sharedClient;
+    },
+
+    _state: function(charId) {
+      if (!this._byChar[charId]) this._byChar[charId] = { hash: '', sentAt: 0, channel: null, onRemote: null };
+      return this._byChar[charId];
+    },
+
+    // entry = { sheet_data, name?, img_url?, space_id? }
+    // Sempre imediato. Saves do mesmo charId são SERIALIZADOS via cadeia
+    // de promises pra garantir que a ordem de execução no Postgres bate
+    // com a ordem de cliques (sem race condition).
+    saveFor: function(charId, entry) {
+      if (!charId || charId === 'default') return Promise.resolve();
+      var st = this._state(charId);
+      var hash = JSON.stringify(entry);
+      if (hash === st.hash) return Promise.resolve();
+      st.hash = hash;
+      var payload = Object.assign({ char_id: charId }, entry);
+      var prev = st.inflight || Promise.resolve();
+      st.inflight = prev.then(function() {
+        st.sentAt = Date.now();
+        return sbFetch('/rest/v1/personagens?char_id=eq.' + charId, 'PATCH', payload);
+      }).catch(function(err) { st.hash = ''; throw err; });
+      return st.inflight;
+    },
+
+    subscribeFor: function(charId, onUpdate) {
+      var self = this;
+      if (!charId || charId === 'default') return null;
+      var client = this._getClient();
+      if (!client) { console.warn('[SheetSync] supabase-js não carregado — realtime desabilitado'); return null; }
+      var st = this._state(charId);
+      st.onRemote = onUpdate;
+      if (st.channel) this.unsubscribeFor(charId);
+      st.channel = client.channel('sheet:' + charId)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'personagens',
+          filter: 'char_id=eq.' + charId
+        }, function(payload) {
+          if (!payload || !payload.new) return;
+          var n = payload.new;
+          var minorHash = JSON.stringify({
+            sheet_data: n.sheet_data,
+            name: n.name,
+            img_url: n.img_url,
+            space_id: n.space_id
+          });
+          if (minorHash === st.hash) return;
+          if (Date.now() - st.sentAt < 1500) return;
+          if (st.onRemote) st.onRemote(n);
+        })
+        .subscribe();
+      return st.channel;
+    },
+
+    unsubscribeFor: function(charId) {
+      var st = this._byChar[charId];
+      if (!st || !st.channel) return;
+      if (this._sharedClient) {
+        try { this._sharedClient.removeChannel(st.channel); } catch (e) {}
+      }
+      st.channel = null;
     }
   };
 

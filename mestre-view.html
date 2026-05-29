@@ -512,6 +512,8 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sheet-sync.js"></script>
 <script>
   var SB_URL = 'https://mxyqqfsyybluavwlrhsa.supabase.co';
   var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eXFxZnN5eWJsdWF2d2xyaHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTM4MzEsImV4cCI6MjA5MzY2OTgzMX0.b0Ij7UGzbMLpqZjLYxoPEu2kGwEW52U_2NSDtpMGUPM';
@@ -565,6 +567,19 @@
       d = row.sheet_data;
     } else if (typeof row.sheet_data === 'string') {
       try { d = JSON.parse(row.sheet_data); } catch(e) {}
+    }
+    // Cache da row inteira p/ edições locais (vital/dot/desp click)
+    card.__row = { char_id: row.char_id, name: row.name, img_url: row.img_url, space_id: row.space_id, sheet_data: d };
+    // Realtime: subscribe uma vez por card
+    if (!card.__subscribed && window.SheetSync && window.SheetSync.subscribeFor) {
+      card.__subscribed = true;
+      window.SheetSync.subscribeFor(row.char_id, function(remote) {
+        var fresh = Object.assign({}, remote);
+        if (typeof fresh.sheet_data === 'string') {
+          try { fresh.sheet_data = JSON.parse(fresh.sheet_data); } catch(e) { fresh.sheet_data = {}; }
+        }
+        renderCard(card, fresh);
+      });
     }
 
     var name = row.name || (d.fields && d.fields.name) || 'Personagem';
@@ -908,6 +923,125 @@
         else card.innerHTML = '<div class="card-loading">Não encontrado</div>';
       })
       .catch(function() { card.innerHTML = '<div class="card-loading">Erro</div>'; });
+  }
+
+  // ─── Edição direta no Modo Mestre ────────────────────────────────
+  // Cliques em vitais, dots e desespero modificam o sheet_data em memória,
+  // atualizam o DOM visualmente e disparam saveFor (immediate).
+  // Reusa a MESMA regra da ficha (buildVital / buildDots) pra consistência.
+
+  function persistCard(card) {
+    if (!card.__row || !window.SheetSync || !SheetSync.saveFor) return;
+    var r = card.__row;
+    SheetSync.saveFor(r.char_id, {
+      sheet_data: r.sheet_data,
+      name: r.name || '',
+      img_url: r.img_url || null,
+      space_id: r.space_id || null
+    });
+  }
+
+  function vitalIdFromName(nameTxt) {
+    var t = (nameTxt || '').toLowerCase();
+    if (t.indexOf('vit') === 0) return 'vit-boxes';
+    if (t.indexOf('vontade') !== -1 || t.indexOf('vont') === 0) return 'fdv-boxes';
+    return null;
+  }
+
+  function handleVboxClick(card, vbox) {
+    var vitalRow = vbox.closest('.vital-row');
+    if (!vitalRow) return;
+    var nameEl = vitalRow.querySelector('.vital-name');
+    var vitalId = nameEl && vitalIdFromName(nameEl.textContent);
+    if (!vitalId) return;
+    var boxes = Array.from(vitalRow.querySelectorAll('.vbox'));
+    var idx = boxes.indexOf(vbox);
+
+    // Mesma regra do buildVital() em ficha.html
+    if (vbox.classList.contains('aggravated')) {
+      vbox.classList.remove('aggravated');
+    } else if (vbox.classList.contains('marked')) {
+      vbox.classList.remove('marked');
+      vbox.classList.add('aggravated');
+    } else {
+      boxes.forEach(function(bb, ii) {
+        if (ii <= idx && !bb.classList.contains('aggravated')) bb.classList.add('marked');
+      });
+    }
+
+    var total = boxes.length;
+    var aggr  = boxes.filter(function(b){ return b.classList.contains('aggravated'); }).length;
+    var fill  = boxes.filter(function(b){ return b.classList.contains('marked') || b.classList.contains('aggravated'); }).length;
+    if (!card.__row.sheet_data) card.__row.sheet_data = {};
+    if (!card.__row.sheet_data.vitals) card.__row.sheet_data.vitals = {};
+    card.__row.sheet_data.vitals[vitalId] = { total: total, filled: fill, aggravated: aggr };
+    persistCard(card);
+  }
+
+  function handleDotClick(card, dot) {
+    var row = dot.closest('.dot-row');
+    if (!row) return;
+    var dotsRow = dot.closest('.dots-row');
+    if (!dotsRow) return;
+    var nameEl = row.querySelector('.dot-name');
+    var statName = nameEl ? nameEl.textContent.trim() : (dot.classList.contains('cosmo-dot') ? 'Cosmologia' : null);
+    if (!statName) return;
+    var dots = Array.from(dotsRow.querySelectorAll('.dot'));
+    var idx = dots.indexOf(dot);
+    var currentlyFilled = dot.classList.contains('filled');
+    var allFilledUpTo = dots.every(function(dd, ii) { return ii > idx || dd.classList.contains('filled'); });
+
+    // Mesma regra do buildDots() em ficha.html
+    if (currentlyFilled && allFilledUpTo) {
+      dots.forEach(function(dd, ii) { dd.classList.toggle('filled', ii < idx); });
+    } else {
+      dots.forEach(function(dd, ii) { dd.classList.toggle('filled', ii <= idx); });
+    }
+
+    var newFilled = dots.filter(function(d){ return d.classList.contains('filled'); }).length;
+    if (!card.__row.sheet_data) card.__row.sheet_data = {};
+    if (!Array.isArray(card.__row.sheet_data.dots)) card.__row.sheet_data.dots = [];
+    var arr = card.__row.sheet_data.dots;
+    var lcStat = statName.toLowerCase();
+    var existing = arr.find(function(x) { return x.name && x.name.toLowerCase() === lcStat; });
+    if (existing) {
+      existing.filled = newFilled;
+    } else {
+      arr.push({ name: statName, filled: newFilled, max: dots.length });
+    }
+    persistCard(card);
+  }
+
+  function handleDespClick(card, despEl) {
+    var cur = parseInt(despEl.textContent, 10) || 0;
+    var next = (cur + 1) % 6;
+    despEl.textContent = next;
+    despEl.classList.toggle('desp-zero', next === 0);
+    if (!card.__row.sheet_data) card.__row.sheet_data = {};
+    if (!card.__row.sheet_data.vitals) card.__row.sheet_data.vitals = {};
+    card.__row.sheet_data.vitals['desp-boxes'] = { desp: next };
+    persistCard(card);
+  }
+
+  // Delegation no container — funciona mesmo após renderCard recriar o innerHTML
+  if (grid) {
+    grid.addEventListener('click', function(e) {
+      var card = e.target.closest('.pj-card');
+      if (!card || !card.__row) return;
+      // ignora cliques em links/botões (Ficha ↗, extract ✕)
+      if (e.target.closest('a, button')) return;
+      var vbox = e.target.closest('.vbox');
+      if (vbox) { handleVboxClick(card, vbox); return; }
+      var dot = e.target.closest('.dot');
+      if (dot) { handleDotClick(card, dot); return; }
+      var desp = e.target.closest('.desp-val');
+      if (desp) { handleDespClick(card, desp); return; }
+    });
+
+    // Estilo: cursor pointer pra deixar claro que é clicável
+    var st = document.createElement('style');
+    st.textContent = '.pj-card .vbox, .pj-card .dot, .pj-card .desp-val { cursor: pointer; }';
+    document.head.appendChild(st);
   }
 </script>
 
