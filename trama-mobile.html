@@ -108,6 +108,7 @@
       height: 3000px;
       top: 0; left: 0;
       transform-origin: 0 0;
+      will-change: transform;
     }
 
     #svg-layer {
@@ -333,6 +334,59 @@
     }
     #status { display: none; }
 
+    /* dirty indicator no btn-save */
+    #btn-save.dirty::after {
+      content: ' ●';
+      color: rgba(255,180,0,0.8);
+      font-size: 9px;
+    }
+
+    /* exit overlay */
+    #exit-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 3000;
+      background: rgba(4,8,16,0.92);
+      backdrop-filter: blur(6px);
+      align-items: center; justify-content: center;
+    }
+    #exit-overlay.open { display: flex; }
+    #exit-box {
+      background: rgba(8,15,30,0.98);
+      border: 1px solid rgba(0,255,231,0.18);
+      border-radius: 6px;
+      padding: 32px 28px;
+      max-width: 320px; width: 90%;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(0,255,231,0.06);
+    }
+    #exit-box .ex-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 12px; letter-spacing: 4px;
+      color: var(--holo); text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    #exit-box .ex-sub {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px; color: rgba(0,255,231,0.4);
+      letter-spacing: 1px; margin-bottom: 24px;
+    }
+    .ex-btns { display: flex; flex-direction: column; gap: 10px; }
+    .ex-btn {
+      background: transparent;
+      border: 1px solid rgba(0,255,231,0.22);
+      color: rgba(0,255,231,0.7);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px; letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 13px 20px; border-radius: 3px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .ex-btn:active { background: rgba(0,255,231,0.07); border-color: var(--holo); color: var(--holo); }
+    .ex-btn.ex-save { border-color: rgba(0,255,231,0.5); color: var(--holo); }
+    .ex-btn.ex-danger { border-color: rgba(255,68,102,0.3); color: rgba(255,68,102,0.6); }
+    .ex-btn.ex-danger:active { background: rgba(255,68,102,0.08); border-color: #ff4466; color: #ff4466; }
+
     /* Hint */
     #hint {
       position: fixed; bottom: 18px; left: 56px;
@@ -389,6 +443,18 @@
       <div class="modal-row">
         <button class="modal-btn" id="modal-cancel">Cancelar</button>
         <button class="modal-btn save" id="modal-save">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="exit-overlay">
+    <div id="exit-box">
+      <div class="ex-title">Sair sem salvar?</div>
+      <div class="ex-sub">Há alterações não salvas nesta trama.</div>
+      <div class="ex-btns">
+        <button class="ex-btn ex-save"   id="ex-save-go">↑ Salvar e sair</button>
+        <button class="ex-btn"           id="ex-stay">Ficar</button>
+        <button class="ex-btn ex-danger" id="ex-go">Sair mesmo assim</button>
       </div>
     </div>
   </div>
@@ -620,8 +686,12 @@
         if (sel) { sel.removeAllRanges(); sel.addRange(range); }
       });
 
+      // marca dirty apenas quando o nó é criado pelo usuário (data=null), não durante load
+      title.addEventListener('input', function() { markDirty(); });
+
       world.appendChild(el);
       nodes[id] = el;
+      if (!data) markDirty();
       updateConnections();
       return id;
     }
@@ -632,12 +702,14 @@
       });
       if (nodes[id]) nodes[id].remove();
       delete nodes[id];
+      markDirty();
       updateConnections();
     }
 
     function addConnection(from, to, savedColor) {
       var conn = { from: from, to: to, labelWrap: null, color: savedColor || '#00ffe7' };
       connections.push(conn);
+      if (!savedColor) markDirty(); // savedColor só existe no load
       setTimeout(updateConnections, 50);
     }
 
@@ -656,6 +728,7 @@
         nodes[currentNoteId].dataset.note = note;
         var prev = nodes[currentNoteId].querySelector('.node-note-preview');
         if (prev) prev.textContent = note.slice(0, 60);
+        markDirty();
       }
       document.getElementById('modal-overlay').classList.remove('open');
       currentNoteId = null;
@@ -671,10 +744,11 @@
         if (item.id === 'conn-delete') {
           if (activeConn) {
             connections = connections.filter(function(c) { return c !== activeConn; });
+            markDirty();
             updateConnections();
           }
         } else {
-          if (activeConn && item.dataset.color) { activeConn.color = item.dataset.color; updateConnections(); }
+          if (activeConn && item.dataset.color) { activeConn.color = item.dataset.color; markDirty(); updateConnections(); }
         }
         connMenu.classList.remove('open');
         activeConn = null;
@@ -718,6 +792,9 @@
     var ghostLine    = null;
     var isPanning    = false;
     var panStart     = { x: 0, y: 0 };
+    var panVelX = 0, panVelY = 0;
+    var _panPrev = null, _panPrevTime = 0;
+    var _inertiaId = null, _rafPending = false;
     var pinchStartDist  = 0;
     var pinchStartScale = 1;
     var pinchStartPan   = { x: 0, y: 0 };
@@ -768,6 +845,7 @@
       }
       e.preventDefault();
       connMenu.classList.remove('open');
+      if (_inertiaId) { cancelAnimationFrame(_inertiaId); _inertiaId = null; }
 
       var touches = getTouches(e);
 
@@ -919,9 +997,16 @@
       }
 
       if (isPanning) {
-        panOffset.x = t.clientX - panStart.x;
-        panOffset.y = t.clientY - panStart.y;
-        applyTransform();
+        var _now = Date.now();
+        var nx = t.clientX - panStart.x;
+        var ny = t.clientY - panStart.y;
+        if (_panPrev) {
+          var _dt = _now - _panPrevTime;
+          if (_dt > 0) { panVelX = (nx - _panPrev.x) / _dt; panVelY = (ny - _panPrev.y) / _dt; }
+        }
+        _panPrev = { x: nx, y: ny }; _panPrevTime = _now;
+        panOffset.x = nx; panOffset.y = ny;
+        if (!_rafPending) { _rafPending = true; requestAnimationFrame(function(){ _rafPending=false; applyTransform(); }); }
       }
 
     }, { passive: false });
@@ -993,6 +1078,57 @@
       setTimeout(updateConnections, 100);
     }
 
+    // ══════════════════════════════════════════════════
+    //  DIRTY STATE
+    // ══════════════════════════════════════════════════
+    var isDirty = false;
+    var exitTarget = 'tramas.html';
+
+    function markDirty() {
+      if (isDirty) return;
+      isDirty = true;
+      document.getElementById('btn-save').classList.add('dirty');
+    }
+    function clearDirty() {
+      isDirty = false;
+      document.getElementById('btn-save').classList.remove('dirty');
+    }
+
+    // Expõe função global para o double-tap poder verificar
+    window._tryNav = function(dest) {
+      if (!isDirty) { window.location.href = dest; return; }
+      exitTarget = dest;
+      document.getElementById('exit-overlay').classList.add('open');
+    };
+
+    // Intercepta back-btn
+    document.getElementById('back-btn').addEventListener('click', function(e) {
+      if (!isDirty) return;
+      e.preventDefault();
+      exitTarget = this.href;
+      document.getElementById('exit-overlay').classList.add('open');
+    });
+
+    // Botões do overlay
+    document.getElementById('ex-stay').addEventListener('click', function() {
+      document.getElementById('exit-overlay').classList.remove('open');
+    });
+    document.getElementById('ex-go').addEventListener('click', function() {
+      isDirty = false;
+      window.location.href = exitTarget;
+    });
+    document.getElementById('ex-save-go').addEventListener('click', function() {
+      document.getElementById('btn-save').click();
+      setTimeout(function() { window.location.href = exitTarget; }, 1400);
+    });
+
+    // beforeunload (fechar aba / F5)
+    window.addEventListener('beforeunload', function(e) {
+      if (!isDirty) return;
+      e.preventDefault();
+      e.returnValue = '';
+    });
+
     // ── Save ──
     document.getElementById('btn-save').addEventListener('click', function() {
       var btn = document.getElementById('btn-save');
@@ -1005,7 +1141,11 @@
             ? sbFetch('/rest/v1/tramas?trama_id=eq.' + TRAMA_ID, 'PATCH', entry)
             : sbFetch('/rest/v1/tramas', 'POST', entry);
         })
-        .then(function() { btn.textContent = '✓ Salvo'; setTimeout(function() { btn.textContent = '↑ Salvar'; }, 2000); })
+        .then(function() {
+          clearDirty();
+          btn.textContent = '✓ Salvo';
+          setTimeout(function() { btn.textContent = '↑ Salvar'; }, 2000);
+        })
         .catch(function() { btn.textContent = 'Erro'; setTimeout(function() { btn.textContent = '↑ Salvar'; }, 2000); });
     });
 
@@ -1026,7 +1166,7 @@
   'use strict';
   var DEST = 'index.html';
   var IA = 'button,a,input,textarea,select,[contenteditable]';
-  function nav(){ window.location.href = DEST; }
+  function nav(){ if (window._tryNav) { window._tryNav(DEST); } else { window.location.href = DEST; } }
   document.addEventListener('dblclick', function(e){ if(e.target.closest(IA)) return; nav(); });
   var _t = 0, _multi = false;
   document.addEventListener('touchstart', function(e){
