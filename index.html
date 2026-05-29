@@ -380,6 +380,118 @@
       z-index: 2;
     }
 
+    /* ── Forge button (Ferramentas) ── */
+    .forge-projection {
+      position: relative;
+      width: 190px; height: 190px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .forge-ret {
+      position: absolute;
+      pointer-events: none;
+    }
+    .fret1 {
+      width: 90%; height: 90%;
+      border: 1px solid rgba(255,107,26,0.22);
+      transform: rotate(45deg);
+      animation: forgeRetSpin 18s linear infinite;
+    }
+    .fret2 {
+      width: 62%; height: 62%;
+      border: 1px solid rgba(0,255,231,0.25);
+      animation: forgeRetSpin 12s linear infinite reverse;
+    }
+    .fret3 {
+      width: 38%; height: 38%;
+      border: 1px dashed rgba(123,47,255,0.4);
+      border-radius: 50%;
+      animation: ringRotate 14s linear infinite;
+    }
+    @keyframes forgeRetSpin {
+      from { transform: rotate(45deg); }
+      to   { transform: rotate(405deg); }
+    }
+    .forge-cross-h, .forge-cross-v {
+      position: absolute;
+      pointer-events: none;
+    }
+    .forge-cross-h {
+      width: 94%; height: 1px; top: 50%; left: 3%;
+      background: linear-gradient(90deg, transparent, rgba(0,255,231,0.20), transparent);
+    }
+    .forge-cross-v {
+      width: 1px; height: 94%; top: 3%; left: 50%;
+      background: linear-gradient(180deg, transparent, rgba(0,255,231,0.20), transparent);
+    }
+    .forge-scanline {
+      position: absolute;
+      width: 78%; height: 1px;
+      left: 11%;
+      background: linear-gradient(90deg, transparent, var(--orange) 30%, var(--orange) 70%, transparent);
+      box-shadow: 0 0 8px var(--orange), 0 0 18px rgba(255,107,26,0.5);
+      animation: forgeScan 3.4s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes forgeScan {
+      0%   { top: 12%; opacity: 0; }
+      8%   { opacity: 0.95; }
+      92%  { opacity: 0.95; }
+      100% { top: 88%; opacity: 0; }
+    }
+    .forge-bracket {
+      position: absolute;
+      width: 16px; height: 16px;
+      border: 1.5px solid rgba(255,107,26,0.55);
+      pointer-events: none;
+    }
+    .fb-tl { top: 5%;    left: 5%;    border-right: none; border-bottom: none; }
+    .fb-tr { top: 5%;    right: 5%;   border-left: none;  border-bottom: none; }
+    .fb-bl { bottom: 5%; left: 5%;    border-right: none; border-top: none; }
+    .fb-br { bottom: 5%; right: 5%;   border-left: none;  border-top: none; }
+
+    .forge-core {
+      position: relative;
+      z-index: 2;
+      width: 56px; height: 56px;
+      border-radius: 4px;
+      border: 1.5px solid rgba(0,255,231,0.45);
+      box-shadow: var(--glow), inset 0 0 20px rgba(0,255,231,0.08);
+      background: rgba(0,255,231,0.03);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      color: rgba(0,255,231,0.6);
+      text-shadow: 0 0 10px rgba(0,255,231,0.6);
+      transition: box-shadow 0.3s, border-color 0.3s, color 0.3s;
+    }
+    .forge-core::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 3px,
+        rgba(0,255,231,0.04) 3px, rgba(0,255,231,0.04) 4px
+      );
+      pointer-events: none;
+      animation: scanMove 4s linear infinite;
+    }
+    .holo-btn:hover .forge-core {
+      box-shadow: 0 0 20px #00ffe7cc, 0 0 60px #00ffe766, inset 0 0 30px rgba(0,255,231,0.2);
+      border-color: rgba(0,255,231,0.85);
+      color: var(--holo);
+    }
+    .device-led.orange {
+      background: var(--orange);
+      animation-name: ledBlinkOrange;
+    }
+    @keyframes ledBlinkOrange {
+      0%,100% { opacity: 1;   box-shadow: 0 0 8px var(--orange), 0 0 16px var(--orange); }
+      50%      { opacity: 0.3; box-shadow: 0 0 4px var(--orange); }
+    }
+
     /* ── Mobile ── */
     @media (max-width: 600px) {
       body { overflow-y: auto; justify-content: flex-start; padding: 28px 0 32px; }
@@ -396,6 +508,7 @@
       .holo-btn { width: 200px; height: 200px; }
       .holo-projection { width: 158px; height: 158px; }
       .globe-projection { width: 158px; height: 158px; }
+      .forge-projection { width: 158px; height: 158px; }
       .btn-name { font-size: 10px; letter-spacing: 3px; }
     }
     /* ── Bloqueio Trama ── */
@@ -524,6 +637,38 @@
 
         </a>
         <div class="btn-name">Trama</div>
+      </div>
+
+      <div class="btn-group">
+        <a href="ferramentas.html" class="holo-btn">
+          <div class="holo-btn-panel"></div>
+          <div class="device-led-wrap">
+            <div class="device-led orange"></div>
+            <span class="device-led-label">Forja</span>
+          </div>
+
+          <div class="forge-projection">
+            <div class="forge-ret fret1"></div>
+            <div class="forge-ret fret2"></div>
+            <div class="forge-ret fret3"></div>
+
+            <div class="forge-cross-h"></div>
+            <div class="forge-cross-v"></div>
+
+            <div class="forge-bracket fb-tl"></div>
+            <div class="forge-bracket fb-tr"></div>
+            <div class="forge-bracket fb-bl"></div>
+            <div class="forge-bracket fb-br"></div>
+
+            <div class="forge-scanline"></div>
+
+            <div class="forge-core">⌬</div>
+
+            <div class="holo-beam"></div>
+          </div>
+
+        </a>
+        <div class="btn-name">Ferramentas</div>
       </div>
 
     </div>

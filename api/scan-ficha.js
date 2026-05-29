@@ -1,0 +1,303 @@
+// Vercel Serverless Function: /api/scan-ficha
+// Recebe imagem(ns) ou PDF de uma ficha manuscrita do Mundo Aberto,
+// chama Claude Vision com schema da ficha e retorna JSON estruturado.
+
+import Anthropic from '@anthropic-ai/sdk';
+
+// ─────────────────────────────────────────────────────────
+// Limites de payload pra Vercel (body size).
+// Imagens grandes podem estourar o default de 4.5MB.
+// ─────────────────────────────────────────────────────────
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '25mb'
+    }
+  }
+};
+
+// ─────────────────────────────────────────────────────────
+// Schema da ficha do Mundo Aberto — nomes EXATOS dos campos
+// ─────────────────────────────────────────────────────────
+const ATRIBUTOS = [
+  'Força', 'Destreza', 'Vigor',
+  'Carisma', 'Manipulação', 'Autocontrole',
+  'Inteligência', 'Raciocínio', 'Determinação'
+];
+
+const HABILIDADES = [
+  'Armas Brancas', 'Armas de Fogo', 'Atletismo', 'Briga', 'Ciência',
+  'Condução', 'Emp. Animais', 'Erudição', 'Etiqueta', 'Finanças',
+  'Furtividade', 'Intimidação', 'Investigação', 'Ladroagem',
+  'Liderança', 'Manha', 'Medicina', 'Ofícios', 'Ocultismo',
+  'Percepção', 'Performance', 'Persuasão', 'Pesquisa', 'Política',
+  'Sagacidade', 'Sobrevivência', 'Subterfúgio', 'Tecnologia'
+];
+
+const IDENTIDADE = [
+  'conceito', 'credo', 'impeto', 'redencao', 'ambicao',
+  'desejo', 'celula', 'principio', 'pilar',
+  'idade', 'nascimento', 'aparencia'
+];
+
+// ─────────────────────────────────────────────────────────
+// Prompt de sistema — instruções pra extração
+// ─────────────────────────────────────────────────────────
+const SYSTEM_PROMPT = `Você é um especialista em leitura de fichas de personagem manuscritas do RPG "Mundo Aberto".
+
+# ESTRUTURA DA FICHA
+
+## ATRIBUTOS (cada um vai de 0 a 5)
+${ATRIBUTOS.join(', ')}
+
+## HABILIDADES (cada uma de 0 a 5)
+${HABILIDADES.join(', ')}
+
+## COSMOLOGIA (de 0 a 10)
+Um único valor.
+
+## VITAIS
+- Vitalidade (geralmente 5-10, indica resistência física)
+- Força de Vontade (geralmente 3-8)
+- Desespero (geralmente 0-5, frequentemente em branco)
+
+## XP
+- total (número inteiro)
+- spent (número inteiro, gasto)
+
+## CAMPOS DE IDENTIDADE (texto livre)
+${IDENTIDADE.join(', ')}, name (nome do personagem)
+
+## QUALIDADES E DEFEITOS (lista dinâmica)
+Cada item tem nome (texto livre) e valor.
+- Qualidades: valor POSITIVO (1 a 5)
+- Defeitos: valor NEGATIVO (-1 a -5)
+Sinais típicos de defeito: "(-1)", "-2", parênteses, contexto.
+
+## TRUNFOS (lista dinâmica)
+Cada trunfo tem key (nome) + val (descrição/valor) + distincts (lista de distinções).
+Frequentemente em branco em fichas básicas.
+
+## EQUIPAMENTOS (lista de strings)
+Itens livres anotados.
+
+# NOTAÇÕES POSSÍVEIS QUE O JOGADOR PODE USAR
+
+Para indicar valores numéricos de atributos/habilidades:
+- **Bolinhas preenchidas vs vazias**: ●●●○○ = 3
+- **Números diretos**: 3
+- **Sistema de quadrado**: cada lado de um quadradinho vale 1
+  - | (1 traço vertical) = 1
+  - L (canto) = 2
+  - U (3 lados) = 3
+  - □ (quadrado fechado) = 4
+  - □ com risco no meio = 5
+- **Hashes/riscos**: ||| = 3
+- **X marcados**: x x x = 3
+- **Qualquer outra forma** — interprete pelo contexto
+
+# REGRAS DE EXTRAÇÃO
+
+1. **Mapeie variações de escrita para os nomes oficiais**:
+   - "Auto-Controle" / "Autocontrole" → "Autocontrole"
+   - "Força Vontade" / "Força de Vontade" / "FdV" → "Força de Vontade"
+   - "Empatia Animal" / "Empatia c/ Animais" → "Emp. Animais"
+   - Acentos podem estar omitidos — preserve corretos na saída.
+
+2. **Campos não preenchidos**: retorne null. NÃO chute valores.
+
+3. **Confiança baixa**: se não conseguir ler algo com certeza razoável, retorne null e adicione a entrada em "warnings" explicando o que estava ambíguo.
+
+4. **Qualidades vs Defeitos**: use o sinal (positivo/negativo) e o contexto. Itens claramente marcados como "(-N)" ou listados como "defeitos" vão em "defects".
+
+5. **Nomes livres**: para qualidades/defeitos/equipamentos, preserve EXATAMENTE o que o jogador escreveu (não normalize nem corrija).
+
+# FORMATO DE RESPOSTA
+
+Retorne APENAS um JSON válido neste formato exato (sem markdown, sem comentários, sem explicação antes ou depois):
+
+\`\`\`
+{
+  "name": string | null,
+  "fields": {
+    "conceito": string | null,
+    "credo": string | null,
+    "impeto": string | null,
+    "redencao": string | null,
+    "ambicao": string | null,
+    "desejo": string | null,
+    "celula": string | null,
+    "principio": string | null,
+    "pilar": string | null,
+    "idade": string | null,
+    "nascimento": string | null,
+    "aparencia": string | null
+  },
+  "atributos": {
+    "Força": number | null,
+    "Destreza": number | null,
+    "Vigor": number | null,
+    "Carisma": number | null,
+    "Manipulação": number | null,
+    "Autocontrole": number | null,
+    "Inteligência": number | null,
+    "Raciocínio": number | null,
+    "Determinação": number | null
+  },
+  "habilidades": {
+    "Armas Brancas": number | null,
+    "Armas de Fogo": number | null,
+    "Atletismo": number | null,
+    "Briga": number | null,
+    "Ciência": number | null,
+    "Condução": number | null,
+    "Emp. Animais": number | null,
+    "Erudição": number | null,
+    "Etiqueta": number | null,
+    "Finanças": number | null,
+    "Furtividade": number | null,
+    "Intimidação": number | null,
+    "Investigação": number | null,
+    "Ladroagem": number | null,
+    "Liderança": number | null,
+    "Manha": number | null,
+    "Medicina": number | null,
+    "Ofícios": number | null,
+    "Ocultismo": number | null,
+    "Percepção": number | null,
+    "Performance": number | null,
+    "Persuasão": number | null,
+    "Pesquisa": number | null,
+    "Política": number | null,
+    "Sagacidade": number | null,
+    "Sobrevivência": number | null,
+    "Subterfúgio": number | null,
+    "Tecnologia": number | null
+  },
+  "cosmologia": number | null,
+  "vitals": {
+    "Vitalidade": number | null,
+    "Força de Vontade": number | null,
+    "Desespero": number | null
+  },
+  "xp": { "total": number | null, "spent": number | null },
+  "qualities": [{ "name": string, "value": number }],
+  "defects": [{ "name": string, "value": number }],
+  "trunfos": [{ "key": string, "val": string, "distincts": [string] }],
+  "equipment": [string],
+  "warnings": [string]
+}
+\`\`\`
+
+Liste APENAS qualidades/defeitos/trunfos/equipamentos que estão de fato escritos na ficha. Arrays vazios são OK.`;
+
+// ─────────────────────────────────────────────────────────
+// Handler principal
+// ─────────────────────────────────────────────────────────
+export default async function handler(req, res) {
+  // CORS — mesma origem, mas previne dor de cabeça
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(500).json({
+      error: 'ANTHROPIC_API_KEY não configurada. Adicione a env var na Vercel.'
+    });
+  }
+
+  try {
+    const { files, notation, model } = req.body || {};
+
+    if (!files || !Array.isArray(files) || files.length === 0) {
+      return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+    }
+
+    if (files.length > 5) {
+      return res.status(400).json({ error: 'Máximo 5 arquivos por análise.' });
+    }
+
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+    // Monta o array de content blocks
+    const content = [];
+
+    for (const file of files) {
+      if (!file?.data || !file?.mediaType) {
+        return res.status(400).json({ error: 'Arquivo inválido (faltam data/mediaType).' });
+      }
+
+      if (file.mediaType === 'application/pdf') {
+        content.push({
+          type: 'document',
+          source: { type: 'base64', media_type: 'application/pdf', data: file.data }
+        });
+      } else if (file.mediaType.startsWith('image/')) {
+        content.push({
+          type: 'image',
+          source: { type: 'base64', media_type: file.mediaType, data: file.data }
+        });
+      } else {
+        return res.status(400).json({ error: `Tipo de arquivo não suportado: ${file.mediaType}` });
+      }
+    }
+
+    // Mensagem de texto: dica de notação (se houver)
+    const notationHint = notation
+      ? `O jogador informou que está usando a notação: "${notation}". Use isso pra interpretar os valores.`
+      : 'O jogador NÃO informou a notação — identifique pelo contexto da ficha.';
+
+    content.push({
+      type: 'text',
+      text: `${notationHint}\n\nExtraia todos os dados da ficha conforme o schema definido. Retorne APENAS o JSON.`
+    });
+
+    // Chama Claude Vision
+    const response = await client.messages.create({
+      model: model || 'claude-sonnet-4-5-20250929',
+      max_tokens: 4096,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content }]
+    });
+
+    const text = response.content?.[0]?.text || '';
+
+    // Tenta extrair JSON do texto retornado
+    // Claude às vezes envolve em ```json ... ``` ou ``` ... ```
+    let jsonText = text.trim();
+    const fenceMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (fenceMatch) jsonText = fenceMatch[1].trim();
+
+    let data;
+    try {
+      data = JSON.parse(jsonText);
+    } catch (parseErr) {
+      return res.status(502).json({
+        error: 'Falha ao interpretar resposta do modelo.',
+        rawResponse: text,
+        parseError: parseErr.message
+      });
+    }
+
+    return res.status(200).json({
+      data,
+      usage: response.usage,
+      model: response.model
+    });
+
+  } catch (error) {
+    console.error('[scan-ficha] error:', error);
+    return res.status(500).json({
+      error: error.message || 'Erro desconhecido',
+      details: error.error || null
+    });
+  }
+}
