@@ -1410,8 +1410,8 @@
     var connSource     = null;
     var isPanning      = false;
     var panVelX = 0, panVelY = 0;
-    var _panPrev = null, _panPrevTime = 0;
-    var _inertiaId = null, _rafPending = false;
+    var _velSamples = [];
+    var _inertiaId = null;
     var pinchStartDist  = 0;
     var pinchStartScale = 1;
     var pinchStartPan   = { x: 0, y: 0 };
@@ -2280,6 +2280,7 @@
         e.preventDefault();
         connMenu.classList.remove('open');
         if (_inertiaId) { cancelAnimationFrame(_inertiaId); _inertiaId = null; }
+        panVelX = 0; panVelY = 0; _velSamples = [];
 
         var touches = Array.from(e.touches);
 
@@ -2424,13 +2425,16 @@
           var _now = Date.now();
           var nx = t.clientX - panStart.x;
           var ny = t.clientY - panStart.y;
-          if (_panPrev) {
-            var _dt = _now - _panPrevTime;
-            if (_dt > 0) { panVelX = (nx - _panPrev.x) / _dt; panVelY = (ny - _panPrev.y) / _dt; }
+          // Velocity: janela de 80 ms de amostras para velocidade estável
+          _velSamples.push({ x: nx, y: ny, t: _now });
+          while (_velSamples.length > 1 && _now - _velSamples[0].t > 80) _velSamples.shift();
+          if (_velSamples.length >= 2) {
+            var _oldest = _velSamples[0];
+            var _dt = _now - _oldest.t;
+            if (_dt > 0) { panVelX = (nx - _oldest.x) / _dt; panVelY = (ny - _oldest.y) / _dt; }
           }
-          _panPrev = { x: nx, y: ny }; _panPrevTime = _now;
           panOffset.x = nx; panOffset.y = ny;
-          if (!_rafPending) { _rafPending = true; requestAnimationFrame(function(){ _rafPending=false; applyTransform(); }); }
+          applyTransform(); // direto — sem atraso de rAF
         }
 
       }, { passive: false });
@@ -2469,17 +2473,17 @@
           }
         }
 
-        if (isPanning && (Math.abs(panVelX) > 0.1 || Math.abs(panVelY) > 0.1)) {
-          var vx = panVelX * 16, vy = panVelY * 16;
+        if (isPanning && (Math.abs(panVelX) > 0.05 || Math.abs(panVelY) > 0.05)) {
+          var vx = panVelX * 22, vy = panVelY * 22;
           (function startInertia(){
-            vx *= 0.92; vy *= 0.92;
-            if (Math.abs(vx) < 0.3 && Math.abs(vy) < 0.3) { _inertiaId = null; return; }
+            vx *= 0.95; vy *= 0.95;
+            if (Math.abs(vx) < 0.15 && Math.abs(vy) < 0.15) { _inertiaId = null; return; }
             panOffset.x += vx; panOffset.y += vy;
             applyTransform();
             _inertiaId = requestAnimationFrame(startInertia);
           })();
         }
-        panVelX = 0; panVelY = 0; _panPrev = null;
+        panVelX = 0; panVelY = 0; _velSamples = [];
 
         if (dragNodeId) markDirty();
         dragNodeId = null;
