@@ -985,22 +985,11 @@
     }
     .mestre-mode .char-delete-btn { display: none; }
 
-    /* ── Modo Mestre: portais menores, sem botão de criação/deleção ── */
-    .mestre-mode .sp-portal-btn,
-    .mestre-mode .portal-btn {
-      width: 100px;
-      height: 100px;
-    }
-    .mestre-mode .sp-portal-group .sp-core,
-    .mestre-mode .portal-group .bh-core {
-      width: 36px; height: 36px;
-    }
-    .mestre-mode .sp-portal-name,
-    .mestre-mode .portal-name {
-      font-size: 7px; letter-spacing: 2px;
-    }
-    .mestre-mode .combo-group { display: none !important; }
-    .mestre-mode .sp-del-btn  { display: none !important; }
+    /* ── Modo Mestre: sem espaços, sem botão de criação/deleção ── */
+    .mestre-mode .sp-portal-group  { display: none !important; }
+    .mestre-mode .new-space-group  { display: none !important; }
+    .mestre-mode .combo-group      { display: none !important; }
+    .mestre-mode .sp-del-btn       { display: none !important; }
 
     .mestre-sel-badge {
       display: none;
