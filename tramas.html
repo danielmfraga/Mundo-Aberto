@@ -463,6 +463,11 @@
     var lastMouse = { x: 0, y: 0 };
     var lastTouchDist = null;
 
+    var camVelX = 0, camVelY = 0;
+    var _camVelSamples = [];
+    var _camInertiaId = null;
+    var _camHoldTimer = null;
+
     var tramas = [];
 
     var scene = document.getElementById('scene');
@@ -528,6 +533,11 @@
         } else { isDraggingCam = true; }
         moved = false;
         lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        // Hold: para inércia só se ficar parado
+        _camHoldTimer = setTimeout(function() {
+          if (_camInertiaId) { cancelAnimationFrame(_camInertiaId); _camInertiaId = null; }
+          camVelX = 0; camVelY = 0; _camVelSamples = [];
+        }, 180);
       }
       if (e.touches.length === 2) {
         lastTouchDist = Math.hypot(
@@ -539,12 +549,29 @@
     scene.addEventListener('touchmove', function(e) {
       e.preventDefault();
       if (e.touches.length === 1) {
-        var dx = e.touches[0].clientX - lastMouse.x;
-        var dy = e.touches[0].clientY - lastMouse.y;
-        if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
-        if (isDraggingCam) { camX += dx; camY += dy; applyCamera(); }
+        var tx = e.touches[0].clientX, ty = e.touches[0].clientY;
+        var dx = tx - lastMouse.x;
+        var dy = ty - lastMouse.y;
+        if (Math.abs(dx) + Math.abs(dy) > 3) {
+          if (!moved) {
+            clearTimeout(_camHoldTimer); _camHoldTimer = null;
+            if (_camInertiaId) { cancelAnimationFrame(_camInertiaId); _camInertiaId = null; camVelX = 0; camVelY = 0; _camVelSamples = []; }
+          }
+          moved = true;
+        }
+        if (isDraggingCam) {
+          var _now = Date.now();
+          _camVelSamples.push({ x: tx, y: ty, t: _now });
+          while (_camVelSamples.length > 1 && _now - _camVelSamples[0].t > 80) _camVelSamples.shift();
+          if (_camVelSamples.length >= 2) {
+            var _oldest = _camVelSamples[0];
+            var _dt = _now - _oldest.t;
+            if (_dt > 0) { camVelX = (tx - _oldest.x) / _dt; camVelY = (ty - _oldest.y) / _dt; }
+          }
+          camX += dx; camY += dy; applyCamera();
+        }
         else if (isDraggingCard && dragData) { moveCard(dragData, dx, dy); }
-        lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        lastMouse = { x: tx, y: ty };
       }
       if (e.touches.length === 2 && lastTouchDist !== null) {
         var dist = Math.hypot(
@@ -557,9 +584,22 @@
     }, { passive: false });
 
     scene.addEventListener('touchend', function() {
+      clearTimeout(_camHoldTimer); _camHoldTimer = null;
       if (isDraggingCard && dragData && moved) saveTramaPos(tramas[dragData.idx]);
       isDraggingCam = isDraggingCard = false;
       dragData = null; lastTouchDist = null;
+      // Inércia de câmera
+      if (moved && (Math.abs(camVelX) > 0.05 || Math.abs(camVelY) > 0.05)) {
+        var vx = camVelX * 22, vy = camVelY * 22;
+        (function startInertia(){
+          vx *= 0.95; vy *= 0.95;
+          if (Math.abs(vx) < 0.15 && Math.abs(vy) < 0.15) { _camInertiaId = null; return; }
+          camX += vx; camY += vy;
+          applyCamera();
+          _camInertiaId = requestAnimationFrame(startInertia);
+        })();
+      }
+      camVelX = 0; camVelY = 0; _camVelSamples = [];
     });
 
     // ── Mover card com colisão ──
