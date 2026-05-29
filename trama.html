@@ -1412,6 +1412,7 @@
     var panVelX = 0, panVelY = 0;
     var _velSamples = [];
     var _inertiaId = null;
+    var _holdTimer = null;
     var pinchStartDist  = 0;
     var pinchStartScale = 1;
     var pinchStartPan   = { x: 0, y: 0 };
@@ -2279,8 +2280,6 @@
                     el0.id === 'modal-save' || el0.id === 'modal-cancel')) return;
         e.preventDefault();
         connMenu.classList.remove('open');
-        if (_inertiaId) { cancelAnimationFrame(_inertiaId); _inertiaId = null; }
-        panVelX = 0; panVelY = 0; _velSamples = [];
 
         var touches = Array.from(e.touches);
 
@@ -2356,6 +2355,12 @@
         }
         isPanning = true;
         panStart = { x: t.clientX - panOffset.x, y: t.clientY - panOffset.y };
+        // Hold: para a inércia só se o dedo ficar parado
+        _holdTimer = setTimeout(function() {
+          if (_inertiaId) { cancelAnimationFrame(_inertiaId); _inertiaId = null; }
+          panStart = { x: touchStartPos.x - panOffset.x, y: touchStartPos.y - panOffset.y };
+          panVelX = 0; panVelY = 0; _velSamples = [];
+        }, 180);
 
       }, { passive: false });
 
@@ -2387,7 +2392,15 @@
 
         var dx = t.clientX - touchStartPos.x;
         var dy = t.clientY - touchStartPos.y;
-        if (Math.abs(dx) > TAP_DIST || Math.abs(dy) > TAP_DIST) { touchMoved = true; clearLong(); }
+        if (Math.abs(dx) > TAP_DIST || Math.abs(dy) > TAP_DIST) {
+          touchMoved = true; clearLong();
+          clearTimeout(_holdTimer); _holdTimer = null;
+          if (_inertiaId) {
+            cancelAnimationFrame(_inertiaId); _inertiaId = null;
+            panStart = { x: t.clientX - panOffset.x, y: t.clientY - panOffset.y };
+            panVelX = 0; panVelY = 0; _velSamples = [];
+          }
+        }
 
         // Ghost line while connecting
         if (connSource && !dragNodeId) {
@@ -2485,6 +2498,7 @@
         }
         panVelX = 0; panVelY = 0; _velSamples = [];
 
+        clearTimeout(_holdTimer); _holdTimer = null;
         if (dragNodeId) markDirty();
         dragNodeId = null;
         isPanning  = false;
