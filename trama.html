@@ -2517,8 +2517,13 @@
   var IA = 'button,a,input,textarea,select,[contenteditable]';
   function nav(){ window.location.href = DEST; }
   document.addEventListener('dblclick', function(e){ if(e.target.closest(IA)) return; nav(); });
-  var _t = 0;
+  var _t = 0, _multi = false;
+  document.addEventListener('touchstart', function(e){
+    if(e.touches.length > 1){ _multi = true; }
+  },{passive:true});
   document.addEventListener('touchend', function(e){
+    if(e.touches.length > 0){ _t=0; _multi=true; return; }
+    if(_multi){ _t=0; _multi=false; return; }
     var el = e.target; if(el.closest(IA)){ _t=0; return; }
     var n = Date.now(); if(n-_t<300){ _t=0; nav(); return; } _t=n;
   },{passive:true});
