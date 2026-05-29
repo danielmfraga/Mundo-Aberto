@@ -439,6 +439,63 @@
       background: var(--line);
       flex-shrink: 0;
     }
+
+    /* ── Mobile ── */
+    @media (max-width: 600px) {
+      html, body { overflow: auto; }
+
+      .layout { overflow: auto; height: auto; min-height: 100vh; }
+
+      /* Grid: 1 coluna, carrega verticalmente */
+      .cards-grid,
+      .cards-grid.count-1,
+      .cards-grid.count-2,
+      .cards-grid.count-4 {
+        grid-template-columns: 1fr;
+        grid-auto-rows: auto;
+        overflow: visible;
+        height: auto;
+        background: var(--dark);
+        gap: 2px;
+      }
+
+      /* Cards sem altura fixa */
+      .pj-card { height: auto; min-height: 0; }
+
+      /* Body do card não rola separado — rola a página inteira */
+      .card-body { overflow: visible; max-height: none; }
+
+      /* Add-card tem altura mínima clicável */
+      .add-card { min-height: 80px; }
+
+      /* ── Stats: 2 colunas (Atributos | Habilidades) ── */
+      .stats-row {
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+      }
+
+      /* Atributos: coluna esquerda, ocupa as 2 linhas do grid */
+      .stats-block:first-child { grid-row: span 2; }
+
+      /* Atributos em laranja */
+      .stats-block:first-child .stats-block-title {
+        color: rgba(255,107,26,0.9);
+        border-bottom-color: rgba(255,107,26,0.3);
+      }
+      .stats-block:first-child .dot-name {
+        color: rgba(255,107,26,0.65);
+      }
+      .stats-block:first-child .dot.filled {
+        background: var(--orange);
+        border-color: var(--orange);
+        box-shadow: 0 0 3px rgba(255,107,26,0.6);
+      }
+
+      /* Fontes e dots ligeiramente maiores */
+      .dot      { width: 7px; height: 7px; }
+      .dot-name { font-size: 8px; letter-spacing: 0; }
+      .vbox     { width: 11px; height: 11px; }
+    }
   </style>
 </head>
 <body>
