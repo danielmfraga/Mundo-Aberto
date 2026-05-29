@@ -545,6 +545,348 @@
       opacity: 0.7;
     }
 
+    /* ───── Ficha-style review (skeleton da ficha real) ───── */
+    .ficha-review { display: flex; flex-direction: column; gap: 22px; }
+
+    .ficha-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(0,255,231,0.12);
+      flex-wrap: wrap;
+    }
+    .ficha-title-block { flex: 1; min-width: 280px; }
+    .ficha-name {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(0,255,231,0.25);
+      color: var(--holo);
+      font-family: 'Orbitron', monospace;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      padding: 4px 0;
+      width: 100%;
+      max-width: 440px;
+      text-shadow: 0 0 12px rgba(0,255,231,0.4);
+    }
+    .ficha-name:focus { outline: none; border-bottom-color: var(--holo); }
+    .ficha-name::placeholder { color: rgba(0,255,231,0.25); font-weight: 400; }
+    .ficha-subtitle {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 5px;
+      color: rgba(207,233,240,0.5);
+      margin-top: 4px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .cosmo-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .cosmo-row .cosmo-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 4px;
+      color: rgba(155,80,255,0.75);
+      text-transform: uppercase;
+      text-shadow: 0 0 8px rgba(155,80,255,0.4);
+    }
+
+    .xp-block-ficha {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: rgba(207,233,240,0.5);
+      text-transform: uppercase;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      text-align: right;
+    }
+    .xp-block-ficha > div { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
+    .xp-num-ficha {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(0,255,231,0.2);
+      color: var(--holo);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 14px;
+      width: 46px;
+      text-align: center;
+      padding: 2px 0;
+    }
+    .xp-num-ficha:focus { outline: none; border-bottom-color: var(--holo); }
+
+    /* Painel (orange title) */
+    .fpanel {
+      border: 1px solid rgba(0,255,231,0.1);
+      background: rgba(0,255,231,0.012);
+      padding: 16px 18px;
+    }
+    .fpanel-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      letter-spacing: 5px;
+      color: var(--orange);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,107,26,0.2);
+    }
+
+    /* Atributos: 3 colunas (Físicos / Sociais / Mentais) */
+    .attr-groups {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px 28px;
+    }
+    .attr-group-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 4px;
+      color: rgba(207,233,240,0.45);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid rgba(0,255,231,0.05);
+    }
+
+    /* Habilidades: 3 colunas */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      column-gap: 24px;
+      row-gap: 2px;
+    }
+
+    /* Identidade: 3 colunas */
+    .identity-fields {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px 18px;
+    }
+    .id-field {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      border-bottom: 1px solid rgba(0,255,231,0.06);
+      padding: 3px 0;
+    }
+    .id-field-key {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: rgba(207,233,240,0.45);
+      text-transform: uppercase;
+      flex-shrink: 0;
+      min-width: 70px;
+    }
+    .id-field-input {
+      background: transparent;
+      border: none;
+      color: var(--fg);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      flex: 1;
+      min-width: 0;
+      padding: 2px 0;
+    }
+    .id-field-input:focus { outline: none; }
+
+    /* Linha base (nome + bolinhas) */
+    .frow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 0;
+    }
+    .frow-name {
+      font-size: 13px;
+      color: var(--fg);
+      flex: 1;
+      letter-spacing: 0.01em;
+    }
+
+    /* Dots */
+    .fdots {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .fdot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,255,231,0.3);
+      background: rgba(0,255,231,0.04);
+      cursor: pointer;
+      transition: all 0.12s;
+      display: inline-block;
+    }
+    .fdot:hover { border-color: var(--holo); }
+    .fdot.filled {
+      background: var(--holo);
+      border-color: var(--holo);
+      box-shadow: 0 0 6px rgba(0,255,231,0.55);
+    }
+    /* Cosmologia em roxo (alinhado com a ficha) */
+    .cosmo-row .fdot {
+      width: 11px; height: 11px;
+      border-color: rgba(140,60,255,0.35);
+      background: rgba(140,60,255,0.04);
+    }
+    .cosmo-row .fdot.filled {
+      background: #c264fe;
+      border-color: #c264fe;
+      box-shadow: 0 0 8px rgba(180,80,255,0.6);
+    }
+
+    /* Vitais */
+    .vital-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 6px 0;
+      flex-wrap: wrap;
+    }
+    .vital-label-f {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: rgba(207,233,240,0.6);
+      text-transform: uppercase;
+      flex-shrink: 0;
+      min-width: 130px;
+    }
+    .vital-boxes {
+      display: flex;
+      gap: 3px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+    .vbox {
+      width: 14px;
+      height: 14px;
+      border: 1px solid rgba(0,255,231,0.3);
+      background: rgba(0,255,231,0.03);
+      cursor: pointer;
+      transition: all 0.12s;
+      display: inline-block;
+    }
+    .vbox:hover { border-color: var(--holo); }
+    .vbox.filled {
+      background: var(--holo);
+      border-color: var(--holo);
+      box-shadow: 0 0 4px rgba(0,255,231,0.5);
+    }
+    .vital-count-input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(0,255,231,0.2);
+      color: var(--holo);
+      width: 36px;
+      text-align: center;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      padding: 2px 0;
+    }
+    .vital-count-input:focus { outline: none; border-bottom-color: var(--holo); }
+    .vital-max-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: rgba(207,233,240,0.4);
+      text-transform: uppercase;
+    }
+
+    /* Qualidades / Defeitos */
+    .qrow {
+      display: grid;
+      grid-template-columns: 38px 1fr auto 24px;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(0,255,231,0.05);
+    }
+    .qtoggle {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: var(--good);
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+      padding: 3px 4px;
+      border: 1px solid rgba(78,224,122,0.3);
+      transition: all 0.15s;
+    }
+    .qtoggle:hover { background: rgba(78,224,122,0.06); }
+    .qrow.defect .qtoggle {
+      color: var(--danger);
+      border-color: rgba(255,85,102,0.4);
+    }
+    .qrow.defect .qtoggle:hover { background: rgba(255,85,102,0.06); }
+    .qname {
+      background: transparent;
+      border: none;
+      border-bottom: 1px dotted rgba(0,255,231,0.12);
+      color: var(--fg);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      padding: 3px 0;
+    }
+    .qname:focus { outline: none; border-bottom-color: var(--holo); }
+    .qdel {
+      background: none;
+      border: none;
+      color: rgba(255,85,102,0.55);
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .qdel:hover { color: var(--danger); }
+
+    /* Equipamentos */
+    .equip-row-f {
+      display: grid;
+      grid-template-columns: 1fr 24px;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(0,255,231,0.04);
+    }
+    .equip-input-f {
+      background: transparent;
+      border: none;
+      color: var(--fg);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      padding: 3px 0;
+    }
+    .equip-input-f:focus { outline: none; }
+
+    /* Mobile (estilo ficha colapsa colunas) */
+    @media (max-width: 700px) {
+      .ficha-header { flex-direction: column; }
+      .xp-block-ficha { text-align: left; }
+      .xp-block-ficha > div { justify-content: flex-start; }
+      .attr-groups { grid-template-columns: 1fr 1fr; }
+      .skills-grid { grid-template-columns: 1fr 1fr; }
+      .identity-fields { grid-template-columns: 1fr; }
+      .ficha-name { font-size: 18px; letter-spacing: 4px; }
+      .vital-label-f { min-width: 110px; }
+    }
+    @media (max-width: 480px) {
+      .attr-groups { grid-template-columns: 1fr; }
+      .skills-grid { grid-template-columns: 1fr; }
+    }
+
     /* Action footer */
     .action-footer {
       display: flex;
@@ -974,10 +1316,38 @@
     }
 
     // ───────────────────────────────────────────────
-    // Render result review
+    // Render result review — VISUAL DA FICHA
+    // (mesmo vocabulário visual da ficha.html:
+    //  bolinhas clicáveis, painéis em laranja, layout em colunas)
     // ───────────────────────────────────────────────
+
+    // Listas oficiais — mesma ordem da ficha.html
+    var ATTR_GROUPS = [
+      { title: 'Físicos', items: ['Força', 'Destreza', 'Vigor'] },
+      { title: 'Sociais', items: ['Carisma', 'Manipulação', 'Autocontrole'] },
+      { title: 'Mentais', items: ['Inteligência', 'Raciocínio', 'Determinação'] }
+    ];
+    // Ordem das habilidades exatamente como na ficha (3 colunas, top→bottom esquerda→direita)
+    var SKILLS_LIST = [
+      'Armas Brancas', 'Finanças', 'Ofícios',
+      'Armas de Fogo', 'Furtividade', 'Percepção',
+      'Atletismo', 'Intimidação', 'Performance',
+      'Briga', 'Investigação', 'Persuasão',
+      'Ciência', 'Ladroagem', 'Política',
+      'Condução', 'Liderança', 'Sagacidade',
+      'Emp. Animais', 'Manha', 'Sobrevivência',
+      'Erudição', 'Medicina', 'Subterfúgio',
+      'Etiqueta', 'Ocultismo', 'Tecnologia'
+    ];
+    var IDENTITY_FIELDS = [
+      ['Conceito', 'conceito'], ['Credo', 'credo'], ['Ímpeto', 'impeto'],
+      ['Redenção', 'redencao'], ['Ambição', 'ambicao'], ['Desejo', 'desejo'],
+      ['Célula', 'celula'], ['Princípio', 'principio'], ['Pilar', 'pilar'],
+      ['Idade', 'idade'], ['Nasc.', 'nascimento'], ['Aparência', 'aparencia']
+    ];
+
     function renderResult(data) {
-      var html = '';
+      var html = '<div class="ficha-review">';
 
       // Warnings
       if (data.warnings && data.warnings.length) {
@@ -988,44 +1358,26 @@
         html += '</ul></div>';
       }
 
-      // Nome
-      html += sectionTextInputs('Identidade', [
-        { name: 'Nome', key: 'name', value: data.name }
-      ].concat(
-        Object.keys(data.fields || {}).map(function(k) {
-          return { name: capitalize(k), key: 'field:' + k, value: data.fields[k] };
-        })
-      ));
+      // HEADER: Nome / Cosmologia / XP
+      html += renderHeader(data);
 
-      // Atributos
-      html += sectionNumberGrid('Atributos', data.atributos || {}, 'attr:');
+      // IDENTIDADE
+      html += renderIdentidade(data.fields || {});
 
-      // Habilidades
-      html += sectionNumberGrid('Habilidades', data.habilidades || {}, 'skill:');
+      // ATRIBUTOS
+      html += renderAtributos(data.atributos || {});
 
-      // Cosmologia (single value)
-      html += sectionNumberGrid('Cosmologia & Vitais', {
-        'Cosmologia': data.cosmologia,
-        'Vitalidade': (data.vitals || {}).Vitalidade,
-        'Força de Vontade': (data.vitals || {})['Força de Vontade'],
-        'Desespero': (data.vitals || {}).Desespero
-      }, 'special:');
+      // HABILIDADES
+      html += renderHabilidades(data.habilidades || {});
 
-      // XP
-      html += sectionNumberGrid('XP', {
-        'Total': (data.xp || {}).total,
-        'Gasto': (data.xp || {}).spent
-      }, 'xp:');
+      // VITAIS
+      html += renderVitais(data.vitals || {});
 
-      // Qualidades + Defeitos juntos (cada linha tem toggle Q/D)
-      var qd = [].concat(
-        (data.qualities || []).map(function(q) { return { name: q.name, value: q.value, defect: false }; }),
-        (data.defects || []).map(function(d) { return { name: d.name, value: Math.abs(d.value), defect: true }; })
-      );
-      html += sectionQualities('Qualidades & Defeitos', qd);
+      // QUALIDADES & DEFEITOS
+      html += renderQualidades(data.qualities || [], data.defects || []);
 
-      // Equipamentos
-      html += sectionEquipment('Equipamentos', data.equipment || []);
+      // EQUIPAMENTOS
+      html += renderEquipamentos(data.equipment || []);
 
       // Action footer
       html +=
@@ -1035,133 +1387,320 @@
           '<button class="btn" id="createNewBtn">Criar nova ficha</button>' +
         '</div>';
 
+      html += '</div>'; // .ficha-review
+
       document.getElementById('phaseResult').innerHTML = html;
 
-      // Wire actions
-      document.getElementById('restartBtn').addEventListener('click', restart);
-      document.getElementById('createNewBtn').addEventListener('click', applyAsNew);
-      document.getElementById('updateExistingBtn').addEventListener('click', openCharPicker);
-
-      // Wire add-line buttons
-      var addQ = document.getElementById('addQualityLine');
-      if (addQ) addQ.addEventListener('click', function() { addQualityRow(false); });
-      var addE = document.getElementById('addEquipLine');
-      if (addE) addE.addEventListener('click', addEquipRow);
-
-      // Wire quality toggles + dels
-      document.querySelectorAll('.quality-row').forEach(wireQualityRow);
-      document.querySelectorAll('.equip-row').forEach(wireEquipRow);
+      wireFichaInteractions();
+      wireActionButtons();
     }
 
-    function sectionTextInputs(title, rows) {
-      var inner = rows.map(function(r) {
-        var nullClass = r.value == null ? ' null' : '';
-        var val = r.value == null ? '' : escapeHtml(String(r.value));
-        return '<div class="result-row' + nullClass + '">' +
-          '<span class="result-name">' + escapeHtml(r.name) + '</span>' +
-          '<input class="result-input text" data-key="' + r.key + '" value="' + val + '">' +
-          '</div>';
-      }).join('');
-      return wrapSection(title, '<div class="result-grid cols2">' + inner + '</div>');
+    // ───── Helpers de render ─────
+
+    function buildDotsHTML(group, val, max) {
+      var v = Math.max(0, Math.min(max, parseInt(val) || 0));
+      var html = '<div class="fdots" data-group="' + group + '" data-val="' + v + '" data-max="' + max + '">';
+      for (var i = 0; i < max; i++) {
+        html += '<span class="fdot' + (i < v ? ' filled' : '') + '"></span>';
+      }
+      html += '</div>';
+      return html;
     }
 
-    function sectionNumberGrid(title, obj, prefix) {
-      var keys = Object.keys(obj);
-      var filled = keys.filter(function(k) { return obj[k] != null; }).length;
-      var inner = keys.map(function(k) {
-        var v = obj[k];
-        var nullClass = v == null ? ' null' : '';
-        return '<div class="result-row' + nullClass + '">' +
-          '<span class="result-name">' + escapeHtml(k) + '</span>' +
-          '<input type="number" class="result-input" data-key="' + prefix + k + '" value="' + (v == null ? '' : v) + '">' +
-          '</div>';
-      }).join('');
-      return wrapSection(title, '<div class="result-grid">' + inner + '</div>', filled + '/' + keys.length);
+    function buildBoxesHTML(group, val, max) {
+      var v = Math.max(0, Math.min(max, parseInt(val) || 0));
+      var html = '<div class="vital-boxes" data-group="' + group + '" data-val="' + v + '" data-max="' + max + '">';
+      for (var i = 0; i < max; i++) {
+        html += '<span class="vbox' + (i < v ? ' filled' : '') + '"></span>';
+      }
+      html += '</div>';
+      return html;
     }
 
-    function sectionQualities(title, items) {
-      var rows = items.map(function(q) { return renderQualityRowHTML(q); }).join('');
-      var body =
-        '<div id="qualityList">' + rows + '</div>' +
-        '<button class="add-line-btn" id="addQualityLine">+ Adicionar qualidade/defeito</button>';
-      return wrapSection(title, body, String(items.length));
+    function renderHeader(data) {
+      var xpTotal = (data.xp && data.xp.total != null) ? data.xp.total : 0;
+      var xpSpent = (data.xp && data.xp.spent != null) ? data.xp.spent : 0;
+      var cosmo   = (data.cosmologia != null) ? data.cosmologia : 0;
+
+      return '<div class="ficha-header">' +
+        '<div class="ficha-title-block">' +
+          '<input class="ficha-name" data-key="name" value="' + escapeHtml(data.name || '') + '" placeholder="Nome do Personagem">' +
+          '<div class="ficha-subtitle">Ficha de Personagem</div>' +
+          '<div class="cosmo-row">' +
+            '<span class="cosmo-label">Cosmologia</span>' +
+            buildDotsHTML('cosmo', cosmo, 10) +
+          '</div>' +
+        '</div>' +
+        '<div class="xp-block-ficha">' +
+          '<div>XP Total<input class="xp-num-ficha" type="number" data-key="xp:total" value="' + xpTotal + '"></div>' +
+          '<div>Gasto<input class="xp-num-ficha" type="number" data-key="xp:spent" value="' + xpSpent + '"></div>' +
+        '</div>' +
+      '</div>';
     }
 
-    function renderQualityRowHTML(q) {
-      return '<div class="quality-row' + (q.defect ? ' defect' : '') + '">' +
-        '<span class="quality-type">' + (q.defect ? 'DEF' : 'QUA') + '</span>' +
-        '<input class="quality-name" value="' + escapeHtml(q.name || '') + '">' +
-        '<input type="number" class="result-input" value="' + (q.value == null ? '' : q.value) + '">' +
-        '<button class="quality-del">✕</button>' +
+    function renderIdentidade(fields) {
+      var rows = IDENTITY_FIELDS.map(function(f) {
+        var label = f[0], key = f[1];
+        var v = fields[key] || '';
+        return '<div class="id-field">' +
+          '<span class="id-field-key">' + label + '</span>' +
+          '<input class="id-field-input" data-key="field:' + key + '" value="' + escapeHtml(v) + '">' +
         '</div>';
+      }).join('');
+      return '<div class="fpanel">' +
+        '<div class="fpanel-title">Identidade</div>' +
+        '<div class="identity-fields">' + rows + '</div>' +
+      '</div>';
     }
 
-    function wireQualityRow(row) {
-      var tog = row.querySelector('.quality-type');
+    function renderAtributos(attrs) {
+      var groups = ATTR_GROUPS.map(function(g) {
+        var rows = g.items.map(function(name) {
+          var v = attrs[name];
+          return '<div class="frow">' +
+            '<span class="frow-name">' + name + '</span>' +
+            buildDotsHTML('attr:' + name, v, 5) +
+          '</div>';
+        }).join('');
+        return '<div class="attr-group">' +
+          '<div class="attr-group-title">' + g.title + '</div>' +
+          rows +
+        '</div>';
+      }).join('');
+      return '<div class="fpanel">' +
+        '<div class="fpanel-title">Atributos</div>' +
+        '<div class="attr-groups">' + groups + '</div>' +
+      '</div>';
+    }
+
+    function renderHabilidades(skills) {
+      var rows = SKILLS_LIST.map(function(name) {
+        var v = skills[name];
+        return '<div class="frow">' +
+          '<span class="frow-name">' + name + '</span>' +
+          buildDotsHTML('skill:' + name, v, 5) +
+        '</div>';
+      }).join('');
+      return '<div class="fpanel">' +
+        '<div class="fpanel-title">Habilidades</div>' +
+        '<div class="skills-grid">' + rows + '</div>' +
+      '</div>';
+    }
+
+    function renderVitais(vitals) {
+      var vit  = (vitals.Vitalidade != null) ? vitals.Vitalidade : 7;
+      var fdv  = (vitals['Força de Vontade'] != null) ? vitals['Força de Vontade'] : 5;
+      var desp = (vitals.Desespero != null) ? vitals.Desespero : 0;
+
+      // Para Vitalidade e FdV o número detectado é o TOTAL de boxes (filled=0 no início)
+      // Para Desespero o número é a contagem atual (0-5)
+      return '<div class="fpanel">' +
+        '<div class="fpanel-title">Vitais</div>' +
+        '<div class="vital-row">' +
+          '<span class="vital-label-f">Vitalidade</span>' +
+          buildBoxesHTML('vital:Vitalidade', 0, vit) +
+          '<span class="vital-max-label">Máx</span>' +
+          '<input class="vital-count-input" type="number" data-key="vmax:Vitalidade" value="' + vit + '" min="1" max="20">' +
+        '</div>' +
+        '<div class="vital-row">' +
+          '<span class="vital-label-f">Força de Vontade</span>' +
+          buildBoxesHTML('vital:Vontade', 0, fdv) +
+          '<span class="vital-max-label">Máx</span>' +
+          '<input class="vital-count-input" type="number" data-key="vmax:Vontade" value="' + fdv + '" min="1" max="20">' +
+        '</div>' +
+        '<div class="vital-row">' +
+          '<span class="vital-label-f">Desespero</span>' +
+          buildBoxesHTML('vital:Desespero', desp, 5) +
+        '</div>' +
+      '</div>';
+    }
+
+    function renderQualidades(qualities, defects) {
+      var combined = [].concat(
+        qualities.map(function(q) { return { name: q.name, value: q.value || 1, defect: false }; }),
+        defects.map(function(d) { return { name: d.name, value: Math.abs(d.value || 1), defect: true }; })
+      );
+      var rows = combined.map(function(q) { return renderQRow(q); }).join('');
+      return '<div class="fpanel">' +
+        '<div class="fpanel-title">Qualidades &amp; Defeitos</div>' +
+        '<div id="qualityList">' + rows + '</div>' +
+        '<button class="add-line-btn" id="addQualityLine">+ Adicionar qualidade/defeito</button>' +
+      '</div>';
+    }
+
+    function renderQRow(q) {
+      return '<div class="qrow' + (q.defect ? ' defect' : '') + '">' +
+        '<span class="qtoggle">' + (q.defect ? 'DEF' : 'QUA') + '</span>' +
+        '<input class="qname" value="' + escapeHtml(q.name || '') + '" placeholder="Nome">' +
+        buildDotsHTML('quality', q.value, 5) +
+        '<button class="qdel">✕</button>' +
+      '</div>';
+    }
+
+    function renderEquipamentos(equipment) {
+      var rows = equipment.map(function(item) {
+        return renderEquipRow(item);
+      }).join('');
+      return '<div class="fpanel">' +
+        '<div class="fpanel-title">Equipamentos</div>' +
+        '<div id="equipList">' + rows + '</div>' +
+        '<button class="add-line-btn" id="addEquipLine">+ Adicionar equipamento</button>' +
+      '</div>';
+    }
+
+    function renderEquipRow(text) {
+      return '<div class="equip-row-f">' +
+        '<input class="equip-input-f" value="' + escapeHtml(text || '') + '" placeholder="Item">' +
+        '<button class="qdel">✕</button>' +
+      '</div>';
+    }
+
+    // ───── Wiring de interações ─────
+    function wireFichaInteractions() {
+      // Dots clicáveis (mesma lógica da ficha.html)
+      document.querySelectorAll('.fdots .fdot').forEach(function(dot) {
+        dot.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var group = dot.parentNode;
+          var dots = group.querySelectorAll('.fdot');
+          var idx = Array.from(dots).indexOf(dot);
+          var current = parseInt(group.dataset.val) || 0;
+          // Se clicou no último filled e ele é o topo: diminui 1
+          var newVal;
+          if (current === idx + 1 && idx === current - 1) {
+            newVal = idx;
+          } else {
+            newVal = idx + 1;
+          }
+          group.dataset.val = newVal;
+          dots.forEach(function(d, i) {
+            d.classList.toggle('filled', i < newVal);
+          });
+        });
+      });
+
+      // Vital boxes clicáveis
+      document.querySelectorAll('.vital-boxes .vbox').forEach(function(box) {
+        box.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var group = box.parentNode;
+          var boxes = group.querySelectorAll('.vbox');
+          var idx = Array.from(boxes).indexOf(box);
+          var current = parseInt(group.dataset.val) || 0;
+          var newVal;
+          if (current === idx + 1 && idx === current - 1) {
+            newVal = idx;
+          } else {
+            newVal = idx + 1;
+          }
+          group.dataset.val = newVal;
+          boxes.forEach(function(b, i) {
+            b.classList.toggle('filled', i < newVal);
+          });
+        });
+      });
+
+      // Inputs de Max nos vitais — regenera os boxes
+      document.querySelectorAll('.vital-count-input').forEach(function(input) {
+        input.addEventListener('change', function() {
+          var newMax = Math.max(1, Math.min(20, parseInt(input.value) || 1));
+          input.value = newMax;
+          // Mapeia "vmax:Vitalidade" → "vital:Vitalidade"
+          var targetGroup = input.dataset.key.replace('vmax:', 'vital:');
+          var box = document.querySelector('.vital-boxes[data-group="' + targetGroup + '"]');
+          if (!box) return;
+          var filled = parseInt(box.dataset.val) || 0;
+          filled = Math.min(filled, newMax);
+          box.dataset.val = filled;
+          box.dataset.max = newMax;
+          box.innerHTML = '';
+          for (var i = 0; i < newMax; i++) {
+            var b = document.createElement('span');
+            b.className = 'vbox' + (i < filled ? ' filled' : '');
+            b.addEventListener('click', function(e) {
+              e.stopPropagation();
+              var g = this.parentNode;
+              var bs = g.querySelectorAll('.vbox');
+              var ix = Array.from(bs).indexOf(this);
+              var cur = parseInt(g.dataset.val) || 0;
+              var nv = (cur === ix + 1) ? ix : ix + 1;
+              g.dataset.val = nv;
+              bs.forEach(function(bb, ii) { bb.classList.toggle('filled', ii < nv); });
+            });
+            box.appendChild(b);
+          }
+        });
+      });
+
+      // Toggle QUA/DEF
+      document.querySelectorAll('.qtoggle').forEach(function(tog) {
+        tog.addEventListener('click', function() {
+          var row = tog.closest('.qrow');
+          row.classList.toggle('defect');
+          tog.textContent = row.classList.contains('defect') ? 'DEF' : 'QUA';
+        });
+      });
+
+      // Deletar linhas
+      document.querySelectorAll('.qdel').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var row = btn.closest('.qrow, .equip-row-f');
+          if (row) row.remove();
+        });
+      });
+
+      // Add buttons
+      var addQ = document.getElementById('addQualityLine');
+      if (addQ) addQ.addEventListener('click', function() { addQRow(false); });
+      var addE = document.getElementById('addEquipLine');
+      if (addE) addE.addEventListener('click', addERow);
+    }
+
+    function addQRow(defect) {
+      var list = document.getElementById('qualityList');
+      var wrap = document.createElement('div');
+      wrap.innerHTML = renderQRow({ name: '', value: 1, defect: !!defect });
+      var row = wrap.firstChild;
+      list.appendChild(row);
+      // Re-wire APENAS desta linha
+      rewireRow(row);
+    }
+
+    function addERow() {
+      var list = document.getElementById('equipList');
+      var wrap = document.createElement('div');
+      wrap.innerHTML = renderEquipRow('');
+      var row = wrap.firstChild;
+      list.appendChild(row);
+      rewireRow(row);
+    }
+
+    function rewireRow(row) {
+      row.querySelectorAll('.fdots .fdot').forEach(function(dot) {
+        dot.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var group = dot.parentNode;
+          var dots = group.querySelectorAll('.fdot');
+          var idx = Array.from(dots).indexOf(dot);
+          var current = parseInt(group.dataset.val) || 0;
+          var newVal = (current === idx + 1) ? idx : idx + 1;
+          group.dataset.val = newVal;
+          dots.forEach(function(d, i) { d.classList.toggle('filled', i < newVal); });
+        });
+      });
+      var tog = row.querySelector('.qtoggle');
       if (tog) tog.addEventListener('click', function() {
         row.classList.toggle('defect');
         tog.textContent = row.classList.contains('defect') ? 'DEF' : 'QUA';
       });
-      var del = row.querySelector('.quality-del');
+      var del = row.querySelector('.qdel');
       if (del) del.addEventListener('click', function() { row.remove(); });
     }
 
-    function addQualityRow(defect) {
-      var list = document.getElementById('qualityList');
-      var wrap = document.createElement('div');
-      wrap.innerHTML = renderQualityRowHTML({ name: '', value: '', defect: defect });
-      var row = wrap.firstChild;
-      list.appendChild(row);
-      wireQualityRow(row);
-    }
-
-    function sectionEquipment(title, items) {
-      var rows = items.map(function(it) {
-        return renderEquipRowHTML(it);
-      }).join('');
-      var body =
-        '<div class="equip-list-edit" id="equipList">' + rows + '</div>' +
-        '<button class="add-line-btn" id="addEquipLine">+ Adicionar equipamento</button>';
-      return wrapSection(title, body, String(items.length));
-    }
-
-    function renderEquipRowHTML(text) {
-      return '<div class="equip-row">' +
-        '<input class="equip-input" value="' + escapeHtml(text || '') + '">' +
-        '<button class="quality-del">✕</button>' +
-        '</div>';
-    }
-
-    function wireEquipRow(row) {
-      var del = row.querySelector('.quality-del');
-      if (del) del.addEventListener('click', function() { row.remove(); });
-    }
-
-    function addEquipRow() {
-      var list = document.getElementById('equipList');
-      var wrap = document.createElement('div');
-      wrap.innerHTML = renderEquipRowHTML('');
-      var row = wrap.firstChild;
-      list.appendChild(row);
-      wireEquipRow(row);
-    }
-
-    function wrapSection(title, body, countLabel) {
-      return '<div class="result-section">' +
-        '<div class="result-section-title">' +
-          '<span>' + escapeHtml(title) + '</span>' +
-          (countLabel ? '<span class="result-section-count">' + countLabel + '</span>' : '') +
-        '</div>' + body + '</div>';
-    }
-
-    function capitalize(s) {
-      if (!s) return s;
-      var map = {
-        impeto: 'Ímpeto', redencao: 'Redenção', ambicao: 'Ambição',
-        celula: 'Célula', principio: 'Princípio', nascimento: 'Nascimento',
-        aparencia: 'Aparência'
-      };
-      return map[s] || (s.charAt(0).toUpperCase() + s.slice(1));
+    function wireActionButtons() {
+      document.getElementById('restartBtn').addEventListener('click', restart);
+      document.getElementById('createNewBtn').addEventListener('click', applyAsNew);
+      document.getElementById('updateExistingBtn').addEventListener('click', openCharPicker);
     }
 
     function escapeHtml(s) {
@@ -1172,70 +1711,87 @@
 
     // ───────────────────────────────────────────────
     // Collect edited values back into sheet_data
+    // (lê do novo DOM: .fdots / .vital-boxes / inputs)
     // ───────────────────────────────────────────────
     function collectSheetData() {
       var fields = {};
       var dots = [];
       var name = '';
 
-      document.querySelectorAll('[data-key]').forEach(function(el) {
-        var key = el.dataset.key;
+      // Nome + campos de identidade
+      var nameEl = document.querySelector('[data-key="name"]');
+      if (nameEl) {
+        name = nameEl.value.trim();
+        if (name) fields.name = name;
+      }
+      document.querySelectorAll('[data-key^="field:"]').forEach(function(el) {
+        var fkey = el.dataset.key.slice(6);
         var val = el.value.trim();
-        if (key === 'name') {
-          name = val;
-          if (val) fields.name = val;
-        } else if (key.startsWith('field:')) {
-          var fkey = key.slice(6);
-          if (val) fields[fkey] = val;
-        } else if (key.startsWith('attr:') || key.startsWith('skill:')) {
-          var stat = key.split(':')[1];
-          if (val !== '' && !isNaN(+val)) {
-            dots.push({ name: stat, filled: Math.max(0, Math.min(5, +val)) });
-          }
-        } else if (key.startsWith('special:')) {
-          var spName = key.slice(8);
-          if (spName === 'Cosmologia' && val !== '' && !isNaN(+val)) {
-            dots.push({ name: 'Cosmologia', filled: Math.max(0, Math.min(10, +val)) });
-          }
-        }
+        if (val) fields[fkey] = val;
       });
 
-      // Vitals
+      // Bolinhas (.fdots) → atributos + habilidades + cosmologia
+      document.querySelectorAll('.fdots').forEach(function(group) {
+        var grp = group.dataset.group;
+        var val = parseInt(group.dataset.val) || 0;
+        if (!grp) return;
+
+        if (grp === 'cosmo') {
+          if (val > 0) dots.push({ name: 'Cosmologia', filled: val });
+        } else if (grp.indexOf('attr:') === 0 || grp.indexOf('skill:') === 0) {
+          var statName = grp.split(':')[1];
+          if (val > 0) dots.push({ name: statName, filled: val });
+        }
+        // 'quality' fdots são processados na seção de qualidades
+      });
+
+      // Vitais
       var vitals = {};
-      var vitVal = document.querySelector('[data-key="special:Vitalidade"]');
-      var fdvVal = document.querySelector('[data-key="special:Força de Vontade"]');
-      var despVal = document.querySelector('[data-key="special:Desespero"]');
-      if (vitVal && vitVal.value !== '') vitals['vit-boxes'] = { total: Math.max(1, +vitVal.value || 7), filled: 0, aggravated: 0 };
-      if (fdvVal && fdvVal.value !== '') vitals['fdv-boxes'] = { total: Math.max(1, +fdvVal.value || 5), filled: 0, aggravated: 0 };
-      if (despVal && despVal.value !== '') vitals['desp-boxes'] = { desp: Math.max(0, +despVal.value || 0) };
+      var vitMaxEl = document.querySelector('[data-key="vmax:Vitalidade"]');
+      var fdvMaxEl = document.querySelector('[data-key="vmax:Vontade"]');
+      var vitDamageEl = document.querySelector('.vital-boxes[data-group="vital:Vitalidade"]');
+      var fdvDamageEl = document.querySelector('.vital-boxes[data-group="vital:Vontade"]');
+      var despEl = document.querySelector('.vital-boxes[data-group="vital:Desespero"]');
+
+      var vitMax = vitMaxEl ? Math.max(1, +vitMaxEl.value || 7) : 7;
+      var fdvMax = fdvMaxEl ? Math.max(1, +fdvMaxEl.value || 5) : 5;
+      var vitDamage = vitDamageEl ? (parseInt(vitDamageEl.dataset.val) || 0) : 0;
+      var fdvDamage = fdvDamageEl ? (parseInt(fdvDamageEl.dataset.val) || 0) : 0;
+      var despVal = despEl ? (parseInt(despEl.dataset.val) || 0) : 0;
+
+      vitals['vit-boxes'] = { total: vitMax, filled: vitDamage, aggravated: 0 };
+      vitals['fdv-boxes'] = { total: fdvMax, filled: fdvDamage, aggravated: 0 };
+      vitals['desp-boxes'] = { desp: despVal };
 
       // XP
-      var xpTotal = document.querySelector('[data-key="xp:Total"]');
-      var xpSpent = document.querySelector('[data-key="xp:Gasto"]');
+      var xpTotal = document.querySelector('[data-key="xp:total"]');
+      var xpSpent = document.querySelector('[data-key="xp:spent"]');
       var xp = {
-        total: xpTotal && xpTotal.value !== '' ? +xpTotal.value : 0,
-        spent: xpSpent && xpSpent.value !== '' ? +xpSpent.value : 0
+        total: (xpTotal && xpTotal.value !== '') ? +xpTotal.value : 0,
+        spent: (xpSpent && xpSpent.value !== '') ? +xpSpent.value : 0
       };
 
-      // Qualities (incluindo defects, marcados com flag)
+      // Qualidades + Defeitos (mesma estrutura, com flag .defect)
       var qualities = [];
-      document.querySelectorAll('.quality-row').forEach(function(row) {
-        var inputs = row.querySelectorAll('input');
-        var qn = inputs[0].value.trim();
-        var qv = inputs[1].value.trim();
+      document.querySelectorAll('.qrow').forEach(function(row) {
+        var nameInput = row.querySelector('.qname');
+        var dotsEl = row.querySelector('.fdots');
+        if (!nameInput || !dotsEl) return;
+        var qn = nameInput.value.trim();
         if (!qn) return;
+        var qv = parseInt(dotsEl.dataset.val) || 1;
         var defect = row.classList.contains('defect');
         qualities.push({
           name: qn,
-          filled: Math.max(0, Math.min(5, +qv || 1)),
+          filled: Math.max(1, Math.min(5, qv)),
           max: 5,
           defect: defect
         });
       });
 
-      // Equipment
+      // Equipamentos
       var equip = [];
-      document.querySelectorAll('.equip-input').forEach(function(inp) {
+      document.querySelectorAll('.equip-input-f').forEach(function(inp) {
         var v = inp.value.trim();
         if (v) equip.push(v);
       });
