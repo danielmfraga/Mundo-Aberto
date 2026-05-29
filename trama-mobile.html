@@ -1044,6 +1044,18 @@
         }
       }
 
+      if (isPanning && (Math.abs(panVelX) > 0.1 || Math.abs(panVelY) > 0.1)) {
+        var vx = panVelX * 16, vy = panVelY * 16;
+        (function startInertia(){
+          vx *= 0.92; vy *= 0.92;
+          if (Math.abs(vx) < 0.3 && Math.abs(vy) < 0.3) { _inertiaId = null; return; }
+          panOffset.x += vx; panOffset.y += vy;
+          applyTransform();
+          _inertiaId = requestAnimationFrame(startInertia);
+        })();
+      }
+      panVelX = 0; panVelY = 0; _panPrev = null;
+
       dragNodeId  = null;
       isPanning   = false;
       if (ghostLine && !connSource) { ghostLine.remove(); ghostLine = null; }

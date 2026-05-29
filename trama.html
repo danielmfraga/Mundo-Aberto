@@ -226,6 +226,7 @@
       top: 0;
       left: 0;
       transform-origin: 0 0;
+      will-change: transform;
     }
 
     /* SVG connections */
@@ -1408,6 +1409,9 @@
     var dragNodeOffset = { x: 0, y: 0 };
     var connSource     = null;
     var isPanning      = false;
+    var panVelX = 0, panVelY = 0;
+    var _panPrev = null, _panPrevTime = 0;
+    var _inertiaId = null, _rafPending = false;
     var pinchStartDist  = 0;
     var pinchStartScale = 1;
     var pinchStartPan   = { x: 0, y: 0 };
@@ -2275,6 +2279,7 @@
                     el0.id === 'modal-save' || el0.id === 'modal-cancel')) return;
         e.preventDefault();
         connMenu.classList.remove('open');
+        if (_inertiaId) { cancelAnimationFrame(_inertiaId); _inertiaId = null; }
 
         var touches = Array.from(e.touches);
 
@@ -2416,9 +2421,16 @@
 
         // Pan
         if (isPanning) {
-          panOffset.x = t.clientX - panStart.x;
-          panOffset.y = t.clientY - panStart.y;
-          applyTransform();
+          var _now = Date.now();
+          var nx = t.clientX - panStart.x;
+          var ny = t.clientY - panStart.y;
+          if (_panPrev) {
+            var _dt = _now - _panPrevTime;
+            if (_dt > 0) { panVelX = (nx - _panPrev.x) / _dt; panVelY = (ny - _panPrev.y) / _dt; }
+          }
+          _panPrev = { x: nx, y: ny }; _panPrevTime = _now;
+          panOffset.x = nx; panOffset.y = ny;
+          if (!_rafPending) { _rafPending = true; requestAnimationFrame(function(){ _rafPending=false; applyTransform(); }); }
         }
 
       }, { passive: false });
@@ -2456,6 +2468,18 @@
             connMenu.classList.remove('open');
           }
         }
+
+        if (isPanning && (Math.abs(panVelX) > 0.1 || Math.abs(panVelY) > 0.1)) {
+          var vx = panVelX * 16, vy = panVelY * 16;
+          (function startInertia(){
+            vx *= 0.92; vy *= 0.92;
+            if (Math.abs(vx) < 0.3 && Math.abs(vy) < 0.3) { _inertiaId = null; return; }
+            panOffset.x += vx; panOffset.y += vy;
+            applyTransform();
+            _inertiaId = requestAnimationFrame(startInertia);
+          })();
+        }
+        panVelX = 0; panVelY = 0; _panPrev = null;
 
         if (dragNodeId) markDirty();
         dragNodeId = null;
