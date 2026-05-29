@@ -2235,9 +2235,14 @@ function restoreSheet(data) {
     goBack();
   });
 
-  // double-tap mobile (dois toques < 300ms na mesma área não-interativa)
-  var _lastTap = 0;
+  // double-tap mobile — ignora pinch/zoom (multi-touch)
+  var _lastTap = 0, _multi = false;
+  document.addEventListener('touchstart', function(e){
+    if(e.touches.length > 1){ _multi = true; }
+  }, { passive: true });
   document.addEventListener('touchend', function(e) {
+    if(e.touches.length > 0){ _lastTap=0; _multi=true; return; }
+    if(_multi){ _lastTap=0; _multi=false; return; }
     var t = e.target;
     if (t.closest(INTERACTIVE)) { _lastTap = 0; return; }
     var now = Date.now();
