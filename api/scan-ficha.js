@@ -215,7 +215,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { files, notation, model } = req.body || {};
+    const { files, notation, notations, model } = req.body || {};
 
     if (!files || !Array.isArray(files) || files.length === 0) {
       return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
@@ -250,21 +250,36 @@ export default async function handler(req, res) {
       }
     }
 
-    // Mensagem de texto: dica de notação (se houver)
-    const notationHint = notation
-      ? `O jogador informou que está usando a notação: "${notation}". Use isso pra interpretar os valores.`
-      : 'O jogador NÃO informou a notação — identifique pelo contexto da ficha.';
+    // Notações: aceita array `notations` (multi) OU string `notation` (legacy single).
+    // Mesma ficha pode misturar notações (ex: atributos em "quadrado", habilidades em números).
+    const notationList = Array.isArray(notations) && notations.length > 0
+      ? notations
+      : (notation ? [notation] : []);
+
+    const notationHint = notationList.length > 0
+      ? `O jogador informou as seguintes notações em uso (potencialmente combinadas na MESMA ficha — interprete cada valor pelo contexto, escolhendo qual notação se aplica a cada caso):\n${notationList.map(n => `  • ${n}`).join('\n')}`
+      : 'O jogador NÃO especificou notações — identifique pelo contexto da ficha.';
 
     content.push({
       type: 'text',
-      text: `${notationHint}\n\nExtraia todos os dados da ficha conforme o schema definido. Retorne APENAS o JSON.`
+      text: `${notationHint}\n\nExtraia todos os dados da ficha conforme o schema definido no system prompt. Retorne APENAS o JSON.`
     });
 
-    // Chama Claude Vision
+    // ─────────────────────────────────────────────────────────
+    // Chama Claude Vision com PROMPT CACHING no system prompt.
+    // O schema é fixo (~5000 tokens) → cache hit em todas as
+    // chamadas seguintes corta ~90% do custo do prompt.
+    // ─────────────────────────────────────────────────────────
     const response = await client.messages.create({
-      model: model || 'claude-sonnet-4-5-20250929',
+      model: model || 'claude-opus-4-8',
       max_tokens: 4096,
-      system: SYSTEM_PROMPT,
+      system: [
+        {
+          type: 'text',
+          text: SYSTEM_PROMPT,
+          cache_control: { type: 'ephemeral' }
+        }
+      ],
       messages: [{ role: 'user', content }]
     });
 

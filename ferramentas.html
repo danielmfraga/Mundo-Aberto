@@ -249,36 +249,60 @@
     /* ── Controls ── */
     .controls-row {
       display: flex;
-      gap: 16px;
-      align-items: center;
+      flex-direction: column;
+      gap: 14px;
       margin-top: 24px;
-      flex-wrap: wrap;
     }
-    .notation-group {
+    .notation-block {
       display: flex;
-      align-items: center;
-      gap: 10px;
-      flex: 1;
-      min-width: 240px;
+      flex-direction: column;
+      gap: 8px;
     }
     .notation-label {
       font-family: 'Share Tech Mono', monospace;
       font-size: 11px;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       color: rgba(207,233,240,0.6);
       text-transform: uppercase;
     }
-    .notation-select {
-      flex: 1;
-      background: rgba(0,255,231,0.05);
-      border: 1px solid rgba(0,255,231,0.25);
-      color: var(--fg);
-      padding: 8px 12px;
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 13px;
-      letter-spacing: 1px;
+    .notation-hint {
+      font-size: 11px;
+      color: rgba(207,233,240,0.4);
+      font-style: italic;
     }
-    .notation-select:focus { outline: none; border-color: var(--holo); }
+    .notation-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .notation-pill {
+      background: rgba(0,255,231,0.04);
+      border: 1px solid rgba(0,255,231,0.22);
+      color: rgba(207,233,240,0.75);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 12px;
+      letter-spacing: 1px;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: all 0.18s;
+      user-select: none;
+      border-radius: 2px;
+    }
+    .notation-pill:hover {
+      border-color: rgba(0,255,231,0.55);
+      color: var(--fg);
+    }
+    .notation-pill.active {
+      background: rgba(255,107,26,0.12);
+      border-color: var(--orange);
+      color: var(--orange);
+      box-shadow: 0 0 10px rgba(255,107,26,0.25);
+    }
+    .scan-btn-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 4px;
+    }
 
     .btn {
       font-family: 'Orbitron', monospace;
@@ -666,18 +690,20 @@
         <div class="preview-grid" id="previewGrid"></div>
 
         <div class="controls-row" id="controlsRow" hidden>
-          <div class="notation-group">
-            <span class="notation-label">Notação:</span>
-            <select class="notation-select" id="notationSelect">
-              <option value="">Detectar automaticamente</option>
-              <option value="Bolinhas preenchidas vs vazias (●●●○○ = 3)">Bolinhas (●○)</option>
-              <option value="Números diretos (3 = 3)">Números (1-5)</option>
-              <option value="Sistema de quadrado: cada lado de um quadradinho vale 1 (| = 1, L = 2, U = 3, □ = 4, □ com risco no meio = 5)">Quadrado (|, L, U, □, ⊠)</option>
-              <option value="Hashes/riscos (||| = 3)">Hashes (|||)</option>
-              <option value="X marcados (x x x = 3)">X marcados</option>
-            </select>
+          <div class="notation-block">
+            <span class="notation-label">Notações em uso</span>
+            <span class="notation-hint">Selecione todas que aparecem na ficha — pode misturar (deixe em branco pra detecção automática)</span>
+            <div class="notation-pills" id="notationPills">
+              <span class="notation-pill" data-value="Bolinhas preenchidas vs vazias (●●●○○ = 3)">Bolinhas (●○)</span>
+              <span class="notation-pill" data-value="Números diretos (3 = 3)">Números (1-5)</span>
+              <span class="notation-pill" data-value="Sistema de quadrado: cada lado de um quadradinho vale 1 (| = 1, L = 2, U = 3, □ = 4, □ com risco no meio = 5)">Quadrado (|, L, U, □, ⊠)</span>
+              <span class="notation-pill" data-value="Hashes/riscos (||| = 3)">Hashes (|||)</span>
+              <span class="notation-pill" data-value="X marcados (x x x = 3)">X marcados</span>
+            </div>
           </div>
-          <button class="btn" id="scanBtn">Iniciar Análise</button>
+          <div class="scan-btn-row">
+            <button class="btn" id="scanBtn">Iniciar Análise</button>
+          </div>
         </div>
       </div>
 
@@ -827,7 +853,8 @@
       });
     }
 
-    // Comprime imagem pra max 1800x1800 / qualidade 0.85
+    // Comprime imagem pra max 2200x2200 / qualidade 0.92
+    // (preserva detalhe da caligrafia; Opus 4.8 aceita até 2576px no eixo maior)
     // Retorna base64 + previewUrl + mediaType (sempre jpeg)
     function compressImage(file) {
       return new Promise(function(resolve, reject) {
@@ -837,7 +864,7 @@
           var img = new Image();
           img.onerror = reject;
           img.onload = function() {
-            var MAX = 1800;
+            var MAX = 2200;
             var w = img.width, h = img.height;
             if (w > MAX || h > MAX) {
               var scale = Math.min(MAX / w, MAX / h);
@@ -847,10 +874,13 @@
             var canvas = document.createElement('canvas');
             canvas.width = w; canvas.height = h;
             var ctx = canvas.getContext('2d');
+            // Smoothing alto pra texto crisp
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
             ctx.fillStyle = '#fff';
             ctx.fillRect(0, 0, w, h);
             ctx.drawImage(img, 0, 0, w, h);
-            var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            var dataUrl = canvas.toDataURL('image/jpeg', 0.92);
             var base64 = dataUrl.split(',')[1];
             resolve({
               base64: base64,
@@ -886,6 +916,23 @@
     }
 
     // ───────────────────────────────────────────────
+    // Notation pills (multi-select)
+    // ───────────────────────────────────────────────
+    document.querySelectorAll('.notation-pill').forEach(function(pill) {
+      pill.addEventListener('click', function() {
+        pill.classList.toggle('active');
+      });
+    });
+
+    function getSelectedNotations() {
+      var selected = [];
+      document.querySelectorAll('.notation-pill.active').forEach(function(p) {
+        selected.push(p.dataset.value);
+      });
+      return selected;
+    }
+
+    // ───────────────────────────────────────────────
     // Trigger scan
     // ───────────────────────────────────────────────
     document.getElementById('scanBtn').addEventListener('click', startScan);
@@ -899,11 +946,11 @@
     async function startScan() {
       if (uploadedFiles.length === 0) return;
       showPhase('phaseLoading');
-      var notation = document.getElementById('notationSelect').value;
+      var notations = getSelectedNotations();
 
       try {
         var payload = {
-          notation: notation || null,
+          notations: notations,
           files: uploadedFiles.map(function(f) {
             return { data: f.data, mediaType: f.mediaType };
           })
