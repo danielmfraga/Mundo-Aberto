@@ -1311,7 +1311,7 @@
     function spLoad() { return _spacesCache; }  // síncrono — usa cache
 
     async function spInit() {
-      var data = await sbFetch('/rest/v1/spaces?select=*&order=created_at.asc', 'GET');
+      var data = await sbFetch('/rest/v1/spaces?select=*&order=created_at.asc&deleted_at=is.null', 'GET');
       _spacesCache = Array.isArray(data) ? data : [];
 
       // Migração única: localStorage → Supabase (roda só uma vez)
