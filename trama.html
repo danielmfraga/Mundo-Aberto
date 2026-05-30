@@ -477,7 +477,19 @@
       justify-content: center;
       line-height: 1;
     }
-    .conn-label-wrap:hover .conn-del { display: flex; }
+    .conn-label-wrap:hover .conn-del,
+    .conn-label-wrap.selected .conn-del { display: flex; }
+    .conn-label-wrap.selected .conn-del {
+      background: rgba(255,68,102,0.15);
+      border-color: #ff4466;
+      color: #ff4466;
+      box-shadow: 0 0 8px rgba(255,68,102,0.6);
+    }
+    /* Fio selecionado: stroke mais grosso + glow ciano (mantém cor original) */
+    .conn-path.selected {
+      stroke-width: 2.5 !important;
+      filter: drop-shadow(0 0 5px rgba(0,255,231,0.9));
+    }
     .conn-del:hover { color: var(--danger); border-color: var(--danger); }
 
     /* ── MODAL ── */
@@ -1502,16 +1514,31 @@
           hit.style.touchAction = 'none';
           hit.dataset.connIdx = connIdx;
         } else {
-          // Desktop: abre menu de cor com clique ESQUERDO ou DIREITO no fio
-          var openConnMenuFor = function(e) {
+          // Desktop:
+          //   ESQUERDO       → seleciona o fio (toggle); Shift+click = adiciona à seleção
+          //   DIREITO        → abre menu de cor (Neutro/Aliado/etc + Deletar)
+          //   DELETE/BACKSPC → deleta os fios selecionados
+          hit.addEventListener('click', function(e) {
+            e.preventDefault(); e.stopPropagation();
+            if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
+              clearMultiSelect();
+            }
+            if (selConns.has(connIdx)) selConns.delete(connIdx);
+            else selConns.add(connIdx);
+            updateConnections();
+          });
+          hit.addEventListener('contextmenu', function(e) {
             e.preventDefault(); e.stopPropagation();
             window._activeConn = conn;
             connMenu.style.left = e.clientX + 'px';
             connMenu.style.top  = e.clientY + 'px';
             connMenu.classList.add('open');
-          };
-          hit.addEventListener('click', openConnMenuFor);
-          hit.addEventListener('contextmenu', openConnMenuFor);
+          });
+        }
+        // Aplica visual de selecionado
+        if (selConns.has(connIdx)) {
+          path.classList.add('selected');
+          hit.classList.add('selected');
         }
         svgLayer.appendChild(hit);
 
@@ -1523,6 +1550,7 @@
           var lh = conn.labelWrap.offsetHeight;
           conn.labelWrap.style.left = (mx - lw/2) + 'px';
           conn.labelWrap.style.top  = (my - lh/2) + 'px';
+          conn.labelWrap.classList.toggle('selected', selConns.has(connIdx));
         }
       });
 
@@ -1757,8 +1785,11 @@
         conn.labelWrap = wrap;
         del.addEventListener('click', function(e) {
           e.stopPropagation();
+          if (!IS_MOBILE && typeof pushUndo === 'function') pushUndo();
           connections = connections.filter(function(c2) { return c2 !== conn; });
           wrap.remove();
+          if (typeof selConns !== 'undefined') selConns.clear(); // índices invalidados
+          if (typeof markDirty === 'function') markDirty();
           updateConnections();
         });
         wrap.addEventListener('contextmenu', function(e) {
@@ -2210,7 +2241,11 @@
         multiSelected.forEach(function(nid) {
           if (nodes[nid]) nodes[nid].classList.remove('multi-selected');
         });
-        multiSelected.clear(); selConns.clear();
+        multiSelected.clear();
+        if (selConns.size > 0) {
+          selConns.clear();
+          updateConnections();  // repinta sem .selected
+        }
       }
 
       // Selection delete
@@ -2275,8 +2310,23 @@
           if (multiSelected.size > 0 || selConns.size > 0) { clearMultiSelect(); return; }
           selectNode(null);
         }
-        if ((e.key === 'Delete' || e.key === 'Backspace') && selectedNode && document.activeElement === document.body) {
-          deleteNode(selectedNode);
+        if ((e.key === 'Delete' || e.key === 'Backspace') && document.activeElement === document.body) {
+          if (selConns.size > 0) {
+            pushUndo();
+            var idxs = Array.from(selConns).sort(function(a,b){return b-a;});
+            idxs.forEach(function(i) {
+              if (connections[i] && connections[i].labelWrap) connections[i].labelWrap.remove();
+              connections.splice(i, 1);
+            });
+            selConns.clear();
+            updateConnections();
+          }
+          if (selectedNode) deleteNode(selectedNode);
+          if (multiSelected.size > 0) {
+            pushUndo();
+            Array.from(multiSelected).forEach(function(nid) { deleteNode(nid); });
+            clearMultiSelect();
+          }
         }
       });
 
