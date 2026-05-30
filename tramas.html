@@ -913,8 +913,25 @@
   'use strict';
   var DEST = 'index.html';
   var IA = 'button,a,input,textarea,select,[contenteditable]';
+  var CARD_PAD = 10; // px de margem em volta dos cards onde dblclick não dispara sair
   function nav(){ window.location.href = DEST; }
-  document.addEventListener('dblclick', function(e){ if(e.target.closest(IA)) return; nav(); });
+  // Considera "imune" se o clique está em cima do card OU até 10px ao redor.
+  // Inclui o nexus-card (também é .trama-card) e qualquer trama draggable.
+  function nearTramaCard(x, y, target){
+    if (target && target.closest && target.closest('.trama-card')) return true;
+    var cards = document.querySelectorAll('.trama-card');
+    for (var i = 0; i < cards.length; i++) {
+      var r = cards[i].getBoundingClientRect();
+      if (x >= r.left - CARD_PAD && x <= r.right + CARD_PAD &&
+          y >= r.top - CARD_PAD && y <= r.bottom + CARD_PAD) return true;
+    }
+    return false;
+  }
+  document.addEventListener('dblclick', function(e){
+    if(e.target.closest(IA)) return;
+    if(nearTramaCard(e.clientX, e.clientY, e.target)) return;
+    nav();
+  });
   var _t = 0, _multi = false;
   document.addEventListener('touchstart', function(e){
     if(e.touches.length > 1){ _multi = true; }
@@ -923,6 +940,8 @@
     if(e.touches.length > 0){ _t=0; _multi=true; return; }
     if(_multi){ _t=0; _multi=false; return; }
     var el = e.target; if(el.closest(IA)){ _t=0; return; }
+    var ct = e.changedTouches && e.changedTouches[0];
+    if (ct && nearTramaCard(ct.clientX, ct.clientY, el)) { _t=0; return; }
     var n = Date.now(); if(n-_t<300){ _t=0; nav(); return; } _t=n;
   },{passive:true});
 })();
