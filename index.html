@@ -86,11 +86,11 @@
       flex-direction: column;
       align-items: center;
       gap: 56px;
-      animation: fadeUp 1s ease forwards;
+      animation: containerFadeIn 1.2s ease forwards;
     }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(28px); }
-      to   { opacity: 1; transform: translateY(0); }
+    @keyframes containerFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
     }
 
     h1 {
@@ -132,29 +132,78 @@
       gap: 10px;
     }
 
-    /* ── Hologram button ── */
+    /* ── Sparkle panel button (vertical) ── */
     .holo-btn {
       position: relative;
       width: 240px;
-      height: 240px;
+      height: 360px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       text-decoration: none;
+
+      /* Forma sparkle: 4 lados côncavos, proporcional ao tamanho */
+      clip-path: url(#sparkleClip);
+
+      /* Animação cinematográfica de abertura */
+      transform-origin: center center;
+      animation: sparkleOpen 2.2s cubic-bezier(0.45, 0, 0.15, 1) forwards;
+    }
+
+    /* Centro horizontal de cada slot, pra calcular o translate inicial:
+       layout: 240w + 40gap + 240w + 40gap + 240w = 800px total
+       centros: 120 / 400 / 680  →  translates p/ convergir em 400: +280 / 0 / -280 */
+    .btn-group:nth-child(1) .holo-btn { --tx-start: 280px; }
+    .btn-group:nth-child(2) .holo-btn { --tx-start: 0px;   }
+    .btn-group:nth-child(3) .holo-btn { --tx-start: -280px; }
+
+    @keyframes sparkleOpen {
+      /* Fase 1 (0-12%): 3 sparkles aparecem MINÚSCULOS sobrepostos no centro */
+      0% {
+        transform: translateX(var(--tx-start)) scale(0.04, 0.025);
+        opacity: 0;
+      }
+      8% {
+        transform: translateX(var(--tx-start)) scale(0.28, 0.18);
+        opacity: 1;
+      }
+      /* Fase 2 (12-40%): mantém pequenos, viajam pra suas posições — fanout horizontal */
+      30% {
+        transform: translateX(var(--tx-start)) scale(0.28, 0.18);
+        opacity: 1;
+      }
+      55% {
+        transform: translateX(0) scale(0.28, 0.18);
+        opacity: 1;
+      }
+      /* Fase 3 (55-100%): esticam verticalmente até o tamanho final */
+      100% {
+        transform: translateX(0) scale(1, 1);
+        opacity: 1;
+      }
     }
 
     .holo-btn-panel {
       position: absolute;
       inset: 0;
-      border: 1px solid rgba(0,255,231,0.18);
-      border-radius: 8px;
+      border: 1px solid rgba(0,255,231,0.22);
       background: rgba(0,255,231,0.02);
       transition: background 0.3s, border-color 0.3s;
     }
     .holo-btn:hover .holo-btn-panel {
-      background: rgba(0,255,231,0.05);
-      border-color: rgba(0,255,231,0.4);
+      background: rgba(0,255,231,0.06);
+      border-color: rgba(0,255,231,0.45);
+    }
+
+    /* Conteúdo interno só aparece quando os painéis terminam de abrir */
+    .holo-btn > *:not(.holo-btn-panel) {
+      opacity: 0;
+      animation: panelContentFadeIn 0.55s 1.7s ease forwards;
+    }
+    @keyframes panelContentFadeIn {
+      to { opacity: 1; }
     }
 
     .device-led-wrap {
@@ -191,7 +240,7 @@
 
     .holo-projection {
       position: relative;
-      width: 190px; height: 190px;
+      width: 170px; height: 170px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -295,24 +344,30 @@
       pointer-events: none;
     }
 
+    /* Label dentro do painel (no rodapé do sparkle) */
     .btn-name {
+      position: absolute;
+      bottom: 36px;
+      left: 0; right: 0;
+      text-align: center;
       font-family: 'Orbitron', monospace;
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 700;
       letter-spacing: 5px;
-      color: rgba(0,255,231,0.45);
+      color: rgba(0,255,231,0.55);
       text-transform: uppercase;
-      text-align: center;
-      transition: color 0.3s;
+      transition: color 0.3s, text-shadow 0.3s;
+      pointer-events: none;
+      z-index: 6;
     }
-    .btn-group:hover .btn-name {
+    .holo-btn:hover .btn-name {
       color: var(--holo);
-      text-shadow: 0 0 10px #00ffe7aa;
+      text-shadow: 0 0 12px #00ffe7cc;
     }
     /* ── Globe button ── */
     .globe-projection {
       position: relative;
-      width: 190px; height: 190px;
+      width: 170px; height: 170px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -383,7 +438,7 @@
     /* ── Forge button (Ferramentas) ── */
     .forge-projection {
       position: relative;
-      width: 190px; height: 190px;
+      width: 170px; height: 170px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -505,11 +560,14 @@
       .container { gap: 24px; padding: 0 12px; }
       .buttons { flex-direction: column; align-items: center; gap: 20px; }
       .btn-group { gap: 6px; }
-      .holo-btn { width: 200px; height: 200px; }
-      .holo-projection { width: 158px; height: 158px; }
-      .globe-projection { width: 158px; height: 158px; }
-      .forge-projection { width: 158px; height: 158px; }
-      .btn-name { font-size: 10px; letter-spacing: 3px; }
+      .holo-btn { width: 220px; height: 330px; }
+      .holo-projection { width: 150px; height: 150px; }
+      .globe-projection { width: 150px; height: 150px; }
+      .forge-projection { width: 150px; height: 150px; }
+      .btn-name { font-size: 10px; letter-spacing: 3px; bottom: 30px; }
+
+      /* Mobile: sem fanout horizontal (stacking vertical) — só aparecem juntos */
+      .btn-group .holo-btn { --tx-start: 0 !important; }
     }
     /* ── Bloqueio Trama ── */
     @keyframes btnGlitch {
@@ -545,6 +603,15 @@
   </style>
 </head>
 <body>
+
+  <!-- SVG clipPath: forma sparkle (4 lados côncavos). Proporcional ao tamanho do elemento. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <clipPath id="sparkleClip" clipPathUnits="objectBoundingBox">
+        <path d="M 0,0 Q 0.5,0.22 1,0 Q 0.78,0.5 1,1 Q 0.5,0.78 0,1 Q 0.22,0.5 0,0 Z" />
+      </clipPath>
+    </defs>
+  </svg>
 
   <div class="corner corner-tl"></div>
   <div class="corner corner-tr"></div>
@@ -595,8 +662,8 @@
             </svg>
           </div>
 
+          <div class="btn-name">Personagens</div>
         </a>
-        <div class="btn-name">Personagens</div>
       </div>
 
       <div class="btn-group" id="tramaGroup">
@@ -635,8 +702,8 @@
             </svg>
           </div>
 
+          <div class="btn-name">Trama</div>
         </a>
-        <div class="btn-name">Trama</div>
       </div>
 
       <div class="btn-group">
@@ -667,8 +734,8 @@
             <div class="holo-beam"></div>
           </div>
 
+          <div class="btn-name">Ferramentas</div>
         </a>
-        <div class="btn-name">Ferramentas</div>
       </div>
 
     </div>
