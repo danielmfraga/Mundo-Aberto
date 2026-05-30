@@ -1497,18 +1497,21 @@
         hit.setAttribute('stroke-width', IS_MOBILE ? '24' : '14');
         hit.classList.add('conn-path');
         hit.style.pointerEvents = 'visibleStroke';
-        hit.style.cursor = IS_MOBILE ? 'pointer' : 'context-menu';
+        hit.style.cursor = 'pointer';
         if (IS_MOBILE) {
           hit.style.touchAction = 'none';
           hit.dataset.connIdx = connIdx;
         } else {
-          hit.addEventListener('contextmenu', function(e) {
+          // Desktop: abre menu de cor com clique ESQUERDO ou DIREITO no fio
+          var openConnMenuFor = function(e) {
             e.preventDefault(); e.stopPropagation();
             window._activeConn = conn;
             connMenu.style.left = e.clientX + 'px';
             connMenu.style.top  = e.clientY + 'px';
             connMenu.classList.add('open');
-          });
+          };
+          hit.addEventListener('click', openConnMenuFor);
+          hit.addEventListener('contextmenu', openConnMenuFor);
         }
         svgLayer.appendChild(hit);
 
