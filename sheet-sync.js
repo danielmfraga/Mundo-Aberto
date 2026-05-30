@@ -306,5 +306,218 @@
     }
   };
 
+  // ─── Factory genérica: SheetSync.create({...}) ─────────────────────
+  // Cria um sync isolado pra qualquer documento JSONB em qualquer tabela.
+  //
+  // Exemplo (trama, com snapshots e sanity check):
+  //   var Sync = SheetSync.create({
+  //     table: 'tramas', idColumn: 'trama_id', id: TRAMA_ID,
+  //     snapshotColumns: { main: 'data', v1: 'data_v1', v2: 'data_v2' },
+  //     validateBeforeSave: function(entry, lastEntry) {
+  //       // return false pra abortar o save
+  //       return true;
+  //     }
+  //   });
+  //   Sync.save({ data: state, name: 'minha trama' });
+  //   Sync.subscribe(function(row) { /* re-render */ });
+  //   Sync.enableSnapshots(5*60*1000);     // rotaciona v1/v2 periodicamente
+  //   Sync.restoreSnapshot('v1');          // retorna o objeto da coluna v1
+  //   Sync.flush();
+  //   Sync.unsubscribe();
+  //   Sync.flag('applyingRemote', true);
+  function createDocSync(config) {
+    var table     = config.table;
+    var idColumn  = config.idColumn;
+    var id        = config.id;
+    var debounceMs = config.debounceMs != null ? config.debounceMs : 800;
+    var snapshotCols = config.snapshotColumns || null;
+    var validateBeforeSave = config.validateBeforeSave || null;
+    var channelName = (config.channelPrefix || table) + ':' + id;
+    var pathFilter = '/rest/v1/' + table + '?' + idColumn + '=eq.' + encodeURIComponent(id);
+
+    var inst = {
+      table: table, idColumn: idColumn, id: id,
+      _debounceTimer: null, _pendingEntry: null, _lastSavedEntry: null,
+      _lastSentHash: '', _lastSentAt: 0,
+      _channel: null, _onRemote: null,
+      _flags: {}, _inflight: null,
+      _snapshotTimer: null, _hasChangesSinceSnapshot: false,
+
+      flag: function(name, value) {
+        if (value === undefined) return !!this._flags[name];
+        this._flags[name] = !!value;
+        return this;
+      },
+
+      save: function(entry, opts) {
+        var self = this;
+        opts = opts || {};
+        if (!id || id === 'default') return Promise.resolve();
+        if (this._flags.applyingRemote) return Promise.resolve();
+        // Sanity check: callback pode abortar o save
+        if (validateBeforeSave) {
+          try {
+            if (validateBeforeSave(entry, this._lastSavedEntry) === false) {
+              console.warn('[SheetSync.create] save abortado por validateBeforeSave', entry);
+              return Promise.resolve();
+            }
+          } catch (e) { console.error('[SheetSync.create] validateBeforeSave erro:', e); }
+        }
+        this._pendingEntry = entry;
+        if (this._debounceTimer) { clearTimeout(this._debounceTimer); this._debounceTimer = null; }
+        if (opts.immediate) return this._doSave();
+        return new Promise(function(resolve) {
+          self._debounceTimer = setTimeout(function() {
+            self._debounceTimer = null;
+            self._doSave().then(resolve, resolve);
+          }, debounceMs);
+        });
+      },
+
+      flush: function() {
+        if (this._debounceTimer) {
+          clearTimeout(this._debounceTimer); this._debounceTimer = null;
+          return this._doSave();
+        }
+        return this._inflight || Promise.resolve();
+      },
+
+      _doSave: function() {
+        var self = this;
+        var entry = this._pendingEntry;
+        if (!entry) return Promise.resolve();
+        var hash = JSON.stringify(entry);
+        if (hash === this._lastSentHash) return Promise.resolve();
+        this._lastSentHash = hash;
+        var payload = Object.assign({}, entry); // entry NÃO contém id (PATCH usa filtro)
+        var prev = this._inflight || Promise.resolve();
+        this._inflight = prev.then(function() {
+          self._lastSentAt = Date.now();
+          return sbFetch(pathFilter, 'PATCH', payload).then(function(res) {
+            self._lastSavedEntry = entry;
+            self._hasChangesSinceSnapshot = true;
+            return res;
+          });
+        }).catch(function(err) { self._lastSentHash = ''; throw err; });
+        return this._inflight;
+      },
+
+      // Snapshots rotativos (v1 = main atual, v2 = v1 anterior)
+      snapshot: function() {
+        var self = this;
+        if (!snapshotCols || !id || id === 'default') return Promise.resolve();
+        var c = snapshotCols;
+        var selectStr = c.main + ',' + c.v1;
+        return sbFetch(pathFilter + '&select=' + selectStr, 'GET').then(function(rows) {
+          if (!rows || !rows.length || !rows[0][c.main]) return;
+          var cur = rows[0];
+          var patch = {};
+          patch[c.v1] = cur[c.main];
+          patch[c.v2] = cur[c.v1] || null;
+          self._lastSentAt = Date.now();
+          return sbFetch(pathFilter, 'PATCH', patch);
+        });
+      },
+
+      enableSnapshots: function(intervalMs) {
+        var self = this;
+        intervalMs = intervalMs || (5 * 60 * 1000);
+        if (this._snapshotTimer) clearInterval(this._snapshotTimer);
+        this._snapshotTimer = setInterval(function() {
+          if (self._hasChangesSinceSnapshot) {
+            self.snapshot().then(function() {
+              self._hasChangesSinceSnapshot = false;
+            }, function() { /* silencioso */ });
+          }
+        }, intervalMs);
+      },
+
+      // Retorna o conteúdo de uma coluna de snapshot (sem aplicar)
+      restoreSnapshot: function(which) {
+        var c = snapshotCols;
+        if (!c) return Promise.resolve(null);
+        var col = which === 'v2' ? c.v2 : c.v1;
+        return sbFetch(pathFilter + '&select=' + col, 'GET').then(function(rows) {
+          if (!rows || !rows.length) return null;
+          return rows[0][col] || null;
+        });
+      },
+
+      subscribe: function(onUpdate) {
+        var self = this;
+        if (!id || id === 'default') return this;
+        if (!global.supabase || !global.supabase.createClient) {
+          console.warn('[SheetSync.create] supabase-js não carregado — realtime desabilitado');
+          return this;
+        }
+        if (!SheetSync._sharedClient) {
+          SheetSync._sharedClient = global.supabase.createClient(SB_URL, SB_KEY);
+        }
+        this._onRemote = onUpdate;
+        if (this._channel) this.unsubscribe();
+        this._channel = SheetSync._sharedClient.channel(channelName)
+          .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: table,
+            filter: idColumn + '=eq.' + id
+          }, function(payload) {
+            if (!payload || !payload.new) return;
+            if (Date.now() - self._lastSentAt < 1500) return;
+            if (self._onRemote) self._onRemote(payload.new);
+          })
+          .subscribe();
+        return this;
+      },
+
+      unsubscribe: function() {
+        if (this._channel && SheetSync._sharedClient) {
+          try { SheetSync._sharedClient.removeChannel(this._channel); } catch(e) {}
+          this._channel = null;
+        }
+        return this;
+      }
+    };
+    return inst;
+  }
+
+  // ─── Listener de tabela inteira (INSERT/UPDATE/DELETE) ─────────────
+  function createTableListener(config) {
+    var table  = config.table;
+    var events = config.events || ['INSERT', 'UPDATE', 'DELETE'];
+    var inst = {
+      table: table,
+      _channel: null,
+      subscribe: function(onEvent) {
+        if (!global.supabase || !global.supabase.createClient) {
+          console.warn('[SheetSync.createTableListener] supabase-js não carregado');
+          return this;
+        }
+        if (!SheetSync._sharedClient) {
+          SheetSync._sharedClient = global.supabase.createClient(SB_URL, SB_KEY);
+        }
+        if (this._channel) this.unsubscribe();
+        var ch = SheetSync._sharedClient.channel('tablelistener:' + table + ':' + Date.now());
+        events.forEach(function(ev) {
+          ch = ch.on('postgres_changes', { event: ev, schema: 'public', table: table }, function(payload) {
+            onEvent(payload);
+          });
+        });
+        this._channel = ch.subscribe();
+        return this;
+      },
+      unsubscribe: function() {
+        if (this._channel && SheetSync._sharedClient) {
+          try { SheetSync._sharedClient.removeChannel(this._channel); } catch(e) {}
+          this._channel = null;
+        }
+      }
+    };
+    return inst;
+  }
+
+  SheetSync.create              = createDocSync;
+  SheetSync.createTableListener = createTableListener;
+
   global.SheetSync = SheetSync;
 })(window);

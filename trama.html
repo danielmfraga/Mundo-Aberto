@@ -1008,7 +1008,8 @@
     <div class="tb-sep"></div>
     <div class="tb-sep"></div>
     <button class="tb-btn" id="btn-trama-note">✎ Notas</button>
-    <button class="tb-btn" id="btn-save">↑ Salvar trama</button>
+    <button class="tb-btn" id="btn-restore" title="Restaurar versão anterior" style="opacity:.55">↺ Restaurar</button>
+    <button class="tb-btn" id="btn-save" style="display:none">↑ Salvar trama</button>
   </div>
 
   <div id="viewport">
@@ -1134,6 +1135,8 @@
   <div id="status">Pronto</div>
   <div id="date-label">10.05.2026 · Alpha</div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="sheet-sync.js"></script>
   <script>
     // ══════════════════════════════════════════════════════════
     //  DETECÇÃO DE DISPOSITIVO
@@ -1297,50 +1300,31 @@
     }
 
     // ══════════════════════════════════════════════════════════
-    //  DIRTY STATE (alterações não salvas)
+    //  AUTO-SAVE — markDirty agora dispara save com guards
     // ══════════════════════════════════════════════════════════
     var isDirty = false;
-    var exitTarget = 'tramas.html';
+    var TramaSync = null;         // inicializado no INIT
+    var loaded    = false;        // só dispara save após load+stabilization
+    var lastSavedConnectionsCount = -1;  // pra sanity check específico
 
-    function markDirty() {
-      if (isDirty) return;
-      isDirty = true;
-      var btn = document.getElementById('btn-save');
-      if (btn) btn.classList.add('dirty');
+    function triggerSave() {
+      if (!loaded || !TramaSync) return;
+      if (TramaSync.flag('applyingRemote')) return;
+      var nameEl = document.getElementById('trama-name-input');
+      var name = (nameEl && nameEl.value || '').trim() || 'Trama';
+      TramaSync.save({ data: serializeState(), name: name });
     }
-    function clearDirty() {
-      isDirty = false;
-      var btn = document.getElementById('btn-save');
-      if (btn) btn.classList.remove('dirty');
-    }
+    function markDirty()  { isDirty = true; triggerSave(); }
+    function clearDirty() { isDirty = false; }
 
-    // ── Interceptar back-btn ──
+    // back-btn: faz flush do debounce antes de navegar
     document.getElementById('back-btn').addEventListener('click', function(e) {
-      if (!isDirty) return;
       e.preventDefault();
-      exitTarget = this.href;
-      document.getElementById('exit-overlay').classList.add('open');
-    });
-
-    // ── Modal de saída ──
-    document.getElementById('ex-stay').addEventListener('click', function() {
-      document.getElementById('exit-overlay').classList.remove('open');
-    });
-    document.getElementById('ex-go').addEventListener('click', function() {
-      isDirty = false;
-      window.location.href = exitTarget;
-    });
-    document.getElementById('ex-save-go').addEventListener('click', function() {
-      var btn = document.getElementById('btn-save');
-      if (btn) btn.click();
-      setTimeout(function() { window.location.href = exitTarget; }, 1200);
-    });
-
-    // ── beforeunload (fechar aba / F5) ──
-    window.addEventListener('beforeunload', function(e) {
-      if (!isDirty) return;
-      e.preventDefault();
-      e.returnValue = '';
+      var href = this.href;
+      var nav = function() { window.location.href = href; };
+      if (TramaSync && typeof TramaSync.flush === 'function') {
+        TramaSync.flush().then(nav, nav);
+      } else nav();
     });
 
     // ══════════════════════════════════════════════════════════
@@ -1911,29 +1895,44 @@
     document.getElementById('fab-loc').addEventListener('click', function() { createNodeAtCenter('loc'); });
     document.getElementById('fab-npc').addEventListener('click', function() { createNodeAtCenter('npc'); });
 
+    // Save manual (botão oculto) — apenas flush do debounce. Auto-save cobre tudo.
     document.getElementById('btn-save').addEventListener('click', function() {
-      var btn = document.getElementById('btn-save');
+      if (TramaSync) TramaSync.flush();
+    });
+
+    // Botão Restaurar — abre prompt 1/2 igual ficha
+    document.getElementById('btn-restore').addEventListener('click', function() {
+      if (!TramaSync) { alert('TramaSync não inicializado'); return; }
+      var btn = this;
       var orig = btn.textContent;
-      btn.textContent = '...';
-      setStatus('Salvando...');
-      var state = serializeState();
-      var tramaName = (document.getElementById('trama-name-input').value || '').trim() || 'Trama';
-      sbFetch('/rest/v1/tramas?trama_id=eq.' + TRAMA_ID + '&select=id', 'GET')
-        .then(function(rows) {
-          var entry = { trama_id: TRAMA_ID, name: tramaName, data: state };
-          return (rows && rows.length)
-            ? sbFetch('/rest/v1/tramas?trama_id=eq.' + TRAMA_ID, 'PATCH', entry)
-            : sbFetch('/rest/v1/tramas', 'POST', entry);
-        })
-        .then(function() {
-          clearDirty();
-          btn.textContent = '✓ Salvo';
-          setStatus('Salvo ✓', true);
-          setTimeout(function() { btn.textContent = orig; setStatus('Pronto'); }, 2000);
-        })
-        .catch(function() {
-          btn.textContent = 'Erro';
-          setStatus('Erro ao salvar', false);
+      Promise.all([TramaSync.restoreSnapshot('v1'), TramaSync.restoreSnapshot('v2')])
+        .then(function(arr) {
+          var v1 = arr[0], v2 = arr[1];
+          if (!v1 && !v2) {
+            btn.textContent = 'Sem versões';
+            setTimeout(function() { btn.textContent = orig; }, 2000);
+            return;
+          }
+          var msg = (v1 ? '1: versão anterior (≤5min atrás)' : '') +
+                    (v1 && v2 ? '\n' : '') +
+                    (v2 ? '2: duas versões atrás (≤10min)' : '') +
+                    '\n\nDigite 1 ou 2:';
+          var choice = prompt(msg);
+          if (!choice) return;
+          var target = choice.trim() === '1' ? v1 : (choice.trim() === '2' ? v2 : null);
+          if (!target) { alert('Opção inválida.'); return; }
+          if (!confirm('Tem certeza? Alterações posteriores serão perdidas.')) return;
+          // Aplica via loadState (pausa autosave)
+          TramaSync.flag('applyingRemote', true);
+          try {
+            loadState(target);
+            // Força save imediato pra trocar 'data' atual pelo target
+            triggerSave();
+            if (TramaSync.flush) TramaSync.flush();
+          } finally {
+            setTimeout(function() { TramaSync.flag('applyingRemote', false); }, 300);
+          }
+          btn.textContent = '✓ Restaurado';
           setTimeout(function() { btn.textContent = orig; }, 2000);
         });
     });
@@ -2530,6 +2529,30 @@
     // ══════════════════════════════════════════════════════════
     setStatus('Carregando...');
     loadPersonagens();
+
+    // Inicializa TramaSync ANTES do load (mas loaded=false bloqueia saves)
+    if (window.SheetSync && SheetSync.create && TRAMA_ID && TRAMA_ID !== 'default') {
+      TramaSync = SheetSync.create({
+        table: 'tramas', idColumn: 'trama_id', id: TRAMA_ID,
+        snapshotColumns: { main: 'data', v1: 'data_v1', v2: 'data_v2' },
+        // SANITY CHECK: o bug anterior foi salvar { connections: [] } durante load.
+        // Aqui freamos: se DOM tem nodes mas connections do payload está vazio
+        // E o último save tinha conexões → suspeito, abortar.
+        validateBeforeSave: function(entry, last) {
+          if (!entry || !entry.data) return true;
+          var nodesInDom = Object.keys(nodes).length;
+          var connsAgora = (entry.data.connections || []).length;
+          var connsAntes = last && last.data ? (last.data.connections || []).length : -1;
+          if (nodesInDom > 0 && connsAgora === 0 && connsAntes > 0) {
+            console.warn('[trama] save BLOQUEADO por sanity check: nodes=' + nodesInDom +
+                         ' conns=0 (último save tinha ' + connsAntes + ' conns)');
+            return false;
+          }
+          return true;
+        }
+      });
+    }
+
     sbFetch('/rest/v1/tramas?trama_id=eq.' + TRAMA_ID + '&select=data,name', 'GET')
       .then(function(rows) {
         if (rows && rows.length) {
@@ -2545,11 +2568,61 @@
         }
         loadTramaLinks();
         setTimeout(function() { setStatus('Pronto'); }, 2000);
+
+        // ── LOAD GUARD: só libera autosave após DOM estabilizar 800ms sem mutação ──
+        var settleTimer = null;
+        var loadObs = new MutationObserver(function() {
+          clearTimeout(settleTimer);
+          settleTimer = setTimeout(function() { loadObs.disconnect(); loaded = true; }, 800);
+        });
+        var root = document.getElementById('world');
+        if (root) loadObs.observe(root, { subtree: true, childList: true, attributes: true });
+        // Failsafe: libera após 4s mesmo sem estabilizar
+        setTimeout(function() { loadObs.disconnect(); loaded = true; }, 4000);
       })
-      .catch(function() { setStatus('Pronto'); });
+      .catch(function() { setStatus('Pronto'); loaded = true; });
 
     panOffset = { x: viewport.offsetWidth/2 - 500, y: viewport.offsetHeight/2 - 300 };
     applyTransform();
+
+    // ══════════════════════════════════════════════════════════
+    //  REALTIME (re-renderiza quando outro user edita)
+    // ══════════════════════════════════════════════════════════
+    if (TramaSync) {
+      TramaSync.subscribe(function(row) {
+        // Pula se usuário está arrastando ou editando texto
+        if (window._tramaDragging) return;
+        var active = document.activeElement;
+        var isEditing = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' ||
+                                   (active.matches && active.matches('[contenteditable]')));
+        if (isEditing) return;
+        TramaSync.flag('applyingRemote', true);
+        try {
+          if (row.name && nameInput && nameInput.value !== row.name) nameInput.value = row.name;
+          if (row.data && Object.keys(row.data).length) loadState(row.data);
+        } finally {
+          setTimeout(function() { TramaSync.flag('applyingRemote', false); }, 300);
+        }
+      });
+      // Snapshots v1/v2 a cada 5min se houve mudança
+      TramaSync.enableSnapshots(5 * 60 * 1000);
+    }
+
+    // Marca _tramaDragging globalmente — usado pelo realtime e backup do save
+    document.addEventListener('mousedown', function(e) {
+      var nd = e.target && e.target.closest && e.target.closest('.node');
+      if (nd) window._tramaDragging = true;
+    }, true);
+    document.addEventListener('mouseup', function() {
+      if (window._tramaDragging) { window._tramaDragging = false; markDirty(); }
+    }, true);
+    document.addEventListener('touchstart', function(e) {
+      var nd = e.target && e.target.closest && e.target.closest('.node');
+      if (nd) window._tramaDragging = true;
+    }, true);
+    document.addEventListener('touchend', function() {
+      if (window._tramaDragging) { window._tramaDragging = false; markDirty(); }
+    }, true);
   </script>
 <!-- ── Duplo clique/toque para voltar ── -->
 <script>
