@@ -1761,8 +1761,15 @@
             m.classList.add('open');
           }
         });
-        title.addEventListener('input', updateConnections);
+        title.addEventListener('input', function() {
+          updateConnections();
+          if (typeof markDirty === 'function') markDirty();
+        });
       } else {
+        // Mobile: edita título do nó também dispara save
+        title.addEventListener('input', function() {
+          if (typeof markDirty === 'function') markDirty();
+        });
         // Mobile: tap on title to open keyboard
         title.addEventListener('touchend', function(e) {
           e.stopPropagation();
@@ -2698,26 +2705,26 @@
           savedTimer = setTimeout(function() { saveStatusEl.className = ''; }, 1200);
         }
       }
+      // Sanity check só nos primeiros 3s após init — protege o load inicial sem
+      // bloquear deletes legítimos depois (que o sanity check anterior comia).
+      var safetyUntil = Date.now() + 3000;
       TramaSync = SheetSync.create({
         table: 'tramas', idColumn: 'trama_id', id: TRAMA_ID,
-        debounceMs: 400,  // antes 800 — reduz janela de "perda" se sair rápido
+        debounceMs: 400,
         snapshotColumns: { main: 'data', v1: 'data_v1', v2: 'data_v2' },
-        // SANITY CHECK: o bug anterior foi salvar { connections: [] } durante load.
-        // Aqui freamos: se DOM tem nodes mas connections do payload está vazio
-        // E o último save tinha conexões → suspeito, abortar.
         validateBeforeSave: function(entry, last) {
+          // Após 3s do init, libera tudo — usuário pode deletar legitimamente
+          if (Date.now() > safetyUntil) return true;
           if (!entry || !entry.data) return true;
           var nodesInDom = Object.keys(nodes).length;
           var connsAgora = (entry.data.connections || []).length;
           var connsAntes = last && last.data ? (last.data.connections || []).length : -1;
           if (nodesInDom > 0 && connsAgora === 0 && connsAntes > 0) {
-            console.warn('[trama] save BLOQUEADO por sanity check: nodes=' + nodesInDom +
-                         ' conns=0 (último save tinha ' + connsAntes + ' conns)');
+            console.warn('[trama] save BLOQUEADO (janela de segurança, primeiros 3s)');
             return false;
           }
           return true;
         },
-        // Indicador visual sutil de status
         onSavePending: function() { setSaveStatus('pending'); },
         onSaveStart:   function() { setSaveStatus('pending'); },
         onSaveDone:    function(err) { setSaveStatus(err ? 'error' : 'saved'); }
@@ -2740,16 +2747,18 @@
         loadTramaLinks();
         setTimeout(function() { setStatus('Pronto'); }, 2000);
 
-        // ── LOAD GUARD: só libera autosave após DOM estabilizar 800ms sem mutação ──
+        // ── LOAD GUARD: só libera autosave após DOM estabilizar 500ms sem mutação ──
+        // childList only (sem attributes) — pan/drag mudam transform e iam resetar
+        // o timer eternamente, deixando 'loaded' travada em false.
         var settleTimer = null;
         var loadObs = new MutationObserver(function() {
           clearTimeout(settleTimer);
-          settleTimer = setTimeout(function() { loadObs.disconnect(); loaded = true; }, 800);
+          settleTimer = setTimeout(function() { loadObs.disconnect(); loaded = true; }, 500);
         });
         var root = document.getElementById('world');
-        if (root) loadObs.observe(root, { subtree: true, childList: true, attributes: true });
-        // Failsafe: libera após 4s mesmo sem estabilizar
-        setTimeout(function() { loadObs.disconnect(); loaded = true; }, 4000);
+        if (root) loadObs.observe(root, { subtree: true, childList: true });
+        // Failsafe: libera após 2.5s mesmo sem estabilizar
+        setTimeout(function() { loadObs.disconnect(); loaded = true; }, 2500);
       })
       .catch(function() { setStatus('Pronto'); loaded = true; });
 
