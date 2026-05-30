@@ -306,5 +306,168 @@
     }
   };
 
+  // ─── Factory genérica: SheetSync.create({...}) ─────────────────────
+  // Cria um sync isolado pra qualquer documento JSONB em qualquer tabela.
+  //
+  // Exemplo (trama):
+  //   var Sync = SheetSync.create({
+  //     table: 'tramas', idColumn: 'trama_id', id: TRAMA_ID
+  //   });
+  //   Sync.save({ data: state, name: 'minha trama' });        // debounce 800ms
+  //   Sync.save({ data: state, name: 'x' }, { immediate: true });
+  //   Sync.subscribe(function(row) { /* re-render */ });
+  //   Sync.flush();              // força debounce pendente
+  //   Sync.unsubscribe();
+  //   Sync.flag('applyingRemote', true);  // pausa autosave durante re-render
+  //
+  // O save sempre faz PATCH (assume que a row já existe). Pra criação,
+  // faça POST manualmente antes.
+  function createDocSync(config) {
+    var table     = config.table;
+    var idColumn  = config.idColumn;
+    var id        = config.id;
+    var debounceMs = config.debounceMs != null ? config.debounceMs : 800;
+    var channelName = (config.channelPrefix || table) + ':' + id;
+    var pathFilter = '/rest/v1/' + table + '?' + idColumn + '=eq.' + encodeURIComponent(id);
+
+    var inst = {
+      table: table, idColumn: idColumn, id: id,
+      _debounceTimer: null, _pendingEntry: null,
+      _lastSentHash: '', _lastSentAt: 0,
+      _channel: null, _onRemote: null,
+      _flags: {}, _inflight: null,
+
+      flag: function(name, value) {
+        if (value === undefined) return !!this._flags[name];
+        this._flags[name] = !!value;
+        return this;
+      },
+
+      save: function(entry, opts) {
+        var self = this;
+        opts = opts || {};
+        if (!id || id === 'default') return Promise.resolve();
+        if (this._flags.applyingRemote) return Promise.resolve();
+
+        this._pendingEntry = entry;
+        if (this._debounceTimer) { clearTimeout(this._debounceTimer); this._debounceTimer = null; }
+        if (opts.immediate) return this._doSave();
+        return new Promise(function(resolve) {
+          self._debounceTimer = setTimeout(function() {
+            self._debounceTimer = null;
+            self._doSave().then(resolve, resolve);
+          }, debounceMs);
+        });
+      },
+
+      flush: function() {
+        if (this._debounceTimer) {
+          clearTimeout(this._debounceTimer); this._debounceTimer = null;
+          return this._doSave();
+        }
+        return this._inflight || Promise.resolve();
+      },
+
+      _doSave: function() {
+        var self = this;
+        var entry = this._pendingEntry;
+        if (!entry) return Promise.resolve();
+        var hash = JSON.stringify(entry);
+        if (hash === this._lastSentHash) return Promise.resolve();
+        this._lastSentHash = hash;
+        var payload = Object.assign({}, entry); // entry NÃO contém id (PATCH usa filtro)
+        var prev = this._inflight || Promise.resolve();
+        this._inflight = prev.then(function() {
+          self._lastSentAt = Date.now();
+          return sbFetch(pathFilter, 'PATCH', payload);
+        }).catch(function(err) { self._lastSentHash = ''; throw err; });
+        return this._inflight;
+      },
+
+      subscribe: function(onUpdate) {
+        var self = this;
+        if (!id || id === 'default') return this;
+        if (!global.supabase || !global.supabase.createClient) {
+          console.warn('[SheetSync.create] supabase-js não carregado — realtime desabilitado');
+          return this;
+        }
+        if (!SheetSync._sharedClient) {
+          SheetSync._sharedClient = global.supabase.createClient(SB_URL, SB_KEY);
+        }
+        this._onRemote = onUpdate;
+        if (this._channel) this.unsubscribe();
+        this._channel = SheetSync._sharedClient.channel(channelName)
+          .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: table,
+            filter: idColumn + '=eq.' + id
+          }, function(payload) {
+            if (!payload || !payload.new) return;
+            if (Date.now() - self._lastSentAt < 1500) return;
+            if (self._onRemote) self._onRemote(payload.new);
+          })
+          .subscribe();
+        return this;
+      },
+
+      unsubscribe: function() {
+        if (this._channel && SheetSync._sharedClient) {
+          try { SheetSync._sharedClient.removeChannel(this._channel); } catch(e) {}
+          this._channel = null;
+        }
+        return this;
+      }
+    };
+    return inst;
+  }
+
+  // ─── Listener de tabela inteira (INSERT/UPDATE/DELETE) ─────────────
+  // Pra lista de tramas: quando alguém cria/deleta/move trama, todos veem.
+  //
+  // Exemplo:
+  //   var L = SheetSync.createTableListener({ table: 'tramas' });
+  //   L.subscribe(function(payload) {
+  //     // payload.eventType: 'INSERT' | 'UPDATE' | 'DELETE'
+  //     // payload.new: row nova (INSERT/UPDATE)
+  //     // payload.old: row antiga (UPDATE/DELETE)
+  //   });
+  function createTableListener(config) {
+    var table  = config.table;
+    var events = config.events || ['INSERT', 'UPDATE', 'DELETE'];
+    var inst = {
+      table: table,
+      _channel: null,
+      subscribe: function(onEvent) {
+        if (!global.supabase || !global.supabase.createClient) {
+          console.warn('[SheetSync.createTableListener] supabase-js não carregado');
+          return this;
+        }
+        if (!SheetSync._sharedClient) {
+          SheetSync._sharedClient = global.supabase.createClient(SB_URL, SB_KEY);
+        }
+        if (this._channel) this.unsubscribe();
+        var ch = SheetSync._sharedClient.channel('tablelistener:' + table + ':' + Date.now());
+        events.forEach(function(ev) {
+          ch = ch.on('postgres_changes', { event: ev, schema: 'public', table: table }, function(payload) {
+            onEvent(payload);
+          });
+        });
+        this._channel = ch.subscribe();
+        return this;
+      },
+      unsubscribe: function() {
+        if (this._channel && SheetSync._sharedClient) {
+          try { SheetSync._sharedClient.removeChannel(this._channel); } catch(e) {}
+          this._channel = null;
+        }
+      }
+    };
+    return inst;
+  }
+
+  SheetSync.create              = createDocSync;
+  SheetSync.createTableListener = createTableListener;
+
   global.SheetSync = SheetSync;
 })(window);

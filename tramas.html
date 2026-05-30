@@ -429,6 +429,8 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="sheet-sync.js"></script>
   <script>
     // ── Constantes ──
     var MIN_FROM_NEXUS = 340;
@@ -616,9 +618,14 @@
       dc.el.style.transform = 'translate3d(' + t.x + 'px,' + t.y + 'px,' + t.z + 'px)';
     }
 
+    // ── Tracker pra ignorar realtime do próprio cliente ──
+    var tramasLastSave = {};
+    function markTramaSaved(id) { tramasLastSave[id] = Date.now(); }
+
     // ── Salvar posição de uma trama no Supabase ──
     function saveTramaPos(t) {
       if (!t) return;
+      markTramaSaved(t.id);
       sbFetch('/rest/v1/tramas?trama_id=eq.' + t.id, 'PATCH', {
         pos_x: Math.round(t.x * 100) / 100,
         pos_y: Math.round(t.y * 100) / 100,
@@ -663,6 +670,7 @@
       var cardEl  = pendingDelete.el;
       pendingDelete = null;
       tramas = tramas.filter(function(t) { return t.id !== tramaId; });
+      markTramaSaved(tramaId);
       sbFetch('/rest/v1/tramas?trama_id=eq.' + tramaId, 'PATCH', { deleted_at: new Date().toISOString() });
       // trama_links ficam órfãos — a query já filtra deleted_at=is.null na trama, nunca aparecem
       cardEl.style.transition = 'opacity 0.3s, transform 0.3s';
@@ -815,6 +823,7 @@
       modal.classList.remove('open');
       var pos = findValidPos();
       var id  = 'trama_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
+      markTramaSaved(id);
       sbFetch('/rest/v1/tramas', 'POST', {
         trama_id: id,
         name:     'Trama',
@@ -826,6 +835,74 @@
         window.location.href = 'trama.html?id=' + id;
       }).catch(function() {
         window.location.href = 'trama.html?id=' + id;
+      });
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  REALTIME: lista de tramas em todos os clientes
+    // ══════════════════════════════════════════════════════════
+    function findCardByTid(tid) {
+      return world.querySelector('.trama-card[data-tid="' + tid + '"]');
+    }
+
+    function applyRemoteUpsert(n) {
+      // Soft delete via UPDATE deleted_at
+      if (n.deleted_at) {
+        var card0 = findCardByTid(n.trama_id);
+        if (card0) {
+          card0.style.transition = 'opacity 0.3s, transform 0.3s';
+          card0.style.opacity = '0';
+          card0.style.transform = card0.style.transform + ' scale(0.7)';
+          setTimeout(function() { card0.remove(); }, 300);
+        }
+        tramas = tramas.filter(function(t) { return t.id !== n.trama_id; });
+        return;
+      }
+      var existing = tramas.find(function(t) { return t.id === n.trama_id; });
+      if (existing) {
+        // Atualiza nome/posição
+        existing.x = n.pos_x || 0;
+        existing.y = n.pos_y || 0;
+        existing.z = n.pos_z || 0;
+        existing.name = n.name || 'Trama';
+        var card = findCardByTid(n.trama_id);
+        if (card) {
+          card.style.transform = 'translate3d(' + existing.x + 'px,' + existing.y + 'px,' + existing.z + 'px)';
+          var nameEl = card.querySelector('.trama-name');
+          if (nameEl) nameEl.textContent = existing.name;
+        }
+      } else {
+        // Novo card vindo de outro user — só renderiza se tem posição válida
+        if (n.pos_x == null || n.trama_id === 'default') return;
+        var t = {
+          id: n.trama_id,
+          name: n.name || 'Trama',
+          x: n.pos_x || 0,
+          y: n.pos_y || 0,
+          z: n.pos_z || 0
+        };
+        tramas.push(t);
+        renderCard(t, tramas.length - 1);
+      }
+    }
+
+    if (window.SheetSync && SheetSync.createTableListener) {
+      var tramasListener = SheetSync.createTableListener({ table: 'tramas' });
+      tramasListener.subscribe(function(payload) {
+        var ev = payload.eventType;
+        var n  = payload.new;
+        var o  = payload.old;
+        if (ev === 'INSERT' || ev === 'UPDATE') {
+          if (!n) return;
+          // Skip eventos do próprio cliente (gerados <1.5s atrás)
+          if (Date.now() - (tramasLastSave[n.trama_id] || 0) < 1500) return;
+          applyRemoteUpsert(n);
+        } else if (ev === 'DELETE') {
+          if (!o || !o.trama_id) return;
+          var card = findCardByTid(o.trama_id);
+          if (card) card.remove();
+          tramas = tramas.filter(function(t) { return t.id !== o.trama_id; });
+        }
       });
     }
 
