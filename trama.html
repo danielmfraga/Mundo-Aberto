@@ -2057,7 +2057,47 @@
         }
       });
 
-      document.addEventListener('mouseup', function() {
+      document.addEventListener('mouseup', function(e) {
+        // ── SNAP-TO-ANCHOR ──
+        // Se arrastando fio e soltou em cima de um nó (mas não numa âncora exata),
+        // cria conexão na âncora mais próxima daquele nó.
+        if (dragConn && e && !e.target.closest('.anchor')) {
+          var rectVp = viewport.getBoundingClientRect();
+          var wx = (e.clientX - rectVp.left - panOffset.x) / scale;
+          var wy = (e.clientY - rectVp.top  - panOffset.y) / scale;
+          var SNAP_PAD = 24;  // px em world coords
+          var tgtId = null, tgtPos = null;
+          Object.entries(nodes).forEach(function(entry) {
+            var nid = entry[0], nel = entry[1];
+            if (nid === dragConn.id) return; // não conecta no próprio source
+            var nx = parseFloat(nel.style.left) || 0;
+            var ny = parseFloat(nel.style.top)  || 0;
+            var nw = nel.offsetWidth, nh = nel.offsetHeight;
+            if (wx >= nx - SNAP_PAD && wx <= nx + nw + SNAP_PAD &&
+                wy >= ny - SNAP_PAD && wy <= ny + nh + SNAP_PAD) {
+              // Acha a âncora (das 4) mais próxima do ponto
+              var as = {
+                top:    { x: nx + nw/2, y: ny },
+                bottom: { x: nx + nw/2, y: ny + nh },
+                left:   { x: nx,        y: ny + nh/2 },
+                right:  { x: nx + nw,   y: ny + nh/2 }
+              };
+              var bestPos = null, bestDist = Infinity;
+              Object.keys(as).forEach(function(p) {
+                var d = (wx - as[p].x) * (wx - as[p].x) + (wy - as[p].y) * (wy - as[p].y);
+                if (d < bestDist) { bestDist = d; bestPos = p; }
+              });
+              tgtId = nid; tgtPos = bestPos;
+            }
+          });
+          if (tgtId && tgtPos) {
+            addConnection(dragConn, { id: tgtId, pos: tgtPos });
+            if (nodes[dragConn.id]) nodes[dragConn.id].classList.remove('connect-src');
+            connectSource = null; dragConn = null;
+            if (ghostLine) { ghostLine.remove(); ghostLine = null; }
+          }
+        }
+
         panning = false;
         dragging = null;
         if (multiDragStart && Object.keys(multiDragOrigins).length > 0) pushUndo();
@@ -2316,7 +2356,27 @@
         if (nodeEl && !el.classList.contains('node-act-btn')) {
           var nid2 = nodeEl.dataset.id;
           if (connSource) {
-            // Tapping a node while connecting — cancel
+            // ── SNAP-TO-ANCHOR (mobile) ──
+            // Tocou num nó enquanto conectando: em vez de cancelar, snap na
+            // âncora mais próxima do toque (a menos que seja o próprio source).
+            if (connSource.id !== nid2) {
+              var wcSnap = worldCoords(t.clientX, t.clientY);
+              var nxS = parseFloat(nodeEl.style.left) || 0;
+              var nyS = parseFloat(nodeEl.style.top)  || 0;
+              var nwS = nodeEl.offsetWidth, nhS = nodeEl.offsetHeight;
+              var asS = {
+                top:    { x: nxS + nwS/2, y: nyS },
+                bottom: { x: nxS + nwS/2, y: nyS + nhS },
+                left:   { x: nxS,         y: nyS + nhS/2 },
+                right:  { x: nxS + nwS,   y: nyS + nhS/2 }
+              };
+              var bestPosS = null, bestDistS = Infinity;
+              Object.keys(asS).forEach(function(p) {
+                var d = (wcSnap.x - asS[p].x)*(wcSnap.x - asS[p].x) + (wcSnap.y - asS[p].y)*(wcSnap.y - asS[p].y);
+                if (d < bestDistS) { bestDistS = d; bestPosS = p; }
+              });
+              addConnection(connSource, { id: nid2, pos: bestPosS });
+            }
             if (nodes[connSource.id]) nodes[connSource.id].classList.remove('connect-src');
             var srcA = nodes[connSource.id] && nodes[connSource.id].querySelector('.anchor[data-pos="'+connSource.pos+'"]');
             if (srcA) srcA.classList.remove('active');
@@ -2629,9 +2689,26 @@
 (function(){
   'use strict';
   var DEST = 'tramas.html';
-  var IA = 'button,a,input,textarea,select,[contenteditable]';
+  // .node, .conn-path e ghostLine no svg também imunes — duplo clique em
+  // qualquer parte do "canvas de trabalho" não deve te tirar da trama.
+  var IA = 'button,a,input,textarea,select,[contenteditable],.node,.conn-path,.conn-label-wrap,#svg-layer path';
+  var NODE_PAD = 12; // px de margem ao redor de cada nó
   function nav(){ window.location.href = DEST; }
-  document.addEventListener('dblclick', function(e){ if(e.target.closest(IA)) return; nav(); });
+  function nearNode(x, y, target) {
+    if (target && target.closest && target.closest('.node')) return true;
+    var nodesEls = document.querySelectorAll('.node');
+    for (var i = 0; i < nodesEls.length; i++) {
+      var r = nodesEls[i].getBoundingClientRect();
+      if (x >= r.left - NODE_PAD && x <= r.right + NODE_PAD &&
+          y >= r.top - NODE_PAD && y <= r.bottom + NODE_PAD) return true;
+    }
+    return false;
+  }
+  document.addEventListener('dblclick', function(e){
+    if(e.target.closest(IA)) return;
+    if(nearNode(e.clientX, e.clientY, e.target)) return;
+    nav();
+  });
   var _t = 0, _multi = false;
   document.addEventListener('touchstart', function(e){
     if(e.touches.length > 1){ _multi = true; }
@@ -2640,6 +2717,8 @@
     if(e.touches.length > 0){ _t=0; _multi=true; return; }
     if(_multi){ _t=0; _multi=false; return; }
     var el = e.target; if(el.closest(IA)){ _t=0; return; }
+    var ct = e.changedTouches && e.changedTouches[0];
+    if (ct && nearNode(ct.clientX, ct.clientY, el)) { _t=0; return; }
     var n = Date.now(); if(n-_t<300){ _t=0; nav(); return; } _t=n;
   },{passive:true});
 })();
