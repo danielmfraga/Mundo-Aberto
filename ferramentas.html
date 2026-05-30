@@ -970,6 +970,118 @@
       display: flex; gap: 10px; justify-content: flex-end;
     }
 
+    /* ───── Diário de Bordo ───── */
+    .diary-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .diary-field-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: rgba(207,233,240,0.6);
+      text-transform: uppercase;
+    }
+    .diary-field-hint {
+      font-size: 11px;
+      color: rgba(207,233,240,0.42);
+      font-style: italic;
+    }
+    .diary-input {
+      background: rgba(0,255,231,0.04);
+      border: 1px solid rgba(0,255,231,0.22);
+      color: var(--fg);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+      padding: 8px 12px;
+      letter-spacing: 0.01em;
+    }
+    .diary-input:focus { outline: none; border-color: var(--holo); }
+    .diary-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 14px;
+    }
+    .diary-textarea {
+      width: 100%;
+      min-height: 280px;
+      resize: vertical;
+      background: rgba(0,255,231,0.03);
+      border: 1px solid rgba(0,255,231,0.16);
+      color: var(--fg);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12.5px;
+      line-height: 1.65;
+      padding: 12px;
+      letter-spacing: 0.01em;
+    }
+    .diary-textarea:focus { outline: none; border-color: var(--holo); }
+
+    .diary-summary-box {
+      background: rgba(255,107,26,0.06);
+      border-left: 2px solid var(--orange);
+      padding: 12px 16px;
+      margin: 14px 0;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+      color: rgba(207,233,240,0.9);
+      line-height: 1.5;
+    }
+    .diary-summary-box strong {
+      color: var(--orange);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .diary-meta-block { margin: 12px 0; }
+    .diary-meta-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--orange);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .diary-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .diary-chip {
+      background: rgba(0,255,231,0.06);
+      border: 1px solid rgba(0,255,231,0.22);
+      color: rgba(207,233,240,0.85);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 12px;
+      padding: 4px 10px;
+      letter-spacing: 0.02em;
+      border-radius: 2px;
+    }
+
+    .diary-review-title {
+      font-family: 'Orbitron', monospace;
+      color: var(--holo);
+      font-size: 14px;
+      letter-spacing: 3px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .diary-done-msg {
+      font-family: 'Orbitron', monospace;
+      font-size: 14px;
+      letter-spacing: 4px;
+      color: var(--good);
+      text-transform: uppercase;
+      text-shadow: 0 0 12px rgba(78,224,122,0.5);
+    }
+
     /* Mobile */
     @media (max-width: 700px) {
       body { padding: 60px 14px 30px; }
@@ -987,6 +1099,7 @@
       .btn { width: 100%; text-align: center; }
       .action-footer { flex-direction: column; }
       .action-footer .btn { width: 100%; }
+      .diary-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -1068,6 +1181,84 @@
         <div class="loading-box">
           <div class="loading-text">Forjando ficha...</div>
           <div class="loading-bar"></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ───────── DIÁRIO DE BORDO ───────── -->
+    <section class="tool-card" id="diaryCard">
+
+      <div class="tool-header">
+        <div class="tool-led"></div>
+        <div class="tool-name">Diário de Bordo</div>
+      </div>
+
+      <p class="tool-desc">
+        Ingere transcrições de sessões (Google Meet, áudio transcrito, notas).
+        O sistema limpa o ruído — conversas paralelas, hesitações, problemas
+        técnicos — preservando tudo que é narrativo. Arquiva no banco da
+        campanha pra consulta posterior no Navegador.
+      </p>
+
+      <!-- PHASE 1: Form -->
+      <div id="diaryForm">
+        <div class="diary-row">
+          <div class="diary-field">
+            <span class="diary-field-label">Título da sessão *</span>
+            <input class="diary-input" id="diaryTitle" placeholder="ex: Sessão 17 — O Encontro com o Vampiro" maxlength="200">
+          </div>
+          <div class="diary-field">
+            <span class="diary-field-label">Data IRL</span>
+            <input class="diary-input" id="diaryDate" type="date">
+          </div>
+          <div class="diary-field">
+            <span class="diary-field-label">Nº da sessão</span>
+            <input class="diary-input" id="diaryNumber" type="number" placeholder="17" min="1" max="9999">
+          </div>
+        </div>
+
+        <div class="diary-field">
+          <span class="diary-field-label">Transcript bruto *</span>
+          <span class="diary-field-hint">Cole o conteúdo do Google Meet, áudio transcrito, ou notas. Pode estar bagunçado — o sistema limpa.</span>
+          <textarea class="diary-textarea" id="diaryRaw" placeholder="Cole o transcript aqui..."></textarea>
+        </div>
+
+        <div class="action-footer">
+          <button class="btn" id="diaryCleanBtn">Limpar Transcript</button>
+        </div>
+      </div>
+
+      <!-- PHASE 2: Loading (cleaning) -->
+      <div id="diaryLoading" hidden>
+        <div class="loading-box">
+          <div class="loading-text">Limpando transcript...</div>
+          <div class="loading-bar"></div>
+          <div class="loading-text" style="font-size:10px;color:rgba(0,255,231,0.5);letter-spacing:3px;margin-top:8px;">
+            Removendo ruído · Preservando narrativa · Extraindo metadata
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 3: Review -->
+      <div id="diaryReview" hidden></div>
+
+      <!-- PHASE 4: Saving -->
+      <div id="diarySaving" hidden>
+        <div class="loading-box">
+          <div class="loading-text">Arquivando no diário...</div>
+          <div class="loading-bar"></div>
+        </div>
+      </div>
+
+      <!-- PHASE 5: Done -->
+      <div id="diaryDone" hidden>
+        <div class="loading-box">
+          <div class="diary-done-msg">✓ Sessão arquivada</div>
+          <p style="color:rgba(207,233,240,0.6);margin:14px 0;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;">
+            Disponível pra consulta no Navegador
+          </p>
+          <button class="btn btn-ghost" id="diaryAnotherBtn" style="margin-top:8px;">Ingerir outra sessão</button>
         </div>
       </div>
 
@@ -1958,6 +2149,156 @@
       out.notes = current.notes || '';
 
       return out;
+    }
+
+    // ═══════════════════════════════════════════════
+    // DIÁRIO DE BORDO — ingestão de sessões
+    // ═══════════════════════════════════════════════
+    var diaryCleanedData = null; // resultado da limpeza pra usar no save
+
+    function showDiaryPhase(id) {
+      ['diaryForm','diaryLoading','diaryReview','diarySaving','diaryDone'].forEach(function(p) {
+        document.getElementById(p).hidden = (p !== id);
+      });
+    }
+
+    document.getElementById('diaryCleanBtn').addEventListener('click', startDiaryClean);
+    document.getElementById('diaryAnotherBtn').addEventListener('click', resetDiaryForm);
+
+    async function startDiaryClean() {
+      var title = document.getElementById('diaryTitle').value.trim();
+      var date = document.getElementById('diaryDate').value || null;
+      var numRaw = document.getElementById('diaryNumber').value;
+      var num = numRaw ? parseInt(numRaw, 10) : null;
+      var raw = document.getElementById('diaryRaw').value.trim();
+
+      // Validações
+      if (!title) { alert('Título da sessão é obrigatório.'); return; }
+      if (!raw) { alert('Cole o transcript no campo apropriado.'); return; }
+      if (raw.length < 100) {
+        if (!confirm('O transcript parece muito curto (' + raw.length + ' caracteres). Continuar mesmo assim?')) return;
+      }
+      // Aviso conservador: > 250KB de texto provavelmente excede limite do endpoint
+      if (raw.length > 250000) {
+        alert('Transcript muito longo (' + raw.length + ' caracteres). Limite ~250KB. Divida em sessões menores.');
+        return;
+      }
+
+      showDiaryPhase('diaryLoading');
+
+      try {
+        var response = await fetch('/api/ingest-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: title, rawContent: raw })
+        });
+        var json = await response.json();
+        if (!response.ok) throw new Error(json.error || 'Erro ' + response.status);
+
+        diaryCleanedData = {
+          title: title,
+          sessionDate: date,
+          sessionNumber: num,
+          rawContent: raw,
+          cleanedContent: json.data.cleaned,
+          summary: json.data.summary,
+          metadata: json.data.metadata || {}
+        };
+
+        renderDiaryReview(diaryCleanedData);
+        showDiaryPhase('diaryReview');
+      } catch (err) {
+        alert('Erro ao limpar transcript:\n' + err.message);
+        showDiaryPhase('diaryForm');
+      }
+    }
+
+    function renderDiaryReview(data) {
+      var meta = data.metadata || {};
+      var html = '';
+
+      // Título
+      html += '<div class="diary-review-title">' + escapeHtml(data.title) + '</div>';
+
+      // Summary
+      if (data.summary) {
+        html += '<div class="diary-summary-box"><strong>Resumo</strong>' + escapeHtml(data.summary) + '</div>';
+      }
+
+      // Metadata chips
+      html += renderDiaryChips('Personagens presentes', meta.personagens_presentes);
+      html += renderDiaryChips('NPCs mencionados', meta.npcs_mencionados);
+      html += renderDiaryChips('Locais', meta.locais);
+      html += renderDiaryChips('Eventos-chave', meta.eventos_chave);
+
+      // Cleaned content (editável — usuário pode revisar)
+      html += '<div class="diary-field" style="margin-top:18px;">' +
+        '<span class="diary-field-label">Conteúdo Limpo (editável)</span>' +
+        '<span class="diary-field-hint">Revise antes de salvar. Esta é a versão que vai pro Navegador. O transcript original fica preservado em separado no banco.</span>' +
+        '<textarea class="diary-textarea" id="diaryCleanedEdit" style="min-height:400px;">' +
+        escapeHtml(data.cleanedContent) + '</textarea>' +
+        '</div>';
+
+      // Footer
+      html += '<div class="action-footer">' +
+        '<button class="btn btn-ghost" id="diaryBackBtn">Voltar / Refazer</button>' +
+        '<button class="btn" id="diarySaveBtn">Arquivar no Diário</button>' +
+        '</div>';
+
+      document.getElementById('diaryReview').innerHTML = html;
+
+      document.getElementById('diaryBackBtn').addEventListener('click', function() {
+        if (confirm('Voltar perde a limpeza atual. Confirmar?')) showDiaryPhase('diaryForm');
+      });
+      document.getElementById('diarySaveBtn').addEventListener('click', saveDiarySession);
+    }
+
+    function renderDiaryChips(label, arr) {
+      if (!arr || !Array.isArray(arr) || !arr.length) return '';
+      return '<div class="diary-meta-block">' +
+        '<div class="diary-meta-title">' + escapeHtml(label) + '</div>' +
+        '<div class="diary-chips">' +
+        arr.map(function(x) { return '<span class="diary-chip">' + escapeHtml(String(x)) + '</span>'; }).join('') +
+        '</div></div>';
+    }
+
+    async function saveDiarySession() {
+      if (!diaryCleanedData) return;
+
+      var editedCleaned = document.getElementById('diaryCleanedEdit').value.trim();
+      if (!editedCleaned) {
+        alert('Conteúdo limpo não pode estar vazio. Edite ou volte pra refazer.');
+        return;
+      }
+
+      showDiaryPhase('diarySaving');
+
+      var payload = {
+        title: diaryCleanedData.title,
+        session_date: diaryCleanedData.sessionDate || null,
+        session_number: diaryCleanedData.sessionNumber || null,
+        raw_content: diaryCleanedData.rawContent,
+        cleaned_content: editedCleaned,
+        summary: diaryCleanedData.summary || null,
+        metadata: diaryCleanedData.metadata || {}
+      };
+
+      try {
+        await sbFetch('/rest/v1/sessions', 'POST', payload);
+        showDiaryPhase('diaryDone');
+      } catch (err) {
+        alert('Erro ao arquivar no banco:\n' + (err.message || err));
+        showDiaryPhase('diaryReview');
+      }
+    }
+
+    function resetDiaryForm() {
+      document.getElementById('diaryTitle').value = '';
+      document.getElementById('diaryDate').value = '';
+      document.getElementById('diaryNumber').value = '';
+      document.getElementById('diaryRaw').value = '';
+      diaryCleanedData = null;
+      showDiaryPhase('diaryForm');
     }
 
   </script>
