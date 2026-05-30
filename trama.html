@@ -91,6 +91,35 @@
 
     .tb-sep { width: 1px; height: 20px; background: rgba(0,255,231,0.1); }
 
+    /* Indicador de status do auto-save (bolinha discreta) */
+    #save-status {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: transparent;
+      transition: background 0.25s, box-shadow 0.25s, opacity 0.3s;
+      opacity: 0.25;
+      flex-shrink: 0;
+    }
+    #save-status.pending {
+      background: rgba(255,200,0,0.85);
+      box-shadow: 0 0 6px rgba(255,200,0,0.6);
+      opacity: 1;
+      animation: savePulse 1s ease-in-out infinite;
+    }
+    #save-status.saved {
+      background: rgba(0,255,231,0.85);
+      box-shadow: 0 0 6px rgba(0,255,231,0.6);
+      opacity: 1;
+    }
+    #save-status.error {
+      background: #ff4466;
+      box-shadow: 0 0 8px rgba(255,68,102,0.8);
+      opacity: 1;
+    }
+    @keyframes savePulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.5; transform: scale(0.85); }
+    }
+
     /* Nome da trama na toolbar */
     .tb-name-wrap {
       display: flex; flex-direction: column; gap: 2px;
@@ -1034,6 +1063,7 @@
     <div class="tb-sep"></div>
     <button class="tb-btn" id="btn-trama-note">✎ Notas</button>
     <button class="tb-btn" id="btn-restore" title="Restaurar versão anterior" style="opacity:.55">↺ Restaurar</button>
+    <div id="save-status" title="Status do auto-save"></div>
     <button class="tb-btn" id="btn-save" style="display:none">↑ Salvar trama</button>
   </div>
 
@@ -2658,8 +2688,19 @@
 
     // Inicializa TramaSync ANTES do load (mas loaded=false bloqueia saves)
     if (window.SheetSync && SheetSync.create && TRAMA_ID && TRAMA_ID !== 'default') {
+      var saveStatusEl = document.getElementById('save-status');
+      var savedTimer = null;
+      function setSaveStatus(state) {
+        if (!saveStatusEl) return;
+        saveStatusEl.className = state || '';
+        if (savedTimer) { clearTimeout(savedTimer); savedTimer = null; }
+        if (state === 'saved') {
+          savedTimer = setTimeout(function() { saveStatusEl.className = ''; }, 1200);
+        }
+      }
       TramaSync = SheetSync.create({
         table: 'tramas', idColumn: 'trama_id', id: TRAMA_ID,
+        debounceMs: 400,  // antes 800 — reduz janela de "perda" se sair rápido
         snapshotColumns: { main: 'data', v1: 'data_v1', v2: 'data_v2' },
         // SANITY CHECK: o bug anterior foi salvar { connections: [] } durante load.
         // Aqui freamos: se DOM tem nodes mas connections do payload está vazio
@@ -2675,7 +2716,11 @@
             return false;
           }
           return true;
-        }
+        },
+        // Indicador visual sutil de status
+        onSavePending: function() { setSaveStatus('pending'); },
+        onSaveStart:   function() { setSaveStatus('pending'); },
+        onSaveDone:    function(err) { setSaveStatus(err ? 'error' : 'saved'); }
       });
     }
 
@@ -2733,6 +2778,22 @@
       // Snapshots v1/v2 a cada 5min se houve mudança
       TramaSync.enableSnapshots(5 * 60 * 1000);
     }
+
+    // ── Garante save mesmo se fechar a aba / F5 / nav externa ──
+    // fetch keepalive permite o request continuar mesmo após a página descarregar.
+    // pagehide é o evento certo (dispara em close, F5, navegação externa, mobile lifecycle).
+    function handlePageHide() {
+      if (TramaSync && typeof TramaSync.flushSync === 'function') {
+        TramaSync.flushSync();
+      }
+    }
+    window.addEventListener('pagehide', handlePageHide);
+    // Fallback pra browsers que ainda priorizam beforeunload
+    window.addEventListener('beforeunload', handlePageHide);
+    // visibilitychange = aba escondida (troca de tab no mobile, app em background)
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'hidden') handlePageHide();
+    });
 
     // Marca _tramaDragging globalmente — usado pelo realtime e backup do save
     document.addEventListener('mousedown', function(e) {

@@ -332,6 +332,9 @@
     var debounceMs = config.debounceMs != null ? config.debounceMs : 800;
     var snapshotCols = config.snapshotColumns || null;
     var validateBeforeSave = config.validateBeforeSave || null;
+    var onSaveStart = config.onSaveStart || null;
+    var onSaveDone  = config.onSaveDone  || null;
+    var onSavePending = config.onSavePending || null;
     var channelName = (config.channelPrefix || table) + ':' + id;
     var pathFilter = '/rest/v1/' + table + '?' + idColumn + '=eq.' + encodeURIComponent(id);
 
@@ -365,6 +368,7 @@
         }
         this._pendingEntry = entry;
         if (this._debounceTimer) { clearTimeout(this._debounceTimer); this._debounceTimer = null; }
+        if (onSavePending) try { onSavePending(); } catch(e) {}
         if (opts.immediate) return this._doSave();
         return new Promise(function(resolve) {
           self._debounceTimer = setTimeout(function() {
@@ -393,13 +397,42 @@
         var prev = this._inflight || Promise.resolve();
         this._inflight = prev.then(function() {
           self._lastSentAt = Date.now();
+          if (onSaveStart) try { onSaveStart(); } catch(e) {}
           return sbFetch(pathFilter, 'PATCH', payload).then(function(res) {
             self._lastSavedEntry = entry;
             self._hasChangesSinceSnapshot = true;
+            if (onSaveDone) try { onSaveDone(); } catch(e) {}
             return res;
           });
-        }).catch(function(err) { self._lastSentHash = ''; throw err; });
+        }).catch(function(err) {
+          self._lastSentHash = '';
+          if (onSaveDone) try { onSaveDone(err); } catch(e) {}
+          throw err;
+        });
         return this._inflight;
+      },
+
+      // Envia o save pendente via fetch keepalive — sobrevive ao close da página.
+      // Use em pagehide/beforeunload pra garantir entrega.
+      flushSync: function() {
+        if (this._debounceTimer) { clearTimeout(this._debounceTimer); this._debounceTimer = null; }
+        var entry = this._pendingEntry;
+        if (!entry) return;
+        var hash = JSON.stringify(entry);
+        if (hash === this._lastSentHash) return;
+        this._lastSentHash = hash;
+        try {
+          fetch(SB_URL + pathFilter, {
+            method: 'PATCH',
+            keepalive: true,
+            headers: {
+              'apikey': SB_KEY,
+              'Authorization': 'Bearer ' + SB_KEY,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(entry)
+          });
+        } catch (e) { /* keepalive pode ter limite de 64KB; falha silenciosa */ }
       },
 
       // Snapshots rotativos (v1 = main atual, v2 = v1 anterior)
