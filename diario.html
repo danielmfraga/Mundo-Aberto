@@ -263,6 +263,26 @@
       color: var(--good); text-transform: uppercase; text-shadow: 0 0 12px rgba(78,224,122,0.5);
     }
 
+    /* Custo da limpeza */
+    .diary-cost-box {
+      margin: 16px 0 4px;
+      padding: 8px 14px;
+      background: rgba(0,136,255,0.04);
+      border: 1px solid rgba(0,136,255,0.14);
+      border-left: 2px solid rgba(0,136,255,0.4);
+    }
+    .diary-cost-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px; letter-spacing: 3px;
+      color: rgba(207,233,240,0.38); text-transform: uppercase;
+      display: block; margin-bottom: 4px;
+    }
+    .diary-cost-info {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px; color: rgba(207,233,240,0.65); letter-spacing: 1px;
+    }
+    .diary-cost-info strong { color: var(--holo); }
+
     /* Offline state */
     .offline-box { padding: 40px 24px; text-align: center; }
     .offline-title {
@@ -607,7 +627,8 @@
           rawContent: raw,
           cleanedContent: json.data.cleaned,
           summary: json.data.summary,
-          metadata: json.data.metadata || {}
+          metadata: json.data.metadata || {},
+          usage: json.usage || null
         };
 
         renderDiaryReview(diaryCleanedData);
@@ -616,6 +637,16 @@
         alert('Erro ao limpar transcript:\n' + err.message);
         showDiaryPhase('diaryForm');
       }
+    }
+
+    // Preços Claude Sonnet 4.6 (USD por 1M tokens)
+    function calcCost(usage) {
+      if (!usage) return null;
+      var input      = ((usage.input_tokens || 0) / 1e6) * 3.00;
+      var output     = ((usage.output_tokens || 0) / 1e6) * 15.00;
+      var cacheWrite = ((usage.cache_creation_input_tokens || 0) / 1e6) * 3.75;
+      var cacheRead  = ((usage.cache_read_input_tokens || 0) / 1e6) * 0.30;
+      return input + output + cacheWrite + cacheRead;
     }
 
     function renderDiaryReview(data) {
@@ -629,6 +660,22 @@
       html += renderDiaryChips('NPCs mencionados', meta.npcs_mencionados);
       html += renderDiaryChips('Locais', meta.locais);
       html += renderDiaryChips('Eventos-chave', meta.eventos_chave);
+      // Custo da chamada
+      if (data.usage) {
+        var cost = calcCost(data.usage);
+        var inTok  = (data.usage.input_tokens  || 0).toLocaleString('pt-BR');
+        var outTok = (data.usage.output_tokens || 0).toLocaleString('pt-BR');
+        var totTok = ((data.usage.input_tokens || 0) + (data.usage.output_tokens || 0)).toLocaleString('pt-BR');
+        var costStr = cost != null ? 'US$ ' + cost.toFixed(4) : '—';
+        html += '<div class="diary-cost-box">' +
+          '<span class="diary-cost-label">Custo desta limpeza · Sonnet 4.6</span>' +
+          '<div class="diary-cost-info">' +
+            totTok + ' tokens &nbsp;(' + inTok + ' entrada / ' + outTok + ' saída)' +
+            ' &nbsp;·&nbsp; <strong>' + costStr + '</strong>' +
+          '</div>' +
+        '</div>';
+      }
+
       html +=
         '<div class="diary-field" style="margin-top:18px;">' +
           '<span class="diary-field-label">Conteúdo Limpo (editável)</span>' +
