@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/navegador.js":       { "maxDuration": 60 },
-    "api/ingest-session.js":  { "maxDuration": 60 }
+    "api/ingest-session.js":  { "maxDuration": 120 }
   },
   "headers": [
     {
