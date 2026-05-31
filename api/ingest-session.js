@@ -103,9 +103,9 @@ export default async function handler(req, res) {
     // Estimativa de tokens do texto (4 chars ≈ 1 token, conservador)
     if (hasText) {
       const inputEstimate = Math.ceil(rawContent.length / 4);
-      if (inputEstimate > 80000) {
+      if (inputEstimate > 150000) {
         return res.status(400).json({
-          error: `Transcript muito longo (~${inputEstimate} tokens estimados, limite 80K). Divida a sessão em partes menores.`
+          error: `Transcript muito longo (~${inputEstimate} tokens estimados, limite 150K). Divida a sessão em partes menores.`
         });
       }
     }
