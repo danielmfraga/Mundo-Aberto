@@ -1101,6 +1101,34 @@
       .action-footer .btn { width: 100%; }
       .diary-row { grid-template-columns: 1fr; }
     }
+
+    /* ───── Navegador ───── */
+    .nav-qa-entry {
+      margin: 20px 0;
+      border: 1px solid rgba(0,136,255,0.18);
+      background: rgba(0,136,255,0.03);
+    }
+    .nav-q-box {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(0,136,255,0.1);
+      background: rgba(0,0,0,0.2);
+    }
+    .nav-a-box { padding: 14px 16px; }
+    .nav-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
+      color: rgba(207,233,240,0.45); display: block; margin-bottom: 6px;
+    }
+    .nav-q-text { font-size: 14px; color: rgba(207,233,240,0.8); font-style: italic; }
+    .nav-a-text { font-size: 14px; color: var(--fg); line-height: 1.65; }
+    .nav-a-text p { margin: 0 0 10px; }
+    .nav-a-text p:last-child { margin-bottom: 0; }
+    .nav-meta {
+      margin-top: 10px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px; letter-spacing: 2px;
+      color: rgba(207,233,240,0.3); text-transform: uppercase;
+    }
   </style>
 </head>
 <body>
@@ -1186,79 +1214,43 @@
 
     </section>
 
-    <!-- ───────── DIÁRIO DE BORDO ───────── -->
-    <section class="tool-card" id="diaryCard">
+    <!-- ───────── NAVEGADOR ───────── -->
+    <section class="tool-card" id="navCard">
 
       <div class="tool-header">
         <div class="tool-led"></div>
-        <div class="tool-name">Diário de Bordo</div>
+        <div class="tool-name">Navegador</div>
       </div>
 
       <p class="tool-desc">
-        Ingere transcrições de sessões (Google Meet, áudio transcrito, notas).
-        O sistema limpa o ruído — conversas paralelas, hesitações, problemas
-        técnicos — preservando tudo que é narrativo. Arquiva no banco da
-        campanha pra consulta posterior no Navegador.
+        Consulte a memória da campanha. Pergunte sobre NPCs, locais, itens e
+        eventos — o Navegador busca nas sessões arquivadas e responde com base
+        no que foi jogado.
       </p>
 
-      <!-- PHASE 1: Form -->
-      <div id="diaryForm">
-        <div class="diary-row">
-          <div class="diary-field">
-            <span class="diary-field-label">Título da sessão *</span>
-            <input class="diary-input" id="diaryTitle" placeholder="ex: Sessão 17 — O Encontro com o Vampiro" maxlength="200">
-          </div>
-          <div class="diary-field">
-            <span class="diary-field-label">Data IRL</span>
-            <input class="diary-input" id="diaryDate" type="date">
-          </div>
-          <div class="diary-field">
-            <span class="diary-field-label">Nº da sessão</span>
-            <input class="diary-input" id="diaryNumber" type="number" placeholder="17" min="1" max="9999">
-          </div>
-        </div>
+      <!-- Histórico de Q&A (acumula na sessão) -->
+      <div id="navHistory"></div>
 
-        <div class="diary-field">
-          <span class="diary-field-label">Transcript bruto *</span>
-          <span class="diary-field-hint">Cole o conteúdo do Google Meet, áudio transcrito, ou notas. Pode estar bagunçado — o sistema limpa.</span>
-          <textarea class="diary-textarea" id="diaryRaw" placeholder="Cole o transcript aqui..."></textarea>
+      <!-- Formulário de pergunta -->
+      <div id="navForm">
+        <div class="diary-field" style="margin-top:8px;">
+          <span class="diary-field-label">Pergunta</span>
+          <span class="diary-field-hint">Ex: "O que aconteceu com o NPC X?", "Onde fomos na sessão 3?", "Quem é o Arauto?" — Ctrl+Enter envia</span>
+          <textarea class="diary-textarea" id="navQuestion" placeholder="Digite sua pergunta..." style="min-height:90px;resize:vertical;"></textarea>
         </div>
-
         <div class="action-footer">
-          <button class="btn" id="diaryCleanBtn">Limpar Transcript</button>
+          <button class="btn btn-cyan" id="navAskBtn">Consultar</button>
         </div>
       </div>
 
-      <!-- PHASE 2: Loading (cleaning) -->
-      <div id="diaryLoading" hidden>
+      <!-- Carregando -->
+      <div id="navLoading" hidden>
         <div class="loading-box">
-          <div class="loading-text">Limpando transcript...</div>
+          <div class="loading-text">Consultando registros...</div>
           <div class="loading-bar"></div>
           <div class="loading-text" style="font-size:10px;color:rgba(0,255,231,0.5);letter-spacing:3px;margin-top:8px;">
-            Removendo ruído · Preservando narrativa · Extraindo metadata
+            Navegando pelas sessões · Sintetizando memória
           </div>
-        </div>
-      </div>
-
-      <!-- PHASE 3: Review -->
-      <div id="diaryReview" hidden></div>
-
-      <!-- PHASE 4: Saving -->
-      <div id="diarySaving" hidden>
-        <div class="loading-box">
-          <div class="loading-text">Arquivando no diário...</div>
-          <div class="loading-bar"></div>
-        </div>
-      </div>
-
-      <!-- PHASE 5: Done -->
-      <div id="diaryDone" hidden>
-        <div class="loading-box">
-          <div class="diary-done-msg">✓ Sessão arquivada</div>
-          <p style="color:rgba(207,233,240,0.6);margin:14px 0;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;">
-            Disponível pra consulta no Navegador
-          </p>
-          <button class="btn btn-ghost" id="diaryAnotherBtn" style="margin-top:8px;">Ingerir outra sessão</button>
         </div>
       </div>
 
@@ -2152,153 +2144,80 @@
     }
 
     // ═══════════════════════════════════════════════
-    // DIÁRIO DE BORDO — ingestão de sessões
+    // NAVEGADOR — consulta RAG de sessões
     // ═══════════════════════════════════════════════
-    var diaryCleanedData = null; // resultado da limpeza pra usar no save
 
-    function showDiaryPhase(id) {
-      ['diaryForm','diaryLoading','diaryReview','diarySaving','diaryDone'].forEach(function(p) {
+    document.getElementById('navAskBtn').addEventListener('click', askNavigator);
+    document.getElementById('navQuestion').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        askNavigator();
+      }
+    });
+
+    function showNavState(id) {
+      ['navForm', 'navLoading'].forEach(function(p) {
         document.getElementById(p).hidden = (p !== id);
       });
     }
 
-    document.getElementById('diaryCleanBtn').addEventListener('click', startDiaryClean);
-    document.getElementById('diaryAnotherBtn').addEventListener('click', resetDiaryForm);
+    async function askNavigator() {
+      var q = document.getElementById('navQuestion').value.trim();
+      if (!q) return;
 
-    async function startDiaryClean() {
-      var title = document.getElementById('diaryTitle').value.trim();
-      var date = document.getElementById('diaryDate').value || null;
-      var numRaw = document.getElementById('diaryNumber').value;
-      var num = numRaw ? parseInt(numRaw, 10) : null;
-      var raw = document.getElementById('diaryRaw').value.trim();
-
-      // Validações
-      if (!title) { alert('Título da sessão é obrigatório.'); return; }
-      if (!raw) { alert('Cole o transcript no campo apropriado.'); return; }
-      if (raw.length < 100) {
-        if (!confirm('O transcript parece muito curto (' + raw.length + ' caracteres). Continuar mesmo assim?')) return;
-      }
-      // Aviso conservador: > 250KB de texto provavelmente excede limite do endpoint
-      if (raw.length > 250000) {
-        alert('Transcript muito longo (' + raw.length + ' caracteres). Limite ~250KB. Divida em sessões menores.');
-        return;
-      }
-
-      showDiaryPhase('diaryLoading');
+      var btn = document.getElementById('navAskBtn');
+      btn.disabled = true;
+      showNavState('navLoading');
 
       try {
-        var response = await fetch('/api/ingest-session', {
+        var resp = await fetch('/api/navegador', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: title, rawContent: raw })
+          body: JSON.stringify({ question: q })
         });
-        var json = await response.json();
-        if (!response.ok) throw new Error(json.error || 'Erro ' + response.status);
+        var json = await resp.json();
+        if (!resp.ok) throw new Error(json.error || 'Erro ' + resp.status);
 
-        diaryCleanedData = {
-          title: title,
-          sessionDate: date,
-          sessionNumber: num,
-          rawContent: raw,
-          cleanedContent: json.data.cleaned,
-          summary: json.data.summary,
-          metadata: json.data.metadata || {}
-        };
-
-        renderDiaryReview(diaryCleanedData);
-        showDiaryPhase('diaryReview');
+        document.getElementById('navQuestion').value = '';
+        appendNavQA(q, json.answer, json.sessionsUsed);
+        showNavState('navForm');
       } catch (err) {
-        alert('Erro ao limpar transcript:\n' + err.message);
-        showDiaryPhase('diaryForm');
+        alert('Erro ao consultar Navegador:\n' + err.message);
+        document.getElementById('navQuestion').value = q;
+        showNavState('navForm');
+      } finally {
+        btn.disabled = false;
       }
     }
 
-    function renderDiaryReview(data) {
-      var meta = data.metadata || {};
-      var html = '';
+    function appendNavQA(question, answer, sessionsUsed) {
+      var history = document.getElementById('navHistory');
+      var entry = document.createElement('div');
+      entry.className = 'nav-qa-entry';
 
-      // Título
-      html += '<div class="diary-review-title">' + escapeHtml(data.title) + '</div>';
+      var metaHtml = (sessionsUsed != null)
+        ? '<div class="nav-meta">' + sessionsUsed + ' sessão(ões) consultada(s)</div>'
+        : '';
 
-      // Summary
-      if (data.summary) {
-        html += '<div class="diary-summary-box"><strong>Resumo</strong>' + escapeHtml(data.summary) + '</div>';
-      }
-
-      // Metadata chips
-      html += renderDiaryChips('Personagens presentes', meta.personagens_presentes);
-      html += renderDiaryChips('NPCs mencionados', meta.npcs_mencionados);
-      html += renderDiaryChips('Locais', meta.locais);
-      html += renderDiaryChips('Eventos-chave', meta.eventos_chave);
-
-      // Cleaned content (editável — usuário pode revisar)
-      html += '<div class="diary-field" style="margin-top:18px;">' +
-        '<span class="diary-field-label">Conteúdo Limpo (editável)</span>' +
-        '<span class="diary-field-hint">Revise antes de salvar. Esta é a versão que vai pro Navegador. O transcript original fica preservado em separado no banco.</span>' +
-        '<textarea class="diary-textarea" id="diaryCleanedEdit" style="min-height:400px;">' +
-        escapeHtml(data.cleanedContent) + '</textarea>' +
+      entry.innerHTML =
+        '<div class="nav-q-box">' +
+          '<span class="nav-label">Você perguntou</span>' +
+          '<div class="nav-q-text">' + escapeHtml(question) + '</div>' +
+        '</div>' +
+        '<div class="nav-a-box">' +
+          '<span class="nav-label" style="color:var(--holo);">Navegador</span>' +
+          '<div class="nav-a-text">' + formatNavText(answer) + '</div>' +
+          metaHtml +
         '</div>';
 
-      // Footer
-      html += '<div class="action-footer">' +
-        '<button class="btn btn-ghost" id="diaryBackBtn">Voltar / Refazer</button>' +
-        '<button class="btn" id="diarySaveBtn">Arquivar no Diário</button>' +
-        '</div>';
-
-      document.getElementById('diaryReview').innerHTML = html;
-
-      document.getElementById('diaryBackBtn').addEventListener('click', function() {
-        if (confirm('Voltar perde a limpeza atual. Confirmar?')) showDiaryPhase('diaryForm');
-      });
-      document.getElementById('diarySaveBtn').addEventListener('click', saveDiarySession);
+      history.appendChild(entry);
+      entry.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    function renderDiaryChips(label, arr) {
-      if (!arr || !Array.isArray(arr) || !arr.length) return '';
-      return '<div class="diary-meta-block">' +
-        '<div class="diary-meta-title">' + escapeHtml(label) + '</div>' +
-        '<div class="diary-chips">' +
-        arr.map(function(x) { return '<span class="diary-chip">' + escapeHtml(String(x)) + '</span>'; }).join('') +
-        '</div></div>';
-    }
-
-    async function saveDiarySession() {
-      if (!diaryCleanedData) return;
-
-      var editedCleaned = document.getElementById('diaryCleanedEdit').value.trim();
-      if (!editedCleaned) {
-        alert('Conteúdo limpo não pode estar vazio. Edite ou volte pra refazer.');
-        return;
-      }
-
-      showDiaryPhase('diarySaving');
-
-      var payload = {
-        title: diaryCleanedData.title,
-        session_date: diaryCleanedData.sessionDate || null,
-        session_number: diaryCleanedData.sessionNumber || null,
-        raw_content: diaryCleanedData.rawContent,
-        cleaned_content: editedCleaned,
-        summary: diaryCleanedData.summary || null,
-        metadata: diaryCleanedData.metadata || {}
-      };
-
-      try {
-        await sbFetch('/rest/v1/sessions', 'POST', payload);
-        showDiaryPhase('diaryDone');
-      } catch (err) {
-        alert('Erro ao arquivar no banco:\n' + (err.message || err));
-        showDiaryPhase('diaryReview');
-      }
-    }
-
-    function resetDiaryForm() {
-      document.getElementById('diaryTitle').value = '';
-      document.getElementById('diaryDate').value = '';
-      document.getElementById('diaryNumber').value = '';
-      document.getElementById('diaryRaw').value = '';
-      diaryCleanedData = null;
-      showDiaryPhase('diaryForm');
+    function formatNavText(text) {
+      return '<p>' + escapeHtml(text)
+        .replace(/\n\n+/g, '</p><p>')
+        .replace(/\n/g, '<br>') + '</p>';
     }
 
   </script>

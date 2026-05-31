@@ -1,4 +1,7 @@
 {
+  "functions": {
+    "api/navegador.js": { "maxDuration": 60 }
+  },
   "headers": [
     {
       "source": "/sheet-sync.js",

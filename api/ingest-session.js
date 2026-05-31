@@ -14,7 +14,7 @@ import Anthropic from '@anthropic-ai/sdk';
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '4mb'  // transcripts grandes mas dentro do limite do Vercel
+      sizeLimit: '12mb'  // comporta texto grande + até 1-2 imagens comprimidas
     }
   }
 };
@@ -88,25 +88,49 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { title, rawContent, model } = req.body || {};
+    const { title, rawContent, imageFiles, model } = req.body || {};
 
     // Validação básica
     if (!title || !String(title).trim()) {
       return res.status(400).json({ error: 'Título é obrigatório.' });
     }
-    if (!rawContent || !String(rawContent).trim()) {
-      return res.status(400).json({ error: 'Conteúdo (transcript) é obrigatório.' });
+    const hasText  = rawContent && String(rawContent).trim().length > 0;
+    const hasImages = Array.isArray(imageFiles) && imageFiles.length > 0;
+    if (!hasText && !hasImages) {
+      return res.status(400).json({ error: 'Forneça um transcript (texto) ou pelo menos uma imagem (jpg/png).' });
     }
 
-    // Estimativa de tokens (4 chars ≈ 1 token, conservador)
-    const inputEstimate = Math.ceil(rawContent.length / 4);
-    if (inputEstimate > 80000) {
-      return res.status(400).json({
-        error: `Transcript muito longo (~${inputEstimate} tokens estimados, limite 80K). Divida a sessão em partes menores e ingira separadamente.`
-      });
+    // Estimativa de tokens do texto (4 chars ≈ 1 token, conservador)
+    if (hasText) {
+      const inputEstimate = Math.ceil(rawContent.length / 4);
+      if (inputEstimate > 80000) {
+        return res.status(400).json({
+          error: `Transcript muito longo (~${inputEstimate} tokens estimados, limite 80K). Divida a sessão em partes menores.`
+        });
+      }
     }
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+    // Monta o conteúdo da mensagem (imagens opcionais + texto)
+    const userContent = [];
+
+    // Imagens vêm ANTES do texto pra Claude associar bem o conteúdo visual
+    if (hasImages) {
+      for (const img of imageFiles) {
+        if (!img.data || !img.mediaType) continue;
+        userContent.push({
+          type: 'image',
+          source: { type: 'base64', media_type: img.mediaType, data: img.data }
+        });
+      }
+    }
+
+    const textPrompt = hasText
+      ? `Título da sessão: ${title}\n\n--- TRANSCRIPT BRUTO ---\n\n${rawContent}\n\n--- FIM DO TRANSCRIPT ---\n\n${hasImages ? 'As imagens acima também fazem parte do material desta sessão — extraia o texto relevante delas e inclua na limpeza.\n\n' : ''}Limpe e retorne o JSON conforme as instruções.`
+      : `Título da sessão: ${title}\n\nAs imagens acima contêm o transcript desta sessão — extraia todo o texto delas, depois limpe e retorne o JSON conforme as instruções.`;
+
+    userContent.push({ type: 'text', text: textPrompt });
 
     // Chama Claude — Sonnet 4.6 (suficiente pra limpeza, 4x mais barato que Opus)
     const response = await client.messages.create({
@@ -122,7 +146,7 @@ export default async function handler(req, res) {
       messages: [
         {
           role: 'user',
-          content: `Título da sessão: ${title}\n\n--- TRANSCRIPT BRUTO ---\n\n${rawContent}\n\n--- FIM DO TRANSCRIPT ---\n\nLimpe e retorne o JSON conforme as instruções.`
+          content: userContent
         }
       ]
     });

@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diário de Bordo — Mundo Aberto</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    :root {
+      --holo:   #00ffe7;
+      --orange: #ff6b1a;
+      --danger: #ff5566;
+      --good:   #4ee07a;
+      --dark:   #040810;
+      --fg:     #cfe9f0;
+      --glow-o: 0 0 10px #ff6b1aaa, 0 0 30px #ff6b1a44;
+    }
+
+    body {
+      background: var(--dark); color: var(--fg);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh; padding: 70px 24px 40px;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,255,231,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,231,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none; z-index: 0;
+    }
+    body::after {
+      content: ''; position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none; z-index: 100;
+    }
+
+    .corner { position: fixed; width: 36px; height: 36px; pointer-events: none; z-index: 5; }
+    .corner::before, .corner::after { content: ''; position: absolute; background: var(--orange); box-shadow: var(--glow-o); }
+    .corner::before { width: 100%; height: 1px; top: 0; }
+    .corner::after  { width: 1px; height: 100%; top: 0; }
+    .corner-tl { top: 20px; left: 20px; }
+    .corner-tr { top: 20px; right: 20px; transform: scaleX(-1); }
+    .corner-bl { bottom: 20px; left: 20px; transform: scaleY(-1); }
+    .corner-br { bottom: 20px; right: 20px; transform: scale(-1); }
+
+    .back-btn {
+      position: fixed; top: 28px; left: 60px;
+      color: rgba(0,255,231,0.55); text-decoration: none;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
+      z-index: 10; transition: color 0.2s;
+    }
+    .back-btn:hover { color: var(--holo); text-shadow: 0 0 8px var(--holo); }
+
+    .container { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; }
+
+    .page-header { text-align: center; margin-bottom: 40px; }
+    .page-title {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(28px, 5vw, 44px); font-weight: 900;
+      letter-spacing: 8px; color: var(--holo);
+      text-shadow: 0 0 15px #00ffe7bb, 0 0 40px #00ffe755; margin-bottom: 6px;
+    }
+    .page-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px; letter-spacing: 5px;
+      color: rgba(255,107,26,0.7); text-transform: uppercase;
+    }
+
+    .tool-card {
+      position: relative;
+      border: 1px solid rgba(0,255,231,0.18);
+      background: rgba(4,8,16,0.6); backdrop-filter: blur(2px);
+      padding: 28px; margin-bottom: 24px;
+    }
+    .tool-card::before {
+      content: ''; position: absolute; top: -1px; left: -1px;
+      width: 14px; height: 14px;
+      border-top: 1.5px solid var(--orange); border-left: 1.5px solid var(--orange);
+    }
+    .tool-card::after {
+      content: ''; position: absolute; bottom: -1px; right: -1px;
+      width: 14px; height: 14px;
+      border-bottom: 1.5px solid var(--orange); border-right: 1.5px solid var(--orange);
+    }
+
+    .tool-header {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 16px; padding-bottom: 14px;
+      border-bottom: 1px solid rgba(0,255,231,0.1);
+    }
+    .tool-led {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--orange);
+      box-shadow: 0 0 8px var(--orange), 0 0 16px var(--orange);
+      animation: ledBlink 2s ease-in-out infinite; flex-shrink: 0;
+    }
+    .tool-led.offline {
+      background: var(--danger);
+      box-shadow: 0 0 8px var(--danger), 0 0 16px var(--danger);
+      animation: none;
+    }
+    @keyframes ledBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .tool-name {
+      font-family: 'Orbitron', monospace; font-size: 16px; font-weight: 700;
+      letter-spacing: 4px; color: var(--holo); text-transform: uppercase;
+    }
+    .tool-desc {
+      font-size: 14px; color: rgba(207,233,240,0.7); line-height: 1.5; margin-bottom: 20px;
+    }
+
+    /* Status toggle */
+    .status-toggle-wrap { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .status-toggle-label {
+      font-family: 'Share Tech Mono', monospace; font-size: 9px;
+      letter-spacing: 3px; color: rgba(207,233,240,0.4); text-transform: uppercase;
+    }
+    .status-toggle {
+      font-family: 'Orbitron', monospace; font-size: 9px; font-weight: 700;
+      letter-spacing: 3px; padding: 5px 12px;
+      border: 1px solid rgba(78,224,122,0.5);
+      background: rgba(78,224,122,0.08); color: var(--good);
+      cursor: pointer; text-transform: uppercase; transition: all 0.2s;
+    }
+    .status-toggle:hover { background: rgba(78,224,122,0.18); }
+    .status-toggle.inactive {
+      border-color: rgba(255,85,102,0.5); background: rgba(255,85,102,0.08); color: var(--danger);
+    }
+    .status-toggle.inactive:hover { background: rgba(255,85,102,0.18); }
+
+    /* Buttons */
+    .btn {
+      font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 700;
+      letter-spacing: 4px; text-transform: uppercase; padding: 12px 24px;
+      background: rgba(255,107,26,0.1); border: 1px solid rgba(255,107,26,0.5);
+      color: var(--orange); cursor: pointer; transition: all 0.2s; display: inline-block;
+    }
+    .btn:hover { background: rgba(255,107,26,0.25); box-shadow: 0 0 18px rgba(255,107,26,0.4); color: #fff; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn.btn-ghost {
+      background: transparent; border-color: rgba(207,233,240,0.25); color: rgba(207,233,240,0.65);
+    }
+    .btn.btn-ghost:hover { background: rgba(207,233,240,0.04); color: var(--fg); }
+
+    /* Loading */
+    .loading-box { padding: 60px 24px; text-align: center; }
+    .loading-bar {
+      position: relative; width: 100%; max-width: 480px;
+      height: 2px; background: rgba(0,255,231,0.08); margin: 24px auto; overflow: hidden;
+    }
+    .loading-bar::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 30%; height: 100%;
+      background: linear-gradient(90deg, transparent, var(--orange), transparent);
+      box-shadow: 0 0 10px var(--orange); animation: loadingSweep 1.8s ease-in-out infinite;
+    }
+    @keyframes loadingSweep { 0% { left: -30%; } 100% { left: 100%; } }
+    .loading-text {
+      font-family: 'Share Tech Mono', monospace; font-size: 13px;
+      letter-spacing: 5px; color: rgba(255,107,26,0.8); text-transform: uppercase;
+      animation: textFlicker 2.5s ease-in-out infinite;
+    }
+    @keyframes textFlicker { 0%,100% { opacity: 1; } 45% { opacity: 0.5; } 55% { opacity: 0.5; } }
+
+    .action-footer {
+      display: flex; gap: 12px; justify-content: flex-end;
+      margin-top: 32px; padding-top: 20px;
+      border-top: 1px solid rgba(0,255,231,0.15); flex-wrap: wrap;
+    }
+
+    /* Diário fields */
+    .diary-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .diary-field-label {
+      font-family: 'Share Tech Mono', monospace; font-size: 10px;
+      letter-spacing: 3px; color: rgba(207,233,240,0.6); text-transform: uppercase;
+    }
+    .diary-field-hint { font-size: 11px; color: rgba(207,233,240,0.42); font-style: italic; }
+    .diary-input {
+      background: rgba(0,255,231,0.04); border: 1px solid rgba(0,255,231,0.22);
+      color: var(--fg); font-family: 'Rajdhani', sans-serif;
+      font-size: 14px; padding: 8px 12px; letter-spacing: 0.01em;
+    }
+    .diary-input:focus { outline: none; border-color: var(--holo); }
+    .diary-row { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+    .diary-textarea {
+      width: 100%; min-height: 280px; resize: vertical;
+      background: rgba(0,255,231,0.03); border: 1px solid rgba(0,255,231,0.16);
+      color: var(--fg); font-family: 'Share Tech Mono', monospace;
+      font-size: 12.5px; line-height: 1.65; padding: 12px; letter-spacing: 0.01em;
+    }
+    .diary-textarea:focus { outline: none; border-color: var(--holo); }
+
+    /* File upload */
+    .diary-file-row {
+      display: flex; align-items: center; gap: 10px;
+      margin: 8px 0 6px; flex-wrap: wrap;
+    }
+    .diary-file-btn {
+      font-family: 'Share Tech Mono', monospace; font-size: 10px;
+      letter-spacing: 2px; padding: 5px 12px;
+      border: 1px dashed rgba(0,255,231,0.35); color: rgba(0,255,231,0.65);
+      cursor: pointer; text-transform: uppercase; transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .diary-file-btn:hover { border-color: var(--holo); color: var(--holo); background: rgba(0,255,231,0.04); }
+    .diary-file-preview {
+      display: none; align-items: center; gap: 8px;
+      background: rgba(0,255,231,0.04); border: 1px solid rgba(0,255,231,0.2);
+      padding: 5px 10px; flex-wrap: wrap;
+    }
+    .diary-file-name {
+      font-family: 'Share Tech Mono', monospace; font-size: 11px;
+      color: var(--holo); letter-spacing: 1px;
+    }
+    .diary-file-meta {
+      font-family: 'Share Tech Mono', monospace; font-size: 10px;
+      color: rgba(207,233,240,0.45); letter-spacing: 1px;
+    }
+    .diary-file-thumb {
+      height: 36px; border: 1px solid rgba(0,255,231,0.25); cursor: pointer;
+    }
+    .diary-file-clear {
+      background: none; border: none; color: rgba(255,85,102,0.6);
+      cursor: pointer; font-size: 14px; padding: 0 2px; line-height: 1;
+    }
+    .diary-file-clear:hover { color: var(--danger); }
+
+    /* Review */
+    .diary-summary-box {
+      background: rgba(255,107,26,0.06); border-left: 2px solid var(--orange);
+      padding: 12px 16px; margin: 14px 0;
+      font-family: 'Rajdhani', sans-serif; font-size: 14px;
+      color: rgba(207,233,240,0.9); line-height: 1.5;
+    }
+    .diary-summary-box strong {
+      color: var(--orange); font-family: 'Share Tech Mono', monospace;
+      font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+      display: block; margin-bottom: 4px;
+    }
+    .diary-meta-block { margin: 12px 0; }
+    .diary-meta-title {
+      font-family: 'Share Tech Mono', monospace; font-size: 10px;
+      letter-spacing: 3px; color: var(--orange); text-transform: uppercase; margin-bottom: 6px;
+    }
+    .diary-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .diary-chip {
+      background: rgba(0,255,231,0.06); border: 1px solid rgba(0,255,231,0.22);
+      color: rgba(207,233,240,0.85); font-family: 'Rajdhani', sans-serif;
+      font-size: 12px; padding: 4px 10px; letter-spacing: 0.02em; border-radius: 2px;
+    }
+    .diary-review-title {
+      font-family: 'Orbitron', monospace; color: var(--holo);
+      font-size: 14px; letter-spacing: 3px; margin-bottom: 12px; text-transform: uppercase;
+    }
+    .diary-done-msg {
+      font-family: 'Orbitron', monospace; font-size: 14px; letter-spacing: 4px;
+      color: var(--good); text-transform: uppercase; text-shadow: 0 0 12px rgba(78,224,122,0.5);
+    }
+
+    /* Offline state */
+    .offline-box { padding: 40px 24px; text-align: center; }
+    .offline-title {
+      font-family: 'Orbitron', monospace; font-size: 14px; letter-spacing: 6px;
+      color: var(--danger); text-transform: uppercase;
+      text-shadow: 0 0 14px rgba(255,85,102,0.5); margin-bottom: 12px;
+    }
+    .offline-sub {
+      font-family: 'Share Tech Mono', monospace; font-size: 11px;
+      letter-spacing: 2px; color: rgba(207,233,240,0.4);
+    }
+
+    @media (max-width: 700px) {
+      body { padding: 60px 14px 30px; }
+      .back-btn { left: 16px; top: 18px; }
+      .corner { width: 24px; height: 24px; }
+      .corner-tl, .corner-tr { top: 10px; }
+      .corner-tl, .corner-bl { left: 10px; }
+      .corner-tr, .corner-br { right: 10px; }
+      .corner-bl, .corner-br { bottom: 10px; }
+      .tool-card { padding: 18px; }
+      .diary-row { grid-template-columns: 1fr; }
+      .action-footer { flex-direction: column; }
+      .action-footer .btn { width: 100%; }
+      .status-toggle-label { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+
+  <a href="index.html" class="back-btn">← Início</a>
+
+  <div class="container">
+
+    <header class="page-header">
+      <div class="page-title">DIÁRIO</div>
+      <div class="page-sub">Ingestão de sessões · Acesso restrito</div>
+    </header>
+
+    <section class="tool-card">
+
+      <div class="tool-header">
+        <div class="tool-led" id="diaryLed"></div>
+        <div class="tool-name">Diário de Bordo</div>
+        <div class="status-toggle-wrap">
+          <span class="status-toggle-label">Status</span>
+          <button class="status-toggle" id="statusToggle">ATIVO</button>
+        </div>
+      </div>
+
+      <p class="tool-desc">
+        Ingere transcrições de sessões (Google Meet, áudio transcrito, notas).
+        O sistema limpa o ruído — conversas paralelas, hesitações, problemas
+        técnicos — preservando tudo que é narrativo. Arquiva no banco da
+        campanha pra consulta posterior no Navegador.
+      </p>
+
+      <!-- Estado offline -->
+      <div id="diaryOffline" hidden>
+        <div class="offline-box">
+          <div class="offline-title">Sistema Offline</div>
+          <div class="offline-sub">Ingestão de sessões temporariamente desativada.<br>Ative o toggle acima pra retomar.</div>
+        </div>
+      </div>
+
+      <!-- PHASE 1: Form -->
+      <div id="diaryForm">
+
+        <div class="diary-row">
+          <div class="diary-field">
+            <span class="diary-field-label">Título da sessão *</span>
+            <input class="diary-input" id="diaryTitle" placeholder="ex: Sessão 17 — O Encontro com o Vampiro" maxlength="200">
+          </div>
+          <div class="diary-field">
+            <span class="diary-field-label">Data IRL</span>
+            <input class="diary-input" id="diaryDate" type="date">
+          </div>
+        </div>
+
+        <div class="diary-field">
+          <span class="diary-field-label">Transcript bruto *</span>
+          <span class="diary-field-hint">Cole o texto abaixo e/ou carregue um arquivo — podem ser usados juntos.</span>
+
+          <!-- File upload -->
+          <div class="diary-file-row">
+            <label class="diary-file-btn" for="diaryFileInput">⊕ Carregar arquivo</label>
+            <input type="file" id="diaryFileInput" accept=".txt,.md,.jpg,.jpeg,.png" style="display:none">
+            <div class="diary-file-preview" id="diaryFilePreview"></div>
+          </div>
+
+          <textarea class="diary-textarea" id="diaryRaw" placeholder="Cole o transcript aqui... (ou carregue um arquivo acima)"></textarea>
+        </div>
+
+        <div class="action-footer">
+          <button class="btn" id="diaryCleanBtn">Limpar Transcript</button>
+        </div>
+      </div>
+
+      <!-- PHASE 2: Loading -->
+      <div id="diaryLoading" hidden>
+        <div class="loading-box">
+          <div class="loading-text">Limpando transcript...</div>
+          <div class="loading-bar"></div>
+          <div class="loading-text" style="font-size:10px;color:rgba(0,255,231,0.5);letter-spacing:3px;margin-top:8px;">
+            Removendo ruído · Preservando narrativa · Extraindo metadata
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 3: Review -->
+      <div id="diaryReview" hidden></div>
+
+      <!-- PHASE 4: Saving -->
+      <div id="diarySaving" hidden>
+        <div class="loading-box">
+          <div class="loading-text">Arquivando no diário...</div>
+          <div class="loading-bar"></div>
+        </div>
+      </div>
+
+      <!-- PHASE 5: Done -->
+      <div id="diaryDone" hidden>
+        <div class="loading-box">
+          <div class="diary-done-msg">✓ Sessão arquivada</div>
+          <p style="color:rgba(207,233,240,0.6);margin:14px 0;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;">
+            Disponível pra consulta no Navegador
+          </p>
+          <button class="btn btn-ghost" id="diaryAnotherBtn" style="margin-top:8px;">Ingerir outra sessão</button>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <script>
+    var SUPABASE_URL = 'https://mxyqqfsyybluavwlrhsa.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eXFxZnN5eWJsdWF2d2xyaHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTM4MzEsImV4cCI6MjA5MzY2OTgzMX0.b0Ij7UGzbMLpqZjLYxoPEu2kGwEW52U_2NSDtpMGUPM';
+
+    function sbFetch(path, method, body) {
+      return fetch(SUPABASE_URL + path, {
+        method: method || 'GET',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': method === 'POST' ? 'return=representation' : ''
+        },
+        body: body ? JSON.stringify(body) : undefined
+      }).then(function(r) { return r.status === 204 ? null : r.json().catch(function() { return null; }); });
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, function(c) {
+        return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+      });
+    }
+
+    // ── Toggle Ativo/Inativo ──
+    var STORAGE_KEY = 'diario_ativo';
+    var diaryActive = localStorage.getItem(STORAGE_KEY) !== 'false';
+    var diaryCurrentPhase = 'diaryForm';
+
+    function applyToggleState() {
+      var toggle  = document.getElementById('statusToggle');
+      var led     = document.getElementById('diaryLed');
+      var offline = document.getElementById('diaryOffline');
+      if (diaryActive) {
+        toggle.textContent = 'ATIVO'; toggle.classList.remove('inactive');
+        led.classList.remove('offline'); offline.hidden = true;
+        showDiaryPhase(diaryCurrentPhase);
+      } else {
+        toggle.textContent = 'INATIVO'; toggle.classList.add('inactive');
+        led.classList.add('offline'); offline.hidden = false;
+        ['diaryForm','diaryLoading','diaryReview','diarySaving','diaryDone'].forEach(function(p) {
+          document.getElementById(p).hidden = true;
+        });
+      }
+    }
+
+    document.getElementById('statusToggle').addEventListener('click', function() {
+      diaryActive = !diaryActive;
+      localStorage.setItem(STORAGE_KEY, String(diaryActive));
+      applyToggleState();
+    });
+
+    // ── Fases ──
+    var PHASES = ['diaryForm','diaryLoading','diaryReview','diarySaving','diaryDone'];
+    function showDiaryPhase(id) {
+      diaryCurrentPhase = id;
+      PHASES.forEach(function(p) { document.getElementById(p).hidden = (p !== id); });
+    }
+
+    // ── Upload de arquivo ──
+    var diaryAttachedImage = null; // { data: base64, mediaType: string, name: string }
+
+    document.getElementById('diaryFileInput').addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+
+      var ext = file.name.split('.').pop().toLowerCase();
+
+      if (ext === 'txt' || ext === 'md') {
+        // Texto: lê e popula textarea
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+          var content = ev.target.result;
+          document.getElementById('diaryRaw').value = content;
+          showFilePreview(file.name, null, content.length);
+        };
+        reader.readAsText(file, 'UTF-8');
+      } else if (file.type.startsWith('image/')) {
+        // Imagem: comprime e armazena como base64
+        compressImage(file).then(function(result) {
+          diaryAttachedImage = { data: result.base64, mediaType: result.mediaType, name: file.name };
+          showFilePreview(file.name, result.previewUrl, null);
+        }).catch(function(err) {
+          alert('Erro ao processar imagem: ' + file.name);
+          console.error(err);
+        });
+      } else {
+        alert('Tipo não suportado. Use txt, md, jpg ou png.');
+        e.target.value = '';
+      }
+    });
+
+    function showFilePreview(name, imgUrl, charCount) {
+      var preview = document.getElementById('diaryFilePreview');
+      var html = '<span class="diary-file-name">' + escapeHtml(name) + '</span>';
+      if (charCount != null) {
+        html += '<span class="diary-file-meta">' + charCount.toLocaleString('pt-BR') + ' chars</span>';
+      }
+      if (imgUrl) {
+        html += '<img src="' + imgUrl + '" class="diary-file-thumb" title="Imagem anexada">';
+      }
+      html += '<button class="diary-file-clear" id="diaryFileClearBtn" title="Remover">✕</button>';
+      preview.innerHTML = html;
+      preview.style.display = 'flex';
+
+      document.getElementById('diaryFileClearBtn').addEventListener('click', function() {
+        diaryAttachedImage = null;
+        document.getElementById('diaryFileInput').value = '';
+        preview.style.display = 'none';
+        preview.innerHTML = '';
+      });
+    }
+
+    // Comprime imagem pra max 2200px, retorna base64 jpeg
+    function compressImage(file) {
+      return new Promise(function(resolve, reject) {
+        var reader = new FileReader();
+        reader.onerror = reject;
+        reader.onload = function(e) {
+          var img = new Image();
+          img.onerror = reject;
+          img.onload = function() {
+            var MAX = 2200;
+            var w = img.width, h = img.height;
+            if (w > MAX || h > MAX) {
+              var scale = Math.min(MAX / w, MAX / h);
+              w = Math.round(w * scale); h = Math.round(h * scale);
+            }
+            var canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            var ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+            ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+            var dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+            resolve({ base64: dataUrl.split(',')[1], mediaType: 'image/jpeg', previewUrl: dataUrl });
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // ── Limpeza ──
+    var diaryCleanedData = null;
+
+    document.getElementById('diaryCleanBtn').addEventListener('click', startDiaryClean);
+    document.getElementById('diaryAnotherBtn').addEventListener('click', resetDiaryForm);
+
+    async function startDiaryClean() {
+      var title = document.getElementById('diaryTitle').value.trim();
+      var date  = document.getElementById('diaryDate').value || null;
+      var raw   = document.getElementById('diaryRaw').value.trim();
+
+      if (!title) { alert('Título da sessão é obrigatório.'); return; }
+
+      // Precisa de texto OU imagem
+      if (!raw && !diaryAttachedImage) {
+        alert('Cole o transcript ou carregue um arquivo (txt, md, jpg, png).'); return;
+      }
+
+      if (raw.length > 0 && raw.length < 100 && !diaryAttachedImage) {
+        if (!confirm('O transcript parece muito curto (' + raw.length + ' caracteres). Continuar?')) return;
+      }
+      if (raw.length > 250000) {
+        alert('Transcript muito longo (' + raw.length + ' chars). Limite ~250KB. Divida em partes menores.'); return;
+      }
+
+      showDiaryPhase('diaryLoading');
+
+      try {
+        var payload = { title: title, rawContent: raw || '' };
+        if (diaryAttachedImage) {
+          payload.imageFiles = [{ data: diaryAttachedImage.data, mediaType: diaryAttachedImage.mediaType }];
+        }
+
+        var response = await fetch('/api/ingest-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        var json = await response.json();
+        if (!response.ok) throw new Error(json.error || 'Erro ' + response.status);
+
+        diaryCleanedData = {
+          title: title,
+          sessionDate: date,
+          rawContent: raw,
+          cleanedContent: json.data.cleaned,
+          summary: json.data.summary,
+          metadata: json.data.metadata || {}
+        };
+
+        renderDiaryReview(diaryCleanedData);
+        showDiaryPhase('diaryReview');
+      } catch (err) {
+        alert('Erro ao limpar transcript:\n' + err.message);
+        showDiaryPhase('diaryForm');
+      }
+    }
+
+    function renderDiaryReview(data) {
+      var meta = data.metadata || {};
+      var html = '';
+      html += '<div class="diary-review-title">' + escapeHtml(data.title) + '</div>';
+      if (data.summary) {
+        html += '<div class="diary-summary-box"><strong>Resumo</strong>' + escapeHtml(data.summary) + '</div>';
+      }
+      html += renderDiaryChips('Personagens presentes', meta.personagens_presentes);
+      html += renderDiaryChips('NPCs mencionados', meta.npcs_mencionados);
+      html += renderDiaryChips('Locais', meta.locais);
+      html += renderDiaryChips('Eventos-chave', meta.eventos_chave);
+      html +=
+        '<div class="diary-field" style="margin-top:18px;">' +
+          '<span class="diary-field-label">Conteúdo Limpo (editável)</span>' +
+          '<span class="diary-field-hint">Revise antes de salvar. Esta é a versão que vai pro Navegador. O transcript original fica preservado no banco.</span>' +
+          '<textarea class="diary-textarea" id="diaryCleanedEdit" style="min-height:400px;">' +
+          escapeHtml(data.cleanedContent) + '</textarea>' +
+        '</div>' +
+        '<div class="action-footer">' +
+          '<button class="btn btn-ghost" id="diaryBackBtn">Voltar / Refazer</button>' +
+          '<button class="btn" id="diarySaveBtn">Arquivar no Diário</button>' +
+        '</div>';
+
+      document.getElementById('diaryReview').innerHTML = html;
+      document.getElementById('diaryBackBtn').addEventListener('click', function() {
+        if (confirm('Voltar perde a limpeza atual. Confirmar?')) showDiaryPhase('diaryForm');
+      });
+      document.getElementById('diarySaveBtn').addEventListener('click', saveDiarySession);
+    }
+
+    function renderDiaryChips(label, arr) {
+      if (!arr || !Array.isArray(arr) || !arr.length) return '';
+      return '<div class="diary-meta-block">' +
+        '<div class="diary-meta-title">' + escapeHtml(label) + '</div>' +
+        '<div class="diary-chips">' +
+        arr.map(function(x) { return '<span class="diary-chip">' + escapeHtml(String(x)) + '</span>'; }).join('') +
+        '</div></div>';
+    }
+
+    async function saveDiarySession() {
+      if (!diaryCleanedData) return;
+      var editedCleaned = document.getElementById('diaryCleanedEdit').value.trim();
+      if (!editedCleaned) {
+        alert('Conteúdo limpo não pode estar vazio. Edite ou volte pra refazer.'); return;
+      }
+      showDiaryPhase('diarySaving');
+      try {
+        await sbFetch('/rest/v1/sessions', 'POST', {
+          title: diaryCleanedData.title,
+          session_date: diaryCleanedData.sessionDate || null,
+          session_number: null,
+          raw_content: diaryCleanedData.rawContent || '',
+          cleaned_content: editedCleaned,
+          summary: diaryCleanedData.summary || null,
+          metadata: diaryCleanedData.metadata || {}
+        });
+        showDiaryPhase('diaryDone');
+      } catch (err) {
+        alert('Erro ao arquivar no banco:\n' + (err.message || err));
+        showDiaryPhase('diaryReview');
+      }
+    }
+
+    function resetDiaryForm() {
+      document.getElementById('diaryTitle').value = '';
+      document.getElementById('diaryDate').value  = '';
+      document.getElementById('diaryRaw').value   = '';
+      diaryCleanedData = null;
+      diaryAttachedImage = null;
+      document.getElementById('diaryFileInput').value = '';
+      var preview = document.getElementById('diaryFilePreview');
+      preview.style.display = 'none'; preview.innerHTML = '';
+      showDiaryPhase('diaryForm');
+    }
+
+    applyToggleState();
+  </script>
+</body>
+</html>
