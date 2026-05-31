@@ -1383,8 +1383,39 @@
     function markDirty()  { isDirty = true; setSaveStatus('pending'); }
     function clearDirty() { isDirty = false; setSaveStatus('saved'); }
 
-    document.getElementById('back-btn').addEventListener('click', function() {
-      window.location.href = this.href;
+    // back-btn: intercepta se houver mudanças não salvas
+    var exitTarget = 'tramas.html';
+    document.getElementById('back-btn').addEventListener('click', function(e) {
+      if (!isDirty) { window.location.href = this.href; return; }
+      e.preventDefault();
+      exitTarget = this.href;
+      document.getElementById('exit-overlay').classList.add('open');
+    });
+
+    document.getElementById('ex-stay').addEventListener('click', function() {
+      document.getElementById('exit-overlay').classList.remove('open');
+    });
+    document.getElementById('ex-go').addEventListener('click', function() {
+      isDirty = false;
+      window.location.href = exitTarget;
+    });
+    document.getElementById('ex-save-go').addEventListener('click', function() {
+      document.getElementById('exit-overlay').classList.remove('open');
+      document.getElementById('btn-save').click();
+      var t = Date.now();
+      var iv = setInterval(function() {
+        if (!isDirty || Date.now() - t > 6000) {
+          clearInterval(iv);
+          setTimeout(function() { window.location.href = exitTarget; }, 400);
+        }
+      }, 150);
+    });
+
+    // Avisa ao fechar aba / F5 com mudanças não salvas
+    window.addEventListener('beforeunload', function(e) {
+      if (!isDirty) return;
+      e.preventDefault();
+      e.returnValue = '';
     });
 
     // ══════════════════════════════════════════════════════════
