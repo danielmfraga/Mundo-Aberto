@@ -354,7 +354,7 @@
           <!-- File upload -->
           <div class="diary-file-row">
             <label class="diary-file-btn" for="diaryFileInput">⊕ Carregar arquivo</label>
-            <input type="file" id="diaryFileInput" accept=".txt,.md,.jpg,.jpeg,.png" style="display:none">
+            <input type="file" id="diaryFileInput" accept=".txt,.md,.docx,.jpg,.jpeg,.png" style="display:none">
             <div class="diary-file-preview" id="diaryFilePreview"></div>
           </div>
 
@@ -402,6 +402,7 @@
     </section>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <script>
     var SUPABASE_URL = 'https://mxyqqfsyybluavwlrhsa.supabase.co';
     var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eXFxZnN5eWJsdWF2d2xyaHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTM4MzEsImV4cCI6MjA5MzY2OTgzMX0.b0Ij7UGzbMLpqZjLYxoPEu2kGwEW52U_2NSDtpMGUPM';
@@ -470,7 +471,7 @@
       var ext = file.name.split('.').pop().toLowerCase();
 
       if (ext === 'txt' || ext === 'md') {
-        // Texto: lê e popula textarea
+        // Texto plano: lê e popula textarea
         var reader = new FileReader();
         reader.onload = function(ev) {
           var content = ev.target.result;
@@ -478,6 +479,21 @@
           showFilePreview(file.name, null, content.length);
         };
         reader.readAsText(file, 'UTF-8');
+      } else if (ext === 'docx') {
+        // Word: extrai texto via mammoth.js
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+          mammoth.extractRawText({ arrayBuffer: ev.target.result })
+            .then(function(result) {
+              document.getElementById('diaryRaw').value = result.value;
+              showFilePreview(file.name, null, result.value.length);
+            })
+            .catch(function(err) {
+              alert('Erro ao ler .docx:\n' + err.message);
+              document.getElementById('diaryFileInput').value = '';
+            });
+        };
+        reader.readAsArrayBuffer(file);
       } else if (file.type.startsWith('image/')) {
         // Imagem: comprime e armazena como base64
         compressImage(file).then(function(result) {
@@ -488,7 +504,7 @@
           console.error(err);
         });
       } else {
-        alert('Tipo não suportado. Use txt, md, jpg ou png.');
+        alert('Tipo não suportado. Use txt, md, docx, jpg ou png.');
         e.target.value = '';
       }
     });
