@@ -1134,8 +1134,7 @@
       <div class="vincular-label">Ficha vinculada</div>
       <div id="vincular-section"></div>
       <div class="modal-row">
-        <button class="modal-btn" id="modal-cancel">Cancelar</button>
-        <button class="modal-btn save" id="modal-save">Salvar notas</button>
+        <button class="modal-btn" id="modal-cancel">Fechar</button>
       </div>
     </div>
   </div>
@@ -1863,26 +1862,45 @@
         else if (!IS_MOBILE) document.getElementById('modal-note').focus();
       }, 50);
     }
-    function closeModal(save) {
-      if (save && currentNoteNodeId && nodes[currentNoteNodeId]) {
-        // Salva nome: atualiza o .node-title exibido no box
-        var newName = document.getElementById('modal-name').value.trim();
+    // Auto-save da modal: aplica mudanças no nó e dispara markDirty
+    function applyModalToNode() {
+      if (!currentNoteNodeId || !nodes[currentNoteNodeId]) return;
+      var newName = document.getElementById('modal-name').value.trim();
+      var note    = document.getElementById('modal-note').value;
+      var titleEl = nodes[currentNoteNodeId].querySelector('.node-title');
+      if (titleEl && titleEl.textContent !== newName) titleEl.textContent = newName;
+      nodes[currentNoteNodeId].dataset.note = note;
+      var prev = nodes[currentNoteNodeId].querySelector('.node-note-preview');
+      if (prev) prev.textContent = note.slice(0, 60);
+      if (typeof markDirty === 'function') markDirty();
+    }
+
+    // Debounce para salvar enquanto digita
+    var modalSaveTimer = null;
+    function scheduleModalSave() {
+      clearTimeout(modalSaveTimer);
+      modalSaveTimer = setTimeout(applyModalToNode, 400);
+    }
+
+    document.getElementById('modal-name').addEventListener('input', function() {
+      // Atualiza o título no nó em tempo real (visual imediato)
+      if (currentNoteNodeId && nodes[currentNoteNodeId]) {
         var titleEl = nodes[currentNoteNodeId].querySelector('.node-title');
-        if (titleEl) titleEl.textContent = newName;
-        // Salva nota
-        var note = document.getElementById('modal-note').value;
-        nodes[currentNoteNodeId].dataset.note = note;
-        var prev = nodes[currentNoteNodeId].querySelector('.node-note-preview');
-        if (prev) prev.textContent = note.slice(0, 60);
-        if (typeof markDirty === 'function') markDirty();
+        if (titleEl) titleEl.textContent = this.value;
       }
+      scheduleModalSave();
+    });
+    document.getElementById('modal-note').addEventListener('input', scheduleModalSave);
+
+    function closeModal() {
+      clearTimeout(modalSaveTimer);
+      applyModalToNode();  // flush imediato ao fechar
       document.getElementById('modal-overlay').classList.remove('open');
       currentNoteNodeId = null;
     }
-    document.getElementById('modal-save').addEventListener('click', function() { closeModal(true); });
-    document.getElementById('modal-cancel').addEventListener('click', function() { closeModal(false); });
+    document.getElementById('modal-cancel').addEventListener('click', closeModal);
     document.getElementById('modal-overlay').addEventListener('click', function(e) {
-      if (e.target === document.getElementById('modal-overlay')) closeModal(false);
+      if (e.target === document.getElementById('modal-overlay')) closeModal();
     });
 
     // ── Notas da trama ──
@@ -2432,7 +2450,7 @@
         var el0 = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
         if (el0 && (el0.classList.contains('node-act-btn') || el0.classList.contains('conn-del') ||
                     el0.classList.contains('cmitem') || el0.id === 'btn-save' ||
-                    el0.id === 'modal-save' || el0.id === 'modal-cancel')) return;
+                    el0.id === 'modal-cancel')) return;
         e.preventDefault();
         connMenu.classList.remove('open');
 
