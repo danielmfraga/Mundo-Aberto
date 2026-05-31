@@ -561,6 +561,20 @@
       color: var(--holo);
       margin-bottom: 14px;
       text-shadow: 0 0 20px rgba(0,255,231,0.4);
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(0,255,231,0.25);
+      outline: none;
+      padding: 4px 0;
+      transition: border-color 0.2s;
+    }
+    #modal-name:focus {
+      border-bottom-color: var(--holo);
+    }
+    #modal-name::placeholder {
+      color: rgba(0,255,231,0.2);
+      font-size: 13px;
     }
     #modal-note {
       width: 100%;
@@ -1114,8 +1128,7 @@
   <!-- Modal notas -->
   <div id="modal-overlay">
     <div id="modal-box">
-      <div class="modal-label">Arquivo · NPC</div>
-      <div id="modal-name">—</div>
+      <input id="modal-name" type="text" placeholder="Nome..." autocomplete="off" spellcheck="false">
       <textarea id="modal-note" placeholder="Histórico, motivações, segredos..."></textarea>
       <div class="vincular-sep"></div>
       <div class="vincular-label">Ficha vinculada</div>
@@ -1607,22 +1620,16 @@
       var acts = document.createElement('div');
       acts.className = 'node-actions';
 
-      var noteBtn = document.createElement('button');
-      noteBtn.className = 'node-act-btn';
-      noteBtn.textContent = '👁';
-      noteBtn.title = 'Notas';
-
       var delBtn = document.createElement('button');
       delBtn.className = 'node-act-btn del';
       delBtn.textContent = '×';
       delBtn.title = 'Apagar';
 
-      acts.appendChild(noteBtn);
       acts.appendChild(delBtn);
 
       var title = document.createElement('div');
       title.className = 'node-title';
-      title.contentEditable = true;
+      title.contentEditable = false;   // nome só editável via modal
       title.spellcheck = false;
       title.dataset.ph = nodeType === 'loc' ? 'Local...' : 'Nome...';
       title.textContent = (data && data.name) ? data.name : '';
@@ -1715,13 +1722,21 @@
         el.appendChild(a);
       });
 
-      noteBtn.addEventListener('click', function(e) { e.stopPropagation(); openModal(id); });
-      delBtn.addEventListener('click',  function(e) { e.stopPropagation(); deleteNode(id); });
+      delBtn.addEventListener('click', function(e) { e.stopPropagation(); deleteNode(id); });
+
+      // Click no título → abre modal (desktop e mobile)
+      title.addEventListener('click', function(e) { e.stopPropagation(); openModal(id); });
 
       if (!IS_MOBILE) {
+        // Desktop: dblclick em qualquer parte do nó → abre modal
+        el.addEventListener('dblclick', function(e) {
+          if (e.target.classList.contains('anchor') || e.target === delBtn) return;
+          e.stopPropagation(); e.preventDefault();
+          openModal(id);
+        });
         // Desktop: node drag
         el.addEventListener('mousedown', function(e) {
-          if (e.target.classList.contains('anchor') || e.target === noteBtn || e.target === delBtn || e.target === title) return;
+          if (e.target.classList.contains('anchor') || e.target === delBtn || e.target === title) return;
           e.stopPropagation(); e.preventDefault();
           if (connectSource) {
             if (nodes[connectSource.id]) nodes[connectSource.id].classList.remove('connect-src');
@@ -1761,25 +1776,14 @@
             m.classList.add('open');
           }
         });
-        title.addEventListener('input', function() {
-          updateConnections();
-          if (typeof markDirty === 'function') markDirty();
-        });
+        // nome agora é read-only no box — editado via modal
       } else {
-        // Mobile: edita título do nó também dispara save
-        title.addEventListener('input', function() {
-          if (typeof markDirty === 'function') markDirty();
-        });
-        // Mobile: tap on title to open keyboard
+        // Mobile: tap no título abre modal (touchend sem movimento)
         title.addEventListener('touchend', function(e) {
           e.stopPropagation();
-          title.focus();
-          var range = document.createRange();
-          range.selectNodeContents(title);
-          range.collapse(false);
-          var sel = window.getSelection();
-          if (sel) { sel.removeAllRanges(); sel.addRange(range); }
-        });
+          e.preventDefault();
+          openModal(id);
+        }, { passive: false });
       }
 
       if (!IS_MOBILE) pushUndo();
@@ -1847,21 +1851,30 @@
     function openModal(id) {
       currentNoteNodeId = id;
       var nodeEl = nodes[id];
-      var isLoc = nodeEl && nodeEl.dataset.type === 'loc';
       var titleText = nodeEl ? nodeEl.querySelector('.node-title').textContent : '';
-      document.getElementById('modal-name').textContent = titleText || (isLoc ? 'Local' : 'NPC');
-      document.querySelector('.modal-label').textContent = isLoc ? 'Arquivo · Local' : 'Arquivo · NPC';
+      var nameInput = document.getElementById('modal-name');
+      nameInput.value = titleText;
       document.getElementById('modal-note').value = nodeEl ? (nodeEl.dataset.note || '') : '';
       renderVincularSection(id);
       document.getElementById('modal-overlay').classList.add('open');
-      if (!IS_MOBILE) document.getElementById('modal-note').focus();
+      // Foca no nome se vazio, senão nas notas
+      setTimeout(function() {
+        if (!titleText) nameInput.focus();
+        else if (!IS_MOBILE) document.getElementById('modal-note').focus();
+      }, 50);
     }
     function closeModal(save) {
       if (save && currentNoteNodeId && nodes[currentNoteNodeId]) {
+        // Salva nome: atualiza o .node-title exibido no box
+        var newName = document.getElementById('modal-name').value.trim();
+        var titleEl = nodes[currentNoteNodeId].querySelector('.node-title');
+        if (titleEl) titleEl.textContent = newName;
+        // Salva nota
         var note = document.getElementById('modal-note').value;
         nodes[currentNoteNodeId].dataset.note = note;
         var prev = nodes[currentNoteNodeId].querySelector('.node-note-preview');
         if (prev) prev.textContent = note.slice(0, 60);
+        if (typeof markDirty === 'function') markDirty();
       }
       document.getElementById('modal-overlay').classList.remove('open');
       currentNoteNodeId = null;
