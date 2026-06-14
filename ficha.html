@@ -1834,16 +1834,13 @@ function restoreSheet(data) {
       data.qualities.forEach(function(q) {
         var row = document.createElement('div');
         row.className = 'row' + (q.defect ? ' defect' : '');
-        var dots = '';
-        for (var i = 0; i < (q.max || 3); i++) {
-          dots += '<div class="dot' + (i < q.filled ? ' filled' : '') + '"></div>';
-        }
         row.innerHTML =
           '<span class="quality-toggle">Q/D</span>' +
           '<span class="row-name" contenteditable="true" spellcheck="false">' + q.name + '</span>' +
-          '<div class="dots">' + dots + '</div>' +
+          '<div class="dots" data-max="' + (q.max || 3) + '" data-val="' + q.filled + '"></div>' +
           '<span class="quality-del">✕</span>';
         list.appendChild(row);
+        buildDots(row.querySelector('.dots'));
         var del = row.querySelector('.quality-del');
         if (del) del.addEventListener('click', function() { row.remove(); });
         var tog = row.querySelector('.quality-toggle');
