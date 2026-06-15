@@ -1378,8 +1378,10 @@
     }
 
     // ── Holograma reutilizável ──
-    function createHoloCard(charId, name, imgSrc, ledLabel) {
-      const href = 'ficha.html?id=' + charId + (ESP_PARAM ? '&esp=' + encodeURIComponent(ESP_PARAM) : '');
+    function createHoloCard(charId, name, imgSrc, ledLabel, sheetData) {
+      const isVampiro = sheetData && (sheetData.sheet_type === 'vampiro' || sheetData.vtmFields);
+      const fichaPage = isVampiro ? 'ficha-vampiro.html' : 'ficha.html';
+      const href = fichaPage + '?id=' + charId + (ESP_PARAM ? '&esp=' + encodeURIComponent(ESP_PARAM) : '');
       const group = document.createElement('div');
       group.className = 'char-group';
       group.dataset.charId = charId;
@@ -1477,7 +1479,7 @@
         chars.filter(function(c) { return !c.char_id.startsWith('npc_'); })
              .sort(function(a,b){ return (a.name||'').localeCompare(b.name||'','pt'); })
              .forEach(function(char, i) {
-          const card = createHoloCard(char.char_id, char.name, char.img_url);
+          const card = createHoloCard(char.char_id, char.name, char.img_url, null, char.sheet_data);
           card.style.animationDelay = (i * 80) + 'ms';
           rosterEl.insertBefore(card, newCharGroup);
         });
@@ -1542,7 +1544,7 @@
           chars.filter(function(c) { return c.char_id.startsWith('npc_'); })
                .sort(function(a,b){ return (a.name||'').localeCompare(b.name||'','pt'); })
                .forEach(function(npc, i) {
-            var card = createHoloCard(npc.char_id, npc.name, npc.img_url, 'N P C');
+            var card = createHoloCard(npc.char_id, npc.name, npc.img_url, 'N P C', npc.sheet_data);
             card.classList.add('npc-inline');
             card.style.animationDelay = (i * 80) + 'ms';
             rosterEl.insertBefore(card, newCharGrp);
@@ -1593,7 +1595,7 @@
 
             chars.filter(function(c) { return !c.char_id.startsWith('npc_'); })
                  .forEach(function(char, i) {
-              var card = createHoloCard(char.char_id, char.name, char.img_url);
+              var card = createHoloCard(char.char_id, char.name, char.img_url, null, char.sheet_data);
               card.classList.add('sp-inline-char');
               card.style.animationDelay = (i * 80) + 'ms';
               roster.insertBefore(card, newCharGrp);
@@ -1818,7 +1820,7 @@
         await sbFetch('/rest/v1/personagens', 'POST', {
           char_id: newId, name: newName, img_url: src.img_url || null, sheet_data: newData
         });
-        const card = createHoloCard(newId, newName, src.img_url);
+        const card = createHoloCard(newId, newName, src.img_url, null, newData);
         document.getElementById('roster').insertBefore(card, document.getElementById('charEnd'));
         requestAnimationFrame(() => card.classList.add('dupe-flash'));
         setTimeout(() => card.classList.remove('dupe-flash'), 950);

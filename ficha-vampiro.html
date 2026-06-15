@@ -1465,6 +1465,9 @@ var CHAR_SPACE_ID = null;
 function captureSheet() {
   var data = {};
 
+  // Marcador de sistema — usado pelo roster pra rotear ao abrir a ficha certa
+  data.sheet_type = 'vampiro';
+
   // Campos de texto
   data.fields = {};
   document.querySelectorAll('[data-field]').forEach(function(el) {
