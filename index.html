@@ -403,26 +403,29 @@
     #codexGroup .device-led { background: #b98cff; box-shadow: 0 0 6px #b98cff; }
     #codexGroup .device-led-label, #codexGroup .btn-name { color: rgba(185,140,255,0.6); }
     #codexGroup .holo-btn:hover .btn-name { color: #b98cff; text-shadow: 0 0 12px #7b2fffcc; }
-    #codexGroup .btn-name { letter-spacing: 3px; }
+    #codexGroup .btn-name { letter-spacing: 4px; }
 
-    /* retrato espectral projetado dentro do núcleo */
-    #codexGroup .holo-core::before {
-      content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
-      background: radial-gradient(circle at 50% 38%, transparent 42%, rgba(123,47,255,0.30));
+    /* núcleo: livro digital + chuva de código (Matrix) */
+    #codexGroup .holo-core::after { z-index: 3; }  /* scanline por cima da chuva */
+    #codexGroup .codex-rain {
+      position: absolute; inset: 0; z-index: 1; overflow: hidden;
+      -webkit-mask-image: linear-gradient(to bottom, transparent, #000 20%, #000 80%, transparent);
+              mask-image: linear-gradient(to bottom, transparent, #000 20%, #000 80%, transparent);
     }
-    #codexGroup .holo-core::after { z-index: 3; }  /* scanline por cima do retrato */
-    #codexGroup .ghost-portrait {
-      position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1;
-      object-fit: cover; object-position: 50% 26%;
-      filter: saturate(0.65) contrast(1.06) brightness(0.9);
+    #codexGroup .rcol {
+      position: absolute; top: 0; white-space: pre; text-align: center;
+      font-family: 'Share Tech Mono', monospace; font-size: 7.5px; line-height: 1.32;
+      color: rgba(123,47,255,0.5); text-shadow: 0 0 5px rgba(123,47,255,0.6);
+      animation: codexFall linear infinite; will-change: transform;
     }
-    #codexGroup .ghost-fallback {
-      position: absolute; inset: 0; z-index: 0;
-      display: flex; align-items: center; justify-content: center;
-      background: radial-gradient(circle at 50% 40%, rgba(123,47,255,0.10), #06040c 75%);
-      color: #6a5b9a;
+    @keyframes codexFall { from { transform: translateY(-75%); } to { transform: translateY(120%); } }
+    #codexGroup .codex-tome { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+    #codexGroup .codex-tome svg { color: #c6a8ff; animation: tomePulse 3.2s ease-in-out infinite; }
+    @keyframes tomePulse {
+      0%,100% { filter: drop-shadow(0 0 6px rgba(123,47,255,0.6)); }
+      50%     { filter: drop-shadow(0 0 11px rgba(123,47,255,0.95)); }
     }
-    #codexGroup .ghost-fallback svg { opacity: 0.55; }
+    #codexGroup .holo-btn:hover .codex-tome svg { color: #e0d0ff; }
 
     /* ── Globe button ── */
     .globe-projection {
@@ -690,7 +693,7 @@
           <div class="holo-btn-panel"></div>
           <div class="device-led-wrap">
             <div class="device-led"></div>
-            <span class="device-led-label">Codex</span>
+            <span class="device-led-label">Grimório</span>
           </div>
 
           <div class="holo-projection">
@@ -699,13 +702,12 @@
             <div class="ring3 holo-ring"></div>
 
             <div class="holo-core">
-              <img class="ghost-portrait" src="assets/codex/fantasma-sofredor.jpg" alt="Fantasma Sofredor" onerror="this.remove()">
-              <div class="ghost-fallback">
-                <svg width="64" height="80" viewBox="0 0 58 74" fill="none" stroke="currentColor" stroke-width="1.2">
-                  <path d="M29 6c-10 0-17 8-17 19v40c4-4 7-4 8.5 0 1.5-4 5-4 6 0 1.5-4 5-4 6.5 0 1.5-4 5-4 8.5 0V25C41 14 39 6 29 6Z"/>
-                  <ellipse cx="22" cy="30" rx="2.6" ry="3.6" fill="currentColor" stroke="none"/>
-                  <ellipse cx="36" cy="30" rx="2.6" ry="3.6" fill="currentColor" stroke="none"/>
-                  <ellipse cx="29" cy="44" rx="3.2" ry="5"/>
+              <div class="codex-rain" id="codexRain"></div>
+              <div class="codex-tome">
+                <svg width="46" height="46" viewBox="0 0 34 34" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round">
+                  <path d="M17 7C13 4.2 7.5 4 4 5.6V26c3.5-1.6 9-1.4 13 1.4 4-2.8 9.5-3 13-1.4V5.6C26.5 4 21 4.2 17 7Z"/>
+                  <path d="M17 7v20.4"/>
+                  <path d="M7 11c2-.8 4.8-.8 6.5 0M7 15c2-.8 4.8-.8 6.5 0M7 19c2-.8 4.8-.8 6.5 0M20.5 11c1.7-.8 4.5-.8 6.5 0M20.5 15c1.7-.8 4.5-.8 6.5 0M20.5 19c1.7-.8 4.5-.8 6.5 0" opacity=".5"/>
                 </svg>
               </div>
             </div>
@@ -729,7 +731,7 @@
             </svg>
           </div>
 
-          <div class="btn-name">Fantasma Sofredor</div>
+          <div class="btn-name">Codex</div>
         </a>
       </div>
 
@@ -873,6 +875,26 @@
       }
       tick();
     }
+
+    // Chuva de código (Matrix) no núcleo do card Codex
+    (function codexRain() {
+      var host = document.getElementById('codexRain');
+      if (!host) return;
+      var chars = 'ｱｲｳｴｵｶｷｸｹｺ0123456789ﾊﾋﾌﾍﾎﾘﾙﾚﾛｦﾝ';
+      var COLS = 7;
+      for (var c = 0; c < COLS; c++) {
+        var col = document.createElement('span');
+        col.className = 'rcol';
+        var len = 6 + Math.floor(Math.random() * 5);
+        var s = '';
+        for (var i = 0; i < len; i++) s += chars.charAt(Math.floor(Math.random() * chars.length)) + '\n';
+        col.textContent = s;
+        col.style.left = (5 + c * 13.5) + '%';
+        col.style.animationDuration = (2.1 + Math.random() * 2.3).toFixed(2) + 's';
+        col.style.animationDelay = (-Math.random() * 4).toFixed(2) + 's';
+        host.appendChild(col);
+      }
+    })();
   </script>
 </body>
 </html>
