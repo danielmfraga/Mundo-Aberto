@@ -902,6 +902,47 @@
     }
     .equip-input-f:focus { outline: none; }
 
+    /* ── Scanner: peças específicas de Vampiro ── */
+    .disc-row-f {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(192,57,43,0.10);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .disc-row-top {
+      display: grid;
+      grid-template-columns: 1fr auto 24px;
+      align-items: center;
+      gap: 10px;
+    }
+    .dname {
+      background: transparent; border: none; color: var(--fg);
+      font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 600; padding: 3px 0;
+    }
+    .dname:focus { outline: none; }
+    .dpowers {
+      width: 100%; background: rgba(192,57,43,0.04);
+      border: 1px solid rgba(192,57,43,0.14); border-radius: 3px;
+      color: var(--fg); font-family: 'Rajdhani', sans-serif; font-size: 12.5px;
+      padding: 6px 9px; resize: vertical; min-height: 38px; line-height: 1.5;
+    }
+    .dpowers:focus { outline: none; border-color: rgba(192,57,43,0.4); }
+    .vtm-text-field { margin-bottom: 12px; }
+    .vtm-text-field:last-child { margin-bottom: 0; }
+    .vtm-text-label {
+      display: block; font-family: 'Share Tech Mono', monospace; font-size: 9px;
+      letter-spacing: 2px; text-transform: uppercase; color: rgba(207,233,240,0.4); margin-bottom: 5px;
+    }
+    .vtm-text {
+      width: 100%; background: rgba(0,255,231,0.03);
+      border: 1px solid rgba(120,200,220,0.12); border-radius: 3px;
+      color: var(--fg); font-family: 'Rajdhani', sans-serif; font-size: 13px;
+      padding: 7px 10px; resize: vertical; min-height: 42px; line-height: 1.55;
+    }
+    .vtm-text:focus { outline: none; border-color: rgba(120,200,220,0.3); }
+    .vtm-text.tall { min-height: 80px; }
+
     /* Mobile (estilo ficha colapsa colunas) */
     @media (max-width: 700px) {
       .ficha-header { flex-direction: column; }
@@ -1524,6 +1565,7 @@
 
       try {
         var payload = {
+          tipo: scanSheetType,
           notations: notations,
           files: uploadedFiles.map(function(f) {
             return { data: f.data, mediaType: f.mediaType };
@@ -1579,6 +1621,7 @@
     ];
 
     function renderResult(data) {
+      if (scanSheetType === 'vampiro') return renderResultVampiro(data);
       var html = '<div class="ficha-review">';
 
       // Warnings
@@ -1941,11 +1984,299 @@
       });
     }
 
+    // ═══════════════════════════════════════════════════════
+    // SISTEMA: VAMPIRO — render + collect (paralelo ao Caçador)
+    // Reaproveita buildDotsHTML/buildBoxesHTML/wireFichaInteractions.
+    // O DOM gerado aqui é lido por collectSheetDataVampiro e o
+    // sheet_data resultante bate com restoreSheet() da ficha-vampiro.
+    // ═══════════════════════════════════════════════════════
+    var VTM_SKILL_GROUPS = [
+      { title: 'Físicas', items: ['Armas Brancas','Armas de Fogo','Atletismo','Briga','Condução','Furtividade','Ladroagem','Ofícios','Sobrevivência'] },
+      { title: 'Sociais', items: ['Emp. c/ Animais','Etiqueta','Intimidação','Liderança','Manha','Performance','Persuasão','Sagacidade','Subterfúgio'] },
+      { title: 'Mentais', items: ['Ciência','Erudição','Finanças','Investigação','Medicina','Ocultismo','Percepção','Política','Tecnologia'] }
+    ];
+    var VTM_IDENTITY_FIELDS = [
+      ['Crônica','cronica'], ['Conceito','conceito'], ['Predador','predador'], ['Clã','cla'],
+      ['Geração','geracao'], ['Senhor','senhor'], ['Ambição','ambicao'], ['Desejo','desejo'],
+      ['Ressonância','ressonancia']
+    ];
+    var VTM_BIO_FIELDS = [
+      ['Idade Verdadeira','idade_verdadeira'], ['Idade Aparente','idade_aparente'],
+      ['Data de Nascimento','data_nascimento'], ['Data de Morte','data_morte']
+    ];
+
+    function renderResultVampiro(data) {
+      var html = '<div class="ficha-review">';
+
+      // Warnings
+      if (data.warnings && data.warnings.length) {
+        html += '<div class="warnings-box"><div class="warnings-title">Avisos da análise</div><ul class="warnings-list">';
+        data.warnings.forEach(function(w) { html += '<li>' + escapeHtml(w) + '</li>'; });
+        html += '</ul></div>';
+      }
+
+      // HEADER: Nome / Potência de Sangue / XP
+      var xpTotal = (data.xp && data.xp.total != null) ? data.xp.total : 0;
+      var xpSpent = (data.xp && data.xp.spent != null) ? data.xp.spent : 0;
+      var pot = (data.potenciaSangue != null) ? data.potenciaSangue : 0;
+      html += '<div class="ficha-header">' +
+        '<div class="ficha-title-block">' +
+          '<input class="ficha-name" data-key="name" value="' + escapeHtml(data.name || '') + '" placeholder="Nome do Personagem">' +
+          '<div class="ficha-subtitle">Ficha de Vampiro · A Máscara</div>' +
+          '<div class="cosmo-row">' +
+            '<span class="cosmo-label">Potência de Sangue</span>' +
+            buildDotsHTML('potsangue', pot, 10) +
+          '</div>' +
+        '</div>' +
+        '<div class="xp-block-ficha">' +
+          '<div>XP Total<input class="xp-num-ficha" type="number" data-key="xp:total" value="' + xpTotal + '"></div>' +
+          '<div>Gasto<input class="xp-num-ficha" type="number" data-key="xp:spent" value="' + xpSpent + '"></div>' +
+        '</div>' +
+      '</div>';
+
+      // IDENTIDADE
+      var fields = data.fields || {};
+      var idRows = VTM_IDENTITY_FIELDS.map(function(f) {
+        return '<div class="id-field"><span class="id-field-key">' + f[0] + '</span>' +
+          '<input class="id-field-input" data-key="field:' + f[1] + '" value="' + escapeHtml(fields[f[1]] || '') + '"></div>';
+      }).join('');
+      html += '<div class="fpanel"><div class="fpanel-title">Identidade</div><div class="identity-fields">' + idRows + '</div></div>';
+
+      // ATRIBUTOS (reaproveita render do Caçador — mesmos nomes)
+      html += renderAtributos(data.atributos || {});
+
+      // HABILIDADES (3 colunas tipadas)
+      var skills = data.habilidades || {};
+      var skillCols = VTM_SKILL_GROUPS.map(function(g) {
+        var rows = g.items.map(function(name) {
+          return '<div class="frow"><span class="frow-name">' + name + '</span>' + buildDotsHTML('skill:' + name, skills[name], 5) + '</div>';
+        }).join('');
+        return '<div class="attr-group"><div class="attr-group-title">' + g.title + '</div>' + rows + '</div>';
+      }).join('');
+      html += '<div class="fpanel"><div class="fpanel-title">Habilidades</div><div class="attr-groups">' + skillCols + '</div></div>';
+
+      // VITAIS: Vitalidade / Força de Vontade / Fome / Humanidade
+      var v = data.vitals || {};
+      var vitMax = (v.Vitalidade != null) ? v.Vitalidade : 7;
+      var fdvMax = (v['Força de Vontade'] != null) ? v['Força de Vontade'] : 5;
+      var fome   = (v.Fome != null) ? v.Fome : 0;
+      var hum    = (v.Humanidade != null) ? v.Humanidade : 0;
+      html += '<div class="fpanel"><div class="fpanel-title">Vitais</div>' +
+        '<div class="vital-row"><span class="vital-label-f">Vitalidade</span>' + buildBoxesHTML('vital:Vitalidade', 0, vitMax) +
+          '<span class="vital-max-label">Máx</span><input class="vital-count-input" type="number" data-key="vmax:Vitalidade" value="' + vitMax + '" min="1" max="20"></div>' +
+        '<div class="vital-row"><span class="vital-label-f">Força de Vontade</span>' + buildBoxesHTML('vital:Vontade', 0, fdvMax) +
+          '<span class="vital-max-label">Máx</span><input class="vital-count-input" type="number" data-key="vmax:Vontade" value="' + fdvMax + '" min="1" max="20"></div>' +
+        '<div class="vital-row"><span class="vital-label-f">Fome</span>' + buildBoxesHTML('vital:Fome', fome, 5) + '</div>' +
+        '<div class="vital-row"><span class="vital-label-f">Humanidade</span>' + buildBoxesHTML('vital:Humanidade', hum, 10) + '</div>' +
+      '</div>';
+
+      // DISCIPLINAS
+      var discs = data.disciplinas || [];
+      var discRows = discs.map(function(d) { return renderDiscRow(d.nome, d.pontos, d.poderes); }).join('');
+      html += '<div class="fpanel"><div class="fpanel-title">Disciplinas</div>' +
+        '<div id="discList">' + discRows + '</div>' +
+        '<button class="add-line-btn" id="addDiscLine">+ Adicionar disciplina</button></div>';
+
+      // VANTAGENS & DEFEITOS (reaproveita o render de Qualidades do Caçador)
+      html += renderQualidades(data.vantagens || [], data.defeitos || []);
+
+      // CRÔNICA
+      var cf = data.cronicaFields || {};
+      html += '<div class="fpanel"><div class="fpanel-title">Crônica</div>' +
+        vtmTextField('Princípios', 'principios', cf.principios) +
+        vtmTextField('Pilares / Convicções', 'pilares', cf.pilares) +
+        vtmTextField('Toque da Perdição', 'perdicao', cf.perdicao) +
+      '</div>';
+
+      // HISTÓRICO
+      var h = data.historico || {};
+      var bioRows = VTM_BIO_FIELDS.map(function(f) {
+        return '<div class="id-field"><span class="id-field-key">' + f[0] + '</span>' +
+          '<input class="id-field-input" data-key="field:' + f[1] + '" value="' + escapeHtml(fields[f[1]] || '') + '"></div>';
+      }).join('');
+      html += '<div class="fpanel"><div class="fpanel-title">Histórico</div>' +
+        '<div class="identity-fields">' + bioRows + '</div>' +
+        vtmTextField('Aparência', 'aparencia', h.aparencia) +
+        vtmTextField('Traços distintivos', 'tracos', h.tracos) +
+        vtmTextField('História', 'historia', h.historia, true) +
+      '</div>';
+
+      // Action footer
+      html += '<div class="action-footer">' +
+          '<button class="btn btn-ghost" id="restartBtn">Reiniciar</button>' +
+          '<button class="btn btn-cyan" id="updateExistingBtn">Atualizar ficha existente</button>' +
+          '<button class="btn" id="createNewBtn">Criar nova ficha</button>' +
+        '</div></div>';
+
+      document.getElementById('phaseResult').innerHTML = html;
+      wireFichaInteractions();
+      wireVampiroExtras();
+      wireActionButtons();
+    }
+
+    function renderDiscRow(nome, pontos, poderes) {
+      return '<div class="disc-row-f">' +
+        '<div class="disc-row-top">' +
+          '<input class="dname" value="' + escapeHtml(nome || '') + '" placeholder="Disciplina">' +
+          buildDotsHTML('disc', pontos, 5) +
+          '<button class="ddel">✕</button>' +
+        '</div>' +
+        '<textarea class="dpowers" placeholder="Poderes…">' + escapeHtml(poderes || '') + '</textarea>' +
+      '</div>';
+    }
+
+    function vtmTextField(label, key, val, tall) {
+      return '<div class="vtm-text-field">' +
+        '<span class="vtm-text-label">' + label + '</span>' +
+        '<textarea class="vtm-text' + (tall ? ' tall' : '') + '" data-vtm="' + key + '">' + escapeHtml(val || '') + '</textarea>' +
+      '</div>';
+    }
+
+    function wireVampiroExtras() {
+      var addD = document.getElementById('addDiscLine');
+      if (addD) addD.addEventListener('click', function() {
+        var list = document.getElementById('discList');
+        var wrap = document.createElement('div');
+        wrap.innerHTML = renderDiscRow('', 0, '');
+        var row = wrap.firstChild;
+        list.appendChild(row);
+        // Wire dots + del só desta linha
+        row.querySelectorAll('.fdots .fdot').forEach(function(dot) {
+          dot.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var group = dot.parentNode;
+            var dots = group.querySelectorAll('.fdot');
+            var idx = Array.from(dots).indexOf(dot);
+            var current = parseInt(group.dataset.val) || 0;
+            var newVal = (current === idx + 1) ? idx : idx + 1;
+            group.dataset.val = newVal;
+            dots.forEach(function(d, i) { d.classList.toggle('filled', i < newVal); });
+          });
+        });
+        var del = row.querySelector('.ddel');
+        if (del) del.addEventListener('click', function() { row.remove(); });
+      });
+      // Del das disciplinas já renderizadas
+      document.querySelectorAll('.ddel').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var row = btn.closest('.disc-row-f');
+          if (row) row.remove();
+        });
+      });
+    }
+
+    function collectSheetDataVampiro() {
+      var fields = {};
+      var dots = [];
+      var name = '';
+
+      var nameEl = document.querySelector('[data-key="name"]');
+      if (nameEl) { name = nameEl.value.trim(); if (name) fields.name = name; }
+      document.querySelectorAll('[data-key^="field:"]').forEach(function(el) {
+        var fkey = el.dataset.key.slice(6);
+        var val = el.value.trim();
+        if (val) fields[fkey] = val;
+      });
+
+      // Atributos + Habilidades (.fdots attr:/skill:)
+      document.querySelectorAll('.fdots').forEach(function(group) {
+        var grp = group.dataset.group;
+        var val = parseInt(group.dataset.val) || 0;
+        if (!grp) return;
+        if (grp.indexOf('attr:') === 0 || grp.indexOf('skill:') === 0) {
+          var statName = grp.split(':')[1];
+          if (val > 0) dots.push({ name: statName, filled: val });
+        }
+      });
+
+      // Potência de Sangue
+      var potEl = document.querySelector('.fdots[data-group="potsangue"]');
+      var potSangue = { filled: potEl ? (parseInt(potEl.dataset.val) || 0) : 0, max: 10 };
+
+      // Vitais
+      var vitMaxEl = document.querySelector('[data-key="vmax:Vitalidade"]');
+      var fdvMaxEl = document.querySelector('[data-key="vmax:Vontade"]');
+      var vitDmgEl = document.querySelector('.vital-boxes[data-group="vital:Vitalidade"]');
+      var fdvDmgEl = document.querySelector('.vital-boxes[data-group="vital:Vontade"]');
+      var fomeEl   = document.querySelector('.vital-boxes[data-group="vital:Fome"]');
+      var humEl    = document.querySelector('.vital-boxes[data-group="vital:Humanidade"]');
+      var vitals = {
+        'vit-boxes':  { total: vitMaxEl ? Math.max(1, +vitMaxEl.value || 7) : 7, filled: vitDmgEl ? (parseInt(vitDmgEl.dataset.val) || 0) : 0, aggravated: 0 },
+        'fdv-boxes':  { total: fdvMaxEl ? Math.max(1, +fdvMaxEl.value || 5) : 5, filled: fdvDmgEl ? (parseInt(fdvDmgEl.dataset.val) || 0) : 0, aggravated: 0 },
+        'fome-boxes': { total: 5,  filled: fomeEl ? (parseInt(fomeEl.dataset.val) || 0) : 0, aggravated: 0 },
+        'hum-boxes':  { total: 10, filled: humEl ? (parseInt(humEl.dataset.val) || 0) : 0, aggravated: 0 }
+      };
+
+      // XP
+      var xpTotal = document.querySelector('[data-key="xp:total"]');
+      var xpSpent = document.querySelector('[data-key="xp:spent"]');
+      var xp = {
+        total: (xpTotal && xpTotal.value !== '') ? +xpTotal.value : 0,
+        spent: (xpSpent && xpSpent.value !== '') ? +xpSpent.value : 0
+      };
+
+      // Disciplinas
+      var disciplines = [];
+      document.querySelectorAll('.disc-row-f').forEach(function(row) {
+        var dn = row.querySelector('.dname');
+        var dd = row.querySelector('.fdots[data-group="disc"]');
+        var dp = row.querySelector('.dpowers');
+        var nm = dn ? dn.value.trim() : '';
+        if (!nm) return;
+        disciplines.push({
+          name: nm,
+          filled: dd ? (parseInt(dd.dataset.val) || 0) : 0,
+          powers: dp ? dp.value.trim() : ''
+        });
+      });
+
+      // Vantagens & Defeitos (mesma estrutura .qrow do Caçador)
+      var qualities = [];
+      document.querySelectorAll('.qrow').forEach(function(row) {
+        var nameInput = row.querySelector('.qname');
+        var dotsEl = row.querySelector('.fdots');
+        if (!nameInput || !dotsEl) return;
+        var qn = nameInput.value.trim();
+        if (!qn) return;
+        var qv = parseInt(dotsEl.dataset.val) || 1;
+        qualities.push({
+          name: qn,
+          filled: Math.max(1, Math.min(5, qv)),
+          max: 5,
+          defect: row.classList.contains('defect')
+        });
+      });
+
+      // Campos de texto livres (crônica + histórico)
+      var vtmFields = {};
+      document.querySelectorAll('.vtm-text[data-vtm]').forEach(function(t) {
+        var val = t.value.trim();
+        if (val) vtmFields[t.dataset.vtm] = val;
+      });
+
+      return {
+        name: name,
+        sheet_data: {
+          sheet_type: 'vampiro',
+          fields: fields,
+          dots: dots,
+          potSangue: potSangue,
+          vitals: vitals,
+          xp: xp,
+          disciplines: disciplines,
+          qualities: qualities,
+          vtmFields: vtmFields,
+          notes: ''
+        }
+      };
+    }
+
     // ───────────────────────────────────────────────
     // Collect edited values back into sheet_data
     // (lê do novo DOM: .fdots / .vital-boxes / inputs)
     // ───────────────────────────────────────────────
     function collectSheetData() {
+      if (scanSheetType === 'vampiro') return collectSheetDataVampiro();
       var fields = {};
       var dots = [];
       var name = '';
@@ -2153,6 +2484,7 @@
     // Merge: novo SOBREESCREVE valores não-vazios; mantém o resto
     // ───────────────────────────────────────────────
     function mergeSheetData(current, incoming) {
+      if (incoming && incoming.sheet_type === 'vampiro') return mergeSheetDataVampiro(current, incoming);
       var out = JSON.parse(JSON.stringify(current));
 
       // fields
@@ -2187,6 +2519,37 @@
       out.trunfos = current.trunfos || [];
 
       // notes — mantém
+      out.notes = current.notes || '';
+
+      return out;
+    }
+
+    // Merge equivalente para Vampiro — preserva disciplines/potSangue/vtmFields.
+    function mergeSheetDataVampiro(current, incoming) {
+      var out = JSON.parse(JSON.stringify(current));
+      out.sheet_type = 'vampiro';
+
+      out.fields = Object.assign({}, current.fields || {}, incoming.fields || {});
+
+      var dotsMap = {};
+      (current.dots || []).forEach(function(d) { dotsMap[d.name] = d; });
+      (incoming.dots || []).forEach(function(d) { dotsMap[d.name] = d; });
+      out.dots = Object.values(dotsMap);
+
+      out.vitals = Object.assign({}, current.vitals || {}, incoming.vitals || {});
+      if (incoming.potSangue) out.potSangue = incoming.potSangue;
+
+      out.xp = current.xp || { total: 0, spent: 0 };
+      if (incoming.xp) {
+        if (incoming.xp.total != null) out.xp.total = incoming.xp.total;
+        if (incoming.xp.spent != null) out.xp.spent = incoming.xp.spent;
+      }
+
+      // disciplinas / vantagens — substitui pelo escaneado quando houver
+      if (incoming.disciplines && incoming.disciplines.length) out.disciplines = incoming.disciplines;
+      if (incoming.qualities && incoming.qualities.length) out.qualities = incoming.qualities;
+
+      out.vtmFields = Object.assign({}, current.vtmFields || {}, incoming.vtmFields || {});
       out.notes = current.notes || '';
 
       return out;

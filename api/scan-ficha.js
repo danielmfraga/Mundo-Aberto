@@ -191,6 +191,182 @@ Retorne APENAS um JSON válido neste formato exato (sem markdown, sem comentári
 
 Liste APENAS qualidades/defeitos/trunfos/equipamentos que estão de fato escritos na ficha. Arrays vazios são OK.`;
 
+// ═════════════════════════════════════════════════════════
+// Schema da ficha de VAMPIRO: A MÁSCARA (V5) — sistema paralelo.
+// Mesmos atributos do Caçador; habilidades quase iguais (note
+// "Emp. c/ Animais"). Tudo abaixo é independente do Caçador.
+// ═════════════════════════════════════════════════════════
+const HABILIDADES_VTM = [
+  // Físicas
+  'Armas Brancas', 'Armas de Fogo', 'Atletismo', 'Briga', 'Condução',
+  'Furtividade', 'Ladroagem', 'Ofícios', 'Sobrevivência',
+  // Sociais
+  'Emp. c/ Animais', 'Etiqueta', 'Intimidação', 'Liderança', 'Manha',
+  'Performance', 'Persuasão', 'Sagacidade', 'Subterfúgio',
+  // Mentais
+  'Ciência', 'Erudição', 'Finanças', 'Investigação', 'Medicina',
+  'Ocultismo', 'Percepção', 'Política', 'Tecnologia'
+];
+
+const SYSTEM_PROMPT_VAMPIRO = `Você é um especialista em leitura de fichas de personagem manuscritas de "Vampiro: A Máscara" (5ª edição / V5), em português.
+
+# ESTRUTURA DA FICHA
+
+## ATRIBUTOS (cada um de 0 a 5)
+${ATRIBUTOS.join(', ')}
+
+## HABILIDADES (cada uma de 0 a 5)
+${HABILIDADES_VTM.join(', ')}
+
+## POTÊNCIA DE SANGUE (Blood Potency, de 0 a 10)
+Um único valor. Vampiros recém-Abraçados costumam ter 1.
+
+## VITAIS
+- Vitalidade (trilha de saúde; geralmente 3-8 = Vigor + 3)
+- Força de Vontade (geralmente Autocontrole + Determinação)
+- Fome (Hunger, de 0 a 5; quase sempre 1 em repouso, podendo estar em branco)
+- Humanidade (de 0 a 10; padrão inicial costuma ser 7)
+
+## XP (Experiência)
+- total (número inteiro)
+- spent (número inteiro, gasto)
+
+## CAMPOS DE IDENTIDADE (texto livre)
+- cronica (nome da crônica/campanha)
+- conceito
+- predador (Tipo de Predador — ex: Alcateia, Vira-Lata, Cleaver, Sandman, Sereno…)
+- cla (Clã — ex: Brujah, Toreador, Ventrue, Nosferatu, Gangrel, Malkaviano, Tremere, Lasombra, Banu Haqim, Hecata, Ministério, Ravnos, Salubri, Tzimisce, Caitiff, Sangue Ralo)
+- geracao (número; ex: 11, 12, 13)
+- senhor (Sire — quem o Abraçou)
+- ambicao
+- desejo
+- ressonancia (Ressonância do sangue — Colérica, Melancólica, Fleumática, Sanguínea…)
+- name (nome do personagem)
+- idade_verdadeira, idade_aparente, data_nascimento, data_morte (do histórico)
+
+## DISCIPLINAS (lista dinâmica)
+Poderes sobrenaturais vampíricos. Cada uma tem nome + nível de pontos (0-5) + poderes anotados.
+Disciplinas comuns: Animalismo, Auspícios, Domínio, Fortitude, Ofuscação, Potência,
+Presença, Protean, Feitiçaria de Sangue (Thaumaturgia), Celeridade, Oblívio, Feitiçaria das Cinzas.
+ATENÇÃO: NÃO confunda com "trunfos" — em V:tM são Disciplinas.
+
+## VANTAGENS & DEFEITOS (Merits & Flaws — lista dinâmica)
+Cada item tem nome (texto livre) e valor.
+- Vantagens (Merits/Antecedentes): valor POSITIVO (1 a 5)
+- Defeitos (Flaws): valor NEGATIVO (-1 a -5)
+Antecedentes típicos: Aliados, Contatos, Recursos, Refúgio, Rebanho, Status, Influência, Mawla.
+
+## CRÔNICA (texto livre)
+- principios (Princípios da Crônica)
+- pilares (Convicções / Pilares — valores do personagem)
+- perdicao (Toque da Perdição / Bane do Clã, ou Pedra de Toque)
+
+## HISTÓRICO (texto livre)
+- aparencia (descrição física)
+- tracos (marcas, maneirismos)
+- historia (passado e origem)
+
+# NOTAÇÕES POSSÍVEIS QUE O JOGADOR PODE USAR
+
+Para indicar valores numéricos (atributos/habilidades/disciplinas/potência de sangue):
+- **Bolinhas preenchidas vs vazias**: ●●●○○ = 3
+- **Números diretos**: 3
+- **Sistema de quadrado**: cada lado de um quadradinho vale 1 (| = 1, L = 2, U = 3, □ = 4, □ com risco = 5)
+- **Hashes/riscos**: ||| = 3
+- **X marcados**: x x x = 3
+- **Qualquer outra forma** — interprete pelo contexto
+
+Para Fome e Humanidade, a notação costuma ser quadradinhos marcados.
+
+# REGRAS DE EXTRAÇÃO
+
+1. **Mapeie variações de escrita para os nomes oficiais**:
+   - "Auto-Controle" → "Autocontrole"
+   - "Força Vontade" / "FdV" → na vital "Força de Vontade"
+   - "Empatia c/ Animais" / "Empatia com Animais" / "Trato com Animais" → "Emp. c/ Animais"
+   - Acentos podem estar omitidos — preserve corretos na saída.
+
+2. **Campos não preenchidos**: retorne null. NÃO chute valores.
+
+3. **Confiança baixa**: se não conseguir ler algo com certeza razoável, retorne null e adicione a entrada em "warnings".
+
+4. **Vantagens vs Defeitos**: use o sinal e o contexto. "(-N)" ou listados como defeitos vão em "defeitos".
+
+5. **Nomes livres** (disciplinas/vantagens/defeitos): preserve EXATAMENTE o que o jogador escreveu.
+
+6. **Disciplinas**: capture o nome, o nível em pontos, e qualquer poder/habilidade anotado junto (em "poderes").
+
+# FORMATO DE RESPOSTA
+
+Retorne APENAS um JSON válido neste formato exato (sem markdown, sem comentários):
+
+\`\`\`
+{
+  "name": string | null,
+  "fields": {
+    "cronica": string | null,
+    "conceito": string | null,
+    "predador": string | null,
+    "cla": string | null,
+    "geracao": string | null,
+    "senhor": string | null,
+    "ambicao": string | null,
+    "desejo": string | null,
+    "ressonancia": string | null,
+    "idade_verdadeira": string | null,
+    "idade_aparente": string | null,
+    "data_nascimento": string | null,
+    "data_morte": string | null
+  },
+  "atributos": {
+    "Força": number | null, "Destreza": number | null, "Vigor": number | null,
+    "Carisma": number | null, "Manipulação": number | null, "Autocontrole": number | null,
+    "Inteligência": number | null, "Raciocínio": number | null, "Determinação": number | null
+  },
+  "habilidades": {
+    "Armas Brancas": number | null, "Armas de Fogo": number | null, "Atletismo": number | null,
+    "Briga": number | null, "Condução": number | null, "Furtividade": number | null,
+    "Ladroagem": number | null, "Ofícios": number | null, "Sobrevivência": number | null,
+    "Emp. c/ Animais": number | null, "Etiqueta": number | null, "Intimidação": number | null,
+    "Liderança": number | null, "Manha": number | null, "Performance": number | null,
+    "Persuasão": number | null, "Sagacidade": number | null, "Subterfúgio": number | null,
+    "Ciência": number | null, "Erudição": number | null, "Finanças": number | null,
+    "Investigação": number | null, "Medicina": number | null, "Ocultismo": number | null,
+    "Percepção": number | null, "Política": number | null, "Tecnologia": number | null
+  },
+  "potenciaSangue": number | null,
+  "vitals": {
+    "Vitalidade": number | null,
+    "Força de Vontade": number | null,
+    "Fome": number | null,
+    "Humanidade": number | null
+  },
+  "xp": { "total": number | null, "spent": number | null },
+  "disciplinas": [{ "nome": string, "pontos": number, "poderes": string }],
+  "vantagens": [{ "name": string, "value": number }],
+  "defeitos": [{ "name": string, "value": number }],
+  "cronicaFields": {
+    "principios": string | null,
+    "pilares": string | null,
+    "perdicao": string | null
+  },
+  "historico": {
+    "aparencia": string | null,
+    "tracos": string | null,
+    "historia": string | null
+  },
+  "warnings": [string]
+}
+\`\`\`
+
+Liste APENAS disciplinas/vantagens/defeitos que estão de fato escritos na ficha. Arrays vazios são OK.`;
+
+// Mapa de sistemas → prompt. Default seguro: caçador (comportamento legado).
+const SYSTEM_PROMPTS = {
+  cacador: SYSTEM_PROMPT,
+  vampiro: SYSTEM_PROMPT_VAMPIRO
+};
+
 // ─────────────────────────────────────────────────────────
 // Handler principal
 // ─────────────────────────────────────────────────────────
@@ -215,7 +391,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { files, notation, notations, model } = req.body || {};
+    const { files, notation, notations, model, tipo } = req.body || {};
+
+    // Sistema da ficha. Default 'cacador' preserva o comportamento legado.
+    const sistema = (tipo === 'vampiro') ? 'vampiro' : 'cacador';
+    const systemPrompt = SYSTEM_PROMPTS[sistema];
 
     if (!files || !Array.isArray(files) || files.length === 0) {
       return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
@@ -276,7 +456,7 @@ export default async function handler(req, res) {
       system: [
         {
           type: 'text',
-          text: SYSTEM_PROMPT,
+          text: systemPrompt,
           cache_control: { type: 'ephemeral' }
         }
       ],
