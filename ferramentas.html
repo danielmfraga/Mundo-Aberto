@@ -2019,10 +2019,15 @@
       var xpTotal = (data.xp && data.xp.total != null) ? data.xp.total : 0;
       var xpSpent = (data.xp && data.xp.spent != null) ? data.xp.spent : 0;
       var pot = (data.potenciaSangue != null) ? data.potenciaSangue : 0;
+      var cosmo = (data.cosmologia != null) ? data.cosmologia : 0;
       html += '<div class="ficha-header">' +
         '<div class="ficha-title-block">' +
           '<input class="ficha-name" data-key="name" value="' + escapeHtml(data.name || '') + '" placeholder="Nome do Personagem">' +
           '<div class="ficha-subtitle">Ficha de Vampiro · A Máscara</div>' +
+          '<div class="cosmo-row">' +
+            '<span class="cosmo-label">Cosmologia</span>' +
+            buildDotsHTML('cosmo', cosmo, 10) +
+          '</div>' +
           '<div class="cosmo-row">' +
             '<span class="cosmo-label">Potência de Sangue</span>' +
             buildDotsHTML('potsangue', pot, 10) +
@@ -2193,6 +2198,8 @@
         if (grp.indexOf('attr:') === 0 || grp.indexOf('skill:') === 0) {
           var statName = grp.split(':')[1];
           if (val > 0) dots.push({ name: statName, filled: val });
+        } else if (grp === 'cosmo') {
+          if (val > 0) dots.push({ name: 'Cosmologia', filled: val });
         }
       });
 

@@ -164,6 +164,38 @@ body::after {
   opacity: 0.7;
 }
 
+/* Cosmologia — stat transversal (roxo), igual à ficha de Caçador */
+.cosmo-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 0 !important;
+  cursor: default !important;
+  border-radius: 0 !important;
+}
+.cosmo-block:hover { background: transparent !important; }
+.cosmo-block .row-name {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: rgba(155,80,255,0.75) !important;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(155,80,255,0.4) !important;
+}
+.cosmo-block .dot {
+  width: 12px; height: 12px;
+  border: 1px solid rgba(140,60,255,0.35) !important;
+  background: rgba(140,60,255,0.05) !important;
+}
+.cosmo-block .dot.filled {
+  background: #c264fe !important;
+  border-color: #c264fe !important;
+  box-shadow: 0 0 8px rgba(180,80,255,0.7), 0 0 18px rgba(180,80,255,0.25) !important;
+}
+.cosmo-block .dot:hover { border-color: rgba(180,80,255,0.65) !important; }
+
 .xp-block {
   display: flex;
   flex-direction: column;
@@ -903,6 +935,10 @@ body::after {
     <div class="title-block">
       <div class="title-name" contenteditable="true" spellcheck="false" data-field="name" data-placeholder="Nome do Personagem"></div>
       <div class="title-sub">Vampiro · A Máscara</div>
+      <div class="cosmo-block row">
+        <span class="row-name">Cosmologia</span>
+        <div class="dots" data-max="10" data-val="0"></div>
+      </div>
     </div>
     <div class="xp-block">
       <div class="xp-row">

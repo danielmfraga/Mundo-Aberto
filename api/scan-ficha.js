@@ -221,6 +221,10 @@ ${HABILIDADES_VTM.join(', ')}
 ## POTÊNCIA DE SANGUE (Blood Potency, de 0 a 10)
 Um único valor. Vampiros recém-Abraçados costumam ter 1.
 
+## COSMOLOGIA (de 0 a 10)
+Um único valor — stat transversal do sistema Mundo Aberto. Pode não constar numa
+ficha física de V:tM; se não houver, retorne null.
+
 ## VITAIS
 - Vitalidade (trilha de saúde; geralmente 3-8 = Vigor + 3)
 - Força de Vontade (geralmente Autocontrole + Determinação)
@@ -340,6 +344,7 @@ Retorne APENAS um JSON válido neste formato exato (sem markdown, sem comentári
     "Percepção": number | null, "Política": number | null, "Tecnologia": number | null
   },
   "potenciaSangue": number | null,
+  "cosmologia": number | null,
   "vitals": {
     "Vitalidade": number | null,
     "Força de Vontade": number | null,
