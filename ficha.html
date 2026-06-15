@@ -2200,13 +2200,15 @@ function applyRemoteSheet(data) {
       '.__ma-thead{padding:10px 14px 8px;border-bottom:1px solid rgba(0,255,231,0.08);',
       'font-size:8px;letter-spacing:4px;color:rgba(0,255,231,0.35);text-transform:uppercase;}',
       '.__ma-item{display:flex;align-items:center;justify-content:space-between;',
-      'padding:9px 14px;border-bottom:1px solid rgba(0,255,231,0.05);gap:8px;}',
+      'padding:9px 14px;border-bottom:1px solid rgba(0,255,231,0.05);gap:8px;',
+      'text-decoration:none;cursor:pointer;transition:background .15s;}',
       '.__ma-item:last-child{border-bottom:none;}',
+      '.__ma-item:hover{background:rgba(0,255,231,0.06);}',
       '.__ma-tname{font-size:10px;letter-spacing:1px;color:rgba(207,233,240,0.7);flex:1;',
-      'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}',
-      '.__ma-link{font-size:10px;color:rgba(0,255,231,0.45);text-decoration:none;flex-shrink:0;',
-      'transition:color .15s;}',
-      '.__ma-link:hover{color:#00ffe7;}',
+      'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s;}',
+      '.__ma-item:hover .__ma-tname{color:#cfe9f0;}',
+      '.__ma-link{font-size:10px;color:rgba(0,255,231,0.45);flex-shrink:0;transition:color .15s;}',
+      '.__ma-item:hover .__ma-link{color:#00ffe7;}',
       '.__ma-empty{padding:14px;font-size:9px;letter-spacing:2px;color:rgba(0,255,231,0.2);text-align:center;}'
     ].join('');
     document.head.appendChild(style);
@@ -2241,10 +2243,10 @@ function applyRemoteSheet(data) {
         if (!tramas || !tramas.length) return;
         var html = '<div class="__ma-thead">Tramas</div>';
         tramas.forEach(function(t) {
-          html += '<div class="__ma-item">' +
+          html += '<a class="__ma-item" href="trama.html?id=' + t.trama_id + '">' +
             '<span class="__ma-tname">' + (t.name || 'Trama') + '</span>' +
-            '<a class="__ma-link" href="trama.html?id=' + t.trama_id + '">→</a>' +
-            '</div>';
+            '<span class="__ma-link">→</span>' +
+            '</a>';
         });
         body.innerHTML = html;
       })
