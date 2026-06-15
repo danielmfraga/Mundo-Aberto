@@ -936,6 +936,20 @@
     .__sp-cx { border: 1px solid rgba(207,233,240,.15); color: rgba(207,233,240,.3); }
     .__sp-cx:hover { border-color: rgba(207,233,240,.35); color: rgba(207,233,240,.5); }
 
+    /* ── Type picker (Vampiro / Caçador) ── */
+    .__tp-box { max-width: 400px; }
+    .__tp-btns { display: flex; gap: 14px; justify-content: center; margin-bottom: 18px; }
+    .__tp-btn {
+      flex: 1; background: transparent; border-radius: 3px; cursor: pointer;
+      font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 2px;
+      text-transform: uppercase; padding: 22px 12px; transition: all 0.2s; line-height: 1.8;
+    }
+    .__tp-btn span { display: block; font-size: 8px; letter-spacing: 1px; margin-top: 2px; opacity: 0.55; }
+    .__tp-vampiro { border: 1px solid rgba(192,57,43,0.4); color: rgba(192,57,43,0.75); }
+    .__tp-vampiro:hover { border-color: #c0392b; color: #c0392b; box-shadow: 0 0 20px rgba(192,57,43,0.25); background: rgba(192,57,43,0.06); }
+    .__tp-cacador { border: 1px solid rgba(78,211,232,0.4); color: rgba(78,211,232,0.75); }
+    .__tp-cacador:hover { border-color: #4ed3e8; color: #4ed3e8; box-shadow: 0 0 20px rgba(78,211,232,0.2); background: rgba(78,211,232,0.05); }
+
     /* ── Botão Mestre ── */
     .mestre-btn {
       font-family: 'Share Tech Mono', monospace;
@@ -1278,6 +1292,18 @@
 
     </div>
 
+  </div>
+
+  <!-- Type picker overlay (Vampiro / Caçador) -->
+  <div id="typePickerOverlay" class="__sp-ov" hidden>
+    <div class="__sp-box __tp-box">
+      <h2>Tipo de Ficha</h2>
+      <div class="__tp-btns">
+        <button class="__tp-btn __tp-vampiro" data-type="vampiro">⚰ Vampiro<span>A Máscara V5</span></button>
+        <button class="__tp-btn __tp-cacador" data-type="cacador">⚔ Caçador<span>Mundo Aberto</span></button>
+      </div>
+      <div class="__sp-btns"><button class="__sp-cx" id="typePickerCancel">Cancelar</button></div>
+    </div>
   </div>
 
   <!-- Menu contextual -->
@@ -1648,13 +1674,11 @@
       updateMestreBar();
     });
 
-    // ── Novo personagem: gera ID único e abre ficha ──
-    document.getElementById('newCharBtn').addEventListener('click', (e) => {
-      e.preventDefault();
-      // Limpa todos os campos do localStorage antes de abrir ficha nova
+    // ── Novo personagem: mostra seletor de tipo ──
+    function clearSheetLocalStorage() {
       Object.keys(localStorage).forEach(k => {
-        if (k.startsWith('idfield:') || k.startsWith('bio:') ||
-            k === 'holoImg' || k === 'sheetTitle' || k === 'notes' ||
+        if (k.startsWith('idfield:') || k.startsWith('vtm:idfield:') ||
+            k.startsWith('bio:') || k === 'holoImg' || k === 'sheetTitle' || k === 'notes' ||
             k === 'xpTotal' || k === 'xpSpent' ||
             k.startsWith('vit:') || k.startsWith('fdv:') || k.startsWith('desp:') ||
             k.startsWith('trunfo:') || k.startsWith('quality:') ||
@@ -1662,8 +1686,25 @@
           localStorage.removeItem(k);
         }
       });
-      const id = 'char_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-      window.location.href = 'ficha.html?id=' + id + (ESP_PARAM ? '&esp=' + encodeURIComponent(ESP_PARAM) : '');
+    }
+
+    document.getElementById('newCharBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('typePickerOverlay').hidden = false;
+    });
+
+    document.getElementById('typePickerCancel').addEventListener('click', () => {
+      document.getElementById('typePickerOverlay').hidden = true;
+    });
+
+    document.querySelectorAll('.__tp-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('typePickerOverlay').hidden = true;
+        clearSheetLocalStorage();
+        const id = 'char_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+        const ficha = btn.dataset.type === 'vampiro' ? 'ficha-vampiro.html' : 'ficha.html';
+        window.location.href = ficha + '?id=' + id + (ESP_PARAM ? '&esp=' + encodeURIComponent(ESP_PARAM) : '');
+      });
     });
     // ── Context menu ──────────────────────────────────────────
     let ctxCharId = null, ctxCharGroup = null, ctxOpenedAt = 0;

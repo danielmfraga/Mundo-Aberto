@@ -303,6 +303,37 @@
       justify-content: flex-end;
       margin-top: 4px;
     }
+    .scan-type-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .scan-type-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(207,233,240,0.4);
+      white-space: nowrap;
+    }
+    .scan-type-pills { display: flex; gap: 8px; }
+    .scan-type-pill {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: all 0.18s;
+      user-select: none;
+      border: 1px solid rgba(207,233,240,0.15);
+      color: rgba(207,233,240,0.35);
+    }
+    .scan-type-pill:hover { border-color: rgba(207,233,240,0.35); color: rgba(207,233,240,0.6); }
+    .scan-type-pill.active[data-type="cacador"] { border-color: rgba(78,211,232,0.5); color: #4ed3e8; background: rgba(78,211,232,0.06); box-shadow: 0 0 10px rgba(78,211,232,0.15); }
+    .scan-type-pill.active[data-type="vampiro"] { border-color: rgba(192,57,43,0.55); color: #c0392b; background: rgba(192,57,43,0.07); box-shadow: 0 0 10px rgba(192,57,43,0.2); }
 
     .btn {
       font-family: 'Orbitron', monospace;
@@ -1161,6 +1192,14 @@
         resultado antes de aplicar.
       </p>
 
+      <div class="scan-type-row">
+        <span class="scan-type-label">Tipo</span>
+        <div class="scan-type-pills">
+          <span class="scan-type-pill active" data-type="cacador">Caçador</span>
+          <span class="scan-type-pill" data-type="vampiro">Vampiro</span>
+        </div>
+      </div>
+
       <!-- PHASE 1: Upload -->
       <div id="phaseUpload">
         <div class="dropzone" id="dropzone">
@@ -1441,6 +1480,16 @@
     }
 
     // ───────────────────────────────────────────────
+    // Scan type selector (single-select)
+    var scanSheetType = 'cacador';
+    document.querySelectorAll('.scan-type-pill').forEach(function(pill) {
+      pill.addEventListener('click', function() {
+        document.querySelectorAll('.scan-type-pill').forEach(function(p) { p.classList.remove('active'); });
+        pill.classList.add('active');
+        scanSheetType = pill.dataset.type;
+      });
+    });
+
     // Notation pills (multi-select)
     // ───────────────────────────────────────────────
     document.querySelectorAll('.notation-pill').forEach(function(pill) {
@@ -2020,7 +2069,7 @@
           img_url: null,
           sheet_data: collected.sheet_data
         });
-        window.location.href = 'ficha.html?id=' + newId;
+        window.location.href = (scanSheetType === 'vampiro' ? 'ficha-vampiro.html' : 'ficha.html') + '?id=' + newId;
       } catch (err) {
         alert('Erro ao criar ficha: ' + err.message);
         showPhase('phaseResult');
@@ -2093,7 +2142,7 @@
         if (collected.name) patch.name = collected.name;
 
         await sbFetch('/rest/v1/personagens?char_id=eq.' + selectedCharId, 'PATCH', patch);
-        window.location.href = 'ficha.html?id=' + selectedCharId;
+        window.location.href = (scanSheetType === 'vampiro' ? 'ficha-vampiro.html' : 'ficha.html') + '?id=' + selectedCharId;
       } catch (err) {
         alert('Erro ao atualizar: ' + err.message);
         showPhase('phaseResult');
