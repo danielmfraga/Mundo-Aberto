@@ -937,6 +937,12 @@
     .__sp-cx:hover { border-color: rgba(207,233,240,.35); color: rgba(207,233,240,.5); }
 
     /* ── Type picker (Vampiro / Caçador) ── */
+    .__tp-ov {
+      display: none;
+      position: fixed; inset: 0; background: rgba(0,0,0,.75);
+      z-index: 99999; align-items: center; justify-content: center;
+    }
+    .__tp-ov.open { display: flex; }
     .__tp-box { max-width: 400px; }
     .__tp-btns { display: flex; gap: 14px; justify-content: center; margin-bottom: 18px; }
     .__tp-btn {
@@ -1295,7 +1301,7 @@
   </div>
 
   <!-- Type picker overlay (Vampiro / Caçador) -->
-  <div id="typePickerOverlay" class="__sp-ov" hidden>
+  <div id="typePickerOverlay" class="__tp-ov">
     <div class="__sp-box __tp-box">
       <h2>Tipo de Ficha</h2>
       <div class="__tp-btns">
@@ -1688,18 +1694,20 @@
       });
     }
 
+    const typePickerOverlay = document.getElementById('typePickerOverlay');
+
     document.getElementById('newCharBtn').addEventListener('click', (e) => {
       e.preventDefault();
-      document.getElementById('typePickerOverlay').hidden = false;
+      typePickerOverlay.classList.add('open');
     });
 
     document.getElementById('typePickerCancel').addEventListener('click', () => {
-      document.getElementById('typePickerOverlay').hidden = true;
+      typePickerOverlay.classList.remove('open');
     });
 
     document.querySelectorAll('.__tp-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.getElementById('typePickerOverlay').hidden = true;
+        typePickerOverlay.classList.remove('open');
         clearSheetLocalStorage();
         const id = 'char_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
         const ficha = btn.dataset.type === 'vampiro' ? 'ficha-vampiro.html' : 'ficha.html';
