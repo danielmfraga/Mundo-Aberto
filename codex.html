@@ -545,7 +545,7 @@
         if (imgEl){ imgEl.src = b64; imgEl.style.display = 'block'; }
         // upload pro storage
         uploadBestaImg(draft.id, b64).then(function(url){ draft.img_url = url; draft.img = url; })
-          .catch(function(){ alert('Falha ao enviar a foto. Tente de novo.'); });
+          .catch(function(err){ console.error('[codex] upload foto:', err); alert('Falha ao enviar a foto:\n\n' + (err && err.message ? err.message : err)); });
       };
       im.src = r.target.result;
     };
@@ -563,7 +563,7 @@
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': mime, 'x-upsert': 'true' },
       body: new Blob([arr], { type: mime })
     }).then(function(r){
-      if (!r.ok) throw new Error('upload ' + r.status);
+      if (!r.ok) return r.text().then(function(t){ throw new Error('HTTP ' + r.status + ' — ' + (t || 'sem corpo')); });
       return SB_URL + '/storage/v1/object/public/personagens/' + path + '?t=' + Date.now();
     });
   }
