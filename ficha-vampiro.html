@@ -45,6 +45,10 @@
   --glow-vtm: 0 0 8px rgba(192,57,43,0.4);
   --hum: #c8a032;
   --hum-soft: rgba(200,160,50,0.55);
+
+  /* Especializações — vermelho no vampiro */
+  --spec: #e0473a;
+  --spec-soft: rgba(224,71,58,0.45);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -570,6 +574,49 @@ body::after {
 }
 .blood-dots .dot:hover { border-color: rgba(224,71,58,0.7); }
 
+/* ── Especializações de habilidade (compartilhado entre fichas) ── */
+.skills-grid .row-name { cursor: pointer; transition: color 0.15s; }
+.skills-grid .row-name:hover { color: var(--spec); }
+.spec-dot {
+  display: inline-block; width: 7px; height: 7px;
+  border-radius: 50%; margin-left: 7px; vertical-align: middle;
+  background: var(--spec); box-shadow: 0 0 6px var(--spec); cursor: pointer;
+}
+.spec-pop {
+  position: absolute; z-index: 9999;
+  min-width: 190px; max-width: 250px;
+  background: var(--bg-1);
+  border: 1px solid var(--spec-soft);
+  border-radius: 4px; padding: 11px 12px;
+  box-shadow: 0 10px 34px rgba(0,0,0,0.55);
+}
+.spec-pop-title {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--spec); margin-bottom: 9px;
+}
+.spec-pop-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 9px; }
+.spec-pop-list:empty { margin-bottom: 0; }
+.spec-pop-item { display: flex; gap: 6px; align-items: center; }
+.spec-input {
+  flex: 1; min-width: 0; background: rgba(255,255,255,0.03);
+  border: 1px solid var(--line); border-radius: 2px;
+  color: var(--fg); font-family: var(--font-display); font-size: 12px;
+  padding: 4px 7px; outline: none;
+}
+.spec-input:focus { border-color: var(--spec-soft); }
+.spec-del {
+  background: transparent; border: none; color: var(--fg-faint);
+  cursor: pointer; font-size: 15px; line-height: 1; padding: 0 3px;
+}
+.spec-del:hover { color: var(--danger); }
+.spec-pop-add {
+  width: 100%; background: transparent; border: 1px dashed var(--spec-soft);
+  color: var(--spec); font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 6px 8px; border-radius: 2px; cursor: pointer; transition: background 0.15s;
+}
+.spec-pop-add:hover { background: rgba(255,255,255,0.04); }
+
 /* Disciplinas */
 .disc-grid {
   display: grid;
@@ -1065,7 +1112,7 @@ body::after {
         <div class="panel-head">
           <h2 class="panel-title">Habilidades</h2>
         </div>
-        <div class="attr-groups">
+        <div class="attr-groups skills-grid">
           <div>
             <div class="attr-group-title">Físicas</div>
             <div class="row"><span class="row-name">Armas Brancas</span><div class="dots" data-max="5" data-val="0"></div></div>
@@ -1545,6 +1592,9 @@ function captureSheet() {
     };
   }
 
+  // Especializações de habilidades
+  data.skillSpecs = window.getSkillSpecs ? window.getSkillSpecs() : {};
+
   // Vitals
   data.vitals = {};
   ['vit-boxes','fdv-boxes','fome-boxes','hum-boxes'].forEach(function(id) {
@@ -1707,11 +1757,161 @@ function restoreSheet(data) {
     var nb = document.getElementById('notes-box');
     if (nb) nb.textContent = data.notes;
   }
+
+  // Especializações de habilidades
+  if (window.setSkillSpecs) window.setSkillSpecs(data.skillSpecs || {});
 }
 
 function escHtml(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
+// ── Especializações de habilidades ─────────────────────────────────────────
+// Mapa { nomeHabilidade: [specs] } guardado no sheet_data. Bolinha indica que
+// a habilidade tem especialização; clicar no nome (ou na bolinha) abre o popup.
+(function setupSkillSpecs() {
+  'use strict';
+  var SKILLS_SELECTOR = '.skills-grid';
+  var skillSpecs = {};
+  var pop = null;
+
+  function skillRows() { return Array.from(document.querySelectorAll(SKILLS_SELECTOR + ' .row')); }
+  function rowName(row) { var el = row.querySelector('.row-name'); return el ? el.textContent.trim() : ''; }
+  function escAttr(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+  function refreshDot(row) {
+    var nameEl = row.querySelector('.row-name');
+    if (!nameEl) return;
+    var name = nameEl.textContent.trim();
+    var has = skillSpecs[name] && skillSpecs[name].length > 0;
+    var dot = nameEl.querySelector('.spec-dot');
+    if (has && !dot) {
+      dot = document.createElement('span');
+      dot.className = 'spec-dot';
+      dot.title = 'Especializações';
+      nameEl.appendChild(dot);
+    } else if (!has && dot) {
+      dot.remove();
+    }
+  }
+  function refreshAllDots() { skillRows().forEach(refreshDot); }
+
+  function onDocDown(e) {
+    if (!pop) return;
+    if (pop.contains(e.target)) return;
+    if (e.target.closest && e.target.closest('.spec-dot')) return;
+    closePop();
+  }
+  function onKey(e) { if (e.key === 'Escape') closePop(); }
+
+  function closePop() {
+    if (!pop) return;
+    var name = pop._skill, row = pop._row;
+    if (skillSpecs[name]) {
+      skillSpecs[name] = skillSpecs[name].map(function(s){ return (s||'').trim(); }).filter(Boolean);
+      if (!skillSpecs[name].length) delete skillSpecs[name];
+    }
+    pop.remove(); pop = null;
+    document.removeEventListener('mousedown', onDocDown, true);
+    document.removeEventListener('keydown', onKey, true);
+    if (row) refreshDot(row);
+    if (window.markDirtyNow) window.markDirtyNow();
+  }
+
+  function renderPop() {
+    var name = pop._skill;
+    var specs = skillSpecs[name] || [];
+    var html = '<div class="spec-pop-title">Especializações</div><div class="spec-pop-list">';
+    specs.forEach(function(s, i) {
+      html += '<div class="spec-pop-item">' +
+        '<input class="spec-input" data-i="' + i + '" value="' + escAttr(s) + '" placeholder="Especialização">' +
+        '<button class="spec-del" data-i="' + i + '" title="Remover" type="button">&times;</button>' +
+      '</div>';
+    });
+    html += '</div><button class="spec-pop-add" type="button">+ adicionar</button>';
+    pop.innerHTML = html;
+    pop.querySelectorAll('.spec-input').forEach(function(inp) {
+      inp.addEventListener('input', function() {
+        skillSpecs[name][+inp.dataset.i] = inp.value;
+        if (window.markDirty) window.markDirty();
+      });
+      inp.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); addSpec(); }
+      });
+    });
+    pop.querySelectorAll('.spec-del').forEach(function(b) {
+      b.addEventListener('click', function() {
+        skillSpecs[name].splice(+b.dataset.i, 1);
+        renderPop();
+        if (window.markDirty) window.markDirty();
+      });
+    });
+    pop.querySelector('.spec-pop-add').addEventListener('click', addSpec);
+  }
+
+  function addSpec() {
+    var name = pop._skill;
+    if (!skillSpecs[name]) skillSpecs[name] = [];
+    skillSpecs[name].push('');
+    renderPop();
+    var inputs = pop.querySelectorAll('.spec-input');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  }
+
+  function openPop(row) {
+    if (pop) closePop();
+    var name = rowName(row);
+    if (!name) return;
+    if (!skillSpecs[name]) skillSpecs[name] = [];
+    pop = document.createElement('div');
+    pop.className = 'spec-pop';
+    pop._skill = name; pop._row = row;
+    renderPop();
+    document.body.appendChild(pop);
+    var r = (row.querySelector('.row-name') || row).getBoundingClientRect();
+    var px = window.scrollX + r.left;
+    var maxLeft = window.scrollX + document.documentElement.clientWidth - pop.offsetWidth - 12;
+    pop.style.top = (window.scrollY + r.bottom + 6) + 'px';
+    pop.style.left = Math.max(window.scrollX + 8, Math.min(px, maxLeft)) + 'px';
+    document.addEventListener('mousedown', onDocDown, true);
+    document.addEventListener('keydown', onKey, true);
+    var inputs = pop.querySelectorAll('.spec-input');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+    else addSpec();
+  }
+
+  document.addEventListener('click', function(e) {
+    var dot = e.target.closest && e.target.closest('.spec-dot');
+    if (dot) {
+      var dr = dot.closest('.row');
+      if (dr && dr.closest(SKILLS_SELECTOR)) { e.stopPropagation(); openPop(dr); }
+      return;
+    }
+    var nameEl = e.target.closest && e.target.closest('.row-name');
+    if (nameEl) {
+      var nr = nameEl.closest('.row');
+      if (nr && nr.closest(SKILLS_SELECTOR)) openPop(nr);
+    }
+  });
+
+  window.getSkillSpecs = function() {
+    var out = {};
+    Object.keys(skillSpecs).forEach(function(k) {
+      var arr = (skillSpecs[k] || []).map(function(s){ return (s||'').trim(); }).filter(Boolean);
+      if (arr.length) out[k] = arr;
+    });
+    return out;
+  };
+  window.setSkillSpecs = function(obj) {
+    skillSpecs = {};
+    if (obj && typeof obj === 'object') {
+      Object.keys(obj).forEach(function(k) { if (Array.isArray(obj[k])) skillSpecs[k] = obj[k].slice(); });
+    }
+    refreshAllDots();
+  };
+
+  refreshAllDots();
+})();
 
 // ── Carga do Supabase ─────────────────────────────────────────────────────
 (function loadCharData() {
