@@ -266,6 +266,11 @@ Antecedentes típicos: Aliados, Contatos, Recursos, Refúgio, Rebanho, Status, I
 - tracos (marcas, maneirismos)
 - historia (passado e origem)
 
+## NOTAS (texto livre)
+Qualquer anotação avulsa que não se encaixe nos campos acima: especializações de
+habilidades, contatos, NPCs, rebanho, lembretes do jogador, regras de mesa. Junte
+tudo no campo "notes" preservando o texto como escrito.
+
 # NOTAÇÕES POSSÍVEIS QUE O JOGADOR PODE USAR
 
 Para indicar valores numéricos (atributos/habilidades/disciplinas/potência de sangue):
@@ -355,6 +360,7 @@ Retorne APENAS um JSON válido neste formato exato (sem markdown, sem comentári
     "tracos": string | null,
     "historia": string | null
   },
+  "notes": string | null,
   "warnings": [string]
 }
 \`\`\`

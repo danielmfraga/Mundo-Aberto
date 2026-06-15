@@ -2101,6 +2101,13 @@
         vtmTextField('História', 'historia', h.historia, true) +
       '</div>';
 
+      // NOTAS (texto livre — vai para o campo Notas da ficha)
+      html += '<div class="fpanel"><div class="fpanel-title">Notas</div>' +
+        '<div class="vtm-text-field">' +
+          '<textarea class="vtm-text tall" id="scanNotesField" placeholder="Anotações livres, especializações, contatos…">' + escapeHtml(data.notes || '') + '</textarea>' +
+        '</div>' +
+      '</div>';
+
       // Action footer
       html += '<div class="action-footer">' +
           '<button class="btn btn-ghost" id="restartBtn">Reiniciar</button>' +
@@ -2254,6 +2261,10 @@
         if (val) vtmFields[t.dataset.vtm] = val;
       });
 
+      // Notas
+      var notesEl = document.getElementById('scanNotesField');
+      var notes = notesEl ? notesEl.value.trim() : '';
+
       return {
         name: name,
         sheet_data: {
@@ -2266,7 +2277,7 @@
           disciplines: disciplines,
           qualities: qualities,
           vtmFields: vtmFields,
-          notes: ''
+          notes: notes
         }
       };
     }
@@ -2550,7 +2561,13 @@
       if (incoming.qualities && incoming.qualities.length) out.qualities = incoming.qualities;
 
       out.vtmFields = Object.assign({}, current.vtmFields || {}, incoming.vtmFields || {});
-      out.notes = current.notes || '';
+
+      // notas — anexa as novas sem perder as antigas nem duplicar
+      var inNotes = (incoming.notes || '').trim();
+      var curNotes = current.notes || '';
+      out.notes = (inNotes && curNotes.indexOf(inNotes) === -1)
+        ? (curNotes ? curNotes + '\n\n' + inNotes : inNotes)
+        : curNotes;
 
       return out;
     }
