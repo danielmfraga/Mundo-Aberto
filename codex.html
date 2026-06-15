@@ -554,17 +554,19 @@
 
   function uploadBestaImg(id, b64){
     var m = b64.match(/data:([^;]+);base64,(.+)/);
-    if (!m) return Promise.reject();
+    if (!m) return Promise.reject(new Error('imagem inválida'));
     var mime = m[1], bin = atob(m[2]), arr = new Uint8Array(bin.length);
     for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-    var path = 'codex/' + id + '.jpg';
+    // Nome único por upload: o bucket permite INSERT mas não UPDATE (overwrite)
+    // para a chave anon, então nunca reusamos o mesmo caminho.
+    var path = 'codex/' + id + '_' + Date.now().toString(36) + '.jpg';
     return fetch(SB_URL + '/storage/v1/object/personagens/' + path, {
       method: 'POST',
-      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': mime, 'x-upsert': 'true' },
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': mime },
       body: new Blob([arr], { type: mime })
     }).then(function(r){
       if (!r.ok) return r.text().then(function(t){ throw new Error('HTTP ' + r.status + ' — ' + (t || 'sem corpo')); });
-      return SB_URL + '/storage/v1/object/public/personagens/' + path + '?t=' + Date.now();
+      return SB_URL + '/storage/v1/object/public/personagens/' + path;
     });
   }
 
