@@ -562,6 +562,14 @@ body::after {
 .dot.filled { background: var(--holo); border-color: var(--holo); box-shadow: var(--glow-pt); }
 .dot:hover { border-color: var(--holo); }
 
+/* Potência de Sangue — bolinhas em vermelho-sangue com neon */
+.blood-dots .dot { border-color: rgba(224,71,58,0.32); background: rgba(224,71,58,0.05); }
+.blood-dots .dot.filled {
+  background: #e0473a; border-color: #e0473a;
+  box-shadow: 0 0 6px #e0473a, 0 0 16px rgba(224,71,58,0.55);
+}
+.blood-dots .dot:hover { border-color: rgba(224,71,58,0.7); }
+
 /* Disciplinas */
 .disc-grid {
   display: grid;
@@ -995,16 +1003,16 @@ body::after {
       <!-- Vitals -->
       <div class="vitals">
         <div class="vital-row">
+          <span class="vital-label" style="color:#e0473a;text-shadow:0 0 10px rgba(224,71,58,0.5);">Potência de Sangue</span>
+          <div class="dots blood-dots" data-max="5" data-val="0"></div>
+        </div>
+        <div class="vital-row">
           <span class="vital-label">Vitalidade</span>
           <div class="vital-boxes" id="vit-boxes"></div>
         </div>
         <div class="vital-row">
           <span class="vital-label">Força de Vontade</span>
           <div class="vital-boxes" id="fdv-boxes"></div>
-        </div>
-        <div class="vital-row">
-          <span class="vital-label">Pot. de Sangue</span>
-          <div class="dots" data-max="10" data-val="0"></div>
         </div>
         <div class="vital-row">
           <span class="vital-label" style="color:var(--vtm);opacity:0.85;">Fome</span>
@@ -1529,11 +1537,11 @@ function captureSheet() {
     });
   });
   // Potência de Sangue (no vitals, standalone dots)
-  var psDots = document.querySelector('.vital-row .dots[data-max="10"]');
+  var psDots = document.querySelector('.vital-row .dots.blood-dots');
   if (psDots) {
     data.potSangue = {
       filled: psDots.querySelectorAll('.dot.filled').length,
-      max: 10
+      max: 5
     };
   }
 
@@ -1626,7 +1634,7 @@ function restoreSheet(data) {
 
   // Potência de Sangue (dots autônomos)
   if (data.potSangue) {
-    var psDots = document.querySelector('.vital-row .dots[data-max="10"]');
+    var psDots = document.querySelector('.vital-row .dots.blood-dots');
     if (psDots) {
       psDots.querySelectorAll('.dot').forEach(function(dot, i) {
         dot.classList.toggle('filled', i < data.potSangue.filled);

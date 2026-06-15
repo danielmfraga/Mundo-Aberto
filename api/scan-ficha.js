@@ -218,8 +218,9 @@ ${ATRIBUTOS.join(', ')}
 ## HABILIDADES (cada uma de 0 a 5)
 ${HABILIDADES_VTM.join(', ')}
 
-## POTÊNCIA DE SANGUE (Blood Potency, de 0 a 10)
-Um único valor. Vampiros recém-Abraçados costumam ter 1.
+## POTÊNCIA DE SANGUE (Blood Potency, de 0 a 5)
+Um único valor. Vampiros recém-Abraçados costumam ter 1. (Se a ficha indicar mais
+de 5, limite a 5.)
 
 ## COSMOLOGIA (de 0 a 10)
 Um único valor — stat transversal do sistema Mundo Aberto. Pode não constar numa

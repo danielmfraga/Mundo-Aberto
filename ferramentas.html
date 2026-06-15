@@ -2030,7 +2030,7 @@
           '</div>' +
           '<div class="cosmo-row">' +
             '<span class="cosmo-label">Potência de Sangue</span>' +
-            buildDotsHTML('potsangue', pot, 10) +
+            buildDotsHTML('potsangue', pot, 5) +
           '</div>' +
         '</div>' +
         '<div class="xp-block-ficha">' +
@@ -2205,7 +2205,7 @@
 
       // Potência de Sangue
       var potEl = document.querySelector('.fdots[data-group="potsangue"]');
-      var potSangue = { filled: potEl ? (parseInt(potEl.dataset.val) || 0) : 0, max: 10 };
+      var potSangue = { filled: potEl ? (parseInt(potEl.dataset.val) || 0) : 0, max: 5 };
 
       // Vitais
       var vitMaxEl = document.querySelector('[data-key="vmax:Vitalidade"]');
