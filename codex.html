@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codex · Mundo Aberto</title>
+
+  <!-- Preview de link (Open Graph / Twitter) -->
+  <meta property="og:title" content="Mundo Aberto">
+  <meta property="og:site_name" content="Mundo Aberto">
+  <meta property="og:description" content="Codex — Bestiário de Campo dos Caçadores">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <meta name="description" content="Codex — Bestiário de Campo dos Caçadores">
+
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --holo:   #00ffe7;
+      --holo2:  #0088ff;
+      --spec:   #7b2fff;   /* roxo espectral — identidade do Codex */
+      --spec2:  #b98cff;
+      --orange: #ff6b1a;
+      --danger: #ff4466;
+      --dark:   #040810;
+      --panel:  rgba(10,8,20,.55);
+      --line:   rgba(123,47,255,.18);
+      --text:   #d8dbe6;
+      --muted:  #7d7795;
+      --dim:    #4b4760;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--dark);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+
+    /* grade animada + scanlines (consistente com index/dossiê) */
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(123,47,255,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(123,47,255,0.035) 1px, transparent 1px);
+      background-size: 44px 44px;
+      animation: gridShift 26s linear infinite;
+    }
+    @keyframes gridShift { from { background-position: 0 0; } to { background-position: 44px 44px; } }
+    body::after {
+      content: ''; position: fixed; inset: 0; z-index: 60; pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.10) 2px, rgba(0,0,0,0.10) 4px);
+    }
+    /* névoa espectral de fundo */
+    .fog {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 50% at 80% -5%, rgba(123,47,255,.12), transparent 60%),
+        radial-gradient(ellipse 55% 50% at -5% 110%, rgba(0,136,255,.08), transparent 55%);
+    }
+
+    .corner { position: fixed; width: 34px; height: 34px; pointer-events: none; z-index: 2; }
+    .corner::before, .corner::after { content: ''; position: absolute; background: var(--spec); box-shadow: 0 0 10px var(--spec); }
+    .corner::before { width: 100%; height: 1px; top: 0; }
+    .corner::after  { width: 1px; height: 100%; top: 0; }
+    .corner-tl { top: 18px; left: 18px; }
+    .corner-tr { top: 18px; right: 18px; transform: scaleX(-1); }
+    .corner-bl { bottom: 18px; left: 18px; transform: scaleY(-1); }
+    .corner-br { bottom: 18px; right: 18px; transform: scale(-1); }
+
+    .wrap { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; padding: 0 26px 90px; }
+
+    /* ── topo ── */
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 26px 0 0; gap: 16px; flex-wrap: wrap; }
+    .back {
+      display: inline-flex; align-items: center; gap: 9px;
+      font-family: 'Share Tech Mono', monospace; font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--spec2); text-decoration: none;
+      border: 1px solid rgba(123,47,255,.4); border-radius: 3px; padding: 9px 16px;
+      background: rgba(123,47,255,.06); transition: .2s;
+    }
+    .back:hover { color: #fff; border-color: var(--spec); box-shadow: 0 0 16px rgba(123,47,255,.4); background: rgba(123,47,255,.12); }
+    .topbar .tag { font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 4px; color: var(--muted); text-transform: uppercase; }
+
+    /* ── header ── */
+    header.hero { padding: 64px 0 38px; position: relative; }
+    .eyebrow { font-family: 'Share Tech Mono', monospace; font-size: 12px; letter-spacing: .34em; color: var(--orange); margin-bottom: 18px; display: flex; align-items: center; gap: 12px; text-transform: uppercase; }
+    .eyebrow::before { content: ''; width: 34px; height: 1px; background: var(--orange); box-shadow: 0 0 8px var(--orange); }
+    h1.codex-title {
+      font-family: 'Orbitron', sans-serif; font-weight: 900;
+      font-size: clamp(46px, 10vw, 104px); line-height: .92; letter-spacing: .04em;
+      color: #f3f0ff; text-shadow: 0 0 28px rgba(123,47,255,.5), 0 0 70px rgba(123,47,255,.25);
+    }
+    .hero .sub { font-family: 'Orbitron', sans-serif; font-weight: 500; font-size: clamp(14px,2.4vw,20px); letter-spacing: .08em; color: var(--spec2); margin: 16px 0 6px; }
+    .hero .lede { max-width: 620px; color: var(--muted); font-size: 17px; line-height: 1.6; margin-top: 14px; }
+    .hr { height: 1px; background: linear-gradient(90deg, var(--spec), transparent); box-shadow: 0 0 10px rgba(123,47,255,.4); margin: 30px 0 0; }
+
+    /* ── entrada de criatura ── */
+    .codex-entry {
+      margin-top: 46px;
+      border: 1px solid var(--line); border-radius: 6px;
+      background: linear-gradient(180deg, rgba(12,9,22,.7), rgba(6,5,12,.55));
+      backdrop-filter: blur(4px);
+      overflow: hidden;
+      position: relative;
+    }
+    .codex-entry::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--spec), transparent); opacity: .7;
+    }
+    .entry-grid { display: grid; grid-template-columns: 320px 1fr; }
+
+    /* coluna esquerda: retrato + ficha rápida */
+    .left { border-right: 1px solid var(--line); padding: 0; }
+    .portrait { position: relative; aspect-ratio: 4/5; width: 100%; overflow: hidden; background: #07060d; border-bottom: 1px solid var(--line); }
+    .portrait img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(.7) contrast(1.05) brightness(.92); z-index: 2; }
+    .portrait .pf {
+      position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+      color: var(--dim); font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 2px; text-align: center; padding: 20px;
+    }
+    .portrait .pf svg { opacity: .5; }
+    .portrait .pf span { color: var(--spec2); opacity: .7; }
+    .portrait .scan { position: absolute; left: 0; right: 0; height: 60px; z-index: 3; pointer-events: none;
+      background: linear-gradient(180deg, transparent, rgba(123,47,255,.14), transparent); animation: portScan 6s ease-in-out infinite; }
+    @keyframes portScan { 0% { top: -60px; } 100% { top: 100%; } }
+    .portrait .vig { position: absolute; inset: 0; z-index: 4; pointer-events: none; box-shadow: inset 0 0 70px rgba(0,0,0,.85); }
+
+    .quick { padding: 18px 20px 22px; }
+    .quick .crow { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px dashed rgba(123,47,255,.14); }
+    .quick .crow:last-child { border-bottom: none; }
+    .quick .k { font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+    .quick .v { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 15px; color: #eee9ff; }
+    .threat { display: inline-flex; gap: 4px; }
+    .pip { width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(255,68,102,.5); }
+    .pip.on { background: var(--danger); border-color: var(--danger); box-shadow: 0 0 8px rgba(255,68,102,.8); }
+
+    /* coluna direita: dossiê */
+    .right { padding: 26px 30px 30px; min-width: 0; }
+    .name-row { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+    h2.cname { font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: clamp(26px,4vw,40px); color: #f3f0ff; letter-spacing: .02em; text-shadow: 0 0 22px rgba(123,47,255,.4); }
+    .alias { font-family: 'Rajdhani', sans-serif; font-style: italic; font-weight: 400; color: var(--spec2); font-size: 17px; }
+    .classline { font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 2px; color: var(--orange); text-transform: uppercase; margin-top: 8px; }
+
+    .sec { margin-top: 26px; }
+    .sec h3 {
+      font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 12.5px; letter-spacing: .22em; text-transform: uppercase;
+      color: var(--spec2); margin-bottom: 12px; display: flex; align-items: center; gap: 10px;
+    }
+    .sec h3::before { content: ''; width: 16px; height: 1px; background: var(--spec); box-shadow: 0 0 6px var(--spec); }
+    .sec p { color: var(--text); line-height: 1.65; font-size: 16px; }
+    .sec p.quote { color: #c8c2dd; font-style: italic; border-left: 2px solid rgba(123,47,255,.5); padding-left: 16px; }
+    .sec ul { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+    .sec ul li { position: relative; padding-left: 20px; line-height: 1.55; color: var(--text); }
+    .sec ul li::before { content: '◇'; position: absolute; left: 0; top: 0; color: var(--spec2); font-size: 12px; }
+    .sec ul.fraq li::before { content: '✕'; color: var(--holo); }
+
+    /* trunfos */
+    .trunfo { border: 1px solid var(--line); border-radius: 4px; padding: 13px 15px; margin-bottom: 10px; background: rgba(123,47,255,.04); }
+    .trunfo b { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 14px; color: #efeaff; letter-spacing: .02em; }
+    .trunfo p { margin-top: 5px; font-size: 15px; color: var(--muted); line-height: 1.55; }
+
+    /* atributos em dots */
+    .attrs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .attr-col h4 { font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 2px; color: var(--orange); text-transform: uppercase; margin-bottom: 10px; }
+    .attr-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 5px 0; }
+    .attr-row .an { font-size: 14.5px; color: var(--text); }
+    .dots { display: inline-flex; gap: 3px; }
+    .d { width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(123,47,255,.35); background: rgba(123,47,255,.05); }
+    .d.f { background: var(--spec2); border-color: var(--spec2); box-shadow: 0 0 7px rgba(123,47,255,.7); }
+
+    /* bloco de mestre (mono) */
+    .gm {
+      font-family: 'Share Tech Mono', monospace; font-size: 13px; line-height: 1.85; color: #b9b2d4;
+      background: rgba(0,0,0,.35); border: 1px solid var(--line); border-radius: 4px; padding: 14px 16px; white-space: pre-wrap;
+    }
+    .gm .lab { color: var(--orange); }
+
+    .draft {
+      margin-top: 14px; font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 1px;
+      color: var(--dim); display: flex; align-items: center; gap: 8px;
+    }
+    .draft .dot2 { width: 7px; height: 7px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 8px var(--orange); }
+
+    footer { margin-top: 56px; text-align: center; font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 3px; color: var(--dim); }
+
+    /* ── mobile ── */
+    @media (max-width: 760px) {
+      .entry-grid { grid-template-columns: 1fr; }
+      .left { border-right: none; border-bottom: 1px solid var(--line); }
+      .portrait { aspect-ratio: 3/2; }
+      .attrs { grid-template-columns: 1fr; gap: 22px; }
+      .right { padding: 22px 18px 24px; }
+      .wrap { padding: 0 16px 70px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="fog"></div>
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+
+  <div class="wrap">
+
+    <div class="topbar">
+      <a class="back" href="index.html">◄ Voltar</a>
+      <span class="tag">Arquivo Restrito · Vol. I</span>
+    </div>
+
+    <header class="hero">
+      <div class="eyebrow">Bestiário de Campo</div>
+      <h1 class="codex-title">Codex</h1>
+      <div class="sub">Registro dos Caçadores</div>
+      <p class="lede">Catálogo de aberrações, espíritos e ameaças encontradas em campo. Tudo aqui foi pago com sangue — leia antes de cruzar a próxima ponte.</p>
+      <div class="hr"></div>
+    </header>
+
+    <!-- ════════════ FANTASMA SOFREDOR ════════════ -->
+    <article class="codex-entry" id="fantasma-sofredor">
+      <div class="entry-grid">
+
+        <!-- ESQUERDA -->
+        <div class="left">
+          <div class="portrait">
+            <img src="assets/codex/fantasma-sofredor.jpg" alt="Fantasma Sofredor" onerror="this.remove()">
+            <div class="pf">
+              <svg width="58" height="74" viewBox="0 0 58 74" fill="none" stroke="currentColor" stroke-width="1.2">
+                <path d="M29 6c-10 0-17 8-17 19v40c4-4 7-4 8.5 0 1.5-4 5-4 6 0 1.5-4 5-4 6.5 0 1.5-4 5-4 8.5 0V25C41 14 39 6 29 6Z"/>
+                <ellipse cx="22" cy="30" rx="2.6" ry="3.6" fill="currentColor" stroke="none"/>
+                <ellipse cx="36" cy="30" rx="2.6" ry="3.6" fill="currentColor" stroke="none"/>
+                <ellipse cx="29" cy="44" rx="3.2" ry="5" />
+              </svg>
+              [ RETRATO NÃO ARQUIVADO ]
+              <span>assets/codex/fantasma-sofredor.jpg</span>
+            </div>
+            <div class="scan"></div>
+            <div class="vig"></div>
+          </div>
+
+          <div class="quick">
+            <div class="crow"><span class="k">Classe</span><span class="v">Espírito Atado</span></div>
+            <div class="crow"><span class="k">Habitat</span><span class="v">Ponte / Água</span></div>
+            <div class="crow"><span class="k">Atividade</span><span class="v">Pós-anoitecer</span></div>
+            <div class="crow">
+              <span class="k">Ameaça</span>
+              <span class="threat">
+                <span class="pip on"></span><span class="pip on"></span><span class="pip on"></span><span class="pip"></span><span class="pip"></span>
+              </span>
+            </div>
+            <div class="crow"><span class="k">Vitalidade</span><span class="v">8</span></div>
+            <div class="crow"><span class="k">Força de Vontade</span><span class="v">6</span></div>
+            <div class="crow"><span class="k">Dificuldade</span><span class="v">6 / 3</span></div>
+          </div>
+        </div>
+
+        <!-- DIREITA -->
+        <div class="right">
+          <div class="name-row">
+            <h2 class="cname">Fantasma Sofredor</h2>
+            <span class="alias">"A Afogada da Ponte"</span>
+          </div>
+          <div class="classline">Assombração de Trauma · Atada ao local da morte</div>
+
+          <div class="sec">
+            <h3>Relato</h3>
+            <p class="quote">Dizem que ela morreu na água, sob o arco de pedra, e que ninguém veio buscá-la. O que sobrou já não lembra o próprio nome — só a dor. Surge encharcada, de vestido pálido colado ao corpo, cabelos escorrendo como algas, a boca aberta num grito que não se ouve... até que se ouve.</p>
+          </div>
+
+          <div class="sec">
+            <h3>Sinais de Manifestação</h3>
+            <ul>
+              <li>Queda brusca de temperatura perto da ponte; o hálito vira fumaça.</li>
+              <li>Choro abafado vindo de baixo d'água, sem fonte visível.</li>
+              <li>Poças se formam onde não há água; pegadas molhadas levando à margem.</li>
+              <li>Quem encara o vão da ponte sente o impulso de descer até a correnteza.</li>
+            </ul>
+          </div>
+
+          <div class="sec">
+            <h3>Atributos</h3>
+            <div class="attrs">
+              <div class="attr-col">
+                <h4>Físico</h4>
+                <div class="attr-row"><span class="an">Força</span><span class="dots"><i class="d f"></i><i class="d f"></i><i class="d"></i><i class="d"></i><i class="d"></i></span></div>
+                <div class="attr-row"><span class="an">Destreza</span><span class="dots"><i class="d f"></i><i class="d f"></i><i class="d f"></i><i class="d"></i><i class="d"></i></span></div>
+                <div class="attr-row"><span class="an">Vigor</span><span class="dots"><i class="d f"></i><i class="d f"></i><i class="d f"></i><i class="d f"></i><i class="d"></i></span></div>
+              </div>
+              <div class="attr-col">
+                <h4>Social</h4>
+                <div class="attr-row"><span class="an">Presença</span><span class="dots"><i class="d f"></i><i class="d f"></i><i class="d f"></i><i class="d f"></i><i class="d"></i></span></div>
+                <div class="attr-row"><span class="an">Manipulação</span><span class="dots"><i class="d f"></i><i class="d f"></i><i class="d"></i><i class="d"></i><i class="d"></i></span></div>
+                <div class="attr-row"><span class="an">Autocontrole</span><span class="dots"><i class="d f"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i></span></div>
+              </div>
+              <div class="attr-col">
+                <h4>Mental</h4>
+                <div class="attr-row"><span class="an">Inteligência</span><span class="dots"><i class="d f"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i></span></div>
+                <div class="attr-row"><span class="an">Raciocínio</span><span class="dots"><i class="d f"></i><i class="d f"></i><i class="d"></i><i class="d"></i><i class="d"></i></span></div>
+                <div class="attr-row"><span class="an">Percepção</span><span class="dots"><i class="d f"></i><i class="d f"></i><i class="d f"></i><i class="d f"></i><i class="d"></i></span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <h3>Trunfos</h3>
+            <div class="trunfo">
+              <b>Lamento Dilacerante</b>
+              <p>O grito que, quando finalmente alcança os ouvidos, paralisa de pavor todos por perto. Corações fracos podem simplesmente parar.</p>
+            </div>
+            <div class="trunfo">
+              <b>Toque Gélido</b>
+              <p>O contato drena o calor do corpo; membros entorpecem, o vigor escorre. Repetido, congela por dentro.</p>
+            </div>
+            <div class="trunfo">
+              <b>Mãos da Corrente</b>
+              <p>Manifestação poltergeist: arrasta vítimas para a água e prende tornozelos como se fossem raízes vivas no leito do rio.</p>
+            </div>
+            <div class="trunfo">
+              <b>Ancoragem à Ponte</b>
+              <p>Não se afasta mais que alguns metros do arco. Ali é quase intangível e regenera — longe dele, enfraquece rápido.</p>
+            </div>
+          </div>
+
+          <div class="sec">
+            <h3>Fraquezas · Como Combater</h3>
+            <ul class="fraq">
+              <li><b>Água corrente viva:</b> atravessar uma correnteza limpa a desorienta e quebra a perseguição.</li>
+              <li><b>Sal e ferro frio:</b> barram o Toque Gélido e as Mãos da Corrente.</li>
+              <li><b>A Âncora:</b> há um resto ou pertence que a prende (ossos no leito, um objeto seu). Encontrar e dar destino — enterro, devolução, fogo — a liberta.</li>
+              <li><b>O nome verdadeiro:</b> descobrir quem ela foi e chamá-la pelo nome rompe o ciclo de dor e a bane sem violência.</li>
+              <li><b>Luz forte e direta no rosto:</b> a faz recuar, mas não destrói.</li>
+            </ul>
+          </div>
+
+          <div class="sec">
+            <h3>Notas de Mestre</h3>
+            <div class="gm"><span class="lab">Dificuldade Geral:</span> 6 / 3
+<span class="lab">Paradas Padrão:</span> Físico 5 · Social 3 · Mental 4   |   Vit 8 · FdV 6
+<span class="lab">Excepcionais:</span> Percepção 7 · Intimidação 8 (Lamento)
+<span class="lab">Defesas:</span> imune a dano físico comum enquanto ancorada à ponte; sal/ferro frio e água corrente contam como dano real.</div>
+            <div class="draft"><span class="dot2"></span> Rascunho — ajustar com os dados oficiais quando definidos.</div>
+          </div>
+
+        </div>
+      </div>
+    </article>
+
+    <footer>// FIM DO REGISTRO · MUNDO ABERTO //</footer>
+
+  </div>
+</body>
+</html>
