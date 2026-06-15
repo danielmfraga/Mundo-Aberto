@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600;700&display=swap">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vampiro · Mundo Aberto</title>
+
+<meta property="og:title" content="Mundo Aberto">
+<meta property="og:site_name" content="Mundo Aberto">
+<meta property="og:description" content="Ficha de Vampiro · Mundo Aberto">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="description" content="Ficha de Vampiro · Mundo Aberto">
+
+<style>
+
+:root {
+  --bg-0: #04070d;
+  --bg-1: #070c16;
+  --bg-2: #0b1320;
+  --line: rgba(120, 200, 220, 0.10);
+  --line-strong: rgba(120, 200, 220, 0.20);
+
+  --fg: #cfe9f0;
+  --fg-dim: rgba(207, 233, 240, 0.55);
+  --fg-faint: rgba(207, 233, 240, 0.32);
+
+  --holo: #4ed3e8;
+  --holo-soft: rgba(78, 211, 232, 0.55);
+  --accent: #ff7a3d;
+  --danger: #ff5566;
+
+  --glow-soft: 0 0 14px rgba(78, 211, 232, 0.25);
+  --glow-pt: 0 0 6px rgba(78, 211, 232, 0.6);
+
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* V:tM */
+  --vtm: #c0392b;
+  --vtm-soft: rgba(192,57,43,0.55);
+  --glow-vtm: 0 0 8px rgba(192,57,43,0.4);
+  --hum: #c8a032;
+  --hum-soft: rgba(200,160,50,0.55);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: var(--bg-0);
+  color: var(--fg);
+  font-family: var(--font-display);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(78,211,232,0.04), transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(192,57,43,0.03), transparent 60%),
+    linear-gradient(rgba(120,200,220,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120,200,220,0.025) 1px, transparent 1px);
+  background-size: auto, auto, 56px 56px, 56px 56px;
+  background-attachment: fixed;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 3px,
+    rgba(0,0,0,0.18) 3px,
+    rgba(0,0,0,0.18) 4px
+  );
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+}
+
+.sheet {
+  position: relative;
+  z-index: 1;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 2.5rem 1.75rem 4rem;
+}
+
+/* ───────── HEADER ───────── */
+.header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  gap: 2rem;
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.75rem;
+  border-bottom: 1px solid var(--line-strong);
+  position: relative;
+}
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0;
+  width: 80px; height: 1px;
+  background: var(--vtm);
+  box-shadow: var(--glow-vtm);
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--vtm);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.eyebrow::before {
+  content: '';
+  width: 6px; height: 6px;
+  background: var(--vtm);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--vtm);
+}
+
+.title-block { text-align: center; }
+.title-name {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--fg);
+  text-transform: uppercase;
+  line-height: 1;
+  outline: none;
+  border-radius: 3px;
+  padding: 2px 6px;
+  margin: -2px -6px;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.title-name[contenteditable]:hover { background: rgba(78,211,232,0.06); }
+.title-name[contenteditable]:focus { background: rgba(78,211,232,0.10); box-shadow: inset 0 0 0 1px rgba(78,211,232,0.35); }
+.title-name[contenteditable]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--fg-faint);
+  opacity: 0.5;
+}
+.title-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--vtm);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin-top: 8px;
+  opacity: 0.7;
+}
+
+.xp-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--fg-faint);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.xp-row { display: flex; gap: 18px; }
+.xp-num {
+  color: var(--fg);
+  font-size: 11px;
+  font-weight: 500;
+  margin-left: 6px;
+  letter-spacing: 0.05em;
+  outline: none;
+  border-radius: 3px;
+  padding: 1px 5px;
+  cursor: text;
+  transition: background 0.15s, box-shadow 0.15s;
+  display: inline-block;
+  min-width: 18px;
+  text-align: center;
+}
+.xp-num[contenteditable]:hover { background: rgba(78,211,232,0.08); }
+.xp-num[contenteditable]:focus { background: rgba(78,211,232,0.12); box-shadow: inset 0 0 0 1px rgba(78,211,232,0.4); }
+.xp-num.readonly { cursor: default; }
+.xp-num.over { color: var(--danger) !important; }
+.xp-bar {
+  width: 200px; height: 3px;
+  background: rgba(120,200,220,0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.xp-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(to right, rgba(78,211,232,0.4), var(--holo));
+  border-radius: 2px;
+  box-shadow: 0 0 6px rgba(78,211,232,0.5);
+}
+
+/* ───────── LAYOUT ───────── */
+.body-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.75rem;
+}
+
+/* ───────── LEFT COLUMN ───────── */
+.col-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.device {
+  position: relative;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(192,57,43,0.05), transparent 70%),
+    linear-gradient(180deg, var(--bg-2), var(--bg-1));
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1rem 1rem 1.25rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.04),
+    0 30px 60px -30px rgba(0,0,0,0.8);
+}
+
+.device .corner {
+  position: absolute;
+  width: 10px; height: 10px;
+  border: 1px solid var(--line-strong);
+}
+.device .corner.tl { top: 8px; left: 8px; border-right: 0; border-bottom: 0; }
+.device .corner.tr { top: 8px; right: 8px; border-left: 0; border-bottom: 0; }
+.device .corner.bl { bottom: 8px; left: 8px; border-right: 0; border-top: 0; }
+.device .corner.br { bottom: 8px; right: 8px; border-left: 0; border-top: 0; }
+
+.device-id {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--fg-faint);
+  letter-spacing: 0.2em;
+  text-align: center;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+.device-id .led {
+  display: inline-block;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--vtm);
+  box-shadow: 0 0 6px var(--vtm);
+  margin-right: 8px;
+  vertical-align: middle;
+  animation: ledPulse 2.4s ease-in-out infinite;
+}
+@keyframes ledPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+.holo-projection {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.holo-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid;
+  pointer-events: none;
+}
+.ring1 { width: 92%; height: 92%; border-color: rgba(192,57,43,0.14); animation: rot 18s linear infinite; }
+.ring2 { width: 76%; height: 76%; border-color: rgba(192,57,43,0.10); border-style: dashed; animation: rot 32s linear infinite reverse; }
+.ring3 { width: 100%; height: 44%; border-color: rgba(192,57,43,0.08); transform: rotateX(72deg); animation: rotX 14s linear infinite; }
+
+@keyframes rot { to { transform: rotate(360deg); } }
+@keyframes rotX { from { transform: rotateX(72deg) rotate(0); } to { transform: rotateX(72deg) rotate(360deg); } }
+
+.holo-area {
+  position: relative;
+  z-index: 2;
+  width: 56%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(192,57,43,0.5);
+  box-shadow:
+    0 0 12px rgba(192,57,43,0.5),
+    0 0 32px rgba(192,57,43,0.25),
+    inset 0 0 30px rgba(192,57,43,0.08);
+  cursor: pointer;
+  background: rgba(192,57,43,0.04);
+  transition: box-shadow 0.3s ease;
+}
+.holo-area:hover {
+  box-shadow:
+    0 0 22px rgba(192,57,43,0.7),
+    0 0 60px rgba(192,57,43,0.35),
+    inset 0 0 30px rgba(192,57,43,0.15);
+}
+.holo-area img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  filter: saturate(1.2) brightness(0.9);
+  mix-blend-mode: normal;
+  display: none;
+}
+.upload-ph {
+  width: 100%; height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.upload-glyph {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  color: rgba(192,57,43,0.55);
+  opacity: 0.8;
+  animation: glyphPulse 3s ease-in-out infinite;
+  line-height: 1;
+}
+@keyframes glyphPulse { 0%,100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 0.85; transform: scale(1.06); } }
+.upload-text {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(192,57,43,0.55);
+  letter-spacing: 0.16em;
+  text-align: center;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+.holo-area::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(192,57,43,0.05) 3px,
+    rgba(192,57,43,0.05) 4px
+  );
+  pointer-events: none;
+  animation: holoScan 4s linear infinite;
+}
+@keyframes holoScan { 0% { background-position: 0 0; } 100% { background-position: 0 100px; } }
+
+/* ── identity ── */
+.identity {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 6px 12px;
+  align-items: center;
+  padding: 14px 16px;
+  background: rgba(120,200,220,0.025);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.id-key {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--fg-faint);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.id-val {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg);
+  letter-spacing: 0.01em;
+  outline: none;
+  border-radius: 3px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  transition: background 0.15s, box-shadow 0.15s;
+  cursor: text;
+  min-height: 1em;
+}
+.id-val:hover { background: rgba(78,211,232,0.05); }
+.id-val:focus { background: rgba(78,211,232,0.08); box-shadow: inset 0 0 0 1px rgba(78,211,232,0.35); }
+.id-val:empty::before { content: attr(data-placeholder); color: var(--fg-faint); font-style: italic; }
+
+/* ── vitals ── */
+.vitals {
+  background: rgba(120,200,220,0.025);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.vital-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+.vital-row + .vital-row { border-top: 1px dashed var(--line); }
+.vital-row.text-row { grid-template-columns: 90px 1fr; }
+.vital-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--fg-dim);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.vital-boxes { display: flex; gap: 3px; }
+.vbox {
+  width: 13px; height: 13px;
+  border: 1px solid rgba(120,200,220,0.25);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.vbox:hover { border-color: var(--holo-soft); background: rgba(78,211,232,0.08); }
+.vbox.marked { background: var(--holo); border-color: var(--holo); box-shadow: 0 0 5px rgba(78,211,232,0.5); }
+.vbox.aggravated { background: var(--danger); border-color: var(--danger); box-shadow: 0 0 5px rgba(220,80,80,0.6); position: relative; }
+.vbox.aggravated::after { content: "\00D7"; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 10px; color: #fff; line-height: 1; }
+
+/* Fome — crimson */
+.fome-track .vbox { border-color: rgba(192,57,43,0.3); }
+.fome-track .vbox:hover { border-color: var(--vtm-soft); background: rgba(192,57,43,0.08); }
+.fome-track .vbox.marked { background: var(--vtm); border-color: var(--vtm); box-shadow: var(--glow-vtm); }
+
+/* Humanidade — âmbar */
+.hum-track .vbox { border-color: rgba(200,160,50,0.3); }
+.hum-track .vbox:hover { border-color: var(--hum-soft); background: rgba(200,160,50,0.08); }
+.hum-track .vbox.marked { background: var(--hum); border-color: var(--hum); box-shadow: 0 0 5px rgba(200,160,50,0.5); }
+
+/* ───────── RIGHT COLUMN ───────── */
+.col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.panel {
+  background: rgba(120,200,220,0.02);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem 1.5rem;
+  position: relative;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.panel-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.panel-meta {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--fg-faint);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Atributos */
+.attr-groups {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+.attr-group-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--fg-faint);
+  letter-spacing: 0.22em;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed var(--line);
+  text-transform: uppercase;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.row:hover { background: rgba(78,211,232,0.04); }
+.row-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg);
+  letter-spacing: 0.005em;
+}
+
+/* Dots */
+.dots { display: flex; gap: 4px; }
+.dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  border: 1px solid rgba(120,200,220,0.28);
+  cursor: pointer;
+  transition: all 0.12s;
+  background: rgba(120,200,220,0.04);
+}
+.dot.filled { background: var(--holo); border-color: var(--holo); box-shadow: var(--glow-pt); }
+.dot:hover { border-color: var(--holo); }
+
+/* Disciplinas */
+.disc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.disc {
+  background: rgba(120,200,220,0.04);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--vtm-soft);
+  border-radius: 6px;
+  padding: 10px 12px;
+  position: relative;
+}
+.disc-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--line);
+}
+.disc-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  outline: none;
+  border-radius: 3px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  cursor: text;
+  transition: background 0.15s, box-shadow 0.15s;
+  min-height: 1em;
+}
+.disc-name:hover { background: rgba(192,57,43,0.06); }
+.disc-name:focus { background: rgba(192,57,43,0.10); box-shadow: inset 0 0 0 1px rgba(192,57,43,0.4); }
+.disc-name:empty::before { content: attr(data-placeholder); color: var(--fg-faint); font-style: italic; }
+.disc-powers {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(207,233,240,0.75);
+  outline: none;
+  border-radius: 4px;
+  padding: 6px 8px;
+  cursor: text;
+  transition: background 0.15s;
+  min-height: 60px;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+.disc-powers:hover { background: rgba(78,211,232,0.04); }
+.disc-powers:focus { background: rgba(78,211,232,0.06); box-shadow: inset 0 0 0 1px rgba(78,211,232,0.25); }
+.disc-powers:empty::before { content: attr(data-placeholder); color: var(--fg-faint); font-style: italic; }
+.disc-del {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 16px; height: 16px;
+  display: grid; place-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: var(--fg-faint);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, border-color 0.15s, background 0.15s;
+}
+.disc:hover .disc-del { opacity: 1; }
+.disc-del:hover { color: var(--danger); border-color: rgba(255,85,102,0.4); background: rgba(255,85,102,0.08); }
+.disc-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px dashed var(--line-strong);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--fg-faint);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 56px;
+}
+.disc-add:hover { border-color: var(--vtm-soft); color: var(--vtm); background: rgba(192,57,43,0.04); }
+.disc-add::before { content: '+'; font-size: 16px; font-weight: 500; }
+
+/* Split two-up */
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+/* Qualidades / Vantagens & Defeitos */
+.quality-list .row-name { font-size: 12px; }
+.quality-list .row.defect .row-name { color: rgba(255, 85, 102, 0.85); }
+.quality-list .row { position: relative; padding-right: 28px; }
+.quality-list .row-name[contenteditable] {
+  outline: none;
+  border-radius: 3px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  cursor: text;
+  transition: background 0.15s, box-shadow 0.15s;
+  min-height: 1em;
+  display: inline-block;
+  min-width: 60px;
+}
+.quality-list .row-name[contenteditable]:hover { background: rgba(78,211,232,0.05); }
+.quality-list .row-name[contenteditable]:focus { background: rgba(78,211,232,0.08); box-shadow: inset 0 0 0 1px rgba(78,211,232,0.35); }
+.quality-list .row-name[contenteditable]:empty::before { content: 'novo traço…'; color: var(--fg-faint); font-style: italic; }
+.quality-del {
+  position: absolute;
+  top: 50%; right: 4px;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  display: grid; place-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 3px;
+  color: var(--fg-faint);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+.quality-list .row:hover .quality-del { opacity: 1; }
+.quality-del:hover { color: var(--danger); background: rgba(255,85,102,0.10); }
+.quality-toggle {
+  position: absolute;
+  top: 50%; right: 24px;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  background: transparent;
+  border: 0;
+  border-radius: 3px;
+  color: var(--fg-faint);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+  letter-spacing: 0;
+}
+.quality-list .row:hover .quality-toggle { opacity: 1; }
+.quality-toggle:hover { color: var(--holo); }
+.quality-list .row.defect .quality-toggle:hover { color: var(--danger); }
+.quality-add {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px dashed var(--line-strong);
+  border-radius: 5px;
+  padding: 6px 12px;
+  color: var(--fg-faint);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.quality-add:hover { border-color: var(--holo-soft); color: var(--holo); background: rgba(78,211,232,0.04); }
+.quality-add::before { content: '+'; font-size: 12px; }
+
+/* Crônica (Princípios / Pilares / Perdição) */
+.cronica-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.cronica-area { display: flex; flex-direction: column; gap: 6px; }
+.cronica-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--accent);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.cronica-val {
+  flex: 1;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg);
+  outline: none;
+  min-height: 80px;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  cursor: text;
+  transition: border-color 0.2s;
+}
+.cronica-val:hover { border-color: var(--line-strong); }
+.cronica-val:focus { border-color: rgba(78,211,232,0.3); }
+.cronica-val:empty::before { content: attr(data-placeholder); color: var(--fg-faint); pointer-events: none; }
+
+/* Potência de Sangue — tabela de referência */
+.blood-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.blood-table td {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  vertical-align: middle;
+}
+.blood-table .bt-label {
+  font-size: 9px;
+  color: var(--fg-dim);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: rgba(0,0,0,0.2);
+  width: 28%;
+  white-space: nowrap;
+}
+.blood-table .bt-val {
+  color: var(--fg);
+  font-size: 12px;
+  outline: none;
+  cursor: text;
+  min-width: 60px;
+  transition: background 0.15s;
+}
+.blood-table .bt-val:hover { background: rgba(78,211,232,0.05); }
+.blood-table .bt-val:focus { background: rgba(78,211,232,0.08); outline: 1px solid rgba(78,211,232,0.3); }
+.blood-table .bt-val:empty::before { content: attr(data-placeholder); color: var(--fg-faint); pointer-events: none; font-style: italic; }
+
+/* Bio — Histórico */
+.bio-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 14px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--fg-faint);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.bio-row .v {
+  color: var(--fg);
+  font-family: var(--font-mono);
+  margin-left: 6px;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  outline: none;
+  border-radius: 3px;
+  padding: 2px 4px;
+  cursor: text;
+  transition: background 0.15s, box-shadow 0.15s;
+  display: inline-block;
+  min-width: 30px;
+}
+.bio-row .v:hover { background: rgba(78,211,232,0.05); }
+.bio-row .v:focus { background: rgba(78,211,232,0.08); box-shadow: inset 0 0 0 1px rgba(78,211,232,0.35); }
+.bio-row .v:empty::before { content: '—'; color: var(--fg-faint); }
+
+.bio-field { margin-top: 12px; }
+.bio-field-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--fg-faint);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.bio-field-val {
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg);
+  outline: none;
+  min-height: 56px;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  cursor: text;
+  transition: border-color 0.2s;
+}
+.bio-field-val:hover { border-color: var(--line-strong); }
+.bio-field-val:focus { border-color: rgba(78,211,232,0.3); }
+.bio-field-val:empty::before { content: attr(data-placeholder); color: var(--fg-faint); pointer-events: none; }
+.bio-field-val.tall { min-height: 90px; }
+
+/* Notas */
+.notes-section {
+  margin: 24px 0 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.notes-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+.notes-box {
+  min-height: 80px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--fg);
+  line-height: 1.6;
+  outline: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.notes-box:empty::before { content: attr(data-placeholder); color: var(--fg-faint); pointer-events: none; }
+.notes-box::-webkit-scrollbar { width: 4px; }
+.notes-box::-webkit-scrollbar-track { background: transparent; }
+.notes-box::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
+
+/* Footer */
+.signature {
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--fg-faint);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+#fileInput { display: none; }
+
+/* Responsive */
+@media (max-width: 920px) {
+  .body-grid { grid-template-columns: 1fr; }
+  .header { grid-template-columns: 1fr; text-align: center; gap: 1rem; }
+  .xp-block { align-items: center; }
+  .attr-groups, .disc-grid, .split, .cronica-grid, .bio-row { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .attr-groups, .disc-grid, .split, .cronica-grid, .bio-row { grid-template-columns: 1fr; }
+  .title-name { font-size: 28px; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="sheet">
+<a id="backBtn" href="personagens.html" style="position:fixed;top:20px;left:24px;display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:10px;letter-spacing:0.25em;color:rgba(207,233,240,0.3);text-decoration:none;text-transform:uppercase;transition:color 0.2s;z-index:200;" onmouseover="this.style.color='rgba(207,233,240,0.7)'" onmouseout="this.style.color='rgba(207,233,240,0.3)'"><span style="font-size:14px;line-height:1;">&#8592;</span>Voltar</a>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="eyebrow"></div>
+    <div class="title-block">
+      <div class="title-name" contenteditable="true" spellcheck="false" data-field="name" data-placeholder="Nome do Personagem"></div>
+      <div class="title-sub">Vampiro · A Máscara</div>
+    </div>
+    <div class="xp-block">
+      <div class="xp-row">
+        <div>XP Total<span class="xp-num" id="xp-total" contenteditable="true" spellcheck="false" inputmode="numeric">0</span></div>
+        <div>Gasto<span class="xp-num" id="xp-spent" contenteditable="true" spellcheck="false" inputmode="numeric">0</span></div>
+        <div>Disp.<span class="xp-num readonly" id="xp-avail" style="color:var(--accent);">0</span></div>
+      </div>
+      <div class="xp-bar"><div class="xp-fill" id="xp-fill"></div></div>
+    </div>
+  </header>
+
+  <div class="body-grid">
+
+    <!-- LEFT -->
+    <aside class="col-left">
+
+      <div class="device">
+        <span class="corner tl"></span>
+        <span class="corner tr"></span>
+        <span class="corner bl"></span>
+        <span class="corner br"></span>
+
+        <div class="device-id"><span class="led"></span>Arquivo Vampírico</div>
+
+        <div class="holo-projection">
+          <div class="holo-ring ring1"></div>
+          <div class="holo-ring ring2"></div>
+          <div class="holo-ring ring3"></div>
+
+          <div class="holo-area" id="holoArea" onclick="document.getElementById('fileInput').click()" title="Clique para carregar imagem">
+            <div class="upload-ph" id="uploadPh">
+              <div class="upload-glyph">☽</div>
+              <div class="upload-text">Clique para<br>projetar<br>personagem</div>
+            </div>
+            <img id="holoImg" alt="Personagem">
+          </div>
+        </div>
+
+        <input type="file" id="fileInput" accept="image/*">
+      </div>
+
+      <!-- Identidade -->
+      <div class="identity">
+        <div class="id-key">Crônica</div><div class="id-val" contenteditable="true" spellcheck="false" data-field="cronica" data-placeholder="—"></div>
+        <div class="id-key">Conceito</div><div class="id-val" contenteditable="true" spellcheck="false" data-field="conceito" data-placeholder="—"></div>
+        <div class="id-key">Predador</div><div class="id-val" contenteditable="true" spellcheck="false" data-field="predador" data-placeholder="—"></div>
+        <div class="id-key">Clã</div><div class="id-val" contenteditable="true" spellcheck="false" data-field="cla" data-placeholder="—"></div>
+        <div class="id-key">Geração</div><div class="id-val" contenteditable="true" spellcheck="false" data-field="geracao" data-placeholder="—"></div>
+        <div class="id-key">Senhor</div><div class="id-val" contenteditable="true" spellcheck="false" data-field="senhor" data-placeholder="—"></div>
+        <div class="id-key">Ambição</div><div class="id-val" contenteditable="true" spellcheck="false" data-field="ambicao" data-placeholder="—"></div>
+        <div class="id-key">Desejo</div><div class="id-val" contenteditable="true" spellcheck="false" data-field="desejo" data-placeholder="—"></div>
+      </div>
+
+      <!-- Vitals -->
+      <div class="vitals">
+        <div class="vital-row">
+          <span class="vital-label">Vitalidade</span>
+          <div class="vital-boxes" id="vit-boxes"></div>
+        </div>
+        <div class="vital-row">
+          <span class="vital-label">Força de Vontade</span>
+          <div class="vital-boxes" id="fdv-boxes"></div>
+        </div>
+        <div class="vital-row">
+          <span class="vital-label">Pot. de Sangue</span>
+          <div class="dots" data-max="10" data-val="0"></div>
+        </div>
+        <div class="vital-row">
+          <span class="vital-label" style="color:var(--vtm);opacity:0.85;">Fome</span>
+          <div class="vital-boxes fome-track" id="fome-boxes"></div>
+        </div>
+        <div class="vital-row">
+          <span class="vital-label" style="color:var(--hum);opacity:0.85;">Humanidade</span>
+          <div class="vital-boxes hum-track" id="hum-boxes"></div>
+        </div>
+        <div class="vital-row text-row">
+          <span class="vital-label">Ressonância</span>
+          <div class="id-val" style="font-size:12px;" contenteditable="true" spellcheck="false" data-field="ressonancia" data-placeholder="—"></div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT -->
+    <main class="col-right">
+
+      <!-- Atributos -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">Atributos</h2>
+        </div>
+        <div class="attr-groups">
+          <div>
+            <div class="attr-group-title">Físicos</div>
+            <div class="row"><span class="row-name">Força</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Destreza</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Vigor</span><div class="dots" data-max="5" data-val="0"></div></div>
+          </div>
+          <div>
+            <div class="attr-group-title">Sociais</div>
+            <div class="row"><span class="row-name">Carisma</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Manipulação</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Autocontrole</span><div class="dots" data-max="5" data-val="0"></div></div>
+          </div>
+          <div>
+            <div class="attr-group-title">Mentais</div>
+            <div class="row"><span class="row-name">Inteligência</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Raciocínio</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Determinação</span><div class="dots" data-max="5" data-val="0"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Habilidades -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">Habilidades</h2>
+        </div>
+        <div class="attr-groups">
+          <div>
+            <div class="attr-group-title">Físicas</div>
+            <div class="row"><span class="row-name">Armas Brancas</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Armas de Fogo</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Atletismo</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Briga</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Condução</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Furtividade</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Ladroagem</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Ofícios</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Sobrevivência</span><div class="dots" data-max="5" data-val="0"></div></div>
+          </div>
+          <div>
+            <div class="attr-group-title">Sociais</div>
+            <div class="row"><span class="row-name">Emp. c/ Animais</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Etiqueta</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Intimidação</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Liderança</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Manha</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Performance</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Persuasão</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Sagacidade</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Subterfúgio</span><div class="dots" data-max="5" data-val="0"></div></div>
+          </div>
+          <div>
+            <div class="attr-group-title">Mentais</div>
+            <div class="row"><span class="row-name">Ciência</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Erudição</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Finanças</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Investigação</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Medicina</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Ocultismo</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Percepção</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Política</span><div class="dots" data-max="5" data-val="0"></div></div>
+            <div class="row"><span class="row-name">Tecnologia</span><div class="dots" data-max="5" data-val="0"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Disciplinas -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">Disciplinas</h2>
+        </div>
+        <div class="disc-grid" id="disc-grid">
+          <button class="disc-add" id="disc-add" type="button">Adicionar disciplina</button>
+        </div>
+      </section>
+
+      <!-- Two-up: Vantagens & Defeitos | Crônica -->
+      <div class="split">
+        <section class="panel">
+          <div class="panel-head">
+            <h2 class="panel-title">Vantagens &amp; Defeitos</h2>
+          </div>
+          <div class="quality-list" id="quality-list"></div>
+          <button class="quality-add" id="quality-add" type="button">Adicionar traço</button>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2 class="panel-title">Crônica</h2>
+          </div>
+          <div class="cronica-grid">
+            <div class="cronica-area">
+              <div class="cronica-label">Princípios</div>
+              <div class="cronica-val" id="vtm-principios" contenteditable="true" spellcheck="false" data-placeholder="Princípios da crônica…"></div>
+            </div>
+            <div class="cronica-area">
+              <div class="cronica-label">Pilares &amp; Convicções</div>
+              <div class="cronica-val" id="vtm-pilares" contenteditable="true" spellcheck="false" data-placeholder="Valores do personagem…"></div>
+            </div>
+            <div class="cronica-area">
+              <div class="cronica-label">Perdição do Clã</div>
+              <div class="cronica-val" id="vtm-perdicao" contenteditable="true" spellcheck="false" data-placeholder="Bane do clã…"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Potência de Sangue — referência -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">Referência de Sangue</h2>
+        </div>
+        <table class="blood-table">
+          <tr>
+            <td class="bt-label">Surto de Sangue</td>
+            <td class="bt-val" id="vtm-surto" contenteditable="true" spellcheck="false" data-placeholder="—"></td>
+            <td class="bt-label">Qtd. Recuperada</td>
+            <td class="bt-val" id="vtm-qtd-rec" contenteditable="true" spellcheck="false" data-placeholder="—"></td>
+          </tr>
+          <tr>
+            <td class="bt-label">Bônus de Poder</td>
+            <td class="bt-val" id="vtm-bonus" contenteditable="true" spellcheck="false" data-placeholder="—"></td>
+            <td class="bt-label">Rerrolagem de Sangue</td>
+            <td class="bt-val" id="vtm-rerrol" contenteditable="true" spellcheck="false" data-placeholder="—"></td>
+          </tr>
+          <tr>
+            <td class="bt-label">Pen. de Alimentação</td>
+            <td class="bt-val" id="vtm-penalidade" contenteditable="true" spellcheck="false" data-placeholder="—"></td>
+            <td class="bt-label">Gravidade da Perdição</td>
+            <td class="bt-val" id="vtm-gravidade" contenteditable="true" spellcheck="false" data-placeholder="—"></td>
+          </tr>
+        </table>
+      </section>
+
+      <!-- Histórico -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">Histórico</h2>
+        </div>
+        <div class="bio-row">
+          <div>Idade Verdadeira <span class="v" contenteditable="true" spellcheck="false" data-field="idade_verdadeira"></span></div>
+          <div>Idade Aparente <span class="v" contenteditable="true" spellcheck="false" data-field="idade_aparente"></span></div>
+          <div>Data de Nascimento <span class="v" contenteditable="true" spellcheck="false" data-field="data_nascimento"></span></div>
+          <div>Data de Morte <span class="v" contenteditable="true" spellcheck="false" data-field="data_morte"></span></div>
+        </div>
+        <div class="bio-field">
+          <div class="bio-field-label">Aparência</div>
+          <div class="bio-field-val" id="vtm-aparencia" contenteditable="true" spellcheck="false" data-placeholder="Descrição física…"></div>
+        </div>
+        <div class="bio-field">
+          <div class="bio-field-label">Traços Distintivos</div>
+          <div class="bio-field-val" id="vtm-tracos" contenteditable="true" spellcheck="false" data-placeholder="Marcas, maneirismos…"></div>
+        </div>
+        <div class="bio-field">
+          <div class="bio-field-label">História</div>
+          <div class="bio-field-val tall" id="vtm-historia" contenteditable="true" spellcheck="false" data-placeholder="Passado e origem…"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Notas -->
+  <div class="notes-section">
+    <div class="notes-label">NOTAS</div>
+    <div class="notes-box" id="notes-box" contenteditable="true" spellcheck="false" data-placeholder="Anotações livres…"></div>
+  </div>
+
+  <footer class="signature">
+    <div>Mundo Aberto · Vampiro: A Máscara</div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <button id="saveSheetBtn" type="button" style="display:none;"></button>
+      <button id="restoreSheetBtn" type="button" style="background:transparent;border:1px solid rgba(255,107,26,0.35);color:rgba(255,107,26,0.5);font-family:var(--font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:6px 12px;cursor:pointer;border-radius:2px;transition:all 0.18s;">Restaurar</button>
+      <button id="clearSheetBtn" type="button" style="background:transparent;border:1px solid var(--line);color:var(--fg-faint);font-family:var(--font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:6px 12px;cursor:pointer;border-radius:2px;transition:all 0.18s;">Limpar ficha</button>
+      <span>2026 · V:tM V5</span>
+    </div>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sheet-sync.js?v=2026053001"></script>
+<script>
+// ── Dots ──────────────────────────────────────────────────────────────────
+function buildDots(container) {
+  if (!container || container.dataset.built) return;
+  container.dataset.built = '1';
+  var max = parseInt(container.dataset.max);
+  var val = parseInt(container.dataset.val);
+  for (var i = 0; i < max; i++) {
+    var d = document.createElement('div');
+    d.className = 'dot' + (i < val ? ' filled' : '');
+    d.addEventListener('click', (function(idx) {
+      return function(e) {
+        e.stopPropagation();
+        var dots = container.querySelectorAll('.dot');
+        var cur = dots[idx];
+        var allFilledUpTo = Array.from(dots).every(function(dd, ii) { return ii > idx || dd.classList.contains('filled'); });
+        if (cur.classList.contains('filled') && allFilledUpTo) {
+          dots.forEach(function(dd, ii) { dd.classList.toggle('filled', ii < idx); });
+        } else {
+          dots.forEach(function(dd, ii) { dd.classList.toggle('filled', ii <= idx); });
+        }
+      };
+    })(i));
+    container.appendChild(d);
+  }
+}
+document.querySelectorAll('.dots[data-max]').forEach(buildDots);
+
+// ── Vital boxes ───────────────────────────────────────────────────────────
+function buildVital(id, total, filled, filledAggr) {
+  var c = document.getElementById(id);
+  if (!c) return;
+  c.innerHTML = '';
+  for (var i = 0; i < total; i++) {
+    var b = document.createElement('div');
+    var cls = 'vbox';
+    if (i < filledAggr) cls += ' aggravated';
+    else if (i < filled) cls += ' marked';
+    b.className = cls;
+    b.addEventListener('click', (function(box, cont) {
+      return function() {
+        if (box.classList.contains('aggravated')) {
+          box.classList.remove('aggravated');
+        } else if (box.classList.contains('marked')) {
+          box.classList.remove('marked');
+          box.classList.add('aggravated');
+        } else {
+          var boxes = cont.querySelectorAll('.vbox');
+          var idx = Array.from(boxes).indexOf(box);
+          boxes.forEach(function(bb, ii) {
+            if (ii <= idx && !bb.classList.contains('aggravated')) bb.classList.add('marked');
+          });
+        }
+      };
+    })(b, c));
+    c.appendChild(b);
+  }
+}
+buildVital('vit-boxes', 10, 0, 0);
+buildVital('fdv-boxes', 10, 0, 0);
+buildVital('fome-boxes', 5, 0, 0);
+buildVital('hum-boxes', 10, 7, 0);
+
+// ── Identity fields ───────────────────────────────────────────────────────
+document.querySelectorAll('.id-val[contenteditable], .title-name[contenteditable], .bio-row .v[contenteditable]').forEach(function(el) {
+  var field = el.dataset.field;
+  if (!field) return;
+  var key = 'vtm:idfield:' + field;
+  var saved = localStorage.getItem(key);
+  if (saved !== null) el.textContent = saved;
+  el.addEventListener('paste', function(e) {
+    e.preventDefault();
+    var text = (e.clipboardData || window.clipboardData).getData('text');
+    document.execCommand('insertText', false, text);
+  });
+  el.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+  });
+  el.addEventListener('input', function() {
+    localStorage.setItem(key, el.textContent);
+  });
+});
+
+// ── Disciplinas ───────────────────────────────────────────────────────────
+(function setupDisc() {
+  var grid = document.getElementById('disc-grid');
+  var addBtn = document.getElementById('disc-add');
+  if (!grid || !addBtn) return;
+
+  function attachDiscHandlers(card) {
+    var del = card.querySelector('.disc-del');
+    if (del) del.addEventListener('click', function() { card.remove(); });
+    var discName = card.querySelector('.disc-name');
+    var discPowers = card.querySelector('.disc-powers');
+    [discName, discPowers].forEach(function(el) {
+      if (!el) return;
+      el.addEventListener('paste', function(e) {
+        e.preventDefault();
+        var text = (e.clipboardData || window.clipboardData).getData('text');
+        document.execCommand('insertText', false, text);
+      });
+    });
+    if (discName) discName.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); discName.blur(); }
+    });
+  }
+
+  grid.querySelectorAll('.disc').forEach(attachDiscHandlers);
+  window.attachDiscHandlers = attachDiscHandlers;
+
+  addBtn.addEventListener('click', function() {
+    var card = document.createElement('div');
+    card.className = 'disc';
+    card.innerHTML =
+      '<button class="disc-del" type="button" title="Remover">✕</button>' +
+      '<div class="disc-header">' +
+        '<div class="disc-name" contenteditable="true" spellcheck="false" data-placeholder="Disciplina"></div>' +
+        '<div class="dots" data-max="5" data-val="0"></div>' +
+      '</div>' +
+      '<div class="disc-powers" contenteditable="true" spellcheck="false" data-placeholder="Poderes (um por linha)…"></div>';
+    grid.insertBefore(card, addBtn);
+    attachDiscHandlers(card);
+    buildDots(card.querySelector('.dots'));
+    card.querySelector('.disc-name').focus();
+  });
+})();
+
+// ── Vantagens & Defeitos ──────────────────────────────────────────────────
+(function setupQualities() {
+  var list = document.getElementById('quality-list');
+  var addBtn = document.getElementById('quality-add');
+  if (!list || !addBtn) return;
+
+  function attachQualityHandlers(row) {
+    var name = row.querySelector('.row-name');
+    var del  = row.querySelector('.quality-del');
+    var tog  = row.querySelector('.quality-toggle');
+    if (del) del.addEventListener('click', function() { row.remove(); });
+    if (tog) tog.addEventListener('click', function() { row.classList.toggle('defect'); });
+    if (name) {
+      name.addEventListener('paste', function(e) {
+        e.preventDefault();
+        var t = (e.clipboardData || window.clipboardData).getData('text');
+        document.execCommand('insertText', false, t);
+      });
+      name.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); name.blur(); }
+      });
+    }
+  }
+  list.querySelectorAll('.row').forEach(attachQualityHandlers);
+  window.attachQualityHandlers = attachQualityHandlers;
+
+  addBtn.addEventListener('click', function() {
+    var row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML =
+      '<span class="row-name" contenteditable="true" spellcheck="false"></span>' +
+      '<button class="quality-toggle" type="button" title="Alternar vantagem/defeito">V/D</button>' +
+      '<button class="quality-del" type="button" title="Remover">✕</button>' +
+      '<div class="dots" data-max="5" data-val="0"></div>';
+    list.appendChild(row);
+    attachQualityHandlers(row);
+    buildDots(row.querySelector('.dots'));
+    row.querySelector('.row-name').focus();
+  });
+})();
+
+// ── XP ────────────────────────────────────────────────────────────────────
+(function setupXP() {
+  var total = document.getElementById('xp-total');
+  var spent = document.getElementById('xp-spent');
+  var avail = document.getElementById('xp-avail');
+  var fill  = document.getElementById('xp-fill');
+  if (!total || !spent || !avail || !fill) return;
+  function clean(el) {
+    var n = parseInt((el.textContent || '0').replace(/[^\d-]/g, ''), 10);
+    return isNaN(n) ? 0 : Math.max(0, n);
+  }
+  function recalc() {
+    var t = clean(total), s = clean(spent), d = t - s;
+    avail.textContent = d;
+    avail.classList.toggle('over', d < 0);
+    var pct = t > 0 ? Math.max(0, Math.min(100, (s / t) * 100)) : 0;
+    fill.style.width = pct + '%';
+    fill.style.background = d < 0
+      ? 'linear-gradient(to right, rgba(255,85,102,0.5), #ff5566)'
+      : 'linear-gradient(to right, rgba(78,211,232,0.4), var(--holo))';
+  }
+  [total, spent].forEach(function(el) {
+    el.addEventListener('paste', function(e) {
+      e.preventDefault();
+      var t = (e.clipboardData || window.clipboardData).getData('text');
+      document.execCommand('insertText', false, t.replace(/[^\d]/g, ''));
+    });
+    el.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+      if (e.key.length === 1 && !/\d/.test(e.key) && !e.metaKey && !e.ctrlKey) e.preventDefault();
+    });
+    el.addEventListener('input', recalc);
+    el.addEventListener('blur', function() { el.textContent = String(clean(el)); recalc(); });
+  });
+  recalc();
+})();
+
+// ── Clear ─────────────────────────────────────────────────────────────────
+document.getElementById('clearSheetBtn').addEventListener('click', function() {
+  if (!confirm('Apagar todos os dados desta ficha? (não pode ser desfeito)')) return;
+  Object.keys(localStorage).forEach(function(k) {
+    if (k.startsWith('vtm:')) localStorage.removeItem(k);
+  });
+  location.reload();
+});
+document.getElementById('clearSheetBtn').addEventListener('mouseenter', function(e) {
+  e.target.style.color = 'var(--danger)'; e.target.style.borderColor = 'rgba(255,85,102,0.4)';
+});
+document.getElementById('clearSheetBtn').addEventListener('mouseleave', function(e) {
+  e.target.style.color = 'var(--fg-faint)'; e.target.style.borderColor = 'var(--line)';
+});
+
+// ── Image upload ──────────────────────────────────────────────────────────
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var MAX_PX = 480, QUALITY = 0.78;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var original = new Image();
+    original.onload = function() {
+      var scale = Math.min(1, MAX_PX / Math.max(original.width, original.height));
+      var w = Math.round(original.width * scale), h = Math.round(original.height * scale);
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(original, 0, 0, w, h);
+      var compressed = canvas.toDataURL('image/jpeg', QUALITY);
+      canvas.width = 0; canvas.height = 0;
+      var img = document.getElementById('holoImg');
+      img.src = compressed; img.style.display = 'block';
+      document.getElementById('uploadPh').style.display = 'none';
+      if (CHAR_ID !== 'default') uploadCharImg(compressed);
+    };
+    original.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+function uploadCharImg(b64Src) {
+  var m = b64Src.match(/data:([^;]+);base64,(.+)/);
+  if (!m) return;
+  var mime = m[1], bin = atob(m[2]), arr = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  var path = CHAR_ID + '.' + (mime.split('/')[1] || 'jpg');
+  fetch(SB_URL + '/storage/v1/object/personagens/' + path, {
+    method: 'POST',
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': mime, 'x-upsert': 'true' },
+    body: new Blob([arr], { type: mime })
+  }).then(function() {
+    var url = SB_URL + '/storage/v1/object/public/personagens/' + path + '?t=' + Date.now();
+    var imgEl = document.getElementById('holoImg');
+    if (imgEl) imgEl.src = url;
+    if (typeof markDirtyNow === 'function') markDirtyNow();
+  }).catch(function() {});
+}
+
+// ── Supabase ──────────────────────────────────────────────────────────────
+var SB_URL = 'https://mxyqqfsyybluavwlrhsa.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eXFxZnN5eWJsdWF2d2xyaHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTM4MzEsImV4cCI6MjA5MzY2OTgzMX0.b0Ij7UGzbMLpqZjLYxoPEu2kGwEW52U_2NSDtpMGUPM';
+
+function sbFetch(path, method, body) {
+  return fetch(SB_URL + path, {
+    method: method || 'GET',
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined
+  }).then(function(r) {
+    if (r.status === 204 || r.headers.get('content-length') === '0') return {};
+    return r.json().catch(function() { return {}; });
+  });
+}
+
+var CHAR_ID       = (new URLSearchParams(window.location.search)).get('id')  || 'default';
+var ESP_PARAM     = (new URLSearchParams(window.location.search)).get('esp') || null;
+var CHAR_SPACE_ID = null;
+
+// ── captureSheet ──────────────────────────────────────────────────────────
+function captureSheet() {
+  var data = {};
+
+  // Campos de texto
+  data.fields = {};
+  document.querySelectorAll('[data-field]').forEach(function(el) {
+    data.fields[el.dataset.field] = el.textContent.trim();
+  });
+
+  // XP
+  data.xp = {
+    total: document.getElementById('xp-total') ? document.getElementById('xp-total').textContent.trim() : '0',
+    spent: document.getElementById('xp-spent') ? document.getElementById('xp-spent').textContent.trim() : '0'
+  };
+
+  // Dots (atributos, habilidades, pot.sangue)
+  data.dots = [];
+  document.querySelectorAll('.row').forEach(function(row) {
+    var nameEl = row.querySelector('.row-name');
+    var dotsEl = row.querySelector('.dots');
+    if (!nameEl || !dotsEl) return;
+    data.dots.push({
+      name:   nameEl.textContent.trim(),
+      filled: dotsEl.querySelectorAll('.dot.filled').length,
+      max:    dotsEl.querySelectorAll('.dot').length
+    });
+  });
+  // Potência de Sangue (no vitals, standalone dots)
+  var psDots = document.querySelector('.vital-row .dots[data-max="10"]');
+  if (psDots) {
+    data.potSangue = {
+      filled: psDots.querySelectorAll('.dot.filled').length,
+      max: 10
+    };
+  }
+
+  // Vitals
+  data.vitals = {};
+  ['vit-boxes','fdv-boxes','fome-boxes','hum-boxes'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    data.vitals[id] = {
+      filled:     el.querySelectorAll('.vbox.marked').length,
+      aggravated: el.querySelectorAll('.vbox.aggravated').length,
+      total:      el.querySelectorAll('.vbox').length
+    };
+  });
+
+  // Disciplinas
+  data.disciplines = [];
+  document.querySelectorAll('.disc').forEach(function(card) {
+    var nameEl  = card.querySelector('.disc-name');
+    var dotsEl  = card.querySelector('.dots');
+    var pwrsEl  = card.querySelector('.disc-powers');
+    data.disciplines.push({
+      name:   nameEl ? nameEl.textContent.trim() : '',
+      filled: dotsEl ? dotsEl.querySelectorAll('.dot.filled').length : 0,
+      powers: pwrsEl ? pwrsEl.textContent.trim() : ''
+    });
+  });
+
+  // Vantagens & Defeitos
+  data.qualities = [];
+  document.querySelectorAll('#quality-list .row').forEach(function(row) {
+    var nameEl = row.querySelector('.row-name');
+    var dotsEl = row.querySelector('.dots');
+    data.qualities.push({
+      name:   nameEl ? nameEl.textContent.trim() : '',
+      defect: row.classList.contains('defect'),
+      filled: dotsEl ? dotsEl.querySelectorAll('.dot.filled').length : 0,
+      max:    dotsEl ? dotsEl.querySelectorAll('.dot').length : 0
+    });
+  });
+
+  // Campos de texto livres (vtm-*)
+  data.vtmFields = {};
+  ['principios','pilares','perdicao','surto','qtd-rec','bonus','rerrol','penalidade','gravidade','aparencia','tracos','historia'].forEach(function(id) {
+    var el = document.getElementById('vtm-' + id);
+    if (el) data.vtmFields[id] = el.textContent;
+  });
+
+  // Notas
+  var nb = document.getElementById('notes-box');
+  data.notes = nb ? nb.textContent : '';
+
+  return data;
+}
+
+// ── restoreSheet ──────────────────────────────────────────────────────────
+function restoreSheet(data) {
+  if (!data) return;
+
+  // Campos de texto
+  if (data.fields) {
+    Object.keys(data.fields).forEach(function(field) {
+      var el = document.querySelector('[data-field="' + field + '"]');
+      if (el) el.textContent = data.fields[field];
+    });
+  }
+
+  // XP
+  if (data.xp) {
+    var xt = document.getElementById('xp-total');
+    var xs = document.getElementById('xp-spent');
+    if (xt) xt.textContent = data.xp.total;
+    if (xs) { xs.textContent = data.xp.spent; xs.dispatchEvent(new Event('input')); }
+  }
+
+  // Dots por nome
+  if (data.dots) {
+    data.dots.forEach(function(d) {
+      document.querySelectorAll('.row').forEach(function(row) {
+        var nameEl = row.querySelector('.row-name');
+        if (!nameEl || nameEl.textContent.trim() !== d.name) return;
+        var dotsEl = row.querySelector('.dots');
+        if (!dotsEl) return;
+        dotsEl.querySelectorAll('.dot').forEach(function(dot, i) {
+          dot.classList.toggle('filled', i < d.filled);
+        });
+      });
+    });
+  }
+
+  // Potência de Sangue (dots autônomos)
+  if (data.potSangue) {
+    var psDots = document.querySelector('.vital-row .dots[data-max="10"]');
+    if (psDots) {
+      psDots.querySelectorAll('.dot').forEach(function(dot, i) {
+        dot.classList.toggle('filled', i < data.potSangue.filled);
+      });
+    }
+  }
+
+  // Vitals
+  if (data.vitals) {
+    Object.keys(data.vitals).forEach(function(id) {
+      var v = data.vitals[id];
+      buildVital(id, v.total, v.filled, v.aggravated || 0);
+    });
+  }
+
+  // Disciplinas
+  if (data.disciplines && data.disciplines.length) {
+    var grid = document.getElementById('disc-grid');
+    var addBtn = document.getElementById('disc-add');
+    if (grid && addBtn) {
+      data.disciplines.forEach(function(d) {
+        var card = document.createElement('div');
+        card.className = 'disc';
+        card.innerHTML =
+          '<button class="disc-del" type="button" title="Remover">✕</button>' +
+          '<div class="disc-header">' +
+            '<div class="disc-name" contenteditable="true" spellcheck="false" data-placeholder="Disciplina">' + escHtml(d.name) + '</div>' +
+            '<div class="dots" data-max="5" data-val="0"></div>' +
+          '</div>' +
+          '<div class="disc-powers" contenteditable="true" spellcheck="false" data-placeholder="Poderes…">' + escHtml(d.powers) + '</div>';
+        grid.insertBefore(card, addBtn);
+        window.attachDiscHandlers(card);
+        buildDots(card.querySelector('.dots'));
+        card.querySelectorAll('.dot').forEach(function(dot, i) {
+          dot.classList.toggle('filled', i < d.filled);
+        });
+      });
+    }
+  }
+
+  // Vantagens & Defeitos
+  if (data.qualities && data.qualities.length) {
+    var qList = document.getElementById('quality-list');
+    if (qList) {
+      data.qualities.forEach(function(q) {
+        var row = document.createElement('div');
+        row.className = 'row' + (q.defect ? ' defect' : '');
+        row.innerHTML =
+          '<span class="row-name" contenteditable="true" spellcheck="false">' + escHtml(q.name) + '</span>' +
+          '<button class="quality-toggle" type="button">V/D</button>' +
+          '<button class="quality-del" type="button">✕</button>' +
+          '<div class="dots" data-max="' + (q.max || 5) + '" data-val="' + q.filled + '"></div>';
+        qList.appendChild(row);
+        window.attachQualityHandlers(row);
+        buildDots(row.querySelector('.dots'));
+      });
+    }
+  }
+
+  // Campos vtm-*
+  if (data.vtmFields) {
+    Object.keys(data.vtmFields).forEach(function(id) {
+      var el = document.getElementById('vtm-' + id);
+      if (el) el.textContent = data.vtmFields[id];
+    });
+  }
+
+  // Notas
+  if (data.notes !== undefined) {
+    var nb = document.getElementById('notes-box');
+    if (nb) nb.textContent = data.notes;
+  }
+}
+
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Carga do Supabase ─────────────────────────────────────────────────────
+(function loadCharData() {
+  localStorage.removeItem('vtm:idfield:name');
+  if (CHAR_ID === 'default') return;
+
+  sbFetch('/rest/v1/personagens?char_id=eq.' + CHAR_ID + '&select=*', 'GET')
+    .then(function(data) {
+      if (!data || !data.length) return;
+      var c = data[0];
+      if (c.space_id) CHAR_SPACE_ID = c.space_id;
+      var nameEl = document.querySelector('[data-field="name"]');
+      if (nameEl && c.name) nameEl.textContent = c.name;
+      if (c.img_url) {
+        var imgEl = document.getElementById('holoImg');
+        var ph    = document.getElementById('uploadPh');
+        if (imgEl) { imgEl.src = c.img_url; imgEl.style.display = 'block'; }
+        if (ph) ph.style.display = 'none';
+      }
+      if (c.sheet_data) restoreSheet(c.sheet_data);
+    }).catch(function() {});
+})();
+
+// ── Botão salvar ──────────────────────────────────────────────────────────
+(function setupSaveBtn() {
+  var btn = document.getElementById('saveSheetBtn');
+  if (!btn) return;
+  btn.addEventListener('mouseenter', function() {
+    btn.style.color = '#00ffe7'; btn.style.borderColor = '#00ffe7';
+    btn.style.boxShadow = '0 0 12px rgba(0,255,231,0.3)';
+  });
+  btn.addEventListener('mouseleave', function() {
+    btn.style.color = 'rgba(0,255,231,0.6)'; btn.style.borderColor = 'rgba(0,255,231,0.35)';
+    btn.style.boxShadow = '';
+  });
+  btn.addEventListener('click', function() {
+    var nameEl = document.querySelector('[data-field="name"]');
+    var name = nameEl ? nameEl.textContent.trim() : '';
+    if (!name) {
+      btn.textContent = 'Insira um nome!';
+      btn.style.color = '#ff5566'; btn.style.borderColor = '#ff5566';
+      setTimeout(function() {
+        btn.textContent = 'Salvar Personagem';
+        btn.style.color = 'rgba(0,255,231,0.6)'; btn.style.borderColor = 'rgba(0,255,231,0.35)'; btn.style.boxShadow = '';
+      }, 2000);
+      if (nameEl) nameEl.focus();
+      return;
+    }
+    btn.textContent = 'Salvando...';
+    var sheetData = captureSheet();
+    var imgEl  = document.getElementById('holoImg');
+    var b64Src = (imgEl && imgEl.style.display !== 'none' && imgEl.src && imgEl.src.startsWith('data:')) ? imgEl.src : null;
+    var httpSrc = (imgEl && imgEl.style.display !== 'none' && imgEl.src && imgEl.src.startsWith('http')) ? imgEl.src : null;
+
+    function saveRecord(imgUrl) {
+      sbFetch('/rest/v1/personagens?char_id=eq.' + CHAR_ID + '&select=id,sheet_data,sheet_data_v1', 'GET')
+        .then(function(rows) {
+          var entry = { char_id: CHAR_ID, name: name, img_url: imgUrl || null, sheet_data: sheetData,
+                        space_id: ESP_PARAM || CHAR_SPACE_ID || null };
+          if (rows && rows.length) {
+            var cur = rows[0];
+            if (cur.sheet_data) entry.sheet_data_v2 = cur.sheet_data_v1 || null;
+            if (cur.sheet_data) entry.sheet_data_v1 = cur.sheet_data;
+            return sbFetch('/rest/v1/personagens?char_id=eq.' + CHAR_ID, 'PATCH', entry);
+          } else {
+            return sbFetch('/rest/v1/personagens', 'POST', entry);
+          }
+        })
+        .then(function() {
+          btn.textContent = '✓ Salvo!';
+          btn.style.color = '#00ffe7'; btn.style.borderColor = '#00ffe7';
+          btn.style.boxShadow = '0 0 16px rgba(0,255,231,0.4)';
+          setTimeout(function() {
+            btn.textContent = 'Salvar Personagem';
+            btn.style.color = 'rgba(0,255,231,0.6)'; btn.style.borderColor = 'rgba(0,255,231,0.35)'; btn.style.boxShadow = '';
+          }, 2000);
+        }).catch(function() {
+          btn.textContent = 'Erro ao salvar'; btn.style.color = '#ff5566';
+          setTimeout(function() {
+            btn.textContent = 'Salvar Personagem';
+            btn.style.color = 'rgba(0,255,231,0.6)'; btn.style.borderColor = 'rgba(0,255,231,0.35)'; btn.style.boxShadow = '';
+          }, 2000);
+        });
+    }
+
+    if (b64Src) {
+      var m = b64Src.match(/data:([^;]+);base64,(.+)/);
+      if (m) {
+        var mime = m[1], bin = atob(m[2]), arr = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+        var path = CHAR_ID + '.' + (mime.split('/')[1] || 'jpg');
+        fetch(SB_URL + '/storage/v1/object/personagens/' + path, {
+          method: 'POST',
+          headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': mime, 'x-upsert': 'true' },
+          body: new Blob([arr], { type: mime })
+        }).then(function() {
+          saveRecord(SB_URL + '/storage/v1/object/public/personagens/' + path);
+        }).catch(function() { saveRecord(httpSrc); });
+      } else { saveRecord(httpSrc); }
+    } else { saveRecord(httpSrc); }
+  });
+})();
+
+// ── Restaurar versão anterior ─────────────────────────────────────────────
+(function setupRestoreBtn() {
+  var btn = document.getElementById('restoreSheetBtn');
+  if (!btn) return;
+  btn.addEventListener('mouseenter', function() {
+    btn.style.color = 'rgba(255,107,26,0.9)'; btn.style.borderColor = 'rgba(255,107,26,0.7)'; btn.style.boxShadow = '0 0 10px rgba(255,107,26,0.3)';
+  });
+  btn.addEventListener('mouseleave', function() {
+    btn.style.color = 'rgba(255,107,26,0.5)'; btn.style.borderColor = 'rgba(255,107,26,0.35)'; btn.style.boxShadow = '';
+  });
+  btn.addEventListener('click', function() {
+    sbFetch('/rest/v1/personagens?char_id=eq.' + CHAR_ID + '&select=sheet_data_v1,sheet_data_v2', 'GET')
+      .then(function(rows) {
+        if (!rows || !rows.length) return;
+        var v1 = rows[0].sheet_data_v1, v2 = rows[0].sheet_data_v2;
+        if (!v1 && !v2) {
+          btn.textContent = 'Sem versões'; btn.style.color = '#ff5566';
+          setTimeout(function() { btn.textContent = 'Restaurar'; btn.style.color = 'rgba(255,107,26,0.5)'; btn.style.borderColor = 'rgba(255,107,26,0.35)'; btn.style.boxShadow = ''; }, 2000);
+          return;
+        }
+        var msg = (v1 ? '1: save anterior' : '') + (v1 && v2 ? ' / ' : '') + (v2 ? '2: dois saves atrás' : '') + ' - Digite 1 ou 2:';
+        var choice = prompt(msg);
+        if (!choice) return;
+        var target = null;
+        if (choice.trim() === '1' && v1) target = v1;
+        else if (choice.trim() === '2' && v2) target = v2;
+        else { alert('Opção inválida.'); return; }
+        if (!confirm('Tem certeza? As alterações não salvas serão perdidas.')) return;
+        // Limpa seções dinâmicas
+        var qList = document.getElementById('quality-list');
+        var dGrid = document.getElementById('disc-grid');
+        var dAdd  = document.getElementById('disc-add');
+        if (qList) qList.innerHTML = '';
+        if (dGrid && dAdd) { dGrid.innerHTML = ''; dGrid.appendChild(dAdd); }
+        restoreSheet(target);
+        btn.textContent = '✓ Restaurado!'; btn.style.color = '#00ffe7'; btn.style.borderColor = '#00ffe7'; btn.style.boxShadow = '0 0 12px rgba(0,255,231,0.4)';
+        setTimeout(function() { btn.textContent = 'Restaurar'; btn.style.color = 'rgba(255,107,26,0.5)'; btn.style.borderColor = 'rgba(255,107,26,0.35)'; btn.style.boxShadow = ''; }, 2000);
+      }).catch(function() {
+        btn.textContent = 'Erro'; btn.style.color = '#ff5566';
+        setTimeout(function() { btn.textContent = 'Restaurar'; btn.style.color = 'rgba(255,107,26,0.5)'; btn.style.borderColor = 'rgba(255,107,26,0.35)'; btn.style.boxShadow = ''; }, 2000);
+      });
+  });
+})();
+
+// ── applyRemoteSheet ──────────────────────────────────────────────────────
+function applyRemoteSheet(data) {
+  if (!data) return;
+  var active = document.activeElement;
+  var isEditing = active && (
+    (active.matches && active.matches('[contenteditable]')) ||
+    active.tagName === 'INPUT' || active.tagName === 'TEXTAREA'
+  );
+  if (!isEditing) {
+    var qList = document.getElementById('quality-list');
+    var dGrid = document.getElementById('disc-grid');
+    var dAdd  = document.getElementById('disc-add');
+    if (qList) qList.innerHTML = '';
+    if (dGrid && dAdd) { dGrid.innerHTML = ''; dGrid.appendChild(dAdd); }
+    restoreSheet(data);
+    return;
+  }
+  // Só vitals + dots enquanto edita
+  if (data.vitals) {
+    Object.keys(data.vitals).forEach(function(id) {
+      var v = data.vitals[id];
+      buildVital(id, v.total, v.filled, v.aggravated || 0);
+    });
+  }
+  if (data.dots) {
+    data.dots.forEach(function(d) {
+      document.querySelectorAll('.row').forEach(function(row) {
+        if (row.contains(active)) return;
+        var nameEl = row.querySelector('.row-name');
+        if (!nameEl || nameEl.textContent.trim() !== d.name) return;
+        var dotsEl = row.querySelector('.dots');
+        if (!dotsEl) return;
+        dotsEl.querySelectorAll('.dot').forEach(function(dot, i) { dot.classList.toggle('filled', i < d.filled); });
+      });
+    });
+  }
+}
+
+// ── Auto-sync ─────────────────────────────────────────────────────────────
+(function setupAutoSync() {
+  if (!window.SheetSync || CHAR_ID === 'default') return;
+  SheetSync.init(CHAR_ID);
+  SheetSync.enableSnapshots(5 * 60 * 1000);
+  SheetSync.subscribe(function(row) {
+    SheetSync.flag('applyingRemote', true);
+    try {
+      if (row.name) {
+        var nameEl = document.querySelector('[data-field="name"]');
+        if (nameEl && document.activeElement !== nameEl && nameEl.textContent !== row.name) nameEl.textContent = row.name;
+      }
+      if (row.img_url) {
+        var imgEl = document.getElementById('holoImg');
+        var ph    = document.getElementById('uploadPh');
+        if (imgEl && imgEl.src !== row.img_url) { imgEl.src = row.img_url; imgEl.style.display = 'block'; if (ph) ph.style.display = 'none'; }
+      }
+      if (row.sheet_data) applyRemoteSheet(row.sheet_data);
+    } finally {
+      setTimeout(function() { SheetSync.flag('applyingRemote', false); }, 200);
+    }
+  });
+})();
+</script>
+
+<!-- Tramas panel -->
+<script>
+(function() {
+  var SUPA_URL = 'https://mxyqqfsyybluavwlrhsa.supabase.co';
+  var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eXFxZnN5eWJsdWF2d2xyaHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTM4MzEsImV4cCI6MjA5MzY2OTgzMX0.b0Ij7UGzbMLpqZjLYxoPEu2kGwEW52U_2NSDtpMGUPM';
+  var personagemId = new URLSearchParams(window.location.search).get('id');
+  if (!personagemId) return;
+
+  function sbGet(path) {
+    return fetch(SUPA_URL + path, { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY } }).then(function(r) { return r.json(); });
+  }
+
+  function injectPanel() {
+    if (!document.body || document.getElementById('__ma-tramas-panel')) return;
+    var style = document.createElement('style');
+    style.textContent = [
+      '#__ma-tramas-panel{position:fixed;bottom:24px;left:24px;z-index:99999;font-family:"Share Tech Mono",monospace;}',
+      '#__ma-tramas-tab{background:rgba(4,8,16,0.95);border:1px solid rgba(0,255,231,0.25);border-radius:4px;',
+      'padding:8px 14px;cursor:pointer;color:rgba(0,255,231,0.6);font-size:9px;letter-spacing:3px;',
+      'text-transform:uppercase;transition:all .2s;user-select:none;}',
+      '#__ma-tramas-tab:hover{color:#00ffe7;border-color:#00ffe7;box-shadow:0 0 12px rgba(0,255,231,0.2);}',
+      '#__ma-tramas-body{display:none;background:rgba(4,8,16,0.97);border:1px solid rgba(0,255,231,0.18);',
+      'border-radius:4px;margin-bottom:6px;min-width:220px;max-width:280px;overflow:hidden;',
+      'box-shadow:0 0 30px rgba(0,255,231,0.06);}',
+      '#__ma-tramas-body.open{display:block;}',
+      '.__ma-thead{padding:10px 14px 8px;border-bottom:1px solid rgba(0,255,231,0.08);font-size:8px;letter-spacing:4px;color:rgba(0,255,231,0.35);text-transform:uppercase;}',
+      '.__ma-item{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid rgba(0,255,231,0.05);gap:8px;text-decoration:none;cursor:pointer;transition:background .15s;}',
+      '.__ma-item:last-child{border-bottom:none;}.__ma-item:hover{background:rgba(0,255,231,0.06);}',
+      '.__ma-tname{font-size:10px;letter-spacing:1px;color:rgba(207,233,240,0.7);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s;}',
+      '.__ma-item:hover .__ma-tname{color:#cfe9f0;}',
+      '.__ma-link{font-size:10px;color:rgba(0,255,231,0.45);flex-shrink:0;transition:color .15s;}',
+      '.__ma-item:hover .__ma-link{color:#00ffe7;}',
+      '.__ma-empty{padding:14px;font-size:9px;letter-spacing:2px;color:rgba(0,255,231,0.2);text-align:center;}'
+    ].join('');
+    document.head.appendChild(style);
+    var panel = document.createElement('div'); panel.id = '__ma-tramas-panel';
+    var body = document.createElement('div'); body.id = '__ma-tramas-body';
+    body.innerHTML = '<div class="__ma-thead">Tramas</div><div class="__ma-empty">Carregando...</div>';
+    var tab = document.createElement('div'); tab.id = '__ma-tramas-tab';
+    tab.textContent = '◈ Tramas';
+    tab.addEventListener('click', function() { body.classList.toggle('open'); });
+    panel.appendChild(body); panel.appendChild(tab);
+    document.body.appendChild(panel);
+    sbGet('/rest/v1/trama_links?personagem_id=eq.' + personagemId + '&select=trama_id')
+      .then(function(links) {
+        if (!Array.isArray(links) || !links.length) { body.innerHTML = '<div class="__ma-thead">Tramas</div><div class="__ma-empty">Nenhuma trama vinculada</div>'; return; }
+        var ids = links.map(function(l) { return l.trama_id; }).join(',');
+        return sbGet('/rest/v1/tramas?trama_id=in.(' + ids + ')&select=trama_id,name&deleted_at=is.null');
+      })
+      .then(function(tramas) {
+        if (!tramas || !tramas.length) return;
+        var html = '<div class="__ma-thead">Tramas</div>';
+        tramas.forEach(function(t) { html += '<a class="__ma-item" href="trama.html?id=' + t.trama_id + '"><span class="__ma-tname">' + (t.name || 'Trama') + '</span><span class="__ma-link">→</span></a>'; });
+        body.innerHTML = html;
+      }).catch(function() {});
+  }
+  function tryInject(attempt) {
+    if (document.getElementById('__ma-tramas-panel')) return;
+    if (document.body && document.body.children.length > 0) injectPanel();
+    else if ((attempt || 0) < 15) setTimeout(function() { tryInject((attempt || 0) + 1); }, 400);
+  }
+  setTimeout(function() { tryInject(0); }, 600);
+})();
+</script>
+
+<!-- Alterações não salvas + auto-save -->
+<style>
+#__ud-ov{position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:999999;display:flex;align-items:center;justify-content:center;}
+#__ud-box{background:#040810;border:1px solid rgba(0,255,231,0.28);border-radius:4px;padding:36px 40px;max-width:340px;width:90%;text-align:center;font-family:'JetBrains Mono',monospace;box-shadow:0 0 40px rgba(0,255,231,0.07);}
+#__ud-box h2{color:rgba(0,255,231,0.85);font-size:10px;letter-spacing:4px;text-transform:uppercase;margin-bottom:12px;}
+#__ud-box p{color:rgba(207,233,240,0.5);font-size:12px;line-height:1.75;margin-bottom:28px;}
+#__ud-box .row{display:flex;gap:12px;justify-content:center;}
+#__ud-box button{background:transparent;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:8px 20px;cursor:pointer;border-radius:2px;transition:all .18s;}
+#__ud-sv{border:1px solid rgba(0,255,231,0.4);color:rgba(0,255,231,0.7);}
+#__ud-sv:hover{border-color:#00ffe7;color:#00ffe7;box-shadow:0 0 12px rgba(0,255,231,0.3);}
+#__ud-dc{border:1px solid rgba(255,107,26,0.35);color:rgba(255,107,26,0.5);}
+#__ud-dc:hover{border-color:rgba(255,107,26,0.75);color:rgba(255,107,26,0.9);}
+</style>
+<script>
+(function() {
+  'use strict';
+  var dirty = false, loaded = false;
+
+  function buildEntry() {
+    var nameEl = document.querySelector('[data-field="name"]');
+    var imgEl  = document.getElementById('holoImg');
+    var imgUrl = (imgEl && imgEl.style.display !== 'none' && imgEl.src && imgEl.src.startsWith('http')) ? imgEl.src : null;
+    return {
+      sheet_data: (typeof captureSheet === 'function') ? captureSheet() : {},
+      name: (nameEl ? nameEl.textContent.trim() : '') || 'Sem nome',
+      img_url: imgUrl,
+      space_id: (window.ESP_PARAM || window.CHAR_SPACE_ID || null)
+    };
+  }
+  function triggerSave(immediate) {
+    if (!loaded || !window.SheetSync) return;
+    if (window.SheetSync.flag && window.SheetSync.flag('applyingRemote')) return;
+    window.SheetSync.save(buildEntry(), { immediate: !!immediate });
+  }
+  function markDirty()    { dirty = true; triggerSave(false); }
+  function markDirtyNow() { dirty = true; triggerSave(true); }
+  function clearDirty()   { dirty = false; }
+  function isDirty()      { return dirty; }
+
+  window.markDirtyNow = markDirtyNow;
+  window.markDirty    = markDirty;
+
+  function goBack() {
+    var params   = new URLSearchParams(location.search);
+    var id       = params.get('id');
+    var returnTo = params.get('returnTo');
+    var espId    = ESP_PARAM || CHAR_SPACE_ID;
+    var dest = returnTo
+      ? returnTo
+      : ((id && id.startsWith('npc_'))
+          ? 'npcs.html'
+          : (espId ? 'personagens.html?esp=' + encodeURIComponent(espId) : 'personagens.html'));
+    var nav = function() { window.location.href = dest; };
+    if (window.SheetSync && typeof window.SheetSync.flush === 'function') {
+      window.SheetSync.flush().then(nav, nav);
+    } else { nav(); }
+  }
+
+  var back = document.getElementById('backBtn');
+  if (back) back.onclick = function(e) { e.preventDefault(); goBack(); };
+
+  var INTERACTIVE = 'button,a,input,textarea,select,[contenteditable],.dot,.vbox';
+  document.addEventListener('dblclick', function(e) { if (e.target.closest(INTERACTIVE)) return; goBack(); });
+
+  var _lastTap = 0, _multi = false;
+  document.addEventListener('touchstart', function(e) { if (e.touches.length > 1) _multi = true; }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    if (e.touches.length > 0) { _lastTap = 0; _multi = true; return; }
+    if (_multi) { _lastTap = 0; _multi = false; return; }
+    var t = e.target;
+    if (t.closest(INTERACTIVE)) { _lastTap = 0; return; }
+    var now = Date.now();
+    if (now - _lastTap < 300) { _lastTap = 0; goBack(); return; }
+    _lastTap = now;
+  }, { passive: true });
+
+  var sh = document.querySelector('.sheet');
+  if (sh) {
+    sh.addEventListener('input', function() { if (loaded) markDirty(); });
+    sh.addEventListener('click', function(e) {
+      if (!loaded) return;
+      var t = e.target;
+      if (t.matches('.dot,.vbox,.quality-toggle,.quality-del,.disc-del') ||
+          t.closest('.dot') || t.closest('.vbox') ||
+          t.id === 'quality-add' || t.id === 'disc-add') {
+        setTimeout(markDirtyNow, 0);
+      }
+    }, true);
+  }
+
+  var settleTimer = null;
+  var obs = new MutationObserver(function() {
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(function() { obs.disconnect(); loaded = true; }, 800);
+  });
+  if (sh) {
+    obs.observe(sh, { subtree: true, childList: true, attributes: true, characterData: true });
+    settleTimer = setTimeout(function() { obs.disconnect(); loaded = true; }, 4000);
+  }
+})();
+</script>
+
+</body>
+</html>
