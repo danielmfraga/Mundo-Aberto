@@ -1166,6 +1166,7 @@ body::after {
   <footer class="signature">
     <div>Mundo Aberto · Vampiro: A Máscara</div>
     <div style="display:flex;align-items:center;gap:14px;">
+      <span id="save-status" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.22em;text-transform:uppercase;transition:opacity 1.2s;opacity:0;"></span>
       <button id="saveSheetBtn" type="button" style="display:none;"></button>
       <button id="restoreSheetBtn" type="button" style="background:transparent;border:1px solid rgba(255,107,26,0.35);color:rgba(255,107,26,0.5);font-family:var(--font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:6px 12px;cursor:pointer;border-radius:2px;transition:all 0.18s;">Restaurar</button>
       <button id="clearSheetBtn" type="button" style="background:transparent;border:1px solid var(--line);color:var(--fg-faint);font-family:var(--font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:6px 12px;cursor:pointer;border-radius:2px;transition:all 0.18s;">Limpar ficha</button>
@@ -1968,10 +1969,34 @@ function applyRemoteSheet(data) {
       space_id: (window.ESP_PARAM || window.CHAR_SPACE_ID || null)
     };
   }
+  var _statusTimer = null;
+  function showSaveStatus(state) {
+    var el = document.getElementById('save-status');
+    if (!el) return;
+    clearTimeout(_statusTimer);
+    if (state === 'saving') {
+      el.style.color = 'rgba(192,57,43,0.55)';
+      el.textContent = '● salvando';
+      el.style.opacity = '1';
+    } else if (state === 'saved') {
+      el.style.color = 'rgba(78,211,232,0.5)';
+      el.textContent = '✓ salvo';
+      el.style.opacity = '0.8';
+      _statusTimer = setTimeout(function() { el.style.opacity = '0'; }, 2500);
+    } else {
+      el.style.color = 'rgba(255,85,102,0.7)';
+      el.textContent = '✗ erro ao salvar';
+      el.style.opacity = '1';
+    }
+  }
+
   function triggerSave(immediate) {
     if (!loaded || !window.SheetSync) return;
     if (window.SheetSync.flag && window.SheetSync.flag('applyingRemote')) return;
-    window.SheetSync.save(buildEntry(), { immediate: !!immediate });
+    showSaveStatus('saving');
+    window.SheetSync.save(buildEntry(), { immediate: !!immediate })
+      .then(function() { showSaveStatus('saved'); })
+      .catch(function() { showSaveStatus('error'); });
   }
   function markDirty()    { dirty = true; triggerSave(false); }
   function markDirtyNow() { dirty = true; triggerSave(true); }
