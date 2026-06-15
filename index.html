@@ -426,6 +426,26 @@
       50%     { filter: drop-shadow(0 0 11px rgba(123,47,255,0.95)); }
     }
     #codexGroup .holo-btn:hover .codex-tome svg { color: #e0d0ff; }
+    #codexGroup { order: 3; }
+
+    /* ── Ferramentas — tema roxo ── */
+    #ferramentasGroup { order: 4; }
+    #ferramentasGroup .holo-btn-panel { border-color: rgba(123,47,255,0.32); background: rgba(123,47,255,0.05); }
+    #ferramentasGroup .holo-btn:hover .holo-btn-panel { border-color: rgba(123,47,255,0.6); background: rgba(123,47,255,0.10); }
+    #ferramentasGroup .device-led { background: #b98cff; box-shadow: 0 0 6px #b98cff; animation-name: ledBlink; }
+    #ferramentasGroup .device-led-label, #ferramentasGroup .btn-name { color: rgba(185,140,255,0.6); }
+    #ferramentasGroup .holo-btn:hover .btn-name { color: #b98cff; text-shadow: 0 0 12px #7b2fffcc; }
+    #ferramentasGroup .holo-beam { background: linear-gradient(to top, #7b2fff, transparent); box-shadow: 0 0 8px #7b2fff; }
+    #ferramentasGroup .fret1 { border-color: rgba(123,47,255,0.35); }
+    #ferramentasGroup .fret2 { border-color: rgba(185,140,255,0.3); }
+    #ferramentasGroup .fret3 { border-color: rgba(123,47,255,0.5); }
+    #ferramentasGroup .forge-cross-h { background: linear-gradient(90deg, transparent, rgba(123,47,255,0.20), transparent); }
+    #ferramentasGroup .forge-cross-v { background: linear-gradient(180deg, transparent, rgba(123,47,255,0.20), transparent); }
+    #ferramentasGroup .forge-scanline { background: linear-gradient(90deg, transparent, #7b2fff 30%, #7b2fff 70%, transparent); box-shadow: 0 0 8px #7b2fff, 0 0 18px rgba(123,47,255,0.5); }
+    #ferramentasGroup .forge-bracket { border-color: rgba(123,47,255,0.55); }
+    #ferramentasGroup .forge-core { border-color: rgba(123,47,255,0.45); box-shadow: 0 0 10px #7b2fffaa, 0 0 30px #7b2fff44, inset 0 0 20px rgba(123,47,255,0.08); background: rgba(123,47,255,0.03); color: rgba(185,140,255,0.7); text-shadow: 0 0 10px rgba(123,47,255,0.6); }
+    #ferramentasGroup .forge-core::after { background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(123,47,255,0.04) 3px, rgba(123,47,255,0.04) 4px); }
+    #ferramentasGroup .holo-btn:hover .forge-core { box-shadow: 0 0 20px #7b2fffcc, 0 0 60px #7b2fff66, inset 0 0 30px rgba(123,47,255,0.2); border-color: rgba(123,47,255,0.85); color: #b98cff; }
 
     /* ── Globe button ── */
     .globe-projection {
@@ -818,11 +838,11 @@
         </a>
       </div>
 
-      <div class="btn-group">
+      <div class="btn-group" id="ferramentasGroup">
         <a href="ferramentas.html" class="holo-btn">
           <div class="holo-btn-panel"></div>
           <div class="device-led-wrap">
-            <div class="device-led orange"></div>
+            <div class="device-led"></div>
             <span class="device-led-label">Forja</span>
           </div>
 
