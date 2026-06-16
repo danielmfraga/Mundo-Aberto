@@ -450,20 +450,31 @@ body {
     return _diceBoxLoading;
   }
 
-  // Monta notação tipo "3d6@5,2,6+2d20@13,7" (moeda fica de fora do 3D)
-  function notationFor(p) {
-    var parts = [];
-    p.groups.forEach(function(g) {
-      if (g.kind === 'coin') return;
-      var sides = parseInt((g.label.match(/(\d+)/) || [])[1], 10) || 6;
-      parts.push(g.faces.length + 'd' + sides + '@' + g.faces.join(','));
-    });
-    return parts.join('+');
+  // Cor de cada tipo de dado (colorset custom; texture:'none' = sem assets).
+  // makeColorSet cacheia por 'name' estável, então a cor é criada uma vez só.
+  function colorObjFor(cls) {
+    switch (cls) {
+      case 'fome': return { name:'mesaFome',  foreground:'#ffffff', background:'#e0473a', outline:'#7a120c', texture:'none', material:'plastic' };
+      case 'desp': return { name:'mesaDesp',  foreground:'#241405', background:'#ff9d3d', outline:'#7a4a10', texture:'none', material:'plastic' };
+      case 'd10':  return { name:'mesaPreto', foreground:'#f0f3f7', background:'#16161b', outline:'#000000', texture:'none', material:'plastic' };
+      default:     return { name:'mesaStd',   foreground:'#06242c', background:'#bfe6ef', outline:'#5a8a93', texture:'none', material:'plastic' };
+    }
   }
 
-  function playRoll3D(p, onDone) {
-    var notation = notationFor(p);
-    if (!notation) return playRollAnim(p, onDone);   // só moeda → CSS
+  // Rola em 3D agrupando por cor: 1º grupo via roll(), demais via add() →
+  // mistura cores na mesma cena (ex: pretos + desespero). updateConfig É async
+  // e precisa de await pra cor pegar antes de cada grupo spawnar.
+  async function playRoll3D(p, onDone) {
+    var byColor = {}, order = [];
+    p.groups.forEach(function(g) {
+      if (g.kind === 'coin') return;   // moeda não entra no 3D
+      var sides = parseInt((g.label.match(/(\d+)/) || [])[1], 10) || 6;
+      var key = g.cls || 'std';
+      if (!byColor[key]) { byColor[key] = []; order.push(key); }
+      byColor[key].push(g.faces.length + 'd' + sides + '@' + g.faces.join(','));
+    });
+    if (!order.length) return playRollAnim(p, onDone);   // só moeda → CSS
+
     var settled = false, timer = null;
     function toCss() {
       if (settled) return; settled = true;
@@ -477,14 +488,19 @@ body {
       renderRoll(p);
       setTimeout(function(){ dice3dEl.classList.remove('show'); onDone(); }, 1400);
     }
-    ensureDiceBox().then(function(box) {
+
+    try {
+      var box = await ensureDiceBox();
       dice3dEl.classList.add('show');
-      box.onRollComplete = function(){ finish(); };
-      var pr;
-      try { pr = box.roll(notation); } catch (e) { return toCss(); }
-      if (pr && typeof pr.then === 'function') pr.then(function(){ finish(); }, toCss);
-      timer = setTimeout(function(){ if (!settled) toCss(); }, 9000);   // trava de segurança
-    }).catch(toCss);
+      timer = setTimeout(function(){ if (!settled) toCss(); }, 14000);   // trava de segurança
+      for (var i = 0; i < order.length; i++) {
+        var notation = byColor[order[i]].join('+');
+        await box.updateConfig({ theme_customColorset: colorObjFor(order[i]) });
+        if (i === 0) await box.roll(notation);
+        else await box.add(notation);
+      }
+      finish();
+    } catch (e) { toCss(); }
   }
 
   // Silhueta volumétrica de cada tipo de dado (viewBox 100x100):
