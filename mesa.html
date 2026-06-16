@@ -131,6 +131,40 @@ body {
 .roll-sum { font-family:var(--font-mono); font-size:10px; color:var(--fg-dim); margin-left:6px; }
 .grp-sep { width:1px; align-self:stretch; background:var(--line); margin:0 2px; }
 
+/* ── Animação de rolagem (cubos 3D) ── */
+.roll-anim-ov {
+  position:fixed; inset:0; z-index:9000; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:22px; pointer-events:none;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,0.55), rgba(0,0,0,0.22) 55%, transparent);
+  animation:ovfade .2s ease;
+}
+@keyframes ovfade { from { opacity:0; } to { opacity:1; } }
+.roll-anim-label {
+  font-family:var(--font-mono); font-size:11px; letter-spacing:0.3em; text-transform:uppercase;
+  color:var(--holo); text-shadow:0 0 14px rgba(78,211,232,0.5);
+}
+.roll-anim-label b { color:#fff; }
+.roll-anim-dice { display:flex; flex-wrap:wrap; gap:16px; justify-content:center; max-width:80vw; perspective:620px; }
+.die3d { width:46px; height:46px; position:relative; transform-style:preserve-3d; animation:tumble .65s linear infinite; }
+.die3d:nth-child(2n) { animation-duration:.54s; }
+.die3d:nth-child(3n) { animation-duration:.73s; }
+.die3d .face {
+  position:absolute; width:46px; height:46px; display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-mono); font-size:17px; font-weight:600; border-radius:7px;
+  border:1px solid var(--holo-soft); background:rgba(10,16,24,0.92); color:var(--holo);
+  box-shadow:0 0 12px rgba(78,211,232,0.35);
+}
+.die3d.d10 .face  { border-color:#52585f; color:#e8edf2; box-shadow:0 0 12px rgba(180,190,200,0.22); }
+.die3d.fome .face { border-color:var(--fome); color:#fff; background:rgba(58,12,10,0.92); box-shadow:0 0 12px rgba(224,71,58,0.5); }
+.die3d.desp .face { border-color:var(--desp); color:#ffce9a; background:rgba(48,30,6,0.92); box-shadow:0 0 12px rgba(255,157,61,0.45); }
+.die3d .f1 { transform:translateZ(23px); }
+.die3d .f2 { transform:rotateY(180deg) translateZ(23px); }
+.die3d .f3 { transform:rotateY(90deg) translateZ(23px); }
+.die3d .f4 { transform:rotateY(-90deg) translateZ(23px); }
+.die3d .f5 { transform:rotateX(90deg) translateZ(23px); }
+.die3d .f6 { transform:rotateX(-90deg) translateZ(23px); }
+@keyframes tumble { from { transform:rotateX(0) rotateY(0); } to { transform:rotateX(360deg) rotateY(396deg); } }
+
 /* ── Chat ── */
 .chat-panel { flex:1 1 auto; min-height:240px; }
 .chat-msgs { flex:1; overflow-y:auto; padding:12px 13px; display:flex; flex-direction:column; gap:10px; }
@@ -318,6 +352,54 @@ body {
     while (rollLog.children.length > 40) rollLog.removeChild(rollLog.lastChild);
   }
 
+  // ── Tensão: cubos 3D rolando ~2s antes do resultado ───────────────
+  var rollQueue = [], animating = false;
+  function enqueueRoll(p) { rollQueue.push(p); processRollQueue(); }
+  function processRollQueue() {
+    if (animating || !rollQueue.length) return;
+    animating = true;
+    var p = rollQueue.shift();
+    playRollAnim(p, function(){ renderRoll(p); animating = false; processRollQueue(); });
+  }
+  function playRollAnim(p, done) {
+    var cubes = [];
+    p.groups.forEach(function(g) {
+      var sides = (g.kind === 'coin') ? 0 : (parseInt((g.label.match(/(\d+)/) || [])[1], 10) || 6);
+      g.faces.forEach(function(){ cubes.push({ cls:g.cls, kind:g.kind, sides:sides }); });
+    });
+    var shown = cubes.slice(0, 12);
+    var total = cubes.length;
+    var ov = document.createElement('div');
+    ov.className = 'roll-anim-ov';
+    ov.innerHTML = '<div class="roll-anim-label"><b>' + esc(p.autor||'?') + '</b> rolando ' + total + ' dado' + (total>1?'s':'') + '…</div>';
+    var tray = document.createElement('div');
+    tray.className = 'roll-anim-dice';
+    shown.forEach(function(c) {
+      var d = document.createElement('div');
+      d.className = 'die3d ' + (c.cls || 'std');
+      var faces = '';
+      for (var i=1;i<=6;i++) faces += '<div class="face f'+i+'">?</div>';
+      d.innerHTML = faces;
+      tray.appendChild(d);
+    });
+    ov.appendChild(tray);
+    document.body.appendChild(ov);
+    function rnd(c){ return c.kind==='coin' ? (Math.random()<0.5?'C':'K') : (1+Math.floor(Math.random()*(c.sides||6))); }
+    function flick() {
+      for (var i=0;i<tray.children.length;i++) {
+        var fs = tray.children[i].children, c = shown[i];
+        for (var j=0;j<fs.length;j++) fs[j].textContent = rnd(c);
+      }
+    }
+    flick();
+    var iv = setInterval(flick, 70);
+    setTimeout(function() {
+      clearInterval(iv);
+      ov.style.animation = 'ovfade .25s ease reverse';
+      setTimeout(function(){ ov.remove(); done(); }, 220);
+    }, 1800);
+  }
+
   // ── Chat ──────────────────────────────────────────────────────────
   var chatMsgs = document.getElementById('chatMsgs');
   var chatInput = document.getElementById('chatInput');
@@ -369,7 +451,7 @@ body {
     else dispatch(event, payload);   // offline: mostra local
   }
   function dispatch(event, payload) {
-    if (event === 'roll') renderRoll(payload);
+    if (event === 'roll') enqueueRoll(payload);
     else if (event === 'chat') renderChat(payload);
   }
   function initRealtime() {
