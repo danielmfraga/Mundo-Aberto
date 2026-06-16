@@ -439,9 +439,10 @@ body {
     _diceBoxLoading = import('https://esm.sh/@3d-dice/dice-box-threejs')
       .then(function(mod) {
         var DiceBox = mod.default || mod.DiceBox || mod;
-        // Config mínima comprovada nesta versão (0.0.12). Opções de tema em
-        // string (theme_surface:'none' etc.) quebram o construtor — evitar.
-        var box = new DiceBox('#dice3d', { sounds: false });
+        // Config comprovada nesta versão (0.0.12). Opções de tema em string
+        // (theme_surface:'none' etc.) quebram o construtor — evitar.
+        // gravity_multiplier alto = dados param rápido → ondas de cor curtas.
+        var box = new DiceBox('#dice3d', { sounds: false, gravity_multiplier: 800 });
         var ready = (typeof box.initialize === 'function') ? box.initialize()
                   : (typeof box.init === 'function') ? box.init() : null;
         return Promise.resolve(ready).then(function(){ _diceBox = box; return box; });
@@ -492,19 +493,18 @@ body {
     try {
       var box = await ensureDiceBox();
       dice3dEl.classList.add('show');
-      timer = setTimeout(function(){ if (!settled) toCss(); }, 14000);   // trava de segurança
-      // Spawn dos grupos quase simultâneo: NÃO espera o settle (await só no
-      // updateConfig). O spawn é síncrono e congela a cor em cada dado, então
-      // trocar a cor logo depois não afeta o grupo já criado. Promise.all
-      // espera todos PARAREM pra então mostrar o resultado escrito.
-      var throws = [];
+      timer = setTimeout(function(){ if (!settled) toCss(); }, 16000);   // trava de segurança
+      // add() SÓ funciona depois que o grupo anterior PAROU (chamar durante a
+      // queda quebra a lib). Então espera cada grupo (await). A "gravidade alta"
+      // na config faz cada grupo parar rápido, deixando as ondas bem curtas.
       for (var i = 0; i < order.length; i++) {
         var notation = byColor[order[i]].join('+');
         await box.updateConfig({ theme_customColorset: colorObjFor(order[i]) });
-        throws.push(i === 0 ? box.roll(notation) : box.add(notation));
+        if (i === 0) await box.roll(notation);
+        else await box.add(notation);
       }
-      Promise.all(throws).then(finish, function(){ toCss(); });
-    } catch (e) { toCss(); }
+      finish();
+    } catch (e) { console.warn('[mesa] erro no 3D:', e); toCss(); }
   }
 
   // Silhueta volumétrica de cada tipo de dado (viewBox 100x100):
