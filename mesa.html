@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mesa · Mundo Aberto</title>
+<meta name="description" content="Mesa virtual · Mundo Aberto">
+
+<style>
+:root {
+  --bg-0:#04070d; --bg-1:#070c16; --bg-2:#0b1320;
+  --line:rgba(120,200,220,0.10); --line-strong:rgba(120,200,220,0.20);
+  --fg:#cfe9f0; --fg-dim:rgba(207,233,240,0.55); --fg-faint:rgba(207,233,240,0.32);
+  --holo:#4ed3e8; --holo-soft:rgba(78,211,232,0.55); --accent:#ff7a3d; --danger:#ff5566;
+  --fome:#e0473a; --desp:#ff9d3d;
+  --font-display:'Space Grotesk',sans-serif; --font-mono:'JetBrains Mono',monospace;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body {
+  background:var(--bg-0); color:var(--fg); font-family:var(--font-display);
+  min-height:100vh; -webkit-font-smoothing:antialiased;
+}
+body {
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(78,211,232,0.04), transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(255,122,61,0.03), transparent 60%),
+    linear-gradient(rgba(120,200,220,0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120,200,220,0.022) 1px, transparent 1px);
+  background-size:auto, auto, 56px 56px, 56px 56px; background-attachment:fixed;
+}
+
+/* ── Top bar ── */
+.topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 22px; border-bottom:1px solid var(--line-strong);
+  position:relative;
+}
+.topbar::after { content:''; position:absolute; bottom:-1px; left:0; width:80px; height:1px; background:var(--holo); box-shadow:0 0 6px var(--holo-soft); }
+.back-link {
+  display:flex; align-items:center; gap:7px; font-family:var(--font-mono); font-size:10px;
+  letter-spacing:0.25em; color:var(--fg-faint); text-decoration:none; text-transform:uppercase;
+  transition:color 0.2s;
+}
+.back-link:hover { color:var(--fg); }
+.brand { font-family:var(--font-mono); font-size:11px; letter-spacing:0.4em; text-transform:uppercase; color:var(--holo); }
+.who { display:flex; align-items:center; gap:10px; font-family:var(--font-mono); font-size:10px; letter-spacing:0.12em; color:var(--fg-dim); }
+.conn-dot { width:7px; height:7px; border-radius:50%; background:var(--danger); box-shadow:0 0 6px var(--danger); transition:all .3s; }
+.conn-dot.on { background:#3ddc84; box-shadow:0 0 6px #3ddc84; }
+.who-name { color:var(--holo); cursor:pointer; }
+.who-name:hover { text-decoration:underline; }
+
+/* ── Grid ── */
+.mesa-grid {
+  display:grid; grid-template-columns:1fr 400px; gap:14px;
+  padding:14px 18px 22px; height:calc(100vh - 56px);
+}
+@media (max-width:920px) { .mesa-grid { grid-template-columns:1fr; height:auto; } }
+
+.panel {
+  background:rgba(11,19,32,0.45); border:1px solid var(--line);
+  border-radius:6px; position:relative; display:flex; flex-direction:column; min-height:0;
+}
+.panel-head {
+  display:flex; align-items:center; gap:9px; padding:11px 14px;
+  border-bottom:1px solid var(--line); flex:0 0 auto;
+}
+.panel-head .led { width:6px; height:6px; border-radius:50%; background:var(--holo); box-shadow:0 0 7px var(--holo); }
+.panel-title { font-family:var(--font-mono); font-size:10px; letter-spacing:0.28em; text-transform:uppercase; color:var(--fg-dim); }
+
+/* ── Video ── */
+.video-panel { overflow:hidden; }
+#jitsi { flex:1; min-height:360px; background:#000; border-radius:0 0 6px 6px; }
+@media (max-width:920px) { #jitsi { height:54vh; } }
+
+/* ── Right rail ── */
+.rail { display:flex; flex-direction:column; gap:14px; min-height:0; }
+@media (max-width:920px) { .rail { height:auto; } }
+
+/* ── Dice ── */
+.dice-panel { flex:0 0 auto; }
+.dice-body { padding:12px 13px; }
+.dice-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; }
+.die-tile {
+  border:1px solid var(--line); border-radius:5px; padding:8px 6px 6px; text-align:center;
+  background:rgba(78,211,232,0.03); transition:border-color .15s, background .15s;
+}
+.die-tile.has { border-color:var(--holo-soft); background:rgba(78,211,232,0.07); }
+.die-tile.fome.has { border-color:rgba(224,71,58,0.6); background:rgba(224,71,58,0.08); }
+.die-tile.desp.has { border-color:rgba(255,157,61,0.6); background:rgba(255,157,61,0.08); }
+.die-tile.d10.has { border-color:rgba(207,233,240,0.5); background:rgba(207,233,240,0.06); }
+.die-label { font-family:var(--font-mono); font-size:10px; letter-spacing:0.05em; color:var(--fg-dim); margin-bottom:5px; min-height:24px; display:flex; align-items:center; justify-content:center; }
+.die-tile.fome .die-label { color:var(--fome); }
+.die-tile.desp .die-label { color:var(--desp); }
+.qty-row { display:flex; align-items:center; justify-content:center; gap:6px; }
+.qty-btn {
+  width:20px; height:20px; border:1px solid var(--line); background:transparent; color:var(--fg-dim);
+  border-radius:3px; cursor:pointer; font-size:13px; line-height:1; font-family:var(--font-mono); transition:all .12s;
+}
+.qty-btn:hover { border-color:var(--holo); color:var(--holo); }
+.qty-num { font-family:var(--font-mono); font-size:13px; min-width:16px; color:var(--fg); }
+.dice-actions { display:flex; gap:8px; margin-top:11px; }
+.btn {
+  font-family:var(--font-mono); font-size:10px; letter-spacing:0.16em; text-transform:uppercase;
+  padding:9px 14px; border-radius:3px; cursor:pointer; transition:all .16s; border:1px solid;
+}
+.btn-roll { flex:1; background:rgba(78,211,232,0.10); border-color:var(--holo-soft); color:var(--holo); }
+.btn-roll:hover { background:rgba(78,211,232,0.18); border-color:var(--holo); box-shadow:0 0 14px rgba(78,211,232,0.3); }
+.btn-clear { background:transparent; border-color:var(--line); color:var(--fg-faint); }
+.btn-clear:hover { border-color:var(--fg-dim); color:var(--fg-dim); }
+
+/* ── Roll log ── */
+.rolllog { border-top:1px solid var(--line); padding:10px 13px; max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:9px; }
+.rolllog:empty { display:none; }
+.roll-entry { animation:popin .25s ease; }
+@keyframes popin { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+.roll-meta { display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:9px; letter-spacing:0.1em; color:var(--fg-faint); margin-bottom:5px; }
+.roll-meta .who-b { color:var(--holo); }
+.roll-dice { display:flex; flex-wrap:wrap; gap:4px; align-items:center; }
+.chip {
+  min-width:24px; height:24px; padding:0 5px; border-radius:4px; display:inline-flex; align-items:center; justify-content:center;
+  font-family:var(--font-mono); font-size:12px; font-weight:500;
+  background:rgba(78,211,232,0.10); border:1px solid var(--holo-soft); color:var(--holo);
+}
+.chip.d10 { background:rgba(20,22,28,0.9); border-color:#52585f; color:#e8edf2; }
+.chip.fome { background:var(--fome); border-color:var(--fome); color:#fff; box-shadow:0 0 7px rgba(224,71,58,0.5); }
+.chip.desp { background:var(--desp); border-color:var(--desp); color:#1a1206; box-shadow:0 0 7px rgba(255,157,61,0.45); }
+.chip.coin { min-width:auto; padding:0 9px; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; }
+.roll-sum { font-family:var(--font-mono); font-size:10px; color:var(--fg-dim); margin-left:6px; }
+.grp-sep { width:1px; align-self:stretch; background:var(--line); margin:0 2px; }
+
+/* ── Chat ── */
+.chat-panel { flex:1 1 auto; min-height:240px; }
+.chat-msgs { flex:1; overflow-y:auto; padding:12px 13px; display:flex; flex-direction:column; gap:10px; }
+.msg { font-size:13px; line-height:1.5; }
+.msg-head { font-family:var(--font-mono); font-size:9px; letter-spacing:0.1em; color:var(--fg-faint); margin-bottom:2px; }
+.msg-head .who-b { color:var(--accent); }
+.msg-text { color:var(--fg); word-break:break-word; }
+.msg-text a { color:var(--holo); }
+.msg-img { max-width:100%; max-height:240px; border-radius:5px; border:1px solid var(--line); margin-top:3px; display:block; }
+.chat-input-row { display:flex; gap:7px; padding:10px 11px; border-top:1px solid var(--line); flex:0 0 auto; align-items:center; }
+.chat-input {
+  flex:1; background:rgba(78,211,232,0.04); border:1px solid var(--line); border-radius:4px;
+  color:var(--fg); font-family:var(--font-display); font-size:13px; padding:8px 11px; outline:none;
+}
+.chat-input:focus { border-color:var(--holo-soft); }
+.icon-btn {
+  width:34px; height:34px; flex:0 0 auto; border:1px solid var(--line); background:transparent; color:var(--fg-dim);
+  border-radius:4px; cursor:pointer; font-size:15px; transition:all .15s; display:flex; align-items:center; justify-content:center;
+}
+.icon-btn:hover { border-color:var(--holo); color:var(--holo); }
+
+/* ── Name modal ── */
+.ov { position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:9999; display:flex; align-items:center; justify-content:center; }
+.ov.hidden { display:none; }
+.ov-box { background:#040810; border:1px solid var(--holo-soft); border-radius:6px; padding:32px 36px; max-width:330px; width:90%; text-align:center; box-shadow:0 0 40px rgba(78,211,232,0.08); }
+.ov-box h2 { font-family:var(--font-mono); font-size:11px; letter-spacing:0.3em; text-transform:uppercase; color:var(--holo); margin-bottom:18px; }
+.ov-input { width:100%; background:rgba(78,211,232,0.05); border:1px solid var(--line); border-radius:3px; color:var(--fg); font-family:var(--font-display); font-size:15px; padding:11px 14px; outline:none; margin-bottom:18px; text-align:center; }
+.ov-input:focus { border-color:var(--holo); }
+.ov-btn { width:100%; background:rgba(78,211,232,0.10); border:1px solid var(--holo-soft); color:var(--holo); font-family:var(--font-mono); font-size:10px; letter-spacing:0.2em; text-transform:uppercase; padding:11px; border-radius:3px; cursor:pointer; transition:all .16s; }
+.ov-btn:hover { background:rgba(78,211,232,0.18); border-color:var(--holo); box-shadow:0 0 14px rgba(78,211,232,0.3); }
+
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--line-strong); border-radius:3px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-link" href="index.html"><span style="font-size:14px;line-height:1;">&#8592;</span>Voltar</a>
+  <div class="brand">Mesa · Mundo Aberto</div>
+  <div class="who">
+    <span class="conn-dot" id="connDot"></span>
+    <span id="whoName" class="who-name" title="Trocar nome">—</span>
+  </div>
+</div>
+
+<div class="mesa-grid">
+  <!-- Vídeo -->
+  <div class="panel video-panel">
+    <div class="panel-head"><span class="led"></span><span class="panel-title">Vídeo</span></div>
+    <div id="jitsi"></div>
+  </div>
+
+  <!-- Rail: dados + chat -->
+  <div class="rail">
+    <div class="panel dice-panel">
+      <div class="panel-head"><span class="led"></span><span class="panel-title">Dados</span></div>
+      <div class="dice-body">
+        <div class="dice-grid" id="diceGrid"></div>
+        <div class="dice-actions">
+          <button class="btn btn-clear" id="clearDice">Limpar</button>
+          <button class="btn btn-roll" id="rollBtn">Rolar</button>
+        </div>
+      </div>
+      <div class="rolllog" id="rollLog"></div>
+    </div>
+
+    <div class="panel chat-panel">
+      <div class="panel-head"><span class="led"></span><span class="panel-title">Chat</span></div>
+      <div class="chat-msgs" id="chatMsgs"></div>
+      <div class="chat-input-row">
+        <input type="file" id="imgInput" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
+        <button class="icon-btn" id="imgBtn" title="Enviar imagem">&#128247;</button>
+        <input class="chat-input" id="chatInput" placeholder="Mensagem, link…" maxlength="2000">
+        <button class="icon-btn" id="sendBtn" title="Enviar">&#10148;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Nome -->
+<div class="ov" id="nameOv">
+  <div class="ov-box">
+    <h2>Quem é você?</h2>
+    <input class="ov-input" id="nameInput" placeholder="Seu nome na mesa" maxlength="32" autocomplete="off">
+    <button class="ov-btn" id="nameBtn">Entrar na mesa</button>
+  </div>
+</div>
+
+<script src="https://meet.jit.si/external_api.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function() {
+  'use strict';
+
+  var SB_URL = 'https://mxyqqfsyybluavwlrhsa.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eXFxZnN5eWJsdWF2d2xyaHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTM4MzEsImV4cCI6MjA5MzY2OTgzMX0.b0Ij7UGzbMLpqZjLYxoPEu2kGwEW52U_2NSDtpMGUPM';
+
+  var SALA = (new URLSearchParams(location.search)).get('sala') || 'principal';
+  var ROOM = 'MundoAbertoMesa-' + SALA + '-7x2k';   // sufixo p/ não colidir com salas aleatórias do meet.jit.si
+  var nome = localStorage.getItem('mesaNome') || '';
+
+  // ── Dados disponíveis ─────────────────────────────────────────────
+  var DICE = [
+    { id:'coin', label:'Cara/Coroa', sides:2, kind:'coin', cls:'std' },
+    { id:'d3',   label:'d3',  sides:3,  cls:'std' },
+    { id:'d4',   label:'d4',  sides:4,  cls:'std' },
+    { id:'d6',   label:'d6',  sides:6,  cls:'std' },
+    { id:'d8',   label:'d8',  sides:8,  cls:'std' },
+    { id:'d10',  label:'d10', sides:10, cls:'d10' },
+    { id:'d10f', label:'d10 Fome', sides:10, cls:'fome' },
+    { id:'d10d', label:'d10 Desespero', sides:10, cls:'desp' },
+    { id:'d12',  label:'d12', sides:12, cls:'std' },
+    { id:'d20',  label:'d20', sides:20, cls:'std' },
+    { id:'d100', label:'d100', sides:100, cls:'std' }
+  ];
+  var counts = {};
+
+  // ── Helpers ───────────────────────────────────────────────────────
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function hhmm(ts){ var d=new Date(ts||Date.now()); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
+  function linkify(escaped){ return escaped.replace(/(https?:\/\/[^\s<]+)/g, function(u){ return '<a href="'+u+'" target="_blank" rel="noopener noreferrer">'+u+'</a>'; }); }
+
+  // ── Bandeja de dados ──────────────────────────────────────────────
+  var diceGrid = document.getElementById('diceGrid');
+  function renderTray() {
+    diceGrid.innerHTML = '';
+    DICE.forEach(function(d) {
+      var n = counts[d.id] || 0;
+      var tile = document.createElement('div');
+      tile.className = 'die-tile ' + d.cls + (n>0?' has':'');
+      tile.innerHTML =
+        '<div class="die-label">' + esc(d.label) + '</div>' +
+        '<div class="qty-row">' +
+          '<button class="qty-btn" data-act="dec" type="button">&minus;</button>' +
+          '<span class="qty-num">' + n + '</span>' +
+          '<button class="qty-btn" data-act="inc" type="button">+</button>' +
+        '</div>';
+      tile.querySelector('[data-act="inc"]').addEventListener('click', function(){ counts[d.id]=(counts[d.id]||0)+1; renderTray(); });
+      tile.querySelector('[data-act="dec"]').addEventListener('click', function(){ counts[d.id]=Math.max(0,(counts[d.id]||0)-1); renderTray(); });
+      diceGrid.appendChild(tile);
+    });
+  }
+
+  document.getElementById('clearDice').addEventListener('click', function(){ counts={}; renderTray(); });
+  document.getElementById('rollBtn').addEventListener('click', rollSelected);
+
+  function rollSelected() {
+    var groups = [], sum = 0, anyNum = false, total = 0;
+    DICE.forEach(function(d) {
+      var n = counts[d.id] || 0;
+      if (!n) return;
+      total += n;
+      var faces = [];
+      for (var i=0;i<n;i++) {
+        if (d.kind === 'coin') { faces.push(Math.random()<0.5 ? 'Cara' : 'Coroa'); }
+        else { var v = 1+Math.floor(Math.random()*d.sides); faces.push(v); sum+=v; anyNum=true; }
+      }
+      groups.push({ label:d.label, cls:d.cls, kind:d.kind||'num', faces:faces });
+    });
+    if (!total) return;
+    var payload = { autor:nome, ts:Date.now(), groups:groups, sum: anyNum?sum:null };
+    send('roll', payload);
+  }
+
+  // ── Render rolagem ────────────────────────────────────────────────
+  var rollLog = document.getElementById('rollLog');
+  function renderRoll(p) {
+    var el = document.createElement('div');
+    el.className = 'roll-entry';
+    var dice = '';
+    p.groups.forEach(function(g, gi) {
+      if (gi>0) dice += '<span class="grp-sep"></span>';
+      g.faces.forEach(function(f) {
+        var chipCls = 'chip ' + (g.cls||'std') + (g.kind==='coin'?' coin':'');
+        dice += '<span class="'+chipCls+'">'+esc(f)+'</span>';
+      });
+    });
+    var sumHtml = (p.sum!=null) ? '<span class="roll-sum">= '+p.sum+'</span>' : '';
+    el.innerHTML =
+      '<div class="roll-meta"><span class="who-b">'+esc(p.autor||'?')+'</span><span>'+hhmm(p.ts)+'</span></div>' +
+      '<div class="roll-dice">'+dice+sumHtml+'</div>';
+    rollLog.insertBefore(el, rollLog.firstChild);
+    while (rollLog.children.length > 40) rollLog.removeChild(rollLog.lastChild);
+  }
+
+  // ── Chat ──────────────────────────────────────────────────────────
+  var chatMsgs = document.getElementById('chatMsgs');
+  var chatInput = document.getElementById('chatInput');
+  function renderChat(p) {
+    var el = document.createElement('div');
+    el.className = 'msg';
+    var body = p.image
+      ? '<img class="msg-img" src="'+esc(p.image)+'" alt="imagem">'
+      : '<div class="msg-text">'+linkify(esc(p.text))+'</div>';
+    el.innerHTML =
+      '<div class="msg-head"><span class="who-b">'+esc(p.autor||'?')+'</span> · '+hhmm(p.ts)+'</div>' + body;
+    chatMsgs.appendChild(el);
+    chatMsgs.scrollTop = chatMsgs.scrollHeight;
+  }
+  function sendChat() {
+    var t = chatInput.value.trim();
+    if (!t) return;
+    chatInput.value = '';
+    send('chat', { autor:nome, ts:Date.now(), text:t });
+  }
+  document.getElementById('sendBtn').addEventListener('click', sendChat);
+  chatInput.addEventListener('keydown', function(e){ if (e.key==='Enter') { e.preventDefault(); sendChat(); } });
+
+  // imagem
+  var imgInput = document.getElementById('imgInput');
+  document.getElementById('imgBtn').addEventListener('click', function(){ imgInput.click(); });
+  imgInput.addEventListener('change', function() {
+    var file = imgInput.files && imgInput.files[0];
+    imgInput.value = '';
+    if (!file) return;
+    if (file.size > 8*1024*1024) { alert('Imagem muito grande (máx 8MB).'); return; }
+    var ext = (file.type.split('/')[1] || 'png').replace('jpeg','jpg');
+    var path = 'mesa/' + Date.now() + '_' + Math.random().toString(36).slice(2,7) + '.' + ext;
+    fetch(SB_URL + '/storage/v1/object/personagens/' + path, {
+      method:'POST',
+      headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Content-Type':file.type, 'x-upsert':'true' },
+      body:file
+    }).then(function(r){
+      if (!r.ok) throw new Error('upload '+r.status);
+      var url = SB_URL + '/storage/v1/object/public/personagens/' + path;
+      send('chat', { autor:nome, ts:Date.now(), image:url });
+    }).catch(function(err){ alert('Falha ao enviar imagem: '+err.message); });
+  });
+
+  // ── Realtime (Supabase broadcast) ─────────────────────────────────
+  var channel = null;
+  function send(event, payload) {
+    if (channel) channel.send({ type:'broadcast', event:event, payload:payload });
+    else dispatch(event, payload);   // offline: mostra local
+  }
+  function dispatch(event, payload) {
+    if (event === 'roll') renderRoll(payload);
+    else if (event === 'chat') renderChat(payload);
+  }
+  function initRealtime() {
+    if (!window.supabase || !window.supabase.createClient) return;
+    var client = window.supabase.createClient(SB_URL, SB_KEY);
+    channel = client.channel('mesa:' + SALA, { config:{ broadcast:{ self:true } } });
+    channel.on('broadcast', { event:'roll' }, function(m){ dispatch('roll', m.payload); });
+    channel.on('broadcast', { event:'chat' }, function(m){ dispatch('chat', m.payload); });
+    channel.subscribe(function(status){
+      document.getElementById('connDot').classList.toggle('on', status === 'SUBSCRIBED');
+    });
+  }
+
+  // ── Jitsi ─────────────────────────────────────────────────────────
+  function initJitsi() {
+    if (!window.JitsiMeetExternalAPI) return;
+    try {
+      new window.JitsiMeetExternalAPI('meet.jit.si', {
+        roomName: ROOM,
+        parentNode: document.getElementById('jitsi'),
+        width:'100%', height:'100%',
+        userInfo: { displayName: nome },
+        configOverwrite: { prejoinPageEnabled:false, disableDeepLinking:true },
+        interfaceConfigOverwrite: { MOBILE_APP_PROMO:false, SHOW_JITSI_WATERMARK:false, SHOW_WATERMARK_FOR_GUESTS:false }
+      });
+    } catch (e) { /* silencioso */ }
+  }
+
+  // ── Nome / boot ───────────────────────────────────────────────────
+  var nameOv = document.getElementById('nameOv');
+  var nameInput = document.getElementById('nameInput');
+  function setName(n) {
+    nome = n.trim().slice(0,32);
+    if (!nome) return;
+    localStorage.setItem('mesaNome', nome);
+    document.getElementById('whoName').textContent = nome;
+    nameOv.classList.add('hidden');
+    if (!channel) { initRealtime(); initJitsi(); }
+  }
+  document.getElementById('nameBtn').addEventListener('click', function(){ setName(nameInput.value); });
+  nameInput.addEventListener('keydown', function(e){ if (e.key==='Enter') setName(nameInput.value); });
+  document.getElementById('whoName').addEventListener('click', function(){
+    nameInput.value = nome; nameOv.classList.remove('hidden'); nameInput.focus();
+  });
+
+  renderTray();
+  if (nome) { document.getElementById('whoName').textContent = nome; nameOv.classList.add('hidden'); initRealtime(); initJitsi(); }
+  else { nameInput.focus(); }
+})();
+</script>
+</body></html>
