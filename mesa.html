@@ -439,11 +439,12 @@ body {
     _diceBoxLoading = import('https://esm.sh/@3d-dice/dice-box-threejs')
       .then(function(mod) {
         var DiceBox = mod.default || mod.DiceBox || mod;
-        // Config comprovada nesta versão (0.0.12). Opções de tema em string
-        // (theme_surface:'none' etc.) quebram o construtor — evitar.
-        // gravidade alta + força baixa = dados batem e param rápido (~1s),
-        // deixando as ondas de cor bem curtas. Calibrado por teste no navegador.
-        var box = new DiceBox('#dice3d', { sounds: false, gravity_multiplier: 6000, strength: 0.35 });
+        // Config mínima comprovada nesta versão (0.0.12). Opções de tema em
+        // string (theme_surface:'none' etc.) quebram o construtor — evitar.
+        // Mantida no físico padrão: queda bonita. Tentativas de acelerar a
+        // queda (gravidade alta) deixam a rolagem feia e mal encurtam as ondas
+        // — não compensa. Ondas sequenciais são o limite desta lib.
+        var box = new DiceBox('#dice3d', { sounds: false });
         var ready = (typeof box.initialize === 'function') ? box.initialize()
                   : (typeof box.init === 'function') ? box.init() : null;
         return Promise.resolve(ready).then(function(){ _diceBox = box; return box; });
