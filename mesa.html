@@ -285,7 +285,7 @@ body {
   </div>
 </div>
 
-<script src="https://meet.jit.si/external_api.js"></script>
+<script src="https://8x8.vc/vpaas-magic-cookie-cacc35dda8be41dbbf0a769952e2df2c/external_api.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function() {
@@ -295,7 +295,8 @@ body {
   var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eXFxZnN5eWJsdWF2d2xyaHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTM4MzEsImV4cCI6MjA5MzY2OTgzMX0.b0Ij7UGzbMLpqZjLYxoPEu2kGwEW52U_2NSDtpMGUPM';
 
   var SALA = (new URLSearchParams(location.search)).get('sala') || 'principal';
-  var ROOM = 'MundoAbertoMesa-' + SALA + '-7x2k';   // sufixo p/ não colidir com salas aleatórias do meet.jit.si
+  var ROOM = 'MundoAbertoMesa-' + SALA + '-7x2k';   // sufixo p/ não colidir com salas alheias
+  var JAAS_APP_ID = 'vpaas-magic-cookie-cacc35dda8be41dbbf0a769952e2df2c';   // não é segredo (vai no nome da sala)
   var nome = localStorage.getItem('mesaNome') || '';
 
   // ── Dados disponíveis ─────────────────────────────────────────────
@@ -701,18 +702,30 @@ body {
   }
 
   // ── Jitsi ─────────────────────────────────────────────────────────
-  function initJitsi() {
-    if (!window.JitsiMeetExternalAPI) return;
+  function jitsiMsg(html) {
+    var el = document.getElementById('jitsi');
+    if (el) el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:24px;text-align:center;font-family:var(--font-mono);font-size:11px;letter-spacing:0.1em;color:var(--fg-dim);line-height:1.9;">' + html + '</div>';
+  }
+  async function initJitsi() {
+    if (!window.JitsiMeetExternalAPI) { jitsiMsg('Vídeo indisponível<br><span style="color:var(--fg-faint);font-size:10px;">API do JaaS não carregou</span>'); return; }
     try {
-      new window.JitsiMeetExternalAPI('meet.jit.si', {
-        roomName: ROOM,
+      var resp = await fetch('/api/jaas-token?name=' + encodeURIComponent(nome || 'Jogador'));
+      var data = await resp.json();
+      if (!resp.ok || !data.token) {
+        jitsiMsg('Vídeo ainda não configurado<br><span style="color:var(--fg-faint);font-size:10px;">' + esc((data && data.error) || 'token não gerado') + '</span>');
+        return;
+      }
+      new window.JitsiMeetExternalAPI('8x8.vc', {
+        roomName: JAAS_APP_ID + '/' + ROOM,
+        jwt: data.token,
         parentNode: document.getElementById('jitsi'),
         width:'100%', height:'100%',
-        userInfo: { displayName: nome },
         configOverwrite: { prejoinPageEnabled:false, disableDeepLinking:true },
         interfaceConfigOverwrite: { MOBILE_APP_PROMO:false, SHOW_JITSI_WATERMARK:false, SHOW_WATERMARK_FOR_GUESTS:false }
       });
-    } catch (e) { /* silencioso */ }
+    } catch (e) {
+      jitsiMsg('Vídeo indisponível<br><span style="color:var(--fg-faint);font-size:10px;">' + esc(String(e && e.message || e)) + '</span>');
+    }
   }
 
   // ── Nome / boot ───────────────────────────────────────────────────
