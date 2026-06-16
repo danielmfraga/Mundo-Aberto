@@ -493,13 +493,17 @@ body {
       var box = await ensureDiceBox();
       dice3dEl.classList.add('show');
       timer = setTimeout(function(){ if (!settled) toCss(); }, 14000);   // trava de segurança
+      // Spawn dos grupos quase simultâneo: NÃO espera o settle (await só no
+      // updateConfig). O spawn é síncrono e congela a cor em cada dado, então
+      // trocar a cor logo depois não afeta o grupo já criado. Promise.all
+      // espera todos PARAREM pra então mostrar o resultado escrito.
+      var throws = [];
       for (var i = 0; i < order.length; i++) {
         var notation = byColor[order[i]].join('+');
         await box.updateConfig({ theme_customColorset: colorObjFor(order[i]) });
-        if (i === 0) await box.roll(notation);
-        else await box.add(notation);
+        throws.push(i === 0 ? box.roll(notation) : box.add(notation));
       }
-      finish();
+      Promise.all(throws).then(finish, function(){ toCss(); });
     } catch (e) { toCss(); }
   }
 
