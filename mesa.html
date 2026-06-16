@@ -441,8 +441,9 @@ body {
         var DiceBox = mod.default || mod.DiceBox || mod;
         // Config comprovada nesta versão (0.0.12). Opções de tema em string
         // (theme_surface:'none' etc.) quebram o construtor — evitar.
-        // gravity_multiplier alto = dados param rápido → ondas de cor curtas.
-        var box = new DiceBox('#dice3d', { sounds: false, gravity_multiplier: 800 });
+        // gravidade alta + força baixa = dados batem e param rápido (~1s),
+        // deixando as ondas de cor bem curtas. Calibrado por teste no navegador.
+        var box = new DiceBox('#dice3d', { sounds: false, gravity_multiplier: 6000, strength: 0.35 });
         var ready = (typeof box.initialize === 'function') ? box.initialize()
                   : (typeof box.init === 'function') ? box.init() : null;
         return Promise.resolve(ready).then(function(){ _diceBox = box; return box; });
