@@ -84,23 +84,33 @@ body {
 .dice-body { padding:12px 13px; }
 .dice-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; }
 .die-tile {
-  border:1px solid var(--line); border-radius:5px; padding:8px 6px 6px; text-align:center;
+  border:1px solid var(--line); border-radius:6px; padding:8px 5px 7px;
   background:rgba(78,211,232,0.03); transition:border-color .15s, background .15s;
+  display:flex; flex-direction:column; align-items:center; gap:5px;
 }
 .die-tile.has { border-color:var(--holo-soft); background:rgba(78,211,232,0.07); }
 .die-tile.fome.has { border-color:rgba(224,71,58,0.6); background:rgba(224,71,58,0.08); }
 .die-tile.desp.has { border-color:rgba(255,157,61,0.6); background:rgba(255,157,61,0.08); }
 .die-tile.d10.has { border-color:rgba(207,233,240,0.5); background:rgba(207,233,240,0.06); }
-.die-label { font-family:var(--font-mono); font-size:10px; letter-spacing:0.05em; color:var(--fg-dim); margin-bottom:5px; min-height:24px; display:flex; align-items:center; justify-content:center; }
-.die-tile.fome .die-label { color:var(--fome); }
-.die-tile.desp .die-label { color:var(--desp); }
-.qty-row { display:flex; align-items:center; justify-content:center; gap:6px; }
-.qty-btn {
-  width:20px; height:20px; border:1px solid var(--line); background:transparent; color:var(--fg-dim);
-  border-radius:3px; cursor:pointer; font-size:13px; line-height:1; font-family:var(--font-mono); transition:all .12s;
+.die-pick {
+  width:38px; height:38px; cursor:pointer; color:var(--holo);
+  transition:transform .1s; user-select:none;
 }
-.qty-btn:hover { border-color:var(--holo); color:var(--holo); }
-.qty-num { font-family:var(--font-mono); font-size:13px; min-width:16px; color:var(--fg); }
+.die-pick:hover { transform:scale(1.12); }
+.die-pick:active { transform:scale(0.93); }
+.die-pick svg { width:100%; height:100%; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.5)); display:block; }
+.die-tile.d10 .die-pick { color:#cdd6df; }
+.die-tile.fome .die-pick { color:var(--fome); }
+.die-tile.desp .die-pick { color:var(--desp); }
+.die-name { font-family:var(--font-mono); font-size:8.5px; letter-spacing:0.03em; color:var(--fg-dim); text-transform:uppercase; line-height:1.25; text-align:center; }
+.die-tile.fome .die-name { color:var(--fome); }
+.die-tile.desp .die-name { color:var(--desp); }
+.die-qty {
+  width:44px; text-align:center; background:rgba(0,0,0,0.28); border:1px solid var(--line);
+  border-radius:4px; color:var(--fg); font-family:var(--font-mono); font-size:13px; font-weight:600;
+  padding:3px 0; outline:none;
+}
+.die-qty:focus { border-color:var(--holo-soft); }
 .dice-actions { display:flex; gap:8px; margin-top:11px; }
 .btn {
   font-family:var(--font-mono); font-size:10px; letter-spacing:0.16em; text-transform:uppercase;
@@ -108,8 +118,23 @@ body {
 }
 .btn-roll { flex:1; background:rgba(78,211,232,0.10); border-color:var(--holo-soft); color:var(--holo); }
 .btn-roll:hover { background:rgba(78,211,232,0.18); border-color:var(--holo); box-shadow:0 0 14px rgba(78,211,232,0.3); }
-.btn-clear { background:transparent; border-color:var(--line); color:var(--fg-faint); }
-.btn-clear:hover { border-color:var(--fg-dim); color:var(--fg-dim); }
+.btn-clear { background:rgba(255,157,61,0.08); border-color:rgba(255,157,61,0.45); color:var(--desp); }
+.btn-clear:hover { background:rgba(255,157,61,0.16); border-color:var(--desp); box-shadow:0 0 12px rgba(255,157,61,0.3); }
+
+/* ── Toggle Dados 3D ── */
+.toggle3d { margin-left:auto; display:flex; align-items:center; gap:7px; cursor:pointer; user-select:none; }
+.toggle3d > span:first-child { font-family:var(--font-mono); font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:var(--fg-faint); transition:color .18s; }
+.toggle3d .sw { width:30px; height:16px; border-radius:9px; background:rgba(255,255,255,0.08); border:1px solid var(--line); position:relative; transition:all .18s; }
+.toggle3d .sw::after { content:''; position:absolute; top:1px; left:1px; width:12px; height:12px; border-radius:50%; background:var(--fg-faint); transition:all .18s; }
+.toggle3d.on .sw { background:rgba(78,211,232,0.25); border-color:var(--holo-soft); }
+.toggle3d.on .sw::after { left:15px; background:var(--holo); box-shadow:0 0 6px var(--holo); }
+.toggle3d.on > span:first-child { color:var(--holo); }
+
+/* ── Canvas dos dados 3D (dice-box) ── */
+/* visibility (não display) p/ o WebGL inicializar com tamanho correto */
+#dice3d { position:fixed; inset:0; z-index:8500; pointer-events:none; visibility:hidden; }
+#dice3d.show { visibility:visible; }
+#dice3d canvas { width:100% !important; height:100% !important; }
 
 /* ── Roll log ── */
 .rolllog { border-top:1px solid var(--line); padding:10px 13px; max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:9px; }
@@ -221,7 +246,10 @@ body {
   <!-- Rail: dados + chat -->
   <div class="rail">
     <div class="panel dice-panel">
-      <div class="panel-head"><span class="led"></span><span class="panel-title">Dados</span></div>
+      <div class="panel-head">
+        <span class="led"></span><span class="panel-title">Dados</span>
+        <div class="toggle3d" id="toggle3d" title="Dados 3D (experimental)"><span>3D</span><span class="sw"></span></div>
+      </div>
       <div class="dice-body">
         <div class="dice-grid" id="diceGrid"></div>
         <div class="dice-actions">
@@ -244,6 +272,9 @@ body {
     </div>
   </div>
 </div>
+
+<!-- Canvas dos dados 3D (preenchido pela dice-box quando o 3D está ligado) -->
+<div id="dice3d"></div>
 
 <!-- Nome -->
 <div class="ov" id="nameOv">
@@ -294,17 +325,27 @@ body {
     diceGrid.innerHTML = '';
     DICE.forEach(function(d) {
       var n = counts[d.id] || 0;
+      var sides = (d.kind === 'coin') ? 0 : (parseInt((d.label.match(/(\d+)/) || [])[1], 10) || 6);
       var tile = document.createElement('div');
       tile.className = 'die-tile ' + d.cls + (n>0?' has':'');
       tile.innerHTML =
-        '<div class="die-label">' + esc(d.label) + '</div>' +
-        '<div class="qty-row">' +
-          '<button class="qty-btn" data-act="dec" type="button">&minus;</button>' +
-          '<span class="qty-num">' + n + '</span>' +
-          '<button class="qty-btn" data-act="inc" type="button">+</button>' +
-        '</div>';
-      tile.querySelector('[data-act="inc"]').addEventListener('click', function(){ counts[d.id]=(counts[d.id]||0)+1; renderTray(); });
-      tile.querySelector('[data-act="dec"]').addEventListener('click', function(){ counts[d.id]=Math.max(0,(counts[d.id]||0)-1); renderTray(); });
+        '<div class="die-pick" title="Clique para adicionar">' + shapeSVG(sides) + '</div>' +
+        '<div class="die-name">' + esc(d.label) + '</div>' +
+        '<input class="die-qty" type="number" min="0" inputmode="numeric" value="' + n + '">';
+      var input = tile.querySelector('.die-qty');
+      // Clicar no dadinho = +1 (atualiza em tempo real, sem re-render)
+      tile.querySelector('.die-pick').addEventListener('click', function() {
+        var v = (counts[d.id] || 0) + 1;
+        counts[d.id] = v; input.value = v;
+        tile.classList.add('has');
+      });
+      // Digitar = define a quantidade direto
+      input.addEventListener('input', function() {
+        var v = parseInt(input.value, 10);
+        if (isNaN(v) || v < 0) v = 0;
+        counts[d.id] = v;
+        tile.classList.toggle('has', v > 0);
+      });
       diceGrid.appendChild(tile);
     });
   }
@@ -370,7 +411,81 @@ body {
     if (animating || !rollQueue.length) return;
     animating = true;
     var p = rollQueue.shift();
-    playRollAnim(p, function(){ animating = false; processRollQueue(); });
+    var done = function(){ animating = false; processRollQueue(); };
+    if (roll3D) playRoll3D(p, done);
+    else playRollAnim(p, done);
+  }
+
+  // ── Dados 3D (dice-box-threejs) — experimental, com fallback p/ CSS ──
+  // crypto decide o resultado; aqui a física só ENCENA cair nos valores.
+  var roll3D = localStorage.getItem('mesa3d') === '1';
+  var _diceBox = null, _diceBoxLoading = null;
+  var dice3dEl = document.getElementById('dice3d');
+  var toggle3dEl = document.getElementById('toggle3d');
+
+  function updateToggle3d() { toggle3dEl.classList.toggle('on', roll3D); }
+  toggle3dEl.addEventListener('click', function() {
+    roll3D = !roll3D;
+    localStorage.setItem('mesa3d', roll3D ? '1' : '0');
+    updateToggle3d();
+    if (roll3D) ensureDiceBox().catch(function(){ /* avisa só ao rolar */ });
+  });
+  updateToggle3d();
+
+  function ensureDiceBox() {
+    if (_diceBox) return Promise.resolve(_diceBox);
+    if (_diceBoxLoading) return _diceBoxLoading;
+    dice3dEl.classList.add('show');   // precisa ter tamanho antes de inicializar o WebGL
+    _diceBoxLoading = import('https://esm.sh/@3d-dice/dice-box-threejs')
+      .then(function(mod) {
+        var DiceBox = mod.default || mod.DiceBox || mod;
+        var box = new DiceBox('#dice3d', {
+          framerate: 1/60, sounds: false, gravity_multiplier: 500,
+          light_intensity: 0.9, baseScale: 90, strength: 1.4,
+          theme_surface: 'none', theme_colorset: 'white', theme_material: 'plastic'
+        });
+        var ready = (typeof box.initialize === 'function') ? box.initialize()
+                  : (typeof box.init === 'function') ? box.init() : null;
+        return Promise.resolve(ready).then(function(){ _diceBox = box; return box; });
+      })
+      .catch(function(err) { _diceBoxLoading = null; dice3dEl.classList.remove('show'); throw err; });
+    return _diceBoxLoading;
+  }
+
+  // Monta notação tipo "3d6@5,2,6+2d20@13,7" (moeda fica de fora do 3D)
+  function notationFor(p) {
+    var parts = [];
+    p.groups.forEach(function(g) {
+      if (g.kind === 'coin') return;
+      var sides = parseInt((g.label.match(/(\d+)/) || [])[1], 10) || 6;
+      parts.push(g.faces.length + 'd' + sides + '@' + g.faces.join(','));
+    });
+    return parts.join('+');
+  }
+
+  function playRoll3D(p, onDone) {
+    var notation = notationFor(p);
+    if (!notation) return playRollAnim(p, onDone);   // só moeda → CSS
+    var settled = false, timer = null;
+    function toCss() {
+      if (settled) return; settled = true;
+      clearTimeout(timer); dice3dEl.classList.remove('show');
+      playRollAnim(p, onDone);
+    }
+    function finish() {
+      if (settled) return; settled = true;
+      clearTimeout(timer);
+      renderRoll(p);
+      setTimeout(function(){ dice3dEl.classList.remove('show'); onDone(); }, 1400);
+    }
+    ensureDiceBox().then(function(box) {
+      dice3dEl.classList.add('show');
+      box.onRollComplete = function(){ finish(); };
+      var pr;
+      try { pr = box.roll(notation); } catch (e) { return toCss(); }
+      if (pr && typeof pr.then === 'function') pr.then(function(){ finish(); }, toCss);
+      timer = setTimeout(function(){ if (!settled) toCss(); }, 9000);   // trava de segurança
+    }).catch(toCss);
   }
 
   // Silhueta volumétrica de cada tipo de dado (viewBox 100x100):
