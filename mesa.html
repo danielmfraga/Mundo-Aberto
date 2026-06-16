@@ -131,11 +131,11 @@ body {
 .roll-sum { font-family:var(--font-mono); font-size:10px; color:var(--fg-dim); margin-left:6px; }
 .grp-sep { width:1px; align-self:stretch; background:var(--line); margin:0 2px; }
 
-/* ── Animação de rolagem (cubos 3D) ── */
+/* ── Animação de rolagem (silhuetas dos dados girando + freando) ── */
 .roll-anim-ov {
   position:fixed; inset:0; z-index:9000; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; gap:22px; pointer-events:none;
-  background:radial-gradient(ellipse at center, rgba(0,0,0,0.55), rgba(0,0,0,0.22) 55%, transparent);
+  align-items:center; justify-content:center; gap:24px; pointer-events:none;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,0.58), rgba(0,0,0,0.24) 55%, transparent);
   animation:ovfade .2s ease;
 }
 @keyframes ovfade { from { opacity:0; } to { opacity:1; } }
@@ -144,26 +144,23 @@ body {
   color:var(--holo); text-shadow:0 0 14px rgba(78,211,232,0.5);
 }
 .roll-anim-label b { color:#fff; }
-.roll-anim-dice { display:flex; flex-wrap:wrap; gap:16px; justify-content:center; max-width:80vw; perspective:620px; }
-.die3d { width:46px; height:46px; position:relative; transform-style:preserve-3d; animation:tumble .65s linear infinite; }
-.die3d:nth-child(2n) { animation-duration:.54s; }
-.die3d:nth-child(3n) { animation-duration:.73s; }
-.die3d .face {
-  position:absolute; width:46px; height:46px; display:flex; align-items:center; justify-content:center;
-  font-family:var(--font-mono); font-size:17px; font-weight:600; border-radius:7px;
-  border:1px solid var(--holo-soft); background:rgba(10,16,24,0.92); color:var(--holo);
-  box-shadow:0 0 12px rgba(78,211,232,0.35);
+.roll-anim-dice { display:flex; flex-wrap:wrap; gap:16px; justify-content:center; max-width:82vw; }
+.die-anim {
+  width:56px; height:56px; position:relative; color:var(--holo);
+  animation:spin2d 3s cubic-bezier(.12,.62,.2,1) forwards;
 }
-.die3d.d10 .face  { border-color:#52585f; color:#e8edf2; box-shadow:0 0 12px rgba(180,190,200,0.22); }
-.die3d.fome .face { border-color:var(--fome); color:#fff; background:rgba(58,12,10,0.92); box-shadow:0 0 12px rgba(224,71,58,0.5); }
-.die3d.desp .face { border-color:var(--desp); color:#ffce9a; background:rgba(48,30,6,0.92); box-shadow:0 0 12px rgba(255,157,61,0.45); }
-.die3d .f1 { transform:translateZ(23px); }
-.die3d .f2 { transform:rotateY(180deg) translateZ(23px); }
-.die3d .f3 { transform:rotateY(90deg) translateZ(23px); }
-.die3d .f4 { transform:rotateY(-90deg) translateZ(23px); }
-.die3d .f5 { transform:rotateX(90deg) translateZ(23px); }
-.die3d .f6 { transform:rotateX(-90deg) translateZ(23px); }
-@keyframes tumble { from { transform:rotateX(0) rotateY(0); } to { transform:rotateX(360deg) rotateY(396deg); } }
+.die-anim.d10  { color:#cdd6df; }
+.die-anim.fome { color:var(--fome); }
+.die-anim.desp { color:var(--desp); }
+.die-anim svg { position:absolute; inset:0; width:100%; height:100%; filter:drop-shadow(0 0 5px currentColor); }
+.die-anim .die-num {
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-mono); font-size:18px; font-weight:700; color:#eaf6fa; text-shadow:0 0 7px rgba(0,0,0,0.7);
+}
+.die-anim.landed { animation:none; transform:rotate(0deg); }
+.die-anim.landed svg { filter:drop-shadow(0 0 13px currentColor); }
+.die-anim.landed .die-num { color:#fff; font-size:20px; }
+@keyframes spin2d { from { transform:rotate(0deg); } to { transform:rotate(var(--spin,1080deg)); } }
 
 /* ── Chat ── */
 .chat-panel { flex:1 1 auto; min-height:240px; }
@@ -352,23 +349,50 @@ body {
     while (rollLog.children.length > 40) rollLog.removeChild(rollLog.lastChild);
   }
 
-  // ── Tensão: cubos 3D rolando ~2s antes do resultado ───────────────
+  // ── Tensão: dados girando e freando ~3s até travar no resultado ───
   var rollQueue = [], animating = false;
   function enqueueRoll(p) { rollQueue.push(p); processRollQueue(); }
   function processRollQueue() {
     if (animating || !rollQueue.length) return;
     animating = true;
     var p = rollQueue.shift();
-    playRollAnim(p, function(){ renderRoll(p); animating = false; processRollQueue(); });
+    playRollAnim(p, function(){ animating = false; processRollQueue(); });
   }
-  function playRollAnim(p, done) {
-    var cubes = [];
+
+  // Silhueta de cada tipo de dado (viewBox 100x100)
+  function shapeSVG(sides) {
+    if (sides === 0) // cara/coroa
+      return '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="2.5"/></svg>';
+    if (sides === 6)
+      return '<svg viewBox="0 0 100 100"><rect x="14" y="14" width="72" height="72" rx="9" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="2.5"/></svg>';
+    var pts, extra = '';
+    switch (sides) {
+      case 3:
+      case 4:  pts = '50,10 90,84 10,84'; break;                    // triângulo
+      case 8:  pts = '50,8 90,50 50,92 10,50';                      // losango
+               extra = '<line x1="10" y1="50" x2="90" y2="50" stroke="currentColor" stroke-width="1.4" opacity="0.5"/>'; break;
+      case 10:
+      case 100: pts = '50,5 80,40 50,95 20,40'; break;              // pipa (d10)
+      case 12: pts = '50,8 89,37 74,86 26,86 11,37'; break;         // pentágono
+      case 20: pts = '50,6 89,28 89,72 50,94 11,72 11,28';          // hexágono
+               extra = '<line x1="50" y1="6" x2="50" y2="94" stroke="currentColor" stroke-width="1.2" opacity="0.45"/>' +
+                       '<line x1="11" y1="28" x2="89" y2="72" stroke="currentColor" stroke-width="1.2" opacity="0.45"/>' +
+                       '<line x1="89" y1="28" x2="11" y2="72" stroke="currentColor" stroke-width="1.2" opacity="0.45"/>'; break;
+      default: pts = '50,8 89,37 74,86 26,86 11,37';
+    }
+    return '<svg viewBox="0 0 100 100"><polygon points="' + pts + '" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>' + extra + '</svg>';
+  }
+
+  function playRollAnim(p, onDone) {
+    var DURATION = 3000, SPINS = [720, 1080, 1440];
+    var dice = [];
     p.groups.forEach(function(g) {
       var sides = (g.kind === 'coin') ? 0 : (parseInt((g.label.match(/(\d+)/) || [])[1], 10) || 6);
-      g.faces.forEach(function(){ cubes.push({ cls:g.cls, kind:g.kind, sides:sides }); });
+      g.faces.forEach(function(f){ dice.push({ cls:g.cls, kind:g.kind, sides:sides, final:f }); });
     });
-    var shown = cubes.slice(0, 12);
-    var total = cubes.length;
+    var shown = dice.slice(0, 12);
+    var total = dice.length;
+
     var ov = document.createElement('div');
     ov.className = 'roll-anim-ov';
     ov.innerHTML = '<div class="roll-anim-label"><b>' + esc(p.autor||'?') + '</b> rolando ' + total + ' dado' + (total>1?'s':'') + '…</div>';
@@ -376,28 +400,40 @@ body {
     tray.className = 'roll-anim-dice';
     shown.forEach(function(c) {
       var d = document.createElement('div');
-      d.className = 'die3d ' + (c.cls || 'std');
-      var faces = '';
-      for (var i=1;i<=6;i++) faces += '<div class="face f'+i+'">?</div>';
-      d.innerHTML = faces;
+      d.className = 'die-anim ' + (c.cls || 'std');
+      d.style.setProperty('--spin', SPINS[Math.floor(Math.random()*SPINS.length)] + 'deg');
+      d.innerHTML = shapeSVG(c.sides) + '<div class="die-num">?</div>';
       tray.appendChild(d);
     });
     ov.appendChild(tray);
     document.body.appendChild(ov);
-    function rnd(c){ return c.kind==='coin' ? (Math.random()<0.5?'C':'K') : (1+Math.floor(Math.random()*(c.sides||6))); }
-    function flick() {
+
+    function rnd(c){ return c.kind==='coin' ? (Math.random()<0.5?'C':'K') : (1 + Math.floor(Math.random()*(c.sides||6))); }
+    function finalText(c){ return c.kind==='coin' ? (c.final==='Cara'?'C':'K') : c.final; }
+    function setNums(fn) {
       for (var i=0;i<tray.children.length;i++) {
-        var fs = tray.children[i].children, c = shown[i];
-        for (var j=0;j<fs.length;j++) fs[j].textContent = rnd(c);
+        var num = tray.children[i].querySelector('.die-num');
+        if (num) num.textContent = fn(shown[i]);
       }
     }
-    flick();
-    var iv = setInterval(flick, 70);
-    setTimeout(function() {
-      clearInterval(iv);
-      ov.style.animation = 'ovfade .25s ease reverse';
-      setTimeout(function(){ ov.remove(); done(); }, 220);
-    }, 1800);
+
+    var startT = Date.now();
+    function tick() {
+      var t = (Date.now() - startT) / DURATION;
+      if (t >= 1) { settle(); return; }
+      setNums(rnd);
+      setTimeout(tick, 45 + 430 * (t*t));   // troca de número desacelera: ~45ms → ~475ms
+    }
+    function settle() {
+      setNums(finalText);                                   // trava no valor real
+      for (var i=0;i<tray.children.length;i++) tray.children[i].classList.add('landed');
+      setTimeout(function() {
+        renderRoll(p);                                      // resultado por escrito
+        ov.style.animation = 'ovfade .3s ease reverse';
+        setTimeout(function(){ ov.remove(); onDone(); }, 300);
+      }, 600);
+    }
+    tick();
   }
 
   // ── Chat ──────────────────────────────────────────────────────────
