@@ -439,16 +439,14 @@ body {
     _diceBoxLoading = import('https://esm.sh/@3d-dice/dice-box-threejs')
       .then(function(mod) {
         var DiceBox = mod.default || mod.DiceBox || mod;
-        var box = new DiceBox('#dice3d', {
-          framerate: 1/60, sounds: false, gravity_multiplier: 500,
-          light_intensity: 0.9, baseScale: 90, strength: 1.4,
-          theme_surface: 'none', theme_colorset: 'white', theme_material: 'plastic'
-        });
+        // Config mínima comprovada nesta versão (0.0.12). Opções de tema em
+        // string (theme_surface:'none' etc.) quebram o construtor — evitar.
+        var box = new DiceBox('#dice3d', { sounds: false });
         var ready = (typeof box.initialize === 'function') ? box.initialize()
                   : (typeof box.init === 'function') ? box.init() : null;
         return Promise.resolve(ready).then(function(){ _diceBox = box; return box; });
       })
-      .catch(function(err) { _diceBoxLoading = null; dice3dEl.classList.remove('show'); throw err; });
+      .catch(function(err) { console.warn('[mesa] dice-box falhou ao carregar/iniciar:', err); _diceBoxLoading = null; dice3dEl.classList.remove('show'); throw err; });
     return _diceBoxLoading;
   }
 
@@ -469,6 +467,7 @@ body {
     var settled = false, timer = null;
     function toCss() {
       if (settled) return; settled = true;
+      console.warn('[mesa] 3D indisponível nesta rolagem — usando animação CSS.');
       clearTimeout(timer); dice3dEl.classList.remove('show');
       playRollAnim(p, onDone);
     }
