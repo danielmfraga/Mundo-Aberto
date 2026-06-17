@@ -69,6 +69,11 @@ body {
 }
 .panel-head .led { width:6px; height:6px; border-radius:50%; background:var(--holo); box-shadow:0 0 7px var(--holo); }
 .panel-title { font-family:var(--font-mono); font-size:10px; letter-spacing:0.28em; text-transform:uppercase; color:var(--fg-dim); }
+.panel-min { margin-left:6px; background:transparent; border:none; color:var(--fg-faint); cursor:pointer; font-size:16px; line-height:1; padding:0 4px; transition:color .15s; }
+.panel-min:hover { color:var(--holo); }
+.panel.collapsed > :not(.panel-head) { display:none !important; }
+.panel.collapsed { flex:0 0 auto !important; }
+.panel.collapsed .panel-head { border-bottom:none; }
 
 /* ── Video ── */
 .video-panel { overflow:hidden; }
@@ -82,7 +87,7 @@ body {
 /* ── Dice ── */
 .dice-panel { flex:0 0 auto; }
 .dice-body { padding:12px 13px; }
-.dice-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; }
+.dice-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:7px; }
 .die-tile {
   border:1px solid var(--line); border-radius:6px; padding:8px 5px 7px;
   background:rgba(78,211,232,0.03); transition:border-color .15s, background .15s;
@@ -249,6 +254,7 @@ body {
       <div class="panel-head">
         <span class="led"></span><span class="panel-title">Dados</span>
         <div class="toggle3d" id="toggle3d" title="Dados 3D (experimental)"><span>3D</span><span class="sw"></span></div>
+        <button class="panel-min" title="Minimizar" type="button">–</button>
       </div>
       <div class="dice-body">
         <div class="dice-grid" id="diceGrid"></div>
@@ -261,7 +267,7 @@ body {
     </div>
 
     <div class="panel chat-panel">
-      <div class="panel-head"><span class="led"></span><span class="panel-title">Chat</span></div>
+      <div class="panel-head"><span class="led"></span><span class="panel-title">Chat</span><button class="panel-min" title="Minimizar" type="button" style="margin-left:auto">–</button></div>
       <div class="chat-msgs" id="chatMsgs"></div>
       <div class="chat-input-row">
         <input type="file" id="imgInput" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
@@ -743,6 +749,16 @@ body {
   nameInput.addEventListener('keydown', function(e){ if (e.key==='Enter') setName(nameInput.value); });
   document.getElementById('whoName').addEventListener('click', function(){
     nameInput.value = nome; nameOv.classList.remove('hidden'); nameInput.focus();
+  });
+
+  // Minimizar painéis (Dados, Chat): clica o "–" pra recolher / "+" pra abrir
+  document.querySelectorAll('.panel-min').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var collapsed = btn.closest('.panel').classList.toggle('collapsed');
+      btn.textContent = collapsed ? '+' : '–';
+      btn.title = collapsed ? 'Expandir' : 'Minimizar';
+    });
   });
 
   renderTray();
