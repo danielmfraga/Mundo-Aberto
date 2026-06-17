@@ -56,7 +56,9 @@ body {
 .mesa-grid {
   display:grid; grid-template-columns:1fr 400px; gap:14px;
   padding:14px 18px 22px; height:calc(100vh - 56px);
+  transition:grid-template-columns .32s ease, gap .32s ease;
 }
+.mesa-grid.rail-collapsed { grid-template-columns:1fr 0; gap:0; }
 @media (max-width:920px) { .mesa-grid { grid-template-columns:1fr; height:auto; } }
 
 .panel {
@@ -69,11 +71,17 @@ body {
 }
 .panel-head .led { width:6px; height:6px; border-radius:50%; background:var(--holo); box-shadow:0 0 7px var(--holo); }
 .panel-title { font-family:var(--font-mono); font-size:10px; letter-spacing:0.28em; text-transform:uppercase; color:var(--fg-dim); }
-.panel-min { margin-left:6px; background:transparent; border:none; color:var(--fg-faint); cursor:pointer; font-size:16px; line-height:1; padding:0 4px; transition:color .15s; }
-.panel-min:hover { color:var(--holo); }
-.panel.collapsed > :not(.panel-head) { display:none !important; }
-.panel.collapsed { flex:0 0 auto !important; }
-.panel.collapsed .panel-head { border-bottom:none; }
+/* Aba lateral: recolhe o rail inteiro pro canto (amplia a câmera) */
+.rail { overflow:hidden; min-width:0; }
+.rail-toggle {
+  position:fixed; top:50%; right:0; transform:translateY(-50%); z-index:500;
+  width:22px; height:66px; background:rgba(11,19,32,0.92);
+  border:1px solid var(--line); border-right:none; border-radius:6px 0 0 6px;
+  color:var(--fg-dim); cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-size:15px; transition:color .15s, background .15s;
+}
+.rail-toggle:hover { color:var(--holo); background:#0b1320; }
+@media (max-width:920px) { .rail-toggle { display:none; } }
 
 /* ── Video ── */
 .video-panel { overflow:hidden; }
@@ -254,7 +262,6 @@ body {
       <div class="panel-head">
         <span class="led"></span><span class="panel-title">Dados</span>
         <div class="toggle3d" id="toggle3d" title="Dados 3D (experimental)"><span>3D</span><span class="sw"></span></div>
-        <button class="panel-min" title="Minimizar" type="button">–</button>
       </div>
       <div class="dice-body">
         <div class="dice-grid" id="diceGrid"></div>
@@ -267,7 +274,7 @@ body {
     </div>
 
     <div class="panel chat-panel">
-      <div class="panel-head"><span class="led"></span><span class="panel-title">Chat</span><button class="panel-min" title="Minimizar" type="button" style="margin-left:auto">–</button></div>
+      <div class="panel-head"><span class="led"></span><span class="panel-title">Chat</span></div>
       <div class="chat-msgs" id="chatMsgs"></div>
       <div class="chat-input-row">
         <input type="file" id="imgInput" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
@@ -278,6 +285,9 @@ body {
     </div>
   </div>
 </div>
+
+<!-- Aba lateral: esconde/mostra a coluna de painéis pra ampliar a câmera -->
+<button class="rail-toggle" id="railToggle" title="Esconder painéis (ampliar câmera)" type="button">&#8250;</button>
 
 <!-- Canvas dos dados 3D (preenchido pela dice-box quando o 3D está ligado) -->
 <div id="dice3d"></div>
@@ -751,14 +761,13 @@ body {
     nameInput.value = nome; nameOv.classList.remove('hidden'); nameInput.focus();
   });
 
-  // Minimizar painéis (Dados, Chat): clica o "–" pra recolher / "+" pra abrir
-  document.querySelectorAll('.panel-min').forEach(function(btn) {
-    btn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      var collapsed = btn.closest('.panel').classList.toggle('collapsed');
-      btn.textContent = collapsed ? '+' : '–';
-      btn.title = collapsed ? 'Expandir' : 'Minimizar';
-    });
+  // Aba lateral: recolhe a coluna de painéis pro canto (amplia a câmera).
+  var railToggle = document.getElementById('railToggle');
+  var mesaGrid = document.querySelector('.mesa-grid');
+  railToggle.addEventListener('click', function() {
+    var collapsed = mesaGrid.classList.toggle('rail-collapsed');
+    railToggle.innerHTML = collapsed ? '&#8249;' : '&#8250;';   // ‹ abrir  /  › esconder
+    railToggle.title = collapsed ? 'Mostrar painéis' : 'Esconder painéis (ampliar câmera)';
   });
 
   renderTray();
