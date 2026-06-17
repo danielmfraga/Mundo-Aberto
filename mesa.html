@@ -209,6 +209,14 @@ body {
 @keyframes spin2d { from { transform:rotate(0deg); } to { transform:rotate(var(--spin,1080deg)); } }
 @keyframes landpop { 0% { transform:rotate(0) scale(1); } 35% { transform:rotate(0) scale(1.16); } 100% { transform:rotate(0) scale(1); } }
 
+/* Moeda: dourada, vira de canto (flip) em vez de girar flat */
+.die-anim.coin { color:#f0c869; animation:coinflip 3s cubic-bezier(.12,.62,.2,1) forwards; }
+.die-anim.coin .die-num { font-size:13px; font-weight:700; }
+.die-anim.coin.landed { animation:coinland .42s ease-out forwards; }
+.die-anim.coin.landed .die-num { font-size:14px; }
+@keyframes coinflip { from { transform:rotateX(0); } to { transform:rotateX(var(--spin,1440deg)); } }
+@keyframes coinland { 0% { transform:rotateX(0) scale(1); } 35% { transform:rotateX(0) scale(1.16); } 100% { transform:rotateX(0) scale(1); } }
+
 /* ── Chat ── */
 .chat-panel { flex:1 1 auto; min-height:240px; }
 .chat-msgs { flex:1; overflow-y:auto; padding:12px 13px; display:flex; flex-direction:column; gap:10px; }
@@ -625,7 +633,7 @@ body {
     tray.className = 'roll-anim-dice';
     shown.forEach(function(c) {
       var d = document.createElement('div');
-      d.className = 'die-anim ' + (c.cls || 'std');
+      d.className = 'die-anim ' + (c.cls || 'std') + (c.kind === 'coin' ? ' coin' : '');
       d.style.setProperty('--spin', SPINS[Math.floor(Math.random()*SPINS.length)] + 'deg');
       d.innerHTML = shapeSVG(c.sides) + '<div class="die-num">?</div>';
       tray.appendChild(d);
@@ -633,8 +641,8 @@ body {
     ov.appendChild(tray);
     document.body.appendChild(ov);
 
-    function rnd(c){ return c.kind==='coin' ? (Math.random()<0.5?'C':'K') : (1 + Math.floor(Math.random()*(c.sides||6))); }
-    function finalText(c){ return c.kind==='coin' ? (c.final==='Cara'?'C':'K') : c.final; }
+    function rnd(c){ return c.kind==='coin' ? (Math.random()<0.5?'CA':'CO') : (1 + Math.floor(Math.random()*(c.sides||6))); }
+    function finalText(c){ return c.kind==='coin' ? (c.final==='Cara'?'CA':'CO') : c.final; }
     function setNums(fn) {
       for (var i=0;i<tray.children.length;i++) {
         var num = tray.children[i].querySelector('.die-num');
