@@ -217,6 +217,22 @@ body {
 @keyframes coinflip { from { transform:rotateX(0); } to { transform:rotateX(var(--spin,1440deg)); } }
 @keyframes coinland { 0% { transform:rotateX(0) scale(1); } 35% { transform:rotateX(0) scale(1.16); } 100% { transform:rotateX(0) scale(1); } }
 
+/* ── Quadro branco ── */
+.wb-btn { font-family:var(--font-mono); font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:var(--holo); background:rgba(78,211,232,0.08); border:1px solid var(--holo-soft); border-radius:4px; padding:5px 10px; cursor:pointer; transition:all .15s; white-space:nowrap; }
+.wb-btn:hover { background:rgba(78,211,232,0.16); box-shadow:0 0 12px rgba(78,211,232,0.3); }
+.wb-overlay { position:fixed; inset:0; z-index:9990; background:rgba(0,0,0,0.82); display:none; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:18px; }
+.wb-overlay.show { display:flex; }
+.wb-toolbar { display:flex; align-items:center; gap:9px; background:#0b1320; border:1px solid var(--line-strong); border-radius:8px; padding:9px 14px; }
+.wb-tool { width:26px; height:26px; cursor:pointer; padding:0; transition:transform .1s, border-color .15s, box-shadow .15s; }
+.wb-color { border-radius:50%; border:2px solid rgba(255,255,255,0.18); display:inline-block; }
+.wb-color.active { border-color:#fff; transform:scale(1.15); box-shadow:0 0 10px rgba(255,255,255,0.5); }
+.wb-icon { background:rgba(255,255,255,0.06); border:1px solid var(--line); color:var(--fg-dim); display:flex; align-items:center; justify-content:center; font-size:13px; border-radius:5px; }
+.wb-icon:hover { color:var(--fg); border-color:var(--holo-soft); }
+.wb-icon.active { color:var(--holo); border-color:var(--holo); box-shadow:0 0 8px rgba(78,211,232,0.3); }
+.wb-close-btn { margin-left:8px; color:var(--danger); border-color:rgba(255,85,102,0.4); }
+.wb-close-btn:hover { color:#fff; background:var(--danger); border-color:var(--danger); }
+#wbCanvas { background:#fff; border-radius:8px; max-width:92vw; max-height:78vh; box-shadow:0 0 40px rgba(0,0,0,0.6); cursor:crosshair; touch-action:none; }
+
 /* ── Personagens ── */
 .chars-panel { flex:0 0 auto; }
 .chars-body { display:flex; flex-wrap:wrap; gap:9px; padding:10px 12px; }
@@ -295,6 +311,7 @@ body {
   <a class="back-link" href="index.html"><span style="font-size:14px;line-height:1;">&#8592;</span>Voltar</a>
   <div class="brand">Mesa · Mundo Aberto</div>
   <div class="who">
+    <button class="wb-btn" id="wbBtn" title="Abrir quadro branco">&#9998; Quadro</button>
     <span class="conn-dot" id="connDot"></span>
     <span id="whoName" class="who-name" title="Trocar nome">—</span>
   </div>
@@ -347,6 +364,20 @@ body {
 
 <!-- Canvas dos dados 3D (preenchido pela dice-box quando o 3D está ligado) -->
 <div id="dice3d"></div>
+
+<!-- Quadro branco compartilhado -->
+<div class="wb-overlay" id="wbOverlay">
+  <div class="wb-toolbar">
+    <span class="wb-tool wb-color active" data-color="#111111" style="background:#111" title="Preto"></span>
+    <span class="wb-tool wb-color" data-color="#e0473a" style="background:#e0473a" title="Vermelho"></span>
+    <span class="wb-tool wb-color" data-color="#2f7bff" style="background:#2f7bff" title="Azul"></span>
+    <span class="wb-tool wb-color" data-color="#22b455" style="background:#22b455" title="Verde"></span>
+    <button class="wb-tool wb-icon" id="wbEraser" type="button" title="Borracha">&#9003;</button>
+    <button class="wb-tool wb-icon" id="wbClear" type="button" title="Limpar tudo">&#128465;</button>
+    <button class="wb-tool wb-icon wb-close-btn" id="wbClose" type="button" title="Fechar">&#10005;</button>
+  </div>
+  <canvas id="wbCanvas" width="1280" height="720"></canvas>
+</div>
 
 <!-- Seleção de personagem -->
 <div class="char-picker" id="charPicker">
@@ -823,6 +854,57 @@ body {
   }
   charPicker.addEventListener('click', function(e){ if (e.target === charPicker) charPicker.classList.remove('show'); });
 
+  // ── Quadro branco (compartilhado) ─────────────────────────────────
+  var wbOverlay = document.getElementById('wbOverlay');
+  var wbCanvas = document.getElementById('wbCanvas');
+  var wbCtx = wbCanvas.getContext('2d');
+  var WB_W = 1280, WB_H = 720;
+  var wbColor = '#111111', wbErase = false, wbDrawing = false, wbLast = null;
+
+  function wbClearLocal() { wbCtx.fillStyle = '#ffffff'; wbCtx.fillRect(0, 0, WB_W, WB_H); }
+  wbClearLocal();   // fundo branco inicial
+
+  function wbDrawSeg(s) {
+    if (!s) return;
+    wbCtx.strokeStyle = s.erase ? '#ffffff' : (s.color || '#111');
+    wbCtx.lineWidth = s.erase ? 28 : 3;
+    wbCtx.lineCap = 'round'; wbCtx.lineJoin = 'round';
+    wbCtx.beginPath();
+    wbCtx.moveTo(s.x0 * WB_W, s.y0 * WB_H);
+    wbCtx.lineTo(s.x1 * WB_W, s.y1 * WB_H);
+    wbCtx.stroke();
+  }
+  function wbPoint(e) {
+    var r = wbCanvas.getBoundingClientRect();
+    return { x:(e.clientX - r.left) / r.width, y:(e.clientY - r.top) / r.height };
+  }
+  wbCanvas.addEventListener('pointerdown', function(e){ wbDrawing = true; wbLast = wbPoint(e); try { wbCanvas.setPointerCapture(e.pointerId); } catch (_) {} });
+  wbCanvas.addEventListener('pointermove', function(e){
+    if (!wbDrawing) return;
+    var p = wbPoint(e);
+    var seg = { x0:wbLast.x, y0:wbLast.y, x1:p.x, y1:p.y, color:wbColor, erase:wbErase };
+    wbDrawSeg(seg); send('wb-draw', seg); wbLast = p;
+  });
+  function wbEnd(){ wbDrawing = false; }
+  wbCanvas.addEventListener('pointerup', wbEnd);
+  wbCanvas.addEventListener('pointercancel', wbEnd);
+
+  document.querySelectorAll('.wb-color').forEach(function(sw){
+    sw.addEventListener('click', function(){
+      wbColor = sw.dataset.color; wbErase = false;
+      document.querySelectorAll('.wb-tool').forEach(function(t){ t.classList.remove('active'); });
+      sw.classList.add('active');
+    });
+  });
+  document.getElementById('wbEraser').addEventListener('click', function(){
+    wbErase = true;
+    document.querySelectorAll('.wb-tool').forEach(function(t){ t.classList.remove('active'); });
+    this.classList.add('active');
+  });
+  document.getElementById('wbClear').addEventListener('click', function(){ wbClearLocal(); send('wb-clear', {}); });
+  document.getElementById('wbClose').addEventListener('click', function(){ wbOverlay.classList.remove('show'); send('wb-close', {}); });
+  document.getElementById('wbBtn').addEventListener('click', function(){ wbOverlay.classList.add('show'); send('wb-open', {}); });
+
   // ── Realtime (Supabase broadcast) ─────────────────────────────────
   var channel = null;
   function send(event, payload) {
@@ -834,6 +916,10 @@ body {
     else if (event === 'chat') renderChat(payload);
     else if (event === 'chars') applyChars(payload);
     else if (event === 'chars-req') { if (mesaChars.length) send('chars', mesaChars); }
+    else if (event === 'wb-draw') wbDrawSeg(payload);
+    else if (event === 'wb-clear') wbClearLocal();
+    else if (event === 'wb-open') wbOverlay.classList.add('show');
+    else if (event === 'wb-close') wbOverlay.classList.remove('show');
   }
   function initRealtime() {
     if (!window.supabase || !window.supabase.createClient) return;
@@ -843,6 +929,9 @@ body {
     channel.on('broadcast', { event:'chat' }, function(m){ dispatch('chat', m.payload); });
     channel.on('broadcast', { event:'chars' }, function(m){ dispatch('chars', m.payload); });
     channel.on('broadcast', { event:'chars-req' }, function(m){ dispatch('chars-req', m.payload); });
+    ['wb-draw','wb-clear','wb-open','wb-close'].forEach(function(ev){
+      channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
+    });
     channel.subscribe(function(status){
       document.getElementById('connDot').classList.toggle('on', status === 'SUBSCRIBED');
       if (status === 'SUBSCRIBED') send('chars-req', {});   // pede a lista atual a quem já está na mesa
