@@ -103,16 +103,17 @@ body {
 .dice-body { padding:12px 13px; }
 .dice-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:7px; }
 .die-tile {
-  border:1px solid var(--line); border-radius:6px; padding:8px 5px 7px;
+  border:1px solid var(--line); border-radius:6px; padding:6px 7px 5px;
   background:rgba(78,211,232,0.03); transition:border-color .15s, background .15s;
-  display:flex; flex-direction:column; align-items:center; gap:5px;
+  display:flex; flex-direction:column; align-items:center; gap:2px;
 }
+.die-row { display:flex; align-items:center; justify-content:center; gap:10px; }
 .die-tile.has { border-color:var(--holo-soft); background:rgba(78,211,232,0.07); }
 .die-tile.fome.has { border-color:rgba(224,71,58,0.6); background:rgba(224,71,58,0.08); }
 .die-tile.desp.has { border-color:rgba(255,157,61,0.6); background:rgba(255,157,61,0.08); }
 .die-tile.d10.has { border-color:rgba(207,233,240,0.5); background:rgba(207,233,240,0.06); }
 .die-pick {
-  width:38px; height:38px; cursor:pointer; color:var(--holo);
+  width:32px; height:32px; flex:0 0 auto; cursor:pointer; color:var(--holo);
   transition:transform .1s; user-select:none;
 }
 .die-pick:hover { transform:scale(1.12); }
@@ -125,7 +126,7 @@ body {
 .die-tile.fome .die-name { color:var(--fome); }
 .die-tile.desp .die-name { color:var(--desp); }
 .die-qty {
-  width:44px; text-align:center; background:rgba(0,0,0,0.28); border:1px solid var(--line);
+  width:40px; flex:0 0 auto; text-align:center; background:rgba(0,0,0,0.28); border:1px solid var(--line);
   border-radius:4px; color:var(--fg); font-family:var(--font-mono); font-size:13px; font-weight:600;
   padding:3px 0; outline:none;
 }
@@ -352,9 +353,11 @@ body {
       var tile = document.createElement('div');
       tile.className = 'die-tile ' + d.cls + (n>0?' has':'');
       tile.innerHTML =
-        '<div class="die-pick" title="Clique para adicionar">' + shapeSVG(sides) + '</div>' +
-        '<div class="die-name">' + esc(d.label) + '</div>' +
-        '<input class="die-qty" type="number" min="0" inputmode="numeric" value="' + n + '">';
+        '<div class="die-row">' +
+          '<div class="die-pick" title="Clique para adicionar">' + shapeSVG(sides) + '</div>' +
+          '<input class="die-qty" type="number" min="0" inputmode="numeric" value="' + n + '">' +
+        '</div>' +
+        '<div class="die-name">' + esc(d.label) + '</div>';
       var input = tile.querySelector('.die-qty');
       // Clicar no dadinho = +1 (atualiza em tempo real, sem re-render)
       tile.querySelector('.die-pick').addEventListener('click', function() {
