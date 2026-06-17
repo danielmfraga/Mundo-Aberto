@@ -72,7 +72,9 @@ body {
 .panel-head .led { width:6px; height:6px; border-radius:50%; background:var(--holo); box-shadow:0 0 7px var(--holo); }
 .panel-title { font-family:var(--font-mono); font-size:10px; letter-spacing:0.28em; text-transform:uppercase; color:var(--fg-dim); }
 /* Aba lateral: recolhe o rail inteiro pro canto (amplia a câmera) */
-.rail { overflow:hidden; min-width:0; }
+/* overflow-x:hidden corta na horizontal (pro colapso); overflow-y:auto deixa
+   rolar até o chat quando a coluna é mais alta que a tela. */
+.rail { overflow-x:hidden; overflow-y:auto; min-width:0; }
 .rail-toggle {
   position:fixed; top:50%; right:414px; transform:translateY(-50%); z-index:500;  /* na divisa câmera/painéis */
   width:24px; height:72px; background:rgba(11,19,32,0.92);
