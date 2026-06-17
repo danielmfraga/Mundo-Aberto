@@ -74,13 +74,17 @@ body {
 /* Aba lateral: recolhe o rail inteiro pro canto (amplia a câmera) */
 .rail { overflow:hidden; min-width:0; }
 .rail-toggle {
-  position:fixed; top:50%; right:0; transform:translateY(-50%); z-index:500;
-  width:22px; height:66px; background:rgba(11,19,32,0.92);
-  border:1px solid var(--line); border-right:none; border-radius:6px 0 0 6px;
-  color:var(--fg-dim); cursor:pointer; display:flex; align-items:center; justify-content:center;
-  font-size:15px; transition:color .15s, background .15s;
+  position:fixed; top:50%; right:414px; transform:translateY(-50%); z-index:500;  /* na divisa câmera/painéis */
+  width:24px; height:72px; background:rgba(11,19,32,0.92);
+  border:1px solid rgba(255,157,61,0.65); border-radius:6px 0 0 6px;
+  color:#ff9d3d; text-shadow:0 0 8px rgba(255,157,61,0.85);
+  box-shadow:0 0 12px rgba(255,157,61,0.3);
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-size:18px; font-weight:700;
+  transition:right .32s ease, background .15s, box-shadow .15s;
 }
-.rail-toggle:hover { color:var(--holo); background:#0b1320; }
+.rail-toggle.at-edge { right:0; }   /* recolhido: desliza pro canto direito */
+.rail-toggle:hover { background:#0b1320; box-shadow:0 0 20px rgba(255,157,61,0.65); }
 @media (max-width:920px) { .rail-toggle { display:none; } }
 
 /* ── Video ── */
@@ -766,6 +770,7 @@ body {
   var mesaGrid = document.querySelector('.mesa-grid');
   railToggle.addEventListener('click', function() {
     var collapsed = mesaGrid.classList.toggle('rail-collapsed');
+    railToggle.classList.toggle('at-edge', collapsed);          // desliza pro canto quando recolhe
     railToggle.innerHTML = collapsed ? '&#8249;' : '&#8250;';   // ‹ abrir  /  › esconder
     railToggle.title = collapsed ? 'Mostrar painéis' : 'Esconder painéis (ampliar câmera)';
   });
