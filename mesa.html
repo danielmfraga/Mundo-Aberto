@@ -217,6 +217,42 @@ body {
 @keyframes coinflip { from { transform:rotateX(0); } to { transform:rotateX(var(--spin,1440deg)); } }
 @keyframes coinland { 0% { transform:rotateX(0) scale(1); } 35% { transform:rotateX(0) scale(1.16); } 100% { transform:rotateX(0) scale(1); } }
 
+/* ── Personagens ── */
+.chars-panel { flex:0 0 auto; }
+.chars-body { display:flex; flex-wrap:wrap; gap:9px; padding:10px 12px; }
+.char-chip { position:relative; width:48px; text-align:center; }
+.char-chip .av {
+  width:42px; height:42px; border-radius:50%; border:1px solid var(--holo-soft);
+  object-fit:cover; background:rgba(78,211,232,0.06); display:block; margin:0 auto;
+  cursor:pointer; transition:box-shadow .15s, border-color .15s;
+}
+.char-chip:hover .av { box-shadow:0 0 11px rgba(78,211,232,0.45); border-color:var(--holo); }
+.char-chip .av.placeholder { display:flex; align-items:center; justify-content:center; color:var(--holo); font-size:18px; }
+.char-chip .nm { font-family:var(--font-mono); font-size:8px; letter-spacing:0.02em; color:var(--fg-dim); margin-top:3px; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+.char-x {
+  position:absolute; top:-3px; right:0; width:16px; height:16px; border-radius:50%;
+  background:rgba(4,8,16,0.92); border:1px solid var(--danger); color:var(--danger);
+  font-size:10px; line-height:1; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; opacity:0; transition:opacity .15s;
+}
+.char-chip:hover .char-x { opacity:1; }
+.char-add {
+  width:42px; height:42px; border-radius:50%; border:1px dashed var(--holo-soft);
+  color:var(--holo); display:flex; align-items:center; justify-content:center;
+  font-size:22px; cursor:pointer; transition:all .15s; margin:0 auto;
+}
+.char-add:hover { background:rgba(78,211,232,0.08); box-shadow:0 0 11px rgba(78,211,232,0.35); }
+/* Modal de seleção */
+.char-picker { position:fixed; inset:0; background:rgba(0,0,0,.78); z-index:9998; display:none; align-items:center; justify-content:center; }
+.char-picker.show { display:flex; }
+.char-picker-box { background:#040810; border:1px solid var(--holo-soft); border-radius:6px; padding:22px 24px; max-width:360px; width:90%; max-height:70vh; overflow-y:auto; box-shadow:0 0 40px rgba(78,211,232,0.08); }
+.char-picker-box h2 { font-family:var(--font-mono); font-size:11px; letter-spacing:0.3em; text-transform:uppercase; color:var(--holo); margin-bottom:16px; text-align:center; }
+.char-picker-list { display:flex; flex-direction:column; gap:6px; }
+.char-pick-item { display:flex; align-items:center; gap:11px; padding:7px 10px; border:1px solid var(--line); border-radius:4px; cursor:pointer; transition:all .15s; }
+.char-pick-item:hover { border-color:var(--holo-soft); background:rgba(78,211,232,0.06); }
+.char-pick-item img, .char-pick-item .ph { width:30px; height:30px; border-radius:50%; object-fit:cover; flex:0 0 auto; background:rgba(78,211,232,0.08); border:1px solid var(--line); }
+.char-pick-item .nm { font-family:var(--font-display); font-size:13px; color:var(--fg); }
+
 /* ── Chat ── */
 .chat-panel { flex:1 1 auto; min-height:240px; }
 .chat-msgs { flex:1; overflow-y:auto; padding:12px 13px; display:flex; flex-direction:column; gap:10px; }
@@ -271,8 +307,13 @@ body {
     <div id="jitsi"></div>
   </div>
 
-  <!-- Rail: dados + chat -->
+  <!-- Rail: personagens + dados + chat -->
   <div class="rail">
+    <div class="panel chars-panel">
+      <div class="panel-head"><span class="led"></span><span class="panel-title">Personagens</span></div>
+      <div class="chars-body" id="charsBody"></div>
+    </div>
+
     <div class="panel dice-panel">
       <div class="panel-head">
         <span class="led"></span><span class="panel-title">Dados</span>
@@ -306,6 +347,14 @@ body {
 
 <!-- Canvas dos dados 3D (preenchido pela dice-box quando o 3D está ligado) -->
 <div id="dice3d"></div>
+
+<!-- Seleção de personagem -->
+<div class="char-picker" id="charPicker">
+  <div class="char-picker-box">
+    <h2>Escolher personagem</h2>
+    <div class="char-picker-list"></div>
+  </div>
+</div>
 
 <!-- Nome -->
 <div class="ov" id="nameOv">
@@ -713,6 +762,67 @@ body {
     }).catch(function(err){ alert('Falha ao enviar imagem: '+err.message); });
   });
 
+  // ── Personagens da mesa (lista compartilhada) ─────────────────────
+  var charsBody = document.getElementById('charsBody');
+  var charPicker = document.getElementById('charPicker');
+  var mesaChars = [];
+
+  function sbGet(path) {
+    return fetch(SB_URL + path, { headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY } })
+      .then(function(r){ return r.json().catch(function(){ return []; }); });
+  }
+  function openSheet(charId) { window.open('ficha.html?id=' + encodeURIComponent(charId), '_blank'); }
+
+  function renderChars() {
+    charsBody.innerHTML = '';
+    mesaChars.forEach(function(c) {
+      var chip = document.createElement('div');
+      chip.className = 'char-chip';
+      var av = c.img_url ? '<img class="av" src="' + esc(c.img_url) + '" alt="">' : '<div class="av placeholder">⬡</div>';
+      chip.innerHTML = av + '<div class="nm" title="' + esc(c.name||'') + '">' + esc(c.name||'?') + '</div><div class="char-x" title="Remover">✕</div>';
+      chip.querySelector('.av').addEventListener('click', function(){ openSheet(c.char_id); });
+      chip.querySelector('.nm').addEventListener('click', function(){ openSheet(c.char_id); });
+      chip.querySelector('.char-x').addEventListener('click', function(e) {
+        e.stopPropagation();
+        mesaChars = mesaChars.filter(function(x){ return x.char_id !== c.char_id; });
+        send('chars', mesaChars); renderChars();
+      });
+      charsBody.appendChild(chip);
+    });
+    var add = document.createElement('div');
+    add.className = 'char-chip';
+    add.innerHTML = '<div class="char-add" title="Adicionar personagem">+</div>';
+    add.querySelector('.char-add').addEventListener('click', openCharPicker);
+    charsBody.appendChild(add);
+  }
+  function applyChars(list) { if (Array.isArray(list)) { mesaChars = list; renderChars(); } }
+
+  function openCharPicker() {
+    charPicker.classList.add('show');
+    var list = charPicker.querySelector('.char-picker-list');
+    list.innerHTML = '<div style="text-align:center;color:var(--fg-faint);font-family:var(--font-mono);font-size:11px;padding:14px;">Carregando…</div>';
+    sbGet('/rest/v1/personagens?select=char_id,name,img_url&deleted_at=is.null&order=name.asc').then(function(rows) {
+      if (!Array.isArray(rows)) rows = [];
+      var chosen = {}; mesaChars.forEach(function(c){ chosen[c.char_id] = 1; });
+      rows = rows.filter(function(r){ return r.char_id && r.char_id.indexOf('npc_') !== 0 && !chosen[r.char_id]; });
+      if (!rows.length) { list.innerHTML = '<div style="text-align:center;color:var(--fg-faint);font-family:var(--font-mono);font-size:11px;padding:14px;">Nenhum personagem disponível.</div>'; return; }
+      list.innerHTML = '';
+      rows.forEach(function(r) {
+        var it = document.createElement('div');
+        it.className = 'char-pick-item';
+        var av = r.img_url ? '<img src="' + esc(r.img_url) + '" alt="">' : '<div class="ph"></div>';
+        it.innerHTML = av + '<div class="nm">' + esc(r.name||'Sem nome') + '</div>';
+        it.addEventListener('click', function() {
+          mesaChars = mesaChars.concat([{ char_id:r.char_id, name:r.name, img_url:r.img_url }]);
+          send('chars', mesaChars); renderChars();
+          charPicker.classList.remove('show');
+        });
+        list.appendChild(it);
+      });
+    }).catch(function(){ list.innerHTML = '<div style="text-align:center;color:var(--danger);font-size:11px;padding:14px;">Erro ao carregar.</div>'; });
+  }
+  charPicker.addEventListener('click', function(e){ if (e.target === charPicker) charPicker.classList.remove('show'); });
+
   // ── Realtime (Supabase broadcast) ─────────────────────────────────
   var channel = null;
   function send(event, payload) {
@@ -722,6 +832,8 @@ body {
   function dispatch(event, payload) {
     if (event === 'roll') enqueueRoll(payload);
     else if (event === 'chat') renderChat(payload);
+    else if (event === 'chars') applyChars(payload);
+    else if (event === 'chars-req') { if (mesaChars.length) send('chars', mesaChars); }
   }
   function initRealtime() {
     if (!window.supabase || !window.supabase.createClient) return;
@@ -729,8 +841,11 @@ body {
     channel = client.channel('mesa:' + SALA, { config:{ broadcast:{ self:true } } });
     channel.on('broadcast', { event:'roll' }, function(m){ dispatch('roll', m.payload); });
     channel.on('broadcast', { event:'chat' }, function(m){ dispatch('chat', m.payload); });
+    channel.on('broadcast', { event:'chars' }, function(m){ dispatch('chars', m.payload); });
+    channel.on('broadcast', { event:'chars-req' }, function(m){ dispatch('chars-req', m.payload); });
     channel.subscribe(function(status){
       document.getElementById('connDot').classList.toggle('on', status === 'SUBSCRIBED');
+      if (status === 'SUBSCRIBED') send('chars-req', {});   // pede a lista atual a quem já está na mesa
     });
   }
 
@@ -789,6 +904,7 @@ body {
   });
 
   renderTray();
+  renderChars();
   if (nome) { document.getElementById('whoName').textContent = nome; nameOv.classList.add('hidden'); initRealtime(); initJitsi(); }
   else { nameInput.focus(); }
 })();
