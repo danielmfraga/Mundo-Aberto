@@ -42,7 +42,7 @@ export default function handler(req, res) {
       features: {
         livestreaming: 'false',
         recording: 'false',
-        transcription: 'false',
+        transcription: 'true',
         'outbound-call': 'false'
       }
     }
