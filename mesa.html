@@ -282,7 +282,16 @@ body {
 .msg-head .who-b { color:var(--accent); }
 .msg-text { color:var(--fg); word-break:break-word; }
 .msg-text a { color:var(--holo); }
-.msg-img { max-width:100%; max-height:240px; border-radius:5px; border:1px solid var(--line); margin-top:3px; display:block; }
+.msg-img { max-width:100%; max-height:240px; border-radius:5px; border:1px solid var(--line); margin-top:3px; display:block; cursor:zoom-in; }
+
+/* Lightbox: duplo clique numa imagem do chat abre pra dar zoom */
+.img-lightbox { position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:10000; display:none; align-items:center; justify-content:center; overflow:hidden; }
+.img-lightbox.show { display:flex; }
+.img-lightbox img { max-width:92vw; max-height:88vh; transform-origin:center center; cursor:grab; user-select:none; will-change:transform; }
+.img-lightbox img.grabbing { cursor:grabbing; }
+.img-lb-close { position:fixed; top:16px; right:20px; width:36px; height:36px; border-radius:50%; background:rgba(0,0,0,0.6); border:1px solid var(--line-strong); color:var(--fg); font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:10001; transition:all .15s; }
+.img-lb-close:hover { color:#fff; border-color:var(--holo); box-shadow:0 0 12px rgba(78,211,232,0.3); }
+.img-lb-hint { position:fixed; bottom:14px; left:50%; transform:translateX(-50%); font-family:var(--font-mono); font-size:9px; letter-spacing:0.08em; color:var(--fg-faint); z-index:10001; pointer-events:none; }
 .chat-input-row { display:flex; gap:7px; padding:10px 11px; border-top:1px solid var(--line); flex:0 0 auto; align-items:center; }
 .chat-input {
   flex:1; background:rgba(78,211,232,0.04); border:1px solid var(--line); border-radius:4px;
@@ -370,6 +379,13 @@ body {
 
 <!-- Canvas dos dados 3D (preenchido pela dice-box quando o 3D está ligado) -->
 <div id="dice3d"></div>
+
+<!-- Lightbox de imagem do chat (zoom) -->
+<div class="img-lightbox" id="imgLightbox">
+  <button class="img-lb-close" id="imgLbClose" type="button" title="Fechar">&#10005;</button>
+  <img id="imgLbImg" src="" alt="">
+  <div class="img-lb-hint">role pra dar zoom · arraste pra mover · duplo clique reseta · esc fecha</div>
+</div>
 
 <!-- Quadro branco compartilhado -->
 <div class="wb-overlay" id="wbOverlay">
@@ -769,6 +785,40 @@ body {
     chatMsgs.appendChild(el);
     chatMsgs.scrollTop = chatMsgs.scrollHeight;
   }
+
+  // ── Lightbox: duplo clique numa imagem do chat → abre com zoom ─────
+  var imgLightbox = document.getElementById('imgLightbox');
+  var imgLbImg = document.getElementById('imgLbImg');
+  var lbScale = 1, lbX = 0, lbY = 0, lbDragging = false, lbStart = null;
+  function lbApply() { imgLbImg.style.transform = 'translate(' + lbX + 'px,' + lbY + 'px) scale(' + lbScale + ')'; }
+  function lbReset() { lbScale = 1; lbX = 0; lbY = 0; lbApply(); }
+  function openLightbox(src) { imgLbImg.src = src; lbReset(); imgLightbox.classList.add('show'); }
+  function closeLightbox() { imgLightbox.classList.remove('show'); imgLbImg.src = ''; }
+
+  chatMsgs.addEventListener('dblclick', function(e) {
+    var img = e.target.closest('.msg-img');
+    if (img && img.src) { e.preventDefault(); openLightbox(img.src); }
+  });
+  document.getElementById('imgLbClose').addEventListener('click', closeLightbox);
+  imgLightbox.addEventListener('click', function(e){ if (e.target === imgLightbox) closeLightbox(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && imgLightbox.classList.contains('show')) closeLightbox(); });
+  imgLbImg.addEventListener('wheel', function(e){
+    e.preventDefault();
+    lbScale = Math.min(6, Math.max(1, lbScale * (e.deltaY < 0 ? 1.15 : 1/1.15)));
+    if (lbScale === 1) { lbX = 0; lbY = 0; }
+    lbApply();
+  }, { passive:false });
+  imgLbImg.addEventListener('pointerdown', function(e){
+    if (lbScale <= 1) return;
+    lbDragging = true; lbStart = { x:e.clientX - lbX, y:e.clientY - lbY };
+    imgLbImg.classList.add('grabbing'); try { imgLbImg.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+  imgLbImg.addEventListener('pointermove', function(e){ if (!lbDragging) return; lbX = e.clientX - lbStart.x; lbY = e.clientY - lbStart.y; lbApply(); });
+  function lbEnd(){ lbDragging = false; imgLbImg.classList.remove('grabbing'); }
+  imgLbImg.addEventListener('pointerup', lbEnd);
+  imgLbImg.addEventListener('pointercancel', lbEnd);
+  imgLbImg.addEventListener('dblclick', lbReset);
+
   function sendChat() {
     var t = chatInput.value.trim();
     if (!t) return;
