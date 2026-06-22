@@ -42,7 +42,7 @@ export default function handler(req, res) {
       features: {
         livestreaming: 'false',
         recording: 'false',
-        transcription: 'true',
+        transcription: process.env.JAAS_TRANSCRIPTION === '1' ? 'true' : 'false',
         'outbound-call': 'false'
       }
     }
