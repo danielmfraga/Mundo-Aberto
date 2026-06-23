@@ -99,6 +99,7 @@ body {
 /* ── Right rail ── */
 .rail { display:flex; flex-direction:column; gap:14px; min-height:0; }
 @media (max-width:920px) { .rail { height:auto; } }
+.rail > .panel { border-color:rgba(78,211,232,0.22); }
 
 /* ── Dice ── */
 .dice-panel { flex:0 0 auto; }
@@ -343,17 +344,6 @@ body {
 .trama-picker.show { display:flex; }
 .trama-picker-box { background:#040810; border:1px solid var(--holo-soft); border-radius:6px; padding:22px 24px; max-width:380px; width:90%; max-height:72vh; overflow-y:auto; box-shadow:0 0 40px rgba(78,211,232,0.08); }
 .trama-picker-box h2 { font-family:var(--font-mono); font-size:11px; letter-spacing:0.3em; text-transform:uppercase; color:var(--holo); margin-bottom:16px; text-align:center; }
-.trama-new-btn { width:100%; display:flex; align-items:center; justify-content:center; gap:7px; padding:9px 12px; border:1px dashed rgba(78,211,232,0.4); border-radius:4px; color:var(--holo); font-family:var(--font-mono); font-size:10px; letter-spacing:0.14em; text-transform:uppercase; cursor:pointer; background:transparent; transition:all .15s; margin-bottom:10px; }
-.trama-new-btn:hover { background:rgba(78,211,232,0.06); border-color:var(--holo); }
-.trama-new-form { display:none; border:1px solid var(--line); border-radius:4px; padding:12px; margin-bottom:12px; }
-.trama-new-form.show { display:block; }
-.trama-new-form input { width:100%; background:rgba(78,211,232,0.04); border:1px solid var(--line); border-radius:3px; color:var(--fg); font-family:var(--font-display); font-size:13px; padding:8px 11px; outline:none; margin-bottom:7px; }
-.trama-new-form input:focus { border-color:var(--holo-soft); }
-.trama-new-actions { display:flex; gap:8px; margin-top:3px; }
-.trama-new-create { flex:1; background:rgba(78,211,232,0.10); border:1px solid var(--holo-soft); color:var(--holo); font-family:var(--font-mono); font-size:10px; letter-spacing:0.18em; text-transform:uppercase; padding:8px; border-radius:3px; cursor:pointer; transition:all .16s; }
-.trama-new-create:hover { background:rgba(78,211,232,0.18); border-color:var(--holo); }
-.trama-new-cancel { background:transparent; border:1px solid var(--line); color:var(--fg-dim); font-family:var(--font-mono); font-size:10px; letter-spacing:0.18em; text-transform:uppercase; padding:8px 12px; border-radius:3px; cursor:pointer; transition:all .16s; }
-.trama-new-cancel:hover { border-color:var(--fg-dim); color:var(--fg); }
 .trama-pick-list { display:flex; flex-direction:column; gap:6px; }
 .trama-pick-item { display:flex; flex-direction:column; gap:3px; padding:9px 12px; border:1px solid var(--line); border-radius:4px; cursor:pointer; transition:all .15s; }
 .trama-pick-item:hover { border-color:var(--holo-soft); background:rgba(78,211,232,0.06); }
@@ -477,15 +467,6 @@ body {
 <div class="trama-picker" id="tramaPicker">
   <div class="trama-picker-box">
     <h2>Escolher Trama</h2>
-    <button class="trama-new-btn" id="tramaNewBtn">+ Nova trama</button>
-    <div class="trama-new-form" id="tramaNewForm">
-      <input type="text" id="tramaNewName" placeholder="Nome da trama" maxlength="80" autocomplete="off">
-      <input type="text" id="tramaNewUrl" placeholder="URL (https://...)" maxlength="1000" autocomplete="off">
-      <div class="trama-new-actions">
-        <button class="trama-new-cancel" id="tramaNewCancel">Cancelar</button>
-        <button class="trama-new-create" id="tramaNewCreate">Criar e adicionar</button>
-      </div>
-    </div>
     <div class="trama-pick-list" id="tramaPickList"></div>
   </div>
 </div>
@@ -1000,26 +981,20 @@ body {
   }
   charPicker.addEventListener('click', function(e){ if (e.target === charPicker) charPicker.classList.remove('show'); });
 
-  // ── Tramas (individual: localStorage por sala) ────────────────────
-  var TRAMA_LIB_KEY = 'mesaTramasLib';            // catálogo global de tramas
-  var TRAMA_SESSAO_KEY = 'mesaTramasSessao_' + SALA; // ativas nesta view/sala
-  var tramaLib = [], tramasSessao = [];
+  // ── Tramas (individual: sessão em localStorage, catálogo no Supabase) ─
+  var TRAMA_SESSAO_KEY = 'mesaTramasSessao_' + SALA;
+  var tramasSessao = [];   // [{id, name}] — ativas nesta view/sala
 
   var tramaList = document.getElementById('tramaList');
   var tramaPicker = document.getElementById('tramaPicker');
   var tramaPickList = document.getElementById('tramaPickList');
-  var tramaNewForm = document.getElementById('tramaNewForm');
-  var tramaNewName = document.getElementById('tramaNewName');
-  var tramaNewUrl = document.getElementById('tramaNewUrl');
   var tramaViewer = document.getElementById('tramaViewer');
   var tramaFrame = document.getElementById('tramaFrame');
   var tramaViewerTitle = document.getElementById('tramaViewerTitle');
 
-  function loadTramas() {
-    try { tramaLib = JSON.parse(localStorage.getItem(TRAMA_LIB_KEY) || '[]'); } catch (_) { tramaLib = []; }
+  function loadTramasSessao() {
     try { tramasSessao = JSON.parse(localStorage.getItem(TRAMA_SESSAO_KEY) || '[]'); } catch (_) { tramasSessao = []; }
   }
-  function saveTramaLib() { localStorage.setItem(TRAMA_LIB_KEY, JSON.stringify(tramaLib)); }
   function saveTramasSessao() { localStorage.setItem(TRAMA_SESSAO_KEY, JSON.stringify(tramasSessao)); }
 
   function renderTramas() {
@@ -1046,33 +1021,40 @@ body {
   }
 
   function openTramaPicker() {
-    var chosen = {}; tramasSessao.forEach(function(t){ chosen[t.id] = 1; });
-    var available = tramaLib.filter(function(t){ return !chosen[t.id]; });
-    tramaPickList.innerHTML = '';
-    tramaNewForm.classList.remove('show');
-    if (!available.length) {
-      var em = document.createElement('div');
-      em.style.cssText = 'text-align:center;color:var(--fg-faint);font-family:var(--font-mono);font-size:11px;padding:14px;';
-      em.textContent = 'Nenhuma trama disponível';
-      tramaPickList.appendChild(em);
-    } else {
-      available.forEach(function(t) {
-        var it = document.createElement('div');
-        it.className = 'trama-pick-item';
-        it.innerHTML = '<div class="ti-nm">'+esc(t.name)+'</div><div class="ti-url">'+esc(t.url)+'</div>';
-        it.addEventListener('click', function() {
-          tramasSessao.push(t); saveTramasSessao(); renderTramas();
-          tramaPicker.classList.remove('show');
-        });
-        tramaPickList.appendChild(it);
-      });
-    }
+    tramaPickList.innerHTML = '<div style="text-align:center;color:var(--fg-faint);font-family:var(--font-mono);font-size:11px;padding:14px;">Carregando…</div>';
     tramaPicker.classList.add('show');
+    sbGet('/rest/v1/tramas?select=trama_id,name&deleted_at=is.null&trama_id=neq.default&order=created_at.desc')
+      .then(function(rows) {
+        if (!Array.isArray(rows)) rows = [];
+        var chosen = {}; tramasSessao.forEach(function(t){ chosen[t.id] = 1; });
+        var available = rows.filter(function(r){ return r.trama_id && !chosen[r.trama_id]; });
+        tramaPickList.innerHTML = '';
+        if (!available.length) {
+          var em = document.createElement('div');
+          em.style.cssText = 'text-align:center;color:var(--fg-faint);font-family:var(--font-mono);font-size:11px;padding:16px;line-height:1.9;';
+          em.innerHTML = 'Nenhuma trama disponível<br><a href="tramas.html" style="color:var(--holo);font-size:9px;" target="_blank">Ir para Tramas →</a>';
+          tramaPickList.appendChild(em);
+          return;
+        }
+        available.forEach(function(r) {
+          var it = document.createElement('div');
+          it.className = 'trama-pick-item';
+          it.innerHTML = '<div class="ti-nm">'+esc(r.name||'Trama')+'</div>';
+          it.addEventListener('click', function() {
+            tramasSessao.push({ id:r.trama_id, name:r.name||'Trama' });
+            saveTramasSessao(); renderTramas();
+            tramaPicker.classList.remove('show');
+          });
+          tramaPickList.appendChild(it);
+        });
+      }).catch(function() {
+        tramaPickList.innerHTML = '<div style="text-align:center;color:var(--danger);font-family:var(--font-mono);font-size:11px;padding:14px;">Erro ao carregar tramas.</div>';
+      });
   }
 
   function openTramaViewer(t) {
     tramaViewerTitle.textContent = t.name;
-    tramaFrame.src = t.url;
+    tramaFrame.src = 'trama.html?id=' + encodeURIComponent(t.id);
     tramaViewer.classList.add('show');
   }
   function closeTramaViewer() { tramaViewer.classList.remove('show'); tramaFrame.src = ''; }
@@ -1080,34 +1062,13 @@ body {
   document.getElementById('tramaAddBtn').addEventListener('click', openTramaPicker);
   tramaPicker.addEventListener('click', function(e){ if (e.target === tramaPicker) tramaPicker.classList.remove('show'); });
 
-  document.getElementById('tramaNewBtn').addEventListener('click', function() {
-    tramaNewName.value = ''; tramaNewUrl.value = '';
-    tramaNewForm.classList.add('show'); tramaNewName.focus();
-  });
-  document.getElementById('tramaNewCancel').addEventListener('click', function() { tramaNewForm.classList.remove('show'); });
-  document.getElementById('tramaNewCreate').addEventListener('click', function() {
-    var name = tramaNewName.value.trim();
-    var url = tramaNewUrl.value.trim();
-    if (!name || !url) return;
-    var t = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,5), name:name, url:url };
-    tramaLib.push(t); saveTramaLib();
-    tramasSessao.push(t); saveTramasSessao(); renderTramas();
-    tramaPicker.classList.remove('show');
-  });
-  [tramaNewName, tramaNewUrl].forEach(function(inp) {
-    inp.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') document.getElementById('tramaNewCreate').click();
-      if (e.key === 'Escape') tramaNewForm.classList.remove('show');
-    });
-  });
-
   document.getElementById('tramaViewerClose').addEventListener('click', closeTramaViewer);
   tramaViewer.addEventListener('click', function(e){ if (e.target === tramaViewer) closeTramaViewer(); });
   document.addEventListener('keydown', function(e){
     if (e.key === 'Escape' && tramaViewer.classList.contains('show')) closeTramaViewer();
   });
 
-  loadTramas(); renderTramas();
+  loadTramasSessao(); renderTramas();
 
   // ── Quadro branco (compartilhado) ─────────────────────────────────
   var wbOverlay = document.getElementById('wbOverlay');
