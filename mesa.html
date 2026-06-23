@@ -316,6 +316,54 @@ body {
 .ov-btn { width:100%; background:rgba(78,211,232,0.10); border:1px solid var(--holo-soft); color:var(--holo); font-family:var(--font-mono); font-size:10px; letter-spacing:0.2em; text-transform:uppercase; padding:11px; border-radius:3px; cursor:pointer; transition:all .16s; }
 .ov-btn:hover { background:rgba(78,211,232,0.18); border-color:var(--holo); box-shadow:0 0 14px rgba(78,211,232,0.3); }
 
+/* ── Trama ── */
+.trama-add-btn {
+  margin-left:auto; width:22px; height:22px; border-radius:4px;
+  border:1px solid var(--holo-soft); background:rgba(78,211,232,0.08);
+  color:var(--holo); font-size:17px; line-height:1; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:all .15s;
+}
+.trama-add-btn:hover { background:rgba(78,211,232,0.18); box-shadow:0 0 10px rgba(78,211,232,0.3); }
+.trama-list { display:flex; flex-direction:column; gap:1px; max-height:150px; overflow-y:auto; }
+.trama-empty { text-align:center; font-family:var(--font-mono); font-size:9px; letter-spacing:0.1em; color:var(--fg-faint); padding:10px; }
+.trama-item {
+  display:flex; align-items:center; gap:8px; padding:7px 12px; cursor:pointer; transition:background .12s;
+}
+.trama-item:hover { background:rgba(78,211,232,0.05); }
+.trama-item .ti-name { font-family:var(--font-display); font-size:12px; color:var(--fg); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.trama-item .ti-x {
+  flex:0 0 auto; width:16px; height:16px; border-radius:50%; border:1px solid var(--danger);
+  color:var(--danger); background:transparent; font-size:9px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .15s;
+}
+.trama-item:hover .ti-x { opacity:1; }
+
+/* Modal adicionar trama */
+.trama-modal { position:fixed; inset:0; background:rgba(0,0,0,.78); z-index:9997; display:none; align-items:center; justify-content:center; }
+.trama-modal.show { display:flex; }
+.trama-modal-box { background:#040810; border:1px solid var(--holo-soft); border-radius:6px; padding:24px 28px; max-width:340px; width:90%; box-shadow:0 0 40px rgba(78,211,232,0.08); }
+.trama-modal-box h2 { font-family:var(--font-mono); font-size:10px; letter-spacing:0.28em; text-transform:uppercase; color:var(--holo); margin-bottom:14px; }
+.trama-modal-box input {
+  width:100%; background:rgba(78,211,232,0.04); border:1px solid var(--line); border-radius:3px;
+  color:var(--fg); font-family:var(--font-display); font-size:13px; padding:8px 11px; outline:none; margin-bottom:9px;
+}
+.trama-modal-box input:last-of-type { margin-bottom:0; }
+.trama-modal-box input:focus { border-color:var(--holo-soft); }
+.trama-modal-actions { display:flex; gap:8px; margin-top:14px; }
+.trama-modal-confirm { flex:1; background:rgba(78,211,232,0.10); border:1px solid var(--holo-soft); color:var(--holo); font-family:var(--font-mono); font-size:10px; letter-spacing:0.2em; text-transform:uppercase; padding:9px; border-radius:3px; cursor:pointer; transition:all .16s; }
+.trama-modal-confirm:hover { background:rgba(78,211,232,0.18); border-color:var(--holo); }
+.trama-modal-cancel { background:transparent; border:1px solid var(--line); color:var(--fg-dim); font-family:var(--font-mono); font-size:10px; letter-spacing:0.2em; text-transform:uppercase; padding:9px 14px; border-radius:3px; cursor:pointer; transition:all .16s; }
+.trama-modal-cancel:hover { border-color:var(--fg-dim); color:var(--fg); }
+
+/* Viewer da trama (iframe) */
+.trama-viewer { position:fixed; inset:0; z-index:9995; background:rgba(0,0,0,.9); display:none; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
+.trama-viewer.show { display:flex; }
+.trama-viewer-bar { display:flex; align-items:center; width:min(90vw,960px); margin-bottom:8px; gap:10px; }
+.trama-viewer-title { font-family:var(--font-mono); font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--holo); flex:1; }
+.trama-viewer-close { width:32px; height:32px; border-radius:50%; background:rgba(0,0,0,0.6); border:1px solid var(--line-strong); color:var(--fg); font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; flex:0 0 auto; }
+.trama-viewer-close:hover { color:#fff; border-color:var(--holo); box-shadow:0 0 12px rgba(78,211,232,0.3); }
+#tramaFrame { width:min(90vw,960px); height:min(80vh,700px); border:1px solid var(--line-strong); border-radius:6px; background:#fff; }
+
 ::-webkit-scrollbar { width:5px; }
 ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:var(--line-strong); border-radius:3px; }
@@ -339,8 +387,17 @@ body {
     <div id="jitsi"></div>
   </div>
 
-  <!-- Rail: personagens + dados + chat -->
+  <!-- Rail: trama + personagens + dados + chat -->
   <div class="rail">
+    <div class="panel" id="tramaPanel">
+      <div class="panel-head">
+        <span class="led"></span>
+        <span class="panel-title">Trama</span>
+        <button class="trama-add-btn" id="tramaAddBtn" title="Adicionar trama">+</button>
+      </div>
+      <div class="trama-list" id="tramaList"></div>
+    </div>
+
     <div class="panel chars-panel">
       <div class="panel-head"><span class="led"></span><span class="panel-title">Personagens</span></div>
       <div class="chars-body" id="charsBody"></div>
@@ -409,6 +466,28 @@ body {
     <h2>Escolher personagem</h2>
     <div class="char-picker-list"></div>
   </div>
+</div>
+
+<!-- Modal adicionar trama -->
+<div class="trama-modal" id="tramaModal">
+  <div class="trama-modal-box">
+    <h2>Adicionar Trama</h2>
+    <input type="text" id="tramaNameInput" placeholder="Nome da trama" maxlength="80" autocomplete="off">
+    <input type="text" id="tramaUrlInput" placeholder="URL (https://...)" maxlength="1000" autocomplete="off">
+    <div class="trama-modal-actions">
+      <button class="trama-modal-cancel" id="tramaModalCancel">Cancelar</button>
+      <button class="trama-modal-confirm" id="tramaModalConfirm">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Viewer de trama (iframe) -->
+<div class="trama-viewer" id="tramaViewer">
+  <div class="trama-viewer-bar">
+    <span class="trama-viewer-title" id="tramaViewerTitle"></span>
+    <button class="trama-viewer-close" id="tramaViewerClose" title="Fechar">&#10005;</button>
+  </div>
+  <iframe id="tramaFrame" src="" allowfullscreen></iframe>
 </div>
 
 <!-- Nome -->
@@ -911,6 +990,79 @@ body {
     }).catch(function(){ list.innerHTML = '<div style="text-align:center;color:var(--danger);font-size:11px;padding:14px;">Erro ao carregar.</div>'; });
   }
   charPicker.addEventListener('click', function(e){ if (e.target === charPicker) charPicker.classList.remove('show'); });
+
+  // ── Tramas (individual: localStorage por sala) ────────────────────
+  var TRAMA_KEY = 'mesaTramas_' + SALA;
+  var tramas = [];
+  var tramaList = document.getElementById('tramaList');
+  var tramaModal = document.getElementById('tramaModal');
+  var tramaNameInput = document.getElementById('tramaNameInput');
+  var tramaUrlInput = document.getElementById('tramaUrlInput');
+  var tramaViewer = document.getElementById('tramaViewer');
+  var tramaFrame = document.getElementById('tramaFrame');
+  var tramaViewerTitle = document.getElementById('tramaViewerTitle');
+
+  function loadTramas() {
+    try { tramas = JSON.parse(localStorage.getItem(TRAMA_KEY) || '[]'); } catch (_) { tramas = []; }
+  }
+  function saveTramas() { localStorage.setItem(TRAMA_KEY, JSON.stringify(tramas)); }
+  function renderTramas() {
+    tramaList.innerHTML = '';
+    if (!tramas.length) {
+      var em = document.createElement('div');
+      em.className = 'trama-empty';
+      em.textContent = 'Nenhuma trama';
+      tramaList.appendChild(em);
+      return;
+    }
+    tramas.forEach(function(t) {
+      var item = document.createElement('div');
+      item.className = 'trama-item';
+      item.innerHTML = '<span class="ti-name" title="'+esc(t.name)+'">'+esc(t.name)+'</span><button class="ti-x" title="Remover">✕</button>';
+      item.addEventListener('click', function() { openTramaViewer(t); });
+      item.querySelector('.ti-x').addEventListener('click', function(e) {
+        e.stopPropagation();
+        tramas = tramas.filter(function(x){ return x.id !== t.id; });
+        saveTramas(); renderTramas();
+      });
+      tramaList.appendChild(item);
+    });
+  }
+
+  function openTramaViewer(t) {
+    tramaViewerTitle.textContent = t.name;
+    tramaFrame.src = t.url;
+    tramaViewer.classList.add('show');
+  }
+  function closeTramaViewer() { tramaViewer.classList.remove('show'); tramaFrame.src = ''; }
+
+  document.getElementById('tramaAddBtn').addEventListener('click', function() {
+    tramaNameInput.value = ''; tramaUrlInput.value = '';
+    tramaModal.classList.add('show'); tramaNameInput.focus();
+  });
+  document.getElementById('tramaModalCancel').addEventListener('click', function() { tramaModal.classList.remove('show'); });
+  tramaModal.addEventListener('click', function(e){ if (e.target === tramaModal) tramaModal.classList.remove('show'); });
+  document.getElementById('tramaModalConfirm').addEventListener('click', function() {
+    var name = tramaNameInput.value.trim();
+    var url = tramaUrlInput.value.trim();
+    if (!name || !url) return;
+    tramas.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,5), name:name, url:url });
+    saveTramas(); renderTramas();
+    tramaModal.classList.remove('show');
+  });
+  [tramaNameInput, tramaUrlInput].forEach(function(inp) {
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('tramaModalConfirm').click();
+      if (e.key === 'Escape') tramaModal.classList.remove('show');
+    });
+  });
+  document.getElementById('tramaViewerClose').addEventListener('click', closeTramaViewer);
+  tramaViewer.addEventListener('click', function(e){ if (e.target === tramaViewer) closeTramaViewer(); });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && tramaViewer.classList.contains('show')) closeTramaViewer();
+  });
+
+  loadTramas(); renderTramas();
 
   // ── Quadro branco (compartilhado) ─────────────────────────────────
   var wbOverlay = document.getElementById('wbOverlay');
