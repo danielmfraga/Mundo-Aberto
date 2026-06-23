@@ -241,6 +241,40 @@ body {
 .wb-close-btn:hover { color:#fff; background:var(--danger); border-color:var(--danger); }
 #wbCanvas { background:#fff; border-radius:8px; max-width:92vw; max-height:78vh; box-shadow:0 0 40px rgba(0,0,0,0.6); cursor:crosshair; touch-action:none; }
 
+/* ── Quadro + caras dos jogadores (vídeo flutua sobre o quadro) ──
+   O #jitsi NUNCA é reparentado (só muda CSS) pra não reconectar a chamada. */
+body.wb-on .video-panel {
+  position:fixed; z-index:9995; border:1px solid var(--holo-soft);
+  border-radius:8px; overflow:hidden; box-shadow:0 0 24px rgba(0,0,0,0.6), 0 0 14px rgba(78,211,232,0.18);
+  transition:top .28s ease, left .28s ease, right .28s ease, bottom .28s ease, width .28s ease, height .28s ease;
+}
+body.wb-on .video-panel .panel-head { display:none; }      /* mais área pras caras */
+body.wb-on .video-panel #jitsi { min-height:0; border-radius:8px; }
+
+/* layout: tira no topo */
+body.wb-on.wb-top   .video-panel { top:10px; left:10px; right:10px; bottom:auto; width:auto; height:132px; }
+body.wb-top   .wb-overlay { padding:150px 18px 18px; }
+body.wb-top   #wbCanvas { max-width:92vw; max-height:calc(100vh - 224px); }
+
+/* layout: lado a lado (vídeo à esquerda) */
+body.wb-on.wb-split .video-panel { top:10px; left:10px; right:auto; bottom:10px; width:46vw; height:auto; }
+body.wb-split .wb-overlay { padding:18px 18px 18px calc(46vw + 28px); }
+body.wb-split #wbCanvas { max-width:calc(54vw - 46px); max-height:82vh; }
+
+/* layout: coluna à direita */
+body.wb-on.wb-right .video-panel { top:10px; right:10px; left:auto; bottom:10px; width:252px; height:auto; }
+body.wb-right .wb-overlay { padding:18px calc(252px + 28px) 18px 18px; }
+body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
+
+/* botões de layout na barra do quadro */
+.wb-sep { width:1px; height:18px; background:var(--line-strong); margin:0 2px; flex:0 0 auto; }
+@media (max-width:920px) {
+  /* no mobile o grid empilha; mantém o quadro cheio e o vídeo como tira no topo */
+  body.wb-on.wb-split .video-panel, body.wb-on.wb-right .video-panel { top:10px; left:10px; right:10px; bottom:auto; width:auto; height:120px; }
+  body.wb-split .wb-overlay, body.wb-right .wb-overlay { padding:140px 12px 12px; }
+  body.wb-split #wbCanvas, body.wb-right #wbCanvas { max-width:94vw; max-height:calc(100vh - 168px); }
+}
+
 /* ── Personagens ── */
 .chars-panel { flex:0 0 auto; }
 .chars-body { display:flex; flex-wrap:wrap; gap:9px; padding:10px 12px; }
@@ -451,6 +485,10 @@ body {
     <span class="wb-tool wb-color" data-color="#22b455" style="background:#22b455" title="Verde"></span>
     <button class="wb-tool wb-icon" id="wbEraser" type="button" title="Borracha">&#9003;</button>
     <button class="wb-tool wb-icon" id="wbClear" type="button" title="Limpar tudo">&#128465;</button>
+    <span class="wb-sep"></span>
+    <button class="wb-tool wb-icon wb-layout-btn" data-layout="top" type="button" title="Caras no topo">&#9600;</button>
+    <button class="wb-tool wb-icon wb-layout-btn" data-layout="split" type="button" title="Vídeo e quadro lado a lado">&#9707;</button>
+    <button class="wb-tool wb-icon wb-layout-btn" data-layout="right" type="button" title="Caras na coluna à direita">&#9616;</button>
     <button class="wb-tool wb-icon wb-close-btn" id="wbClose" type="button" title="Fechar">&#10005;</button>
   </div>
   <canvas id="wbCanvas" width="1280" height="720"></canvas>
@@ -1109,21 +1147,58 @@ body {
   document.querySelectorAll('.wb-color').forEach(function(sw){
     sw.addEventListener('click', function(){
       wbColor = sw.dataset.color; wbErase = false;
-      document.querySelectorAll('.wb-tool').forEach(function(t){ t.classList.remove('active'); });
+      document.querySelectorAll('.wb-color').forEach(function(t){ t.classList.remove('active'); });
+      document.getElementById('wbEraser').classList.remove('active');
       sw.classList.add('active');
     });
   });
   document.getElementById('wbEraser').addEventListener('click', function(){
     wbErase = true;
-    document.querySelectorAll('.wb-tool').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelectorAll('.wb-color').forEach(function(t){ t.classList.remove('active'); });
     this.classList.add('active');
   });
   document.getElementById('wbClear').addEventListener('click', function(){ wbClearLocal(); send('wb-clear', {}); });
-  document.getElementById('wbClose').addEventListener('click', function(){ wbOverlay.classList.remove('show'); send('wb-close', {}); });
-  document.getElementById('wbBtn').addEventListener('click', function(){ wbOverlay.classList.add('show'); send('wb-open', {}); });
+  document.getElementById('wbClose').addEventListener('click', function(){ closeWhiteboardView(); send('wb-close', {}); });
+  document.getElementById('wbBtn').addEventListener('click', function(){ openWhiteboardView(); send('wb-open', {}); });
+
+  // ── Layout do quadro: caras dos jogadores junto do quadro (individual) ──
+  // O quadro continua compartilhado (wb-open/wb-close por broadcast), mas ONDE
+  // cada um vê as caras é preferência local, salva por jogador.
+  var WB_LAYOUT_KEY = 'mesaWbLayout';
+  var wbLayout = localStorage.getItem(WB_LAYOUT_KEY) || 'top';
+  if (['top','split','right'].indexOf(wbLayout) < 0) wbLayout = 'top';
+
+  function wbIsOpen() { return wbOverlay.classList.contains('show'); }
+  function jitsiTile(on) { if (jitsiApi) { try { jitsiApi.executeCommand('setTileView', !!on); } catch (_) {} } }
+
+  function applyWbLayout(l) {
+    if (['top','split','right'].indexOf(l) < 0) l = 'top';
+    wbLayout = l;
+    localStorage.setItem(WB_LAYOUT_KEY, l);
+    document.body.classList.remove('wb-top','wb-split','wb-right');
+    document.body.classList.add('wb-' + l);
+    document.querySelectorAll('.wb-layout-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.layout === l);
+    });
+  }
+  function openWhiteboardView() {
+    wbOverlay.classList.add('show');
+    document.body.classList.add('wb-on');
+    applyWbLayout(wbLayout);
+    jitsiTile(true);   // mostra todas as caras na grade
+  }
+  function closeWhiteboardView() {
+    wbOverlay.classList.remove('show');
+    document.body.classList.remove('wb-on','wb-top','wb-split','wb-right');
+    jitsiTile(false);  // volta o vídeo ao normal
+  }
+  document.querySelectorAll('.wb-layout-btn').forEach(function(b){
+    b.addEventListener('click', function(){ applyWbLayout(b.dataset.layout); });
+  });
 
   // ── Realtime (Supabase broadcast) ─────────────────────────────────
   var channel = null;
+  var jitsiApi = null;
   function send(event, payload) {
     if (channel) channel.send({ type:'broadcast', event:event, payload:payload });
     else dispatch(event, payload);   // offline: mostra local
@@ -1135,8 +1210,8 @@ body {
     else if (event === 'chars-req') { if (mesaChars.length) send('chars', mesaChars); }
     else if (event === 'wb-draw') wbDrawSeg(payload);
     else if (event === 'wb-clear') wbClearLocal();
-    else if (event === 'wb-open') wbOverlay.classList.add('show');
-    else if (event === 'wb-close') wbOverlay.classList.remove('show');
+    else if (event === 'wb-open') openWhiteboardView();
+    else if (event === 'wb-close') closeWhiteboardView();
     else if (event === 'mesa-ctx') { applyContexto(payload.text); }
     else if (event === 'mesa-ctx-req') { var ctx = localStorage.getItem(CONTEXTO_KEY); if (ctx) send('mesa-ctx', { text:ctx }); }
   }
@@ -1173,7 +1248,7 @@ body {
         jitsiMsg('Vídeo ainda não configurado<br><span style="color:var(--fg-faint);font-size:10px;">' + esc((data && data.error) || 'token não gerado') + '</span>');
         return;
       }
-      new window.JitsiMeetExternalAPI('8x8.vc', {
+      jitsiApi = new window.JitsiMeetExternalAPI('8x8.vc', {
         roomName: JAAS_APP_ID + '/' + ROOM,
         jwt: data.token,
         parentNode: document.getElementById('jitsi'),
@@ -1181,6 +1256,8 @@ body {
         configOverwrite: { prejoinPageEnabled:false, disableDeepLinking:true },
         interfaceConfigOverwrite: { MOBILE_APP_PROMO:false, SHOW_JITSI_WATERMARK:false, SHOW_WATERMARK_FOR_GUESTS:false }
       });
+      // se o quadro já estiver aberto quando o vídeo terminar de carregar, alinha o tile view
+      if (wbIsOpen()) jitsiTile(true);
     } catch (e) {
       jitsiMsg('Vídeo indisponível<br><span style="color:var(--fg-faint);font-size:10px;">' + esc(String(e && e.message || e)) + '</span>');
     }
