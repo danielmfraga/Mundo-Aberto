@@ -45,7 +45,9 @@ body {
   transition:color 0.2s;
 }
 .back-link:hover { color:var(--fg); }
-.brand { font-family:var(--font-mono); font-size:11px; letter-spacing:0.4em; text-transform:uppercase; color:var(--holo); }
+.brand { font-family:var(--font-mono); font-size:11px; letter-spacing:0.4em; text-transform:uppercase; color:var(--holo); cursor:pointer; transition:color .2s; }
+.brand:hover { color:var(--fg); }
+.brand[contenteditable="true"] { outline:none; border-bottom:1px solid rgba(78,211,232,0.5); color:var(--fg); }
 .who { display:flex; align-items:center; gap:10px; font-family:var(--font-mono); font-size:10px; letter-spacing:0.12em; color:var(--fg-dim); }
 .conn-dot { width:7px; height:7px; border-radius:50%; background:var(--danger); box-shadow:0 0 6px var(--danger); transition:all .3s; }
 .conn-dot.on { background:#3ddc84; box-shadow:0 0 6px #3ddc84; }
@@ -284,7 +286,7 @@ body {
 .msg-text a { color:var(--holo); }
 .msg-img { max-width:100%; max-height:240px; border-radius:5px; border:1px solid var(--line); margin-top:3px; display:block; cursor:zoom-in; }
 
-/* Lightbox: duplo clique numa imagem do chat abre pra dar zoom */
+/* Lightbox: clique numa imagem do chat abre pra dar zoom */
 .img-lightbox { position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:10000; display:none; align-items:center; justify-content:center; overflow:hidden; }
 .img-lightbox.show { display:flex; }
 .img-lightbox img { max-width:92vw; max-height:88vh; transform-origin:center center; cursor:grab; user-select:none; will-change:transform; }
@@ -323,7 +325,7 @@ body {
 
 <div class="topbar">
   <a class="back-link" href="index.html"><span style="font-size:14px;line-height:1;">&#8592;</span>Voltar</a>
-  <div class="brand">Mesa · Mundo Aberto</div>
+  <div class="brand" id="mesaBrand" title="Clique para editar o contexto da mesa">Mesa · Mundo Aberto</div>
   <div class="who">
     <span class="conn-dot" id="connDot"></span>
     <span id="whoName" class="who-name" title="Trocar nome">—</span>
@@ -795,7 +797,7 @@ body {
   function openLightbox(src) { imgLbImg.src = src; lbReset(); imgLightbox.classList.add('show'); }
   function closeLightbox() { imgLightbox.classList.remove('show'); imgLbImg.src = ''; }
 
-  chatMsgs.addEventListener('dblclick', function(e) {
+  chatMsgs.addEventListener('click', function(e) {
     var img = e.target.closest('.msg-img');
     if (img && img.src) { e.preventDefault(); openLightbox(img.src); }
   });
@@ -976,6 +978,8 @@ body {
     else if (event === 'wb-clear') wbClearLocal();
     else if (event === 'wb-open') wbOverlay.classList.add('show');
     else if (event === 'wb-close') wbOverlay.classList.remove('show');
+    else if (event === 'mesa-ctx') { applyContexto(payload.text); }
+    else if (event === 'mesa-ctx-req') { var ctx = localStorage.getItem(CONTEXTO_KEY); if (ctx) send('mesa-ctx', { text:ctx }); }
   }
   function initRealtime() {
     if (!window.supabase || !window.supabase.createClient) return;
@@ -988,9 +992,11 @@ body {
     ['wb-draw','wb-clear','wb-open','wb-close'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
+    channel.on('broadcast', { event:'mesa-ctx' }, function(m){ dispatch('mesa-ctx', m.payload); });
+    channel.on('broadcast', { event:'mesa-ctx-req' }, function(m){ dispatch('mesa-ctx-req', m.payload); });
     channel.subscribe(function(status){
       document.getElementById('connDot').classList.toggle('on', status === 'SUBSCRIBED');
-      if (status === 'SUBSCRIBED') send('chars-req', {});   // pede a lista atual a quem já está na mesa
+      if (status === 'SUBSCRIBED') { send('chars-req', {}); send('mesa-ctx-req', {}); }
     });
   }
 
@@ -1020,6 +1026,43 @@ body {
       jitsiMsg('Vídeo indisponível<br><span style="color:var(--fg-faint);font-size:10px;">' + esc(String(e && e.message || e)) + '</span>');
     }
   }
+
+  // ── Contexto da mesa (data/situação atual do jogo) ───────────────
+  var CONTEXTO_KEY = 'mesaContexto_' + SALA;
+  var DEFAULT_CONTEXTO = 'Mesa · Mundo Aberto';
+  var mesaBrand = document.getElementById('mesaBrand');
+  var _contextoAntes = '';
+
+  function applyContexto(text) {
+    mesaBrand.textContent = text || DEFAULT_CONTEXTO;
+    localStorage.setItem(CONTEXTO_KEY, mesaBrand.textContent);
+  }
+  (function loadContexto() {
+    var v = localStorage.getItem(CONTEXTO_KEY);
+    if (v) mesaBrand.textContent = v;
+  })();
+
+  mesaBrand.addEventListener('click', function() {
+    if (mesaBrand.contentEditable === 'true') return;
+    _contextoAntes = mesaBrand.textContent;
+    mesaBrand.contentEditable = 'true';
+    mesaBrand.focus();
+    var range = document.createRange();
+    range.selectNodeContents(mesaBrand);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  });
+  mesaBrand.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); mesaBrand.blur(); }
+    if (e.key === 'Escape') { mesaBrand.textContent = _contextoAntes; mesaBrand.blur(); }
+  });
+  mesaBrand.addEventListener('blur', function() {
+    mesaBrand.contentEditable = 'false';
+    var v = mesaBrand.textContent.trim() || DEFAULT_CONTEXTO;
+    applyContexto(v);
+    send('mesa-ctx', { text:v });
+  });
 
   // ── Nome / boot ───────────────────────────────────────────────────
   var nameOv = document.getElementById('nameOv');
