@@ -1,4 +1,8 @@
 {
+  "redirects": [
+    { "source": "/diario", "destination": "/", "permanent": false },
+    { "source": "/diario.html", "destination": "/", "permanent": false }
+  ],
   "functions": {
     "api/navegador.js":       { "maxDuration": 60 },
     "api/ingest-session.js":  { "maxDuration": 120 },
