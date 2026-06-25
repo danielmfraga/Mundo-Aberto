@@ -1336,34 +1336,6 @@
 
     </section>
 
-    <!-- ───────── TRANSCRIÇÕES ───────── -->
-    <section class="tool-card" id="transcricoesCard">
-
-      <div class="tool-header">
-        <div class="tool-led"></div>
-        <div class="tool-name">Transcrições</div>
-      </div>
-
-      <p class="tool-desc">
-        Arquivos de transcrição capturados pelo webhook do JaaS.
-        Cada arquivo corresponde a uma sessão onde o botão "A" foi ativado.
-      </p>
-
-      <div id="transcListWrap">
-        <div class="loading-box" id="transcLoading">
-          <div class="loading-text">Carregando arquivos...</div>
-          <div class="loading-bar"></div>
-        </div>
-        <div id="transcList" hidden></div>
-        <div id="transcEmpty" hidden style="font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:2px;color:rgba(207,233,240,0.4);padding:20px 0;">
-          Nenhuma transcrição encontrada. Ative o botão "A" na próxima sessão.
-        </div>
-      </div>
-
-      <div style="margin-top:16px;">
-        <button class="btn btn-ghost" id="transcRefreshBtn" style="font-size:11px;padding:8px 18px;">↺ Atualizar lista</button>
-      </div>
-
     </section>
   </div>
 
@@ -2685,85 +2657,6 @@
         .replace(/\n\n+/g, '</p><p>')
         .replace(/\n/g, '<br>') + '</p>';
     }
-
-    // ═══════════════════════════════════════════════
-    // TRANSCRIÇÕES — lista e download do Storage
-    // ═══════════════════════════════════════════════
-
-    async function loadTranscricoes() {
-      document.getElementById('transcLoading').hidden = false;
-      document.getElementById('transcList').hidden = true;
-      document.getElementById('transcEmpty').hidden = true;
-
-      try {
-        var r = await fetch(SUPABASE_URL + '/storage/v1/object/list/sessoes', {
-          method: 'POST',
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ prefix: 'transcricoes/', limit: 100, sortBy: { column: 'name', order: 'desc' } })
-        });
-        var files = await r.json();
-
-        document.getElementById('transcLoading').hidden = true;
-
-        if (!Array.isArray(files) || files.length === 0) {
-          document.getElementById('transcEmpty').hidden = false;
-          return;
-        }
-
-        var list = document.getElementById('transcList');
-        list.innerHTML = '';
-        files.forEach(function(f) {
-          var row = document.createElement('div');
-          row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(0,255,231,0.07);';
-          var name = f.name.replace('transcricoes/', '');
-          var kb = f.metadata && f.metadata.size ? ' · ' + Math.round(f.metadata.size / 1024) + ' KB' : '';
-          row.innerHTML =
-            '<div>' +
-              '<div style="font-family:\'Share Tech Mono\',monospace;font-size:12px;color:var(--fg);">' + escapeHtml(name) + '</div>' +
-              '<div style="font-family:\'Share Tech Mono\',monospace;font-size:10px;color:rgba(207,233,240,0.4);margin-top:2px;letter-spacing:1px;">' + escapeHtml(kb) + '</div>' +
-            '</div>' +
-            '<button class="btn btn-cyan" data-path="transcricoes/' + escapeHtml(f.name) + '" style="font-size:10px;padding:6px 14px;white-space:nowrap;">↓ Baixar</button>';
-          row.querySelector('button').addEventListener('click', function() {
-            downloadTranscricao(this.dataset.path, name);
-          });
-          list.appendChild(row);
-        });
-        list.hidden = false;
-      } catch (e) {
-        document.getElementById('transcLoading').hidden = true;
-        document.getElementById('transcEmpty').hidden = false;
-        console.error('Erro ao listar transcrições:', e);
-      }
-    }
-
-    async function downloadTranscricao(path, filename) {
-      try {
-        var r = await fetch(SUPABASE_URL + '/storage/v1/object/sign/sessoes/' + path, {
-          method: 'POST',
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ expiresIn: 3600 })
-        });
-        var json = await r.json();
-        if (!json.signedURL) throw new Error('Link não gerado');
-        var a = document.createElement('a');
-        a.href = SUPABASE_URL + json.signedURL;
-        a.download = filename;
-        a.click();
-      } catch (e) {
-        alert('Erro ao gerar link de download:\n' + e.message);
-      }
-    }
-
-    document.getElementById('transcRefreshBtn').addEventListener('click', loadTranscricoes);
-    loadTranscricoes();
 
   </script>
 </body>
