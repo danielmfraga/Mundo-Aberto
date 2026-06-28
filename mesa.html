@@ -1253,7 +1253,8 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
         jwt: data.token,
         parentNode: document.getElementById('jitsi'),
         width:'100%', height:'100%',
-        configOverwrite: { prejoinPageEnabled:false, disableDeepLinking:true, transcription: { preferredLanguage: 'pt-BR' } },
+        configOverwrite: { prejoinPageEnabled:false, disableDeepLinking:true },
+        dynamicBrandingUrl: 'https://project-1opl1.vercel.app/api/jaas-branding',
         interfaceConfigOverwrite: { MOBILE_APP_PROMO:false, SHOW_JITSI_WATERMARK:false, SHOW_WATERMARK_FOR_GUESTS:false }
       });
       // se o quadro já estiver aberto quando o vídeo terminar de carregar, alinha o tile view
