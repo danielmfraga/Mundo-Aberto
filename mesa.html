@@ -289,6 +289,17 @@ body {
 .diario-counter { min-width:88px; text-align:center; font-family:var(--font-mono); font-size:11px; letter-spacing:0.08em; color:#6b3f1d; }
 .diario-addpg { margin-left:auto; padding:5px 12px; border-radius:5px; border:1px solid rgba(120,90,40,0.4); background:transparent; color:#6b3f1d; font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; }
 .diario-addpg:hover { background:rgba(120,90,40,0.14); }
+.diario-tabs { display:flex; align-items:flex-end; gap:4px; padding:8px 12px 0; overflow-x:auto; background:rgba(205,182,138,0.25); border-bottom:1px solid rgba(120,90,40,0.28); }
+.diario-tabs::-webkit-scrollbar { height:5px; }
+.diario-tabs::-webkit-scrollbar-thumb { background:rgba(120,90,40,0.3); border-radius:3px; }
+.diario-tab { flex:0 0 auto; display:inline-flex; align-items:center; gap:5px; max-width:170px; padding:6px 9px; border-radius:6px 6px 0 0; border:1px solid rgba(120,90,40,0.3); border-bottom:none; background:rgba(180,150,95,0.2); color:#7a5a30; font-family:Georgia,serif; font-size:13px; cursor:pointer; white-space:nowrap; }
+.diario-tab > span:first-child { overflow:hidden; text-overflow:ellipsis; max-width:130px; }
+.diario-tab:hover { background:rgba(180,150,95,0.34); }
+.diario-tab.active { background:#f3ead2; color:#6b3f1d; font-weight:700; border-color:rgba(120,90,40,0.45); }
+.diario-tab-x { border:none; background:transparent; color:#a98a5a; font-size:14px; line-height:1; cursor:pointer; padding:0 1px; opacity:0.55; }
+.diario-tab-x:hover { color:#c0392b; opacity:1; }
+.diario-tab-add { flex:0 0 auto; border:1px dashed rgba(120,90,40,0.45); background:transparent; color:#7a5a30; width:26px; height:29px; border-radius:6px 6px 0 0; cursor:pointer; font-size:16px; line-height:1; }
+.diario-tab-add:hover { background:rgba(180,150,95,0.2); }
 
 /* ── Quadro + caras dos jogadores (vídeo flutua sobre o quadro) ──
    O #jitsi NUNCA é reparentado (só muda CSS) pra não reconectar a chamada. */
@@ -537,6 +548,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       <span class="diario-status" id="diarioStatus"></span>
       <button class="diario-close" id="diarioClose" type="button" title="Fechar (Esc)">&#10005;</button>
     </div>
+    <div class="diario-tabs" id="diarioTabs"></div>
     <div class="diario-paper">
       <textarea class="diario-text" id="diarioText" placeholder="Escreva aqui a crônica da mesa…" spellcheck="true"></textarea>
     </div>
@@ -1270,24 +1282,59 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   });
 
   // ── Diário da Mesa (moleskine compartilhado, persistido no Supabase) ─
-  // Um caderno por sala (tabela diario_mesa: sala PK, paginas jsonb). Qualquer
-  // um escreve; salva sozinho (debounce) e sincroniza ao vivo por página.
-  var diarioPaginas = null;                 // array de páginas (strings) — null = ainda não carregado
-  var diarioPage = 0;
+  // Um caderno por sala (tabela diario_mesa: sala PK, abas jsonb). Cada aba tem
+  // nome + suas páginas. Qualquer um escreve; salva sozinho (debounce) e
+  // sincroniza ao vivo: texto por página (diario-pg), estrutura (diario-struct).
+  var diarioAbas = null;                    // [{nome, paginas:[str]}] — null = não carregado
+  var diarioTab = 0, diarioPage = 0;
   var _diarioSaveT = null, _diarioBcastT = null;
   var diarioOverlay = document.getElementById('diarioOverlay');
   var diarioText    = document.getElementById('diarioText');
   var diarioCounter = document.getElementById('diarioCounter');
   var diarioStatus  = document.getElementById('diarioStatus');
-  function diarioEnsure() { if (!Array.isArray(diarioPaginas) || !diarioPaginas.length) diarioPaginas = ['']; }
+  var diarioTabs    = document.getElementById('diarioTabs');
+  function diarioEnsure() {
+    if (!Array.isArray(diarioAbas) || !diarioAbas.length) diarioAbas = [{ nome:'Diário', paginas:[''] }];
+    diarioAbas.forEach(function(a){
+      if (!a || typeof a !== 'object') return;
+      if (!Array.isArray(a.paginas) || !a.paginas.length) a.paginas = [''];
+      if (typeof a.nome !== 'string' || !a.nome) a.nome = 'Aba';
+    });
+    if (diarioTab > diarioAbas.length - 1) diarioTab = diarioAbas.length - 1;
+    if (diarioTab < 0) diarioTab = 0;
+    var pg = diarioAbas[diarioTab].paginas;
+    if (diarioPage > pg.length - 1) diarioPage = pg.length - 1;
+    if (diarioPage < 0) diarioPage = 0;
+  }
+  function diarioCurPages() { return diarioAbas[diarioTab].paginas; }
+  function diarioRenderTabs() {
+    diarioTabs.innerHTML = '';
+    diarioAbas.forEach(function(a, idx){
+      var t = document.createElement('span');
+      t.className = 'diario-tab' + (idx === diarioTab ? ' active' : '');
+      t.title = 'Clique p/ abrir · duplo clique p/ renomear';
+      var nm = document.createElement('span'); nm.textContent = a.nome; t.appendChild(nm);
+      t.addEventListener('click', function(){ if (idx !== diarioTab) { diarioTab = idx; diarioPage = 0; diarioRender(); diarioText.focus(); } });
+      t.addEventListener('dblclick', function(){ diarioRenameTab(idx); });
+      var x = document.createElement('button');
+      x.className = 'diario-tab-x'; x.type = 'button'; x.textContent = '×'; x.title = 'Excluir aba';
+      x.addEventListener('click', function(e){ e.stopPropagation(); diarioDeleteTab(idx); });
+      t.appendChild(x);
+      diarioTabs.appendChild(t);
+    });
+    var add = document.createElement('button');
+    add.className = 'diario-tab-add'; add.type = 'button'; add.textContent = '+'; add.title = 'Nova aba';
+    add.addEventListener('click', diarioAddTab);
+    diarioTabs.appendChild(add);
+  }
   function diarioRender() {
     diarioEnsure();
-    if (diarioPage > diarioPaginas.length - 1) diarioPage = diarioPaginas.length - 1;
-    if (diarioPage < 0) diarioPage = 0;
-    diarioText.value = diarioPaginas[diarioPage] || '';
-    diarioCounter.textContent = 'Página ' + (diarioPage + 1) + ' / ' + diarioPaginas.length;
+    diarioRenderTabs();
+    var pg = diarioCurPages();
+    diarioText.value = pg[diarioPage] || '';
+    diarioCounter.textContent = 'Página ' + (diarioPage + 1) + ' / ' + pg.length;
     document.getElementById('diarioPrev').disabled = diarioPage === 0;
-    document.getElementById('diarioNext').disabled = diarioPage === diarioPaginas.length - 1;
+    document.getElementById('diarioNext').disabled = diarioPage === pg.length - 1;
   }
   function diarioSave() {
     diarioStatus.textContent = 'salvando…';
@@ -1296,7 +1343,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       fetch(SB_URL + '/rest/v1/diario_mesa?on_conflict=sala', {
         method:'POST',
         headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Content-Type':'application/json', 'Prefer':'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify({ sala:SALA, paginas:diarioPaginas, updated_at:new Date().toISOString() })
+        body: JSON.stringify({ sala:SALA, abas:diarioAbas, updated_at:new Date().toISOString() })
       }).then(function(r){ diarioStatus.textContent = r.ok ? 'salvo ✓' : 'erro ao salvar'; })
         .catch(function(){ diarioStatus.textContent = 'sem conexão'; });
     }, 700);
@@ -1304,44 +1351,78 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   function openDiario() {
     diarioOverlay.classList.add('show');
     diarioStatus.textContent = 'carregando…';
-    sbGet('/rest/v1/diario_mesa?sala=eq.' + encodeURIComponent(SALA) + '&select=paginas').then(function(rows){
-      var pg = (Array.isArray(rows) && rows[0] && Array.isArray(rows[0].paginas)) ? rows[0].paginas : null;
-      diarioPaginas = (pg && pg.length) ? pg : [''];
+    sbGet('/rest/v1/diario_mesa?sala=eq.' + encodeURIComponent(SALA) + '&select=abas,paginas').then(function(rows){
+      var row = (Array.isArray(rows) && rows[0]) ? rows[0] : null;
+      if (row && Array.isArray(row.abas) && row.abas.length) diarioAbas = row.abas;
+      else if (row && Array.isArray(row.paginas) && row.paginas.length) diarioAbas = [{ nome:'Diário', paginas:row.paginas }]; // migra formato antigo
+      else diarioAbas = [{ nome:'Diário', paginas:[''] }];
+      diarioTab = 0; diarioPage = 0;
       diarioStatus.textContent = '';
       diarioRender();
       setTimeout(function(){ diarioText.focus(); }, 40);
     }).catch(function(){ diarioEnsure(); diarioStatus.textContent = ''; diarioRender(); });
   }
   function closeDiario() { diarioOverlay.classList.remove('show'); }
-  function applyDiarioPg(p) {   // recebe edição de outra pessoa (página i)
-    if (!p || typeof p.i !== 'number' || !Array.isArray(diarioPaginas)) return;
-    var grew = false;
-    while (diarioPaginas.length <= p.i) { diarioPaginas.push(''); grew = true; }
-    diarioPaginas[p.i] = p.text || '';
+  function applyDiarioPg(p) {   // edição de texto de outra pessoa (aba t, página i)
+    if (!p || typeof p.t !== 'number' || typeof p.i !== 'number' || !Array.isArray(diarioAbas) || !diarioAbas[p.t]) return;
+    var pg = diarioAbas[p.t].paginas;
+    while (pg.length <= p.i) pg.push('');
+    pg[p.i] = p.text || '';
     if (!diarioOverlay.classList.contains('show')) return;
-    // só mexe no textarea se a mudança é da página que estou vendo E eu não estou digitando nela
-    if (p.i === diarioPage && document.activeElement !== diarioText) diarioText.value = diarioPaginas[diarioPage] || '';
-    if (grew) { diarioCounter.textContent = 'Página ' + (diarioPage + 1) + ' / ' + diarioPaginas.length;
-                document.getElementById('diarioNext').disabled = diarioPage === diarioPaginas.length - 1; }
+    if (p.t === diarioTab && p.i === diarioPage && document.activeElement !== diarioText) diarioText.value = pg[diarioPage] || '';
+  }
+  function applyDiarioStruct(s) {   // mudança de abas/páginas de outra pessoa
+    if (!s || !Array.isArray(s.abas) || !Array.isArray(diarioAbas)) return;
+    var typing = (diarioOverlay.classList.contains('show') && document.activeElement === diarioText);
+    var curText = typing ? diarioText.value : null;
+    diarioAbas = s.abas;
+    diarioEnsure();
+    // preserva o que eu estava digitando, se a coordenada ainda existir
+    if (typing && diarioAbas[diarioTab] && diarioAbas[diarioTab].paginas[diarioPage] !== undefined) diarioAbas[diarioTab].paginas[diarioPage] = curText;
+    if (!diarioOverlay.classList.contains('show')) return;
+    if (typing) diarioRenderTabs();   // não mexe no caret; só atualiza as abas
+    else diarioRender();
+  }
+  function diarioBcastStruct() { send('diario-struct', { abas:diarioAbas }); }
+  function diarioAddTab() {
+    var nome = (window.prompt('Nome da nova aba:', 'Aba ' + (diarioAbas.length + 1)) || '').trim();
+    if (!nome) return;
+    diarioAbas.push({ nome:nome, paginas:[''] });
+    diarioTab = diarioAbas.length - 1; diarioPage = 0;
+    diarioRender(); diarioText.focus(); diarioBcastStruct(); diarioSave();
+  }
+  function diarioRenameTab(idx) {
+    var nome = (window.prompt('Renomear aba:', diarioAbas[idx].nome) || '').trim();
+    if (!nome) return;
+    diarioAbas[idx].nome = nome;
+    diarioRenderTabs(); diarioBcastStruct(); diarioSave();
+  }
+  function diarioDeleteTab(idx) {
+    if (diarioAbas.length <= 1) { window.alert('O diário precisa de pelo menos uma aba.'); return; }
+    if (!window.confirm('Excluir a aba "' + diarioAbas[idx].nome + '" e todo o conteúdo dela?')) return;
+    diarioAbas.splice(idx, 1);
+    if (diarioTab >= diarioAbas.length) diarioTab = diarioAbas.length - 1;
+    diarioPage = 0;
+    diarioRender(); diarioText.focus(); diarioBcastStruct(); diarioSave();
   }
   diarioText.addEventListener('input', function() {
     diarioEnsure();
-    diarioPaginas[diarioPage] = diarioText.value;
-    var i = diarioPage, val = diarioText.value;
+    diarioCurPages()[diarioPage] = diarioText.value;
+    var t = diarioTab, i = diarioPage, val = diarioText.value;
     if (_diarioBcastT) clearTimeout(_diarioBcastT);
-    _diarioBcastT = setTimeout(function(){ send('diario-pg', { i:i, text:val }); }, 250);
+    _diarioBcastT = setTimeout(function(){ send('diario-pg', { t:t, i:i, text:val }); }, 250);
     diarioSave();
   });
   document.getElementById('diarioPrev').addEventListener('click', function(){ if (diarioPage > 0) { diarioPage--; diarioRender(); diarioText.focus(); } });
-  document.getElementById('diarioNext').addEventListener('click', function(){ if (diarioPage < diarioPaginas.length - 1) { diarioPage++; diarioRender(); diarioText.focus(); } });
+  document.getElementById('diarioNext').addEventListener('click', function(){ if (diarioPage < diarioCurPages().length - 1) { diarioPage++; diarioRender(); diarioText.focus(); } });
   document.getElementById('diarioAdd').addEventListener('click', function(){
-    diarioEnsure(); diarioPaginas.push(''); diarioPage = diarioPaginas.length - 1; diarioRender(); diarioText.focus();
-    send('diario-pg', { i:diarioPage, text:'' }); diarioSave();
+    diarioEnsure(); diarioCurPages().push(''); diarioPage = diarioCurPages().length - 1; diarioRender(); diarioText.focus();
+    diarioBcastStruct(); diarioSave();
   });
   document.getElementById('diarioClose').addEventListener('click', closeDiario);
   document.getElementById('diarioBtn').addEventListener('click', openDiario);
   diarioOverlay.addEventListener('click', function(e){ if (e.target === diarioOverlay) closeDiario(); });
-  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && diarioOverlay.classList.contains('show')) closeDiario(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && diarioOverlay.classList.contains('show') && document.activeElement !== diarioText) closeDiario(); });
 
   // ── Realtime (Supabase broadcast) ─────────────────────────────────
   var channel = null;
@@ -1362,6 +1443,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     else if (event === 'mesa-ctx') { applyContexto(payload.text); }
     else if (event === 'mesa-ctx-req') { var ctx = localStorage.getItem(CONTEXTO_KEY); if (ctx) send('mesa-ctx', { text:ctx }); }
     else if (event === 'diario-pg') applyDiarioPg(payload);
+    else if (event === 'diario-struct') applyDiarioStruct(payload);
   }
   function initRealtime() {
     if (!window.supabase || !window.supabase.createClient) return;
@@ -1377,6 +1459,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     channel.on('broadcast', { event:'mesa-ctx' }, function(m){ dispatch('mesa-ctx', m.payload); });
     channel.on('broadcast', { event:'mesa-ctx-req' }, function(m){ dispatch('mesa-ctx-req', m.payload); });
     channel.on('broadcast', { event:'diario-pg' }, function(m){ dispatch('diario-pg', m.payload); });
+    channel.on('broadcast', { event:'diario-struct' }, function(m){ dispatch('diario-struct', m.payload); });
     channel.subscribe(function(status){
       document.getElementById('connDot').classList.toggle('on', status === 'SUBSCRIBED');
       if (status === 'SUBSCRIBED') { send('chars-req', {}); send('mesa-ctx-req', {}); }
