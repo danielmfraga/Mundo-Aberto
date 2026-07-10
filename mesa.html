@@ -304,6 +304,13 @@ body {
 .diario-subitem.active { background:rgba(180,150,95,0.42); color:#6b3f1d; font-weight:700; }
 .diario-subitem-x { border:none; background:transparent; color:#a98a5a; font-size:13px; line-height:1; cursor:pointer; padding:0 1px; opacity:0.6; }
 .diario-subitem-x:hover { color:#c0392b; opacity:1; }
+.diario-mention { display:none; position:fixed; z-index:40; min-width:170px; max-width:240px; max-height:210px; overflow-y:auto; background:#fbf6e6; border:1px solid rgba(120,90,40,0.5); border-radius:7px; box-shadow:0 10px 24px rgba(60,40,10,0.42); padding:4px; }
+.diario-mention.show { display:block; }
+.diario-mention-item { display:flex; align-items:center; gap:8px; padding:5px 7px; border-radius:5px; cursor:pointer; color:#3a2e1c; font-family:Georgia,serif; font-size:13px; }
+.diario-mention-item.active, .diario-mention-item:hover { background:rgba(180,150,95,0.32); }
+.diario-mention-item img { width:22px; height:22px; border-radius:50%; object-fit:cover; flex:0 0 auto; }
+.diario-mention-ph { width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(120,90,40,0.18); color:#8a6a3a; font-size:12px; flex:0 0 auto; }
+.diario-mention-item span:last-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .diario-tabs { display:flex; align-items:flex-end; gap:4px; padding:8px 12px 0; overflow-x:auto; background:rgba(205,182,138,0.25); border-bottom:1px solid rgba(120,90,40,0.28); }
 .diario-tabs::-webkit-scrollbar { height:5px; }
 .diario-tabs::-webkit-scrollbar-thumb { background:rgba(120,90,40,0.3); border-radius:3px; }
@@ -578,7 +585,8 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     </div>
     <div class="diario-tabs" id="diarioTabs"></div>
     <div class="diario-paper">
-      <textarea class="diario-text" id="diarioText" placeholder="Escreva aqui a crônica da mesa…" spellcheck="true"></textarea>
+      <textarea class="diario-text" id="diarioText" placeholder="Escreva aqui a crônica da mesa… (digite @ para marcar um personagem)" spellcheck="true"></textarea>
+      <div class="diario-mention" id="diarioMention"></div>
     </div>
     <div class="diario-nav">
       <button class="diario-navbtn" id="diarioPrev" type="button" title="Página anterior">&#8249;</button>
@@ -1328,6 +1336,8 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   var diarioSearch        = document.getElementById('diarioSearch');
   var diarioSearchInput   = document.getElementById('diarioSearchInput');
   var diarioSearchResults = document.getElementById('diarioSearchResults');
+  var diarioMention = document.getElementById('diarioMention');
+  var diarioChars = [], _diarioMentionRange = null, _diarioMentionMatches = null, _diarioMentionIdx = 0;
   var _diarioActiveTabEl = null;
   function diarioEnsure() {
     if (!Array.isArray(diarioAbas) || !diarioAbas.length) diarioAbas = [{ nome:'Diário', subabas:[{ nome:'Geral', paginas:[''] }] }];
@@ -1453,6 +1463,8 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   function openDiario() {
     diarioOverlay.classList.add('show');
     diarioStatus.textContent = 'carregando…';
+    sbGet('/rest/v1/personagens?select=char_id,name,img_url&deleted_at=is.null&order=name.asc')
+      .then(function(rows){ diarioChars = Array.isArray(rows) ? rows.filter(function(r){ return r && r.name; }) : []; }).catch(function(){});
     sbGet('/rest/v1/diario_mesa?sala=eq.' + encodeURIComponent(SALA) + '&select=abas,paginas').then(function(rows){
       var row = (Array.isArray(rows) && rows[0]) ? rows[0] : null;
       if (row && Array.isArray(row.abas) && row.abas.length) diarioAbas = row.abas;                          // migra p/ subabas no diarioEnsure
@@ -1572,6 +1584,58 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   }
   diarioSearchInput.addEventListener('input', diarioRunSearch);
 
+  // ── Menções: digitar @ marca um personagem do banco ────────────────
+  function diarioCaretXY(ta) {   // posição em pixels do cursor dentro do textarea (técnica do espelho)
+    var div = document.createElement('div'), cs = getComputedStyle(ta);
+    ['fontFamily','fontSize','fontWeight','lineHeight','letterSpacing','textTransform','paddingTop','paddingRight','paddingBottom','paddingLeft','borderTopWidth','borderRightWidth','borderBottomWidth','borderLeftWidth','boxSizing'].forEach(function(p){ div.style[p] = cs[p]; });
+    div.style.position = 'absolute'; div.style.visibility = 'hidden'; div.style.whiteSpace = 'pre-wrap'; div.style.wordWrap = 'break-word'; div.style.width = ta.clientWidth + 'px';
+    div.textContent = ta.value.substring(0, ta.selectionStart);
+    var span = document.createElement('span'); span.textContent = '​'; div.appendChild(span);
+    document.body.appendChild(div);
+    var x = span.offsetLeft - ta.scrollLeft, y = span.offsetTop - ta.scrollTop;
+    document.body.removeChild(div);
+    return { x:x, y:y };
+  }
+  function diarioHideMention() { diarioMention.classList.remove('show'); _diarioMentionRange = null; _diarioMentionMatches = null; }
+  function diarioHighlightMention() { Array.prototype.forEach.call(diarioMention.children, function(ch, i){ ch.classList.toggle('active', i === _diarioMentionIdx); }); }
+  function diarioPickMention(i) {
+    if (!_diarioMentionRange || !_diarioMentionMatches || !_diarioMentionMatches[i]) return;
+    var ta = diarioText, val = ta.value, insert = '@' + _diarioMentionMatches[i].name + ' ';
+    ta.value = val.substring(0, _diarioMentionRange.start) + insert + val.substring(_diarioMentionRange.end);
+    var caret = _diarioMentionRange.start + insert.length;
+    diarioHideMention();
+    ta.focus(); ta.setSelectionRange(caret, caret);
+    diarioEnsure(); diarioCurPages()[diarioPage] = ta.value;
+    send('diario-pg', { t:diarioTab, s:diarioSub, i:diarioPage, text:ta.value });
+    diarioSave();
+  }
+  function diarioCheckMention() {
+    if (!diarioChars.length) { diarioHideMention(); return; }
+    var ta = diarioText, pos = ta.selectionStart;
+    var m = ta.value.substring(0, pos).match(/(^|\s)@([^\s@]*)$/);
+    if (!m) { diarioHideMention(); return; }
+    var query = m[2].toLowerCase();
+    _diarioMentionRange = { start: pos - m[2].length - 1, end: pos };
+    var matches = diarioChars.filter(function(c){ return c.name.toLowerCase().indexOf(query) >= 0; }).slice(0, 6);
+    if (!matches.length) { diarioHideMention(); return; }
+    _diarioMentionMatches = matches; _diarioMentionIdx = 0;
+    diarioMention.innerHTML = '';
+    matches.forEach(function(c, i){
+      var it = document.createElement('div'); it.className = 'diario-mention-item' + (i === 0 ? ' active' : '');
+      var av = c.img_url ? '<img src="' + esc(c.img_url) + '" alt="">' : '<span class="diario-mention-ph">⬡</span>';
+      it.innerHTML = av + '<span>' + esc(c.name) + '</span>';
+      (function(i){ it.addEventListener('mousedown', function(e){ e.preventDefault(); diarioPickMention(i); }); })(i);
+      (function(i){ it.addEventListener('mouseenter', function(){ _diarioMentionIdx = i; diarioHighlightMention(); }); })(i);
+      diarioMention.appendChild(it);
+    });
+    var caret = diarioCaretXY(ta), taR = ta.getBoundingClientRect();
+    diarioMention.style.left = Math.max(8, Math.min(taR.left + caret.x, window.innerWidth - 250)) + 'px';
+    diarioMention.classList.add('show');
+    var h = diarioMention.offsetHeight, top = taR.top + caret.y + 22;
+    if (top + h > window.innerHeight - 8) top = taR.top + caret.y - h - 6;
+    diarioMention.style.top = Math.max(8, top) + 'px';
+  }
+
   diarioText.addEventListener('input', function() {
     diarioEnsure();
     diarioCurPages()[diarioPage] = diarioText.value;
@@ -1579,7 +1643,17 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     if (_diarioBcastT) clearTimeout(_diarioBcastT);
     _diarioBcastT = setTimeout(function(){ send('diario-pg', { t:t, s:s, i:i, text:val }); }, 250);
     diarioSave();
+    diarioCheckMention();
   });
+  diarioText.addEventListener('keydown', function(e){
+    if (!diarioMention.classList.contains('show') || !_diarioMentionMatches) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); _diarioMentionIdx = Math.min(_diarioMentionMatches.length - 1, _diarioMentionIdx + 1); diarioHighlightMention(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); _diarioMentionIdx = Math.max(0, _diarioMentionIdx - 1); diarioHighlightMention(); }
+    else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); diarioPickMention(_diarioMentionIdx); }
+    else if (e.key === 'Escape') { e.preventDefault(); diarioHideMention(); }
+  });
+  diarioText.addEventListener('blur', function(){ setTimeout(diarioHideMention, 150); });
+  diarioText.addEventListener('click', function(){ diarioHideMention(); });
   document.getElementById('diarioPrev').addEventListener('click', function(){ if (diarioPage > 0) { diarioPage--; diarioRender(); diarioText.focus(); } });
   document.getElementById('diarioNext').addEventListener('click', function(){ if (diarioPage < diarioCurPages().length - 1) { diarioPage++; diarioRender(); diarioText.focus(); } });
   document.getElementById('diarioAdd').addEventListener('click', function(){
