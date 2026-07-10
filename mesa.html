@@ -125,7 +125,7 @@ body {
   background:rgba(78,211,232,0.03); transition:border-color .15s, background .15s;
   display:flex; flex-direction:column; align-items:center; gap:2px;
 }
-.die-row { display:flex; align-items:center; justify-content:center; gap:10px; }
+.die-row { display:flex; align-items:center; gap:8px; width:100%; }
 .die-tile.has { border-color:var(--holo-soft); background:rgba(78,211,232,0.07); }
 .die-tile.fome.has { border-color:rgba(224,71,58,0.6); background:rgba(224,71,58,0.08); }
 .die-tile.desp.has { border-color:rgba(255,157,61,0.6); background:rgba(255,157,61,0.08); }
@@ -140,7 +140,7 @@ body {
 .die-tile.d10 .die-pick { color:#cdd6df; }
 .die-tile.fome .die-pick { color:var(--fome); }
 .die-tile.desp .die-pick { color:var(--desp); }
-.die-name { font-family:var(--font-mono); font-size:8.5px; letter-spacing:0.03em; color:var(--fg-dim); text-transform:uppercase; line-height:1.25; text-align:center; }
+.die-name { flex:1 1 auto; min-width:0; font-family:var(--font-mono); font-size:15px; font-weight:700; letter-spacing:0.02em; color:var(--fg); text-transform:uppercase; line-height:1.08; text-align:left; cursor:pointer; word-break:break-word; }
 .die-tile.fome .die-name { color:var(--fome); }
 .die-tile.desp .die-name { color:var(--desp); }
 .die-qty {
@@ -709,17 +709,15 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       tile.className = 'die-tile ' + d.cls + (n>0?' has':'');
       tile.innerHTML =
         '<div class="die-row">' +
+          '<div class="die-name" title="Clique para adicionar">' + esc(d.label) + '</div>' +
           '<div class="die-pick" title="Clique para adicionar">' + shapeSVG(sides) + '</div>' +
           '<input class="die-qty" type="number" min="0" inputmode="numeric" value="' + n + '">' +
-        '</div>' +
-        '<div class="die-name">' + esc(d.label) + '</div>';
+        '</div>';
       var input = tile.querySelector('.die-qty');
-      // Clicar no dadinho = +1 (atualiza em tempo real, sem re-render)
-      tile.querySelector('.die-pick').addEventListener('click', function() {
-        var v = (counts[d.id] || 0) + 1;
-        counts[d.id] = v; input.value = v;
-        tile.classList.add('has');
-      });
+      // Clicar no dado ou no nome = +1 (atualiza em tempo real, sem re-render)
+      function addOne() { var v = (counts[d.id] || 0) + 1; counts[d.id] = v; input.value = v; tile.classList.add('has'); }
+      tile.querySelector('.die-pick').addEventListener('click', addOne);
+      tile.querySelector('.die-name').addEventListener('click', addOne);
       // Digitar = define a quantidade direto
       input.addEventListener('input', function() {
         var v = parseInt(input.value, 10);
