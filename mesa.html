@@ -1409,7 +1409,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
         subl.textContent = '› ' + (a.subabas[diarioSub] ? a.subabas[diarioSub].nome : '');
         t.appendChild(subl);
       }
-      t.addEventListener('click', function(){ if (idx !== diarioTab) { diarioTab = idx; diarioSub = diarioDefaultSub(diarioAbas[idx]); diarioPage = 0; diarioCloseSubmenu(); diarioRender(); diarioText.focus(); } });
+      t.addEventListener('click', function(e){ e.stopPropagation(); if (idx !== diarioTab) { diarioTab = idx; diarioSub = diarioDefaultSub(diarioAbas[idx]); diarioPage = 0; diarioCloseSubmenu(); diarioRender(); diarioText.focus(); } else { diarioToggleSubmenu(t); } });
       t.addEventListener('dblclick', function(){ diarioRenameTab(idx); });
       if (active) {
         var car = document.createElement('button');
