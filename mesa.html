@@ -143,6 +143,8 @@ body {
 .die-name { flex:1 1 auto; min-width:0; font-family:var(--font-mono); font-size:15px; font-weight:700; letter-spacing:0.12em; color:var(--holo); text-transform:uppercase; line-height:1.12; text-align:left; cursor:pointer; word-break:break-word; text-shadow:0 0 6px rgba(78,211,232,0.5); }
 .die-tile.fome .die-name { color:var(--fome); text-shadow:0 0 6px rgba(224,71,58,0.55); }
 .die-tile.desp .die-name { color:var(--desp); text-shadow:0 0 6px rgba(255,157,61,0.55); }
+.die-tile.wide-name .die-row { justify-content:center; gap:12px; }
+.die-tile.wide-name .die-name { flex:none; width:100%; text-align:center; white-space:nowrap; font-size:13.5px; letter-spacing:0.06em; }
 .die-qty {
   width:40px; flex:0 0 auto; text-align:center; background:rgba(0,0,0,0.28); border:1px solid var(--line);
   border-radius:4px; color:var(--fg); font-family:var(--font-mono); font-size:13px; font-weight:600;
@@ -706,13 +708,14 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       var n = counts[d.id] || 0;
       var sides = (d.kind === 'coin') ? 0 : (parseInt((d.label.match(/(\d+)/) || [])[1], 10) || 6);
       var tile = document.createElement('div');
-      tile.className = 'die-tile ' + d.cls + (n>0?' has':'');
-      tile.innerHTML =
-        '<div class="die-row">' +
-          '<div class="die-name" title="Clique para adicionar">' + esc(d.label) + '</div>' +
-          '<div class="die-pick" title="Clique para adicionar">' + shapeSVG(sides) + '</div>' +
-          '<input class="die-qty" type="number" min="0" inputmode="numeric" value="' + n + '">' +
-        '</div>';
+      var wide = /[\s\/]/.test(d.label);   // nomes longos (Cara/Coroa, D10 Fome, D10 Desespero) → nome embaixo
+      tile.className = 'die-tile ' + d.cls + (wide ? ' wide-name' : '') + (n>0?' has':'');
+      var nameHtml = '<div class="die-name" title="Clique para adicionar">' + esc(d.label) + '</div>';
+      var pickHtml = '<div class="die-pick" title="Clique para adicionar">' + shapeSVG(sides) + '</div>';
+      var qtyHtml  = '<input class="die-qty" type="number" min="0" inputmode="numeric" value="' + n + '">';
+      tile.innerHTML = wide
+        ? ('<div class="die-row">' + pickHtml + qtyHtml + '</div>' + nameHtml)
+        : ('<div class="die-row">' + nameHtml + pickHtml + qtyHtml + '</div>');
       var input = tile.querySelector('.die-qty');
       // Clicar no dado ou no nome = +1 (atualiza em tempo real, sem re-render)
       function addOne() { var v = (counts[d.id] || 0) + 1; counts[d.id] = v; input.value = v; tile.classList.add('has'); }
