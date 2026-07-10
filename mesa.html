@@ -300,6 +300,18 @@ body {
 .diario-tab-x:hover { color:#c0392b; opacity:1; }
 .diario-tab-add { flex:0 0 auto; border:1px dashed rgba(120,90,40,0.45); background:transparent; color:#7a5a30; width:26px; height:29px; border-radius:6px 6px 0 0; cursor:pointer; font-size:16px; line-height:1; }
 .diario-tab-add:hover { background:rgba(180,150,95,0.2); }
+.diario-search-btn { background:transparent; border:none; color:#8a6a3a; font-size:14px; line-height:1; cursor:pointer; padding:2px 4px; }
+.diario-search-btn:hover { color:#6b3f1d; }
+.diario-search { display:none; padding:10px 14px; background:#efe4c8; border-bottom:1px solid rgba(120,90,40,0.35); box-shadow:inset 0 -8px 12px -10px rgba(60,40,10,0.35); }
+.diario-search.show { display:block; }
+.diario-search-input { width:100%; box-sizing:border-box; padding:8px 11px; border:1px solid rgba(120,90,40,0.4); border-radius:6px; background:#fbf6e6; color:#2b2418; font-family:Georgia,serif; font-size:14px; outline:none; }
+.diario-search-input:focus { border-color:rgba(120,90,40,0.7); }
+.diario-search-results { max-height:200px; overflow-y:auto; margin-top:8px; }
+.diario-sr-item { display:flex; flex-direction:column; gap:2px; padding:7px 9px; border-radius:5px; cursor:pointer; }
+.diario-sr-item:hover { background:rgba(180,150,95,0.28); }
+.diario-sr-loc { font-family:var(--font-mono); font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:#9a6b30; }
+.diario-sr-snip { font-family:Georgia,serif; font-size:13px; color:#4a3d28; }
+.diario-sr-empty { padding:8px 9px; color:#9a8256; font-family:Georgia,serif; font-size:13px; font-style:italic; }
 
 /* ── Quadro + caras dos jogadores (vídeo flutua sobre o quadro) ──
    O #jitsi NUNCA é reparentado (só muda CSS) pra não reconectar a chamada. */
@@ -546,7 +558,12 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     <div class="diario-head">
       <span class="diario-title">Diário da Mesa</span>
       <span class="diario-status" id="diarioStatus"></span>
+      <button class="diario-search-btn" id="diarioSearchBtn" type="button" title="Buscar no diário">&#128269;</button>
       <button class="diario-close" id="diarioClose" type="button" title="Fechar (Esc)">&#10005;</button>
+    </div>
+    <div class="diario-search" id="diarioSearch">
+      <input class="diario-search-input" id="diarioSearchInput" type="text" placeholder="Buscar em todas as abas…">
+      <div class="diario-search-results" id="diarioSearchResults"></div>
     </div>
     <div class="diario-tabs" id="diarioTabs"></div>
     <div class="diario-paper">
@@ -1293,6 +1310,9 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   var diarioCounter = document.getElementById('diarioCounter');
   var diarioStatus  = document.getElementById('diarioStatus');
   var diarioTabs    = document.getElementById('diarioTabs');
+  var diarioSearch        = document.getElementById('diarioSearch');
+  var diarioSearchInput   = document.getElementById('diarioSearchInput');
+  var diarioSearchResults = document.getElementById('diarioSearchResults');
   function diarioEnsure() {
     if (!Array.isArray(diarioAbas) || !diarioAbas.length) diarioAbas = [{ nome:'Diário', paginas:[''] }];
     diarioAbas.forEach(function(a){
@@ -1307,7 +1327,14 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     if (diarioPage < 0) diarioPage = 0;
   }
   function diarioCurPages() { return diarioAbas[diarioTab].paginas; }
+  function diarioSort() {   // mantém as abas sempre em ordem alfabética
+    if (!Array.isArray(diarioAbas) || !diarioAbas.length) return;
+    var cur = (diarioTab >= 0 && diarioTab < diarioAbas.length && diarioAbas[diarioTab]) ? diarioAbas[diarioTab].nome : null;
+    diarioAbas.sort(function(a, b){ return (a.nome || '').localeCompare((b.nome || ''), 'pt-BR', { sensitivity:'base' }); });
+    if (cur != null) { for (var k = 0; k < diarioAbas.length; k++) { if (diarioAbas[k].nome === cur) { diarioTab = k; break; } } }
+  }
   function diarioRenderTabs() {
+    diarioSort();
     diarioTabs.innerHTML = '';
     diarioAbas.forEach(function(a, idx){
       var t = document.createElement('span');
@@ -1375,7 +1402,10 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     if (!s || !Array.isArray(s.abas) || !Array.isArray(diarioAbas)) return;
     var typing = (diarioOverlay.classList.contains('show') && document.activeElement === diarioText);
     var curText = typing ? diarioText.value : null;
+    var curName = (diarioAbas[diarioTab] && diarioAbas[diarioTab].nome) || null;
     diarioAbas = s.abas;
+    diarioEnsure();
+    if (curName != null) { for (var k = 0; k < diarioAbas.length; k++) { if (diarioAbas[k].nome === curName) { diarioTab = k; break; } } }
     diarioEnsure();
     // preserva o que eu estava digitando, se a coordenada ainda existir
     if (typing && diarioAbas[diarioTab] && diarioAbas[diarioTab].paginas[diarioPage] !== undefined) diarioAbas[diarioTab].paginas[diarioPage] = curText;
@@ -1405,6 +1435,46 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     diarioPage = 0;
     diarioRender(); diarioText.focus(); diarioBcastStruct(); diarioSave();
   }
+  function diarioToggleSearch() {
+    var showing = diarioSearch.classList.toggle('show');
+    if (showing) { diarioSearchInput.value = ''; diarioSearchResults.innerHTML = ''; setTimeout(function(){ diarioSearchInput.focus(); }, 20); }
+  }
+  function diarioRunSearch() {
+    var q = diarioSearchInput.value.trim().toLowerCase();
+    diarioSearchResults.innerHTML = '';
+    if (!q || !Array.isArray(diarioAbas)) return;
+    var frag = document.createDocumentFragment(), n = 0;
+    diarioAbas.forEach(function(a, ti){
+      a.paginas.forEach(function(txt, pi){
+        var low = (txt || '').toLowerCase(), idx = low.indexOf(q);
+        if (idx < 0) return;
+        n++;
+        var start = Math.max(0, idx - 24);
+        var snip = (start > 0 ? '…' : '') + txt.substring(start, idx + q.length + 34).replace(/\s+/g, ' ') + '…';
+        var el = document.createElement('div');
+        el.className = 'diario-sr-item';
+        el.innerHTML = '<span class="diario-sr-loc">' + esc(a.nome) + ' · pág ' + (pi + 1) + '</span><span class="diario-sr-snip">' + esc(snip) + '</span>';
+        (function(ti, pi, idx){
+          el.addEventListener('click', function(){
+            diarioTab = ti; diarioPage = pi; diarioRender();
+            diarioSearch.classList.remove('show');
+            try {
+              diarioText.focus();
+              diarioText.setSelectionRange(idx, idx + q.length);
+              var before = (diarioCurPages()[pi] || '').substring(0, idx);
+              diarioText.scrollTop = Math.max(0, (before.split('\n').length - 2) * 30);
+            } catch (_) {}
+          });
+        })(ti, pi, idx);
+        frag.appendChild(el);
+      });
+    });
+    if (!n) { diarioSearchResults.innerHTML = '<div class="diario-sr-empty">Nada encontrado.</div>'; return; }
+    diarioSearchResults.appendChild(frag);
+  }
+  document.getElementById('diarioSearchBtn').addEventListener('click', diarioToggleSearch);
+  diarioSearchInput.addEventListener('input', diarioRunSearch);
+
   diarioText.addEventListener('input', function() {
     diarioEnsure();
     diarioCurPages()[diarioPage] = diarioText.value;
@@ -1422,7 +1492,11 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   document.getElementById('diarioClose').addEventListener('click', closeDiario);
   document.getElementById('diarioBtn').addEventListener('click', openDiario);
   diarioOverlay.addEventListener('click', function(e){ if (e.target === diarioOverlay) closeDiario(); });
-  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && diarioOverlay.classList.contains('show') && document.activeElement !== diarioText) closeDiario(); });
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Escape' || !diarioOverlay.classList.contains('show')) return;
+    if (diarioSearch.classList.contains('show')) { diarioSearch.classList.remove('show'); return; }
+    if (document.activeElement !== diarioText) closeDiario();
+  });
 
   // ── Realtime (Supabase broadcast) ─────────────────────────────────
   var channel = null;
