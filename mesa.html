@@ -290,6 +290,9 @@ body {
 .diario-navbtn { width:30px; height:28px; border-radius:5px; border:1px solid rgba(120,90,40,0.4); background:transparent; color:#6b3f1d; font-size:15px; line-height:1; cursor:pointer; }
 .diario-navbtn:hover:not(:disabled) { background:rgba(120,90,40,0.14); }
 .diario-navbtn:disabled { opacity:0.35; cursor:default; }
+.diario-fmt-group { display:flex; align-items:center; gap:4px; margin-left:8px; }
+.diario-fmt { width:27px; height:27px; border-radius:5px; border:1px solid rgba(120,90,40,0.35); background:transparent; color:#5a3410; cursor:pointer; font-family:Georgia,serif; font-size:13px; line-height:1; padding:0; }
+.diario-fmt:hover { background:rgba(120,90,40,0.16); }
 .diario-counter { min-width:88px; text-align:center; font-family:var(--font-mono); font-size:11px; letter-spacing:0.08em; color:#6b3f1d; }
 .diario-addsub { margin-left:auto; padding:5px 12px; border-radius:5px; border:1px solid rgba(120,90,40,0.45); background:transparent; color:#5a3410; font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; font-weight:700; cursor:pointer; }
 .diario-addsub:hover { background:rgba(120,90,40,0.14); }
@@ -595,6 +598,12 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       <button class="diario-navbtn" id="diarioPrev" type="button" title="Página anterior">&#8249;</button>
       <span class="diario-counter" id="diarioCounter">Página 1</span>
       <button class="diario-navbtn" id="diarioNext" type="button" title="Próxima página">&#8250;</button>
+      <span class="diario-fmt-group">
+        <button class="diario-fmt" type="button" data-cmd="bold" title="Negrito (Ctrl+B)"><b>B</b></button>
+        <button class="diario-fmt" type="button" data-cmd="italic" title="Itálico (Ctrl+I)"><i>I</i></button>
+        <button class="diario-fmt" type="button" data-cmd="underline" title="Sublinhado (Ctrl+U)"><u>U</u></button>
+        <button class="diario-fmt" type="button" data-cmd="strikeThrough" title="Tachado"><s>S</s></button>
+      </span>
       <button class="diario-addsub" id="diarioAddSub" type="button" title="Nova subaba na aba atual">+ aba</button>
       <button class="diario-addpg" id="diarioAdd" type="button" title="Nova página">+ página</button>
     </div>
@@ -1368,6 +1377,11 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   function diarioCurAba()   { return diarioAbas[diarioTab]; }
   function diarioCurSub()   { return diarioCurAba().subabas[diarioSub]; }
   function diarioCurPages() { return diarioCurSub().paginas; }
+  function diarioDefaultSub(a) {   // prefere a subaba "Geral"; senão a primeira
+    if (!a || !Array.isArray(a.subabas)) return 0;
+    for (var i = 0; i < a.subabas.length; i++) { if ((a.subabas[i].nome || '').toLowerCase() === 'geral') return i; }
+    return 0;
+  }
   function diarioSort() {   // abas e subabas sempre em ordem alfabética (determinístico p/ sync)
     if (!Array.isArray(diarioAbas) || !diarioAbas.length) return;
     var coll = function(a, b){ return (a.nome || '').localeCompare((b.nome || ''), 'pt-BR', { sensitivity:'base' }); };
@@ -1395,7 +1409,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
         subl.textContent = '› ' + (a.subabas[diarioSub] ? a.subabas[diarioSub].nome : '');
         t.appendChild(subl);
       }
-      t.addEventListener('click', function(){ if (idx !== diarioTab) { diarioTab = idx; diarioSub = 0; diarioPage = 0; diarioCloseSubmenu(); diarioRender(); diarioText.focus(); } });
+      t.addEventListener('click', function(){ if (idx !== diarioTab) { diarioTab = idx; diarioSub = diarioDefaultSub(diarioAbas[idx]); diarioPage = 0; diarioCloseSubmenu(); diarioRender(); diarioText.focus(); } });
       t.addEventListener('dblclick', function(){ diarioRenameTab(idx); });
       if (active) {
         var car = document.createElement('button');
@@ -1478,7 +1492,9 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       else diarioAbas = [{ nome:'Diário', subabas:[{ nome:'Geral', paginas:[''] }] }];
       diarioTab = 0; diarioSub = 0; diarioPage = 0;
       diarioStatus.textContent = '';
-      diarioRender();
+      diarioRender();                                   // normaliza + ordena
+      diarioTab = 0; diarioSub = diarioDefaultSub(diarioAbas[0]); diarioPage = 0;
+      diarioRender();                                   // abre na 1ª aba, subaba Geral, pág 1
       setTimeout(function(){ diarioText.focus(); }, 40);
     }).catch(function(){ diarioEnsure(); diarioStatus.textContent = ''; diarioRender(); });
   }
@@ -1681,6 +1697,9 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     diarioBcastStruct(); diarioSave();
   });
   document.getElementById('diarioAddSub').addEventListener('click', diarioAddSub);
+  Array.prototype.forEach.call(document.querySelectorAll('.diario-fmt'), function(b){
+    b.addEventListener('mousedown', function(e){ e.preventDefault(); document.execCommand(b.getAttribute('data-cmd'), false, null); diarioText.focus(); diarioSyncPage(); });
+  });
   document.getElementById('diarioClose').addEventListener('click', closeDiario);
   document.getElementById('diarioBtn').addEventListener('click', openDiario);
   diarioOverlay.addEventListener('click', function(e){ if (e.target === diarioOverlay) closeDiario(); });
