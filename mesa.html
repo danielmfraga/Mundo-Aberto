@@ -256,6 +256,40 @@ body {
 .wb-close-btn:hover { color:#fff; background:var(--danger); border-color:var(--danger); }
 #wbCanvas { background:#fff; border-radius:8px; max-width:92vw; max-height:78vh; box-shadow:0 0 40px rgba(0,0,0,0.6); cursor:crosshair; touch-action:none; }
 
+/* ── Diário da Mesa (moleskine compartilhado) ── */
+.diario-btn { color:#e7b768; background:rgba(210,150,70,0.08); border-color:rgba(210,150,70,0.45); }
+.diario-btn:hover { background:rgba(210,150,70,0.16); box-shadow:0 0 14px rgba(210,150,70,0.28); }
+.diario-overlay { position:fixed; inset:0; z-index:9992; display:none; align-items:center; justify-content:center; background:rgba(6,10,16,0.74); padding:20px; }
+.diario-overlay.show { display:flex; }
+.diario-book {
+  width:min(680px,94vw); height:min(82vh,860px); display:flex; flex-direction:column;
+  background:#f3ead2; color:#2b2418; border-radius:5px 9px 9px 5px; border-left:10px solid #b98a4a;
+  box-shadow:0 20px 60px rgba(0,0,0,0.55), inset 16px 0 26px -16px rgba(60,40,10,0.45); overflow:hidden;
+  font-family:Georgia,'Palatino Linotype','Times New Roman',serif;
+}
+.diario-head { display:flex; align-items:center; gap:10px; padding:12px 16px 10px; border-bottom:1px solid rgba(120,90,40,0.28); }
+.diario-title { font-size:19px; font-weight:700; color:#6b3f1d; letter-spacing:0.01em; }
+.diario-status { margin-left:auto; font-family:var(--font-mono); font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:#9a8256; }
+.diario-close { background:transparent; border:none; color:#8a6a3a; font-size:17px; line-height:1; cursor:pointer; padding:2px 4px; }
+.diario-close:hover { color:#6b3f1d; }
+.diario-paper { position:relative; flex:1 1 auto; overflow:hidden; }
+.diario-paper::before { content:''; position:absolute; top:0; bottom:0; left:44px; width:2px; background:rgba(200,70,60,0.38); z-index:1; }
+.diario-text {
+  width:100%; height:100%; box-sizing:border-box; resize:none; border:none; outline:none;
+  padding:8px 24px 22px 58px; color:#2b2418; caret-color:#6b3f1d;
+  font-family:inherit; font-size:16px; line-height:30px;
+  background:repeating-linear-gradient(#f3ead2, #f3ead2 29px, rgba(70,105,150,0.22) 29px, rgba(70,105,150,0.22) 30px);
+  background-attachment:local;
+}
+.diario-text::placeholder { color:#b3a479; font-style:italic; }
+.diario-nav { display:flex; align-items:center; gap:9px; padding:9px 16px; border-top:1px solid rgba(120,90,40,0.28); background:rgba(205,182,138,0.35); }
+.diario-navbtn { width:30px; height:28px; border-radius:5px; border:1px solid rgba(120,90,40,0.4); background:transparent; color:#6b3f1d; font-size:15px; line-height:1; cursor:pointer; }
+.diario-navbtn:hover:not(:disabled) { background:rgba(120,90,40,0.14); }
+.diario-navbtn:disabled { opacity:0.35; cursor:default; }
+.diario-counter { min-width:88px; text-align:center; font-family:var(--font-mono); font-size:11px; letter-spacing:0.08em; color:#6b3f1d; }
+.diario-addpg { margin-left:auto; padding:5px 12px; border-radius:5px; border:1px solid rgba(120,90,40,0.4); background:transparent; color:#6b3f1d; font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; }
+.diario-addpg:hover { background:rgba(120,90,40,0.14); }
+
 /* ── Quadro + caras dos jogadores (vídeo flutua sobre o quadro) ──
    O #jitsi NUNCA é reparentado (só muda CSS) pra não reconectar a chamada. */
 body.wb-on .video-panel {
@@ -467,6 +501,8 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 
     <button class="wb-btn" id="wbBtn" title="Abrir quadro branco">&#9998; Quadro Branco</button>
 
+    <button class="wb-btn diario-btn" id="diarioBtn" title="Abrir o diário da mesa">&#128214; Diário da Mesa</button>
+
     <div class="panel chat-panel">
       <div class="panel-head"><span class="led"></span><span class="panel-title">Chat</span></div>
       <div class="chat-msgs" id="chatMsgs"></div>
@@ -491,6 +527,26 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   <button class="img-lb-close" id="imgLbClose" type="button" title="Fechar">&#10005;</button>
   <img id="imgLbImg" src="" alt="">
   <div class="img-lb-hint">role pra dar zoom · arraste pra mover · duplo clique reseta · esc fecha</div>
+</div>
+
+<!-- Diário da Mesa (moleskine compartilhado) -->
+<div class="diario-overlay" id="diarioOverlay">
+  <div class="diario-book">
+    <div class="diario-head">
+      <span class="diario-title">Diário da Mesa</span>
+      <span class="diario-status" id="diarioStatus"></span>
+      <button class="diario-close" id="diarioClose" type="button" title="Fechar (Esc)">&#10005;</button>
+    </div>
+    <div class="diario-paper">
+      <textarea class="diario-text" id="diarioText" placeholder="Escreva aqui a crônica da mesa…" spellcheck="true"></textarea>
+    </div>
+    <div class="diario-nav">
+      <button class="diario-navbtn" id="diarioPrev" type="button" title="Página anterior">&#8249;</button>
+      <span class="diario-counter" id="diarioCounter">Página 1</span>
+      <button class="diario-navbtn" id="diarioNext" type="button" title="Próxima página">&#8250;</button>
+      <button class="diario-addpg" id="diarioAdd" type="button" title="Nova página">+ página</button>
+    </div>
+  </div>
 </div>
 
 <!-- Quadro branco compartilhado -->
@@ -1213,6 +1269,80 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     b.addEventListener('click', function(){ applyWbLayout(b.dataset.layout); });
   });
 
+  // ── Diário da Mesa (moleskine compartilhado, persistido no Supabase) ─
+  // Um caderno por sala (tabela diario_mesa: sala PK, paginas jsonb). Qualquer
+  // um escreve; salva sozinho (debounce) e sincroniza ao vivo por página.
+  var diarioPaginas = null;                 // array de páginas (strings) — null = ainda não carregado
+  var diarioPage = 0;
+  var _diarioSaveT = null, _diarioBcastT = null;
+  var diarioOverlay = document.getElementById('diarioOverlay');
+  var diarioText    = document.getElementById('diarioText');
+  var diarioCounter = document.getElementById('diarioCounter');
+  var diarioStatus  = document.getElementById('diarioStatus');
+  function diarioEnsure() { if (!Array.isArray(diarioPaginas) || !diarioPaginas.length) diarioPaginas = ['']; }
+  function diarioRender() {
+    diarioEnsure();
+    if (diarioPage > diarioPaginas.length - 1) diarioPage = diarioPaginas.length - 1;
+    if (diarioPage < 0) diarioPage = 0;
+    diarioText.value = diarioPaginas[diarioPage] || '';
+    diarioCounter.textContent = 'Página ' + (diarioPage + 1) + ' / ' + diarioPaginas.length;
+    document.getElementById('diarioPrev').disabled = diarioPage === 0;
+    document.getElementById('diarioNext').disabled = diarioPage === diarioPaginas.length - 1;
+  }
+  function diarioSave() {
+    diarioStatus.textContent = 'salvando…';
+    if (_diarioSaveT) clearTimeout(_diarioSaveT);
+    _diarioSaveT = setTimeout(function() {
+      fetch(SB_URL + '/rest/v1/diario_mesa?on_conflict=sala', {
+        method:'POST',
+        headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Content-Type':'application/json', 'Prefer':'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ sala:SALA, paginas:diarioPaginas, updated_at:new Date().toISOString() })
+      }).then(function(r){ diarioStatus.textContent = r.ok ? 'salvo ✓' : 'erro ao salvar'; })
+        .catch(function(){ diarioStatus.textContent = 'sem conexão'; });
+    }, 700);
+  }
+  function openDiario() {
+    diarioOverlay.classList.add('show');
+    diarioStatus.textContent = 'carregando…';
+    sbGet('/rest/v1/diario_mesa?sala=eq.' + encodeURIComponent(SALA) + '&select=paginas').then(function(rows){
+      var pg = (Array.isArray(rows) && rows[0] && Array.isArray(rows[0].paginas)) ? rows[0].paginas : null;
+      diarioPaginas = (pg && pg.length) ? pg : [''];
+      diarioStatus.textContent = '';
+      diarioRender();
+      setTimeout(function(){ diarioText.focus(); }, 40);
+    }).catch(function(){ diarioEnsure(); diarioStatus.textContent = ''; diarioRender(); });
+  }
+  function closeDiario() { diarioOverlay.classList.remove('show'); }
+  function applyDiarioPg(p) {   // recebe edição de outra pessoa (página i)
+    if (!p || typeof p.i !== 'number' || !Array.isArray(diarioPaginas)) return;
+    var grew = false;
+    while (diarioPaginas.length <= p.i) { diarioPaginas.push(''); grew = true; }
+    diarioPaginas[p.i] = p.text || '';
+    if (!diarioOverlay.classList.contains('show')) return;
+    // só mexe no textarea se a mudança é da página que estou vendo E eu não estou digitando nela
+    if (p.i === diarioPage && document.activeElement !== diarioText) diarioText.value = diarioPaginas[diarioPage] || '';
+    if (grew) { diarioCounter.textContent = 'Página ' + (diarioPage + 1) + ' / ' + diarioPaginas.length;
+                document.getElementById('diarioNext').disabled = diarioPage === diarioPaginas.length - 1; }
+  }
+  diarioText.addEventListener('input', function() {
+    diarioEnsure();
+    diarioPaginas[diarioPage] = diarioText.value;
+    var i = diarioPage, val = diarioText.value;
+    if (_diarioBcastT) clearTimeout(_diarioBcastT);
+    _diarioBcastT = setTimeout(function(){ send('diario-pg', { i:i, text:val }); }, 250);
+    diarioSave();
+  });
+  document.getElementById('diarioPrev').addEventListener('click', function(){ if (diarioPage > 0) { diarioPage--; diarioRender(); diarioText.focus(); } });
+  document.getElementById('diarioNext').addEventListener('click', function(){ if (diarioPage < diarioPaginas.length - 1) { diarioPage++; diarioRender(); diarioText.focus(); } });
+  document.getElementById('diarioAdd').addEventListener('click', function(){
+    diarioEnsure(); diarioPaginas.push(''); diarioPage = diarioPaginas.length - 1; diarioRender(); diarioText.focus();
+    send('diario-pg', { i:diarioPage, text:'' }); diarioSave();
+  });
+  document.getElementById('diarioClose').addEventListener('click', closeDiario);
+  document.getElementById('diarioBtn').addEventListener('click', openDiario);
+  diarioOverlay.addEventListener('click', function(e){ if (e.target === diarioOverlay) closeDiario(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && diarioOverlay.classList.contains('show')) closeDiario(); });
+
   // ── Realtime (Supabase broadcast) ─────────────────────────────────
   var channel = null;
   var jitsiApi = null;
@@ -1231,6 +1361,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     else if (event === 'wb-close') closeWhiteboardView();
     else if (event === 'mesa-ctx') { applyContexto(payload.text); }
     else if (event === 'mesa-ctx-req') { var ctx = localStorage.getItem(CONTEXTO_KEY); if (ctx) send('mesa-ctx', { text:ctx }); }
+    else if (event === 'diario-pg') applyDiarioPg(payload);
   }
   function initRealtime() {
     if (!window.supabase || !window.supabase.createClient) return;
@@ -1245,6 +1376,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     });
     channel.on('broadcast', { event:'mesa-ctx' }, function(m){ dispatch('mesa-ctx', m.payload); });
     channel.on('broadcast', { event:'mesa-ctx-req' }, function(m){ dispatch('mesa-ctx-req', m.payload); });
+    channel.on('broadcast', { event:'diario-pg' }, function(m){ dispatch('diario-pg', m.payload); });
     channel.subscribe(function(status){
       document.getElementById('connDot').classList.toggle('on', status === 'SUBSCRIBED');
       if (status === 'SUBSCRIBED') { send('chars-req', {}); send('mesa-ctx-req', {}); }
