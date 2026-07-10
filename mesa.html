@@ -262,6 +262,7 @@ body {
 .diario-overlay { position:fixed; inset:0; z-index:9992; display:none; align-items:center; justify-content:center; background:rgba(6,10,16,0.74); padding:20px; }
 .diario-overlay.show { display:flex; }
 .diario-book {
+  position:relative;
   width:min(680px,94vw); height:min(82vh,860px); display:flex; flex-direction:column;
   background:#f3ead2; color:#2b2418; border-radius:5px 9px 9px 5px; border-left:10px solid #b98a4a;
   box-shadow:0 20px 60px rgba(0,0,0,0.55), inset 16px 0 26px -16px rgba(60,40,10,0.45); overflow:hidden;
@@ -287,9 +288,22 @@ body {
 .diario-navbtn:hover:not(:disabled) { background:rgba(120,90,40,0.14); }
 .diario-navbtn:disabled { opacity:0.35; cursor:default; }
 .diario-counter { min-width:88px; text-align:center; font-family:var(--font-mono); font-size:11px; letter-spacing:0.08em; color:#6b3f1d; }
-.diario-addpg { margin-left:auto; padding:5px 13px; border-radius:5px; border:1px solid #6b3f1d; background:rgba(107,63,29,0.06); color:#5a3410; font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; font-weight:700; cursor:pointer; animation:diarioNeon 1.9s ease-in-out infinite; }
+.diario-addsub { margin-left:auto; padding:5px 12px; border-radius:5px; border:1px solid rgba(120,90,40,0.45); background:transparent; color:#5a3410; font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; font-weight:700; cursor:pointer; }
+.diario-addsub:hover { background:rgba(120,90,40,0.14); }
+.diario-addpg { padding:5px 13px; border-radius:5px; border:1px solid #6b3f1d; background:rgba(107,63,29,0.06); color:#5a3410; font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; font-weight:700; cursor:pointer; animation:diarioNeon 1.9s ease-in-out infinite; }
 .diario-addpg:hover { background:rgba(107,63,29,0.12); box-shadow:0 0 15px rgba(150,100,40,0.55); }
 @keyframes diarioNeon { 0%,100% { box-shadow:0 0 6px rgba(120,80,30,0.25); } 50% { box-shadow:0 0 13px rgba(150,100,40,0.55); } }
+.diario-tab-caret { border:none; background:transparent; color:#6b3f1d; font-size:11px; line-height:1; cursor:pointer; padding:0 1px; }
+.diario-tab-caret:hover { color:#000; }
+.diario-tab-sub { color:#9a6b30; font-style:italic; margin-left:3px; max-width:90px; overflow:hidden; text-overflow:ellipsis; }
+.diario-submenu { display:none; position:absolute; z-index:20; min-width:150px; max-width:230px; max-height:230px; overflow-y:auto; background:#efe4c8; border:1px solid rgba(120,90,40,0.5); border-radius:0 0 7px 7px; box-shadow:0 12px 24px rgba(60,40,10,0.4); padding:4px; }
+.diario-submenu.show { display:block; }
+.diario-subitem { display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:5px; cursor:pointer; color:#5a4327; font-family:Georgia,serif; font-size:13px; }
+.diario-subitem > span:first-child { flex:1 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.diario-subitem:hover { background:rgba(180,150,95,0.28); }
+.diario-subitem.active { background:rgba(180,150,95,0.42); color:#6b3f1d; font-weight:700; }
+.diario-subitem-x { border:none; background:transparent; color:#a98a5a; font-size:13px; line-height:1; cursor:pointer; padding:0 1px; opacity:0.6; }
+.diario-subitem-x:hover { color:#c0392b; opacity:1; }
 .diario-tabs { display:flex; align-items:flex-end; gap:4px; padding:8px 12px 0; overflow-x:auto; background:rgba(205,182,138,0.25); border-bottom:1px solid rgba(120,90,40,0.28); }
 .diario-tabs::-webkit-scrollbar { height:5px; }
 .diario-tabs::-webkit-scrollbar-thumb { background:rgba(120,90,40,0.3); border-radius:3px; }
@@ -570,8 +584,10 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       <button class="diario-navbtn" id="diarioPrev" type="button" title="Página anterior">&#8249;</button>
       <span class="diario-counter" id="diarioCounter">Página 1</span>
       <button class="diario-navbtn" id="diarioNext" type="button" title="Próxima página">&#8250;</button>
+      <button class="diario-addsub" id="diarioAddSub" type="button" title="Nova subaba na aba atual">+ aba</button>
       <button class="diario-addpg" id="diarioAdd" type="button" title="Nova página">+ página</button>
     </div>
+    <div class="diario-submenu" id="diarioSubmenu"></div>
   </div>
 </div>
 
@@ -1299,47 +1315,82 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   // Um caderno por sala (tabela diario_mesa: sala PK, abas jsonb). Cada aba tem
   // nome + suas páginas. Qualquer um escreve; salva sozinho (debounce) e
   // sincroniza ao vivo: texto por página (diario-pg), estrutura (diario-struct).
-  var diarioAbas = null;                    // [{nome, paginas:[str]}] — null = não carregado
-  var diarioTab = 0, diarioPage = 0;
+  // Estrutura: abas = [{ nome, subabas:[{ nome, paginas:[str] }] }]  (3 níveis: Aba › Subaba › Página)
+  var diarioAbas = null;                    // null = não carregado
+  var diarioTab = 0, diarioSub = 0, diarioPage = 0;
   var _diarioSaveT = null, _diarioBcastT = null;
   var diarioOverlay = document.getElementById('diarioOverlay');
   var diarioText    = document.getElementById('diarioText');
   var diarioCounter = document.getElementById('diarioCounter');
   var diarioStatus  = document.getElementById('diarioStatus');
   var diarioTabs    = document.getElementById('diarioTabs');
+  var diarioSubmenu = document.getElementById('diarioSubmenu');
   var diarioSearch        = document.getElementById('diarioSearch');
   var diarioSearchInput   = document.getElementById('diarioSearchInput');
   var diarioSearchResults = document.getElementById('diarioSearchResults');
+  var _diarioActiveTabEl = null;
   function diarioEnsure() {
-    if (!Array.isArray(diarioAbas) || !diarioAbas.length) diarioAbas = [{ nome:'Diário', paginas:[''] }];
+    if (!Array.isArray(diarioAbas) || !diarioAbas.length) diarioAbas = [{ nome:'Diário', subabas:[{ nome:'Geral', paginas:[''] }] }];
     diarioAbas.forEach(function(a){
       if (!a || typeof a !== 'object') return;
-      if (!Array.isArray(a.paginas) || !a.paginas.length) a.paginas = [''];
       if (typeof a.nome !== 'string' || !a.nome) a.nome = 'Aba';
+      if (!Array.isArray(a.subabas) || !a.subabas.length) {   // migra formato antigo (aba com paginas direto)
+        a.subabas = (Array.isArray(a.paginas) && a.paginas.length) ? [{ nome:'Geral', paginas:a.paginas }] : [{ nome:'Geral', paginas:[''] }];
+      }
+      if (a.paginas) delete a.paginas;
+      a.subabas.forEach(function(sb){
+        if (typeof sb.nome !== 'string' || !sb.nome) sb.nome = 'Geral';
+        if (!Array.isArray(sb.paginas) || !sb.paginas.length) sb.paginas = [''];
+      });
     });
     if (diarioTab > diarioAbas.length - 1) diarioTab = diarioAbas.length - 1;
     if (diarioTab < 0) diarioTab = 0;
-    var pg = diarioAbas[diarioTab].paginas;
+    var subs = diarioAbas[diarioTab].subabas;
+    if (diarioSub > subs.length - 1) diarioSub = subs.length - 1;
+    if (diarioSub < 0) diarioSub = 0;
+    var pg = subs[diarioSub].paginas;
     if (diarioPage > pg.length - 1) diarioPage = pg.length - 1;
     if (diarioPage < 0) diarioPage = 0;
   }
-  function diarioCurPages() { return diarioAbas[diarioTab].paginas; }
-  function diarioSort() {   // mantém as abas sempre em ordem alfabética
+  function diarioCurAba()   { return diarioAbas[diarioTab]; }
+  function diarioCurSub()   { return diarioCurAba().subabas[diarioSub]; }
+  function diarioCurPages() { return diarioCurSub().paginas; }
+  function diarioSort() {   // abas e subabas sempre em ordem alfabética (determinístico p/ sync)
     if (!Array.isArray(diarioAbas) || !diarioAbas.length) return;
-    var cur = (diarioTab >= 0 && diarioTab < diarioAbas.length && diarioAbas[diarioTab]) ? diarioAbas[diarioTab].nome : null;
-    diarioAbas.sort(function(a, b){ return (a.nome || '').localeCompare((b.nome || ''), 'pt-BR', { sensitivity:'base' }); });
-    if (cur != null) { for (var k = 0; k < diarioAbas.length; k++) { if (diarioAbas[k].nome === cur) { diarioTab = k; break; } } }
+    var coll = function(a, b){ return (a.nome || '').localeCompare((b.nome || ''), 'pt-BR', { sensitivity:'base' }); };
+    var curA = (diarioAbas[diarioTab] && diarioAbas[diarioTab].nome) || null;
+    var curS = (diarioAbas[diarioTab] && diarioAbas[diarioTab].subabas && diarioAbas[diarioTab].subabas[diarioSub] && diarioAbas[diarioTab].subabas[diarioSub].nome) || null;
+    diarioAbas.sort(coll);
+    diarioAbas.forEach(function(a){ if (Array.isArray(a.subabas)) a.subabas.sort(coll); });
+    if (curA != null) { for (var k = 0; k < diarioAbas.length; k++) { if (diarioAbas[k].nome === curA) { diarioTab = k; break; } } }
+    if (curS != null && diarioAbas[diarioTab] && Array.isArray(diarioAbas[diarioTab].subabas)) {
+      for (var j = 0; j < diarioAbas[diarioTab].subabas.length; j++) { if (diarioAbas[diarioTab].subabas[j].nome === curS) { diarioSub = j; break; } }
+    }
   }
   function diarioRenderTabs() {
     diarioSort();
+    diarioCloseSubmenu();
     diarioTabs.innerHTML = '';
     diarioAbas.forEach(function(a, idx){
+      var active = idx === diarioTab;
       var t = document.createElement('span');
-      t.className = 'diario-tab' + (idx === diarioTab ? ' active' : '');
+      t.className = 'diario-tab' + (active ? ' active' : '');
       t.title = 'Clique p/ abrir · duplo clique p/ renomear';
       var nm = document.createElement('span'); nm.textContent = a.nome; t.appendChild(nm);
-      t.addEventListener('click', function(){ if (idx !== diarioTab) { diarioTab = idx; diarioPage = 0; diarioRender(); diarioText.focus(); } });
+      if (active && a.subabas && a.subabas.length > 1) {
+        var subl = document.createElement('span'); subl.className = 'diario-tab-sub';
+        subl.textContent = '› ' + (a.subabas[diarioSub] ? a.subabas[diarioSub].nome : '');
+        t.appendChild(subl);
+      }
+      t.addEventListener('click', function(){ if (idx !== diarioTab) { diarioTab = idx; diarioSub = 0; diarioPage = 0; diarioCloseSubmenu(); diarioRender(); diarioText.focus(); } });
       t.addEventListener('dblclick', function(){ diarioRenameTab(idx); });
+      if (active) {
+        var car = document.createElement('button');
+        car.className = 'diario-tab-caret'; car.type = 'button'; car.textContent = '▾'; car.title = 'Subabas';
+        car.addEventListener('click', function(e){ e.stopPropagation(); diarioToggleSubmenu(t); });
+        t.appendChild(car);
+        _diarioActiveTabEl = t;
+      }
       var x = document.createElement('button');
       x.className = 'diario-tab-x'; x.type = 'button'; x.textContent = '×'; x.title = 'Excluir aba';
       x.addEventListener('click', function(e){ e.stopPropagation(); diarioDeleteTab(idx); });
@@ -1350,6 +1401,33 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     add.className = 'diario-tab-add'; add.type = 'button'; add.textContent = '+'; add.title = 'Nova aba';
     add.addEventListener('click', diarioAddTab);
     diarioTabs.appendChild(add);
+  }
+  function diarioCloseSubmenu() { diarioSubmenu.classList.remove('show'); }
+  function diarioBuildSubmenu() {
+    diarioSubmenu.innerHTML = '';
+    var a = diarioCurAba(); if (!a) return;
+    a.subabas.forEach(function(sb, sidx){
+      var it = document.createElement('div');
+      it.className = 'diario-subitem' + (sidx === diarioSub ? ' active' : '');
+      it.title = 'Clique p/ abrir · duplo clique p/ renomear';
+      var nm = document.createElement('span'); nm.textContent = sb.nome; it.appendChild(nm);
+      it.addEventListener('click', function(){ diarioSub = sidx; diarioPage = 0; diarioCloseSubmenu(); diarioRender(); diarioText.focus(); });
+      it.addEventListener('dblclick', function(e){ e.stopPropagation(); diarioRenameSub(sidx); });
+      var x = document.createElement('button');
+      x.className = 'diario-subitem-x'; x.type = 'button'; x.textContent = '×'; x.title = 'Excluir subaba';
+      x.addEventListener('click', function(e){ e.stopPropagation(); diarioDeleteSub(sidx); });
+      it.appendChild(x);
+      diarioSubmenu.appendChild(it);
+    });
+  }
+  function diarioToggleSubmenu(tabEl) {
+    if (diarioSubmenu.classList.contains('show')) { diarioCloseSubmenu(); return; }
+    diarioBuildSubmenu();
+    var book = diarioOverlay.querySelector('.diario-book');
+    var tr = (tabEl || _diarioActiveTabEl).getBoundingClientRect(), br = book.getBoundingClientRect();
+    diarioSubmenu.style.left = Math.max(4, tr.left - br.left) + 'px';
+    diarioSubmenu.style.top  = (tr.bottom - br.top) + 'px';
+    diarioSubmenu.classList.add('show');
   }
   function diarioRender() {
     diarioEnsure();
@@ -1377,46 +1455,49 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     diarioStatus.textContent = 'carregando…';
     sbGet('/rest/v1/diario_mesa?sala=eq.' + encodeURIComponent(SALA) + '&select=abas,paginas').then(function(rows){
       var row = (Array.isArray(rows) && rows[0]) ? rows[0] : null;
-      if (row && Array.isArray(row.abas) && row.abas.length) diarioAbas = row.abas;
-      else if (row && Array.isArray(row.paginas) && row.paginas.length) diarioAbas = [{ nome:'Diário', paginas:row.paginas }]; // migra formato antigo
-      else diarioAbas = [{ nome:'Diário', paginas:[''] }];
-      diarioTab = 0; diarioPage = 0;
+      if (row && Array.isArray(row.abas) && row.abas.length) diarioAbas = row.abas;                          // migra p/ subabas no diarioEnsure
+      else if (row && Array.isArray(row.paginas) && row.paginas.length) diarioAbas = [{ nome:'Diário', paginas:row.paginas }]; // formato bem antigo
+      else diarioAbas = [{ nome:'Diário', subabas:[{ nome:'Geral', paginas:[''] }] }];
+      diarioTab = 0; diarioSub = 0; diarioPage = 0;
       diarioStatus.textContent = '';
       diarioRender();
       setTimeout(function(){ diarioText.focus(); }, 40);
     }).catch(function(){ diarioEnsure(); diarioStatus.textContent = ''; diarioRender(); });
   }
-  function closeDiario() { diarioOverlay.classList.remove('show'); }
-  function applyDiarioPg(p) {   // edição de texto de outra pessoa (aba t, página i)
-    if (!p || typeof p.t !== 'number' || typeof p.i !== 'number' || !Array.isArray(diarioAbas) || !diarioAbas[p.t]) return;
-    var pg = diarioAbas[p.t].paginas;
+  function closeDiario() { diarioCloseSubmenu(); diarioOverlay.classList.remove('show'); }
+  function applyDiarioPg(p) {   // edição de texto de outra pessoa (aba t, subaba s, página i)
+    if (!p || typeof p.t !== 'number' || typeof p.s !== 'number' || typeof p.i !== 'number' || !Array.isArray(diarioAbas)) return;
+    var a = diarioAbas[p.t]; if (!a || !Array.isArray(a.subabas) || !a.subabas[p.s]) return;
+    var pg = a.subabas[p.s].paginas;
     while (pg.length <= p.i) pg.push('');
     pg[p.i] = p.text || '';
     if (!diarioOverlay.classList.contains('show')) return;
-    if (p.t === diarioTab && p.i === diarioPage && document.activeElement !== diarioText) diarioText.value = pg[diarioPage] || '';
+    if (p.t === diarioTab && p.s === diarioSub && p.i === diarioPage && document.activeElement !== diarioText) diarioText.value = pg[diarioPage] || '';
   }
-  function applyDiarioStruct(s) {   // mudança de abas/páginas de outra pessoa
+  function applyDiarioStruct(s) {   // mudança de abas/subabas/páginas de outra pessoa
     if (!s || !Array.isArray(s.abas) || !Array.isArray(diarioAbas)) return;
     var typing = (diarioOverlay.classList.contains('show') && document.activeElement === diarioText);
     var curText = typing ? diarioText.value : null;
-    var curName = (diarioAbas[diarioTab] && diarioAbas[diarioTab].nome) || null;
+    var curA = (diarioAbas[diarioTab] && diarioAbas[diarioTab].nome) || null;
+    var curS = (diarioAbas[diarioTab] && diarioAbas[diarioTab].subabas && diarioAbas[diarioTab].subabas[diarioSub] && diarioAbas[diarioTab].subabas[diarioSub].nome) || null;
     diarioAbas = s.abas;
     diarioEnsure();
-    if (curName != null) { for (var k = 0; k < diarioAbas.length; k++) { if (diarioAbas[k].nome === curName) { diarioTab = k; break; } } }
+    if (curA != null) { for (var k = 0; k < diarioAbas.length; k++) { if (diarioAbas[k].nome === curA) { diarioTab = k; break; } } }
+    if (curS != null && diarioAbas[diarioTab]) { var subs = diarioAbas[diarioTab].subabas; for (var j = 0; j < subs.length; j++) { if (subs[j].nome === curS) { diarioSub = j; break; } } }
     diarioEnsure();
     // preserva o que eu estava digitando, se a coordenada ainda existir
-    if (typing && diarioAbas[diarioTab] && diarioAbas[diarioTab].paginas[diarioPage] !== undefined) diarioAbas[diarioTab].paginas[diarioPage] = curText;
+    if (typing && diarioCurPages()[diarioPage] !== undefined) diarioCurPages()[diarioPage] = curText;
     if (!diarioOverlay.classList.contains('show')) return;
-    if (typing) diarioRenderTabs();   // não mexe no caret; só atualiza as abas
+    if (typing) diarioRenderTabs();   // não mexe no caret; só atualiza abas/subabas
     else diarioRender();
   }
   function diarioBcastStruct() { send('diario-struct', { abas:diarioAbas }); }
-  function diarioAddTab() {
+  function diarioAddTab() {   // nova aba de topo (com uma subaba padrão)
     var nome = (window.prompt('Nome da nova aba:', 'Aba ' + (diarioAbas.length + 1)) || '').trim();
     if (!nome) return;
-    diarioAbas.push({ nome:nome, paginas:[''] });
-    diarioTab = diarioAbas.length - 1; diarioPage = 0;
-    diarioRender(); diarioText.focus(); diarioBcastStruct(); diarioSave();
+    diarioAbas.push({ nome:nome, subabas:[{ nome:'Geral', paginas:[''] }] });
+    diarioTab = diarioAbas.length - 1; diarioSub = 0; diarioPage = 0;
+    diarioCloseSubmenu(); diarioRender(); diarioText.focus(); diarioBcastStruct(); diarioSave();
   }
   function diarioRenameTab(idx) {
     var nome = (window.prompt('Renomear aba:', diarioAbas[idx].nome) || '').trim();
@@ -1429,8 +1510,29 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     if (!window.confirm('Excluir a aba "' + diarioAbas[idx].nome + '" e todo o conteúdo dela?')) return;
     diarioAbas.splice(idx, 1);
     if (diarioTab >= diarioAbas.length) diarioTab = diarioAbas.length - 1;
+    diarioSub = 0; diarioPage = 0;
+    diarioCloseSubmenu(); diarioRender(); diarioText.focus(); diarioBcastStruct(); diarioSave();
+  }
+  function diarioAddSub() {   // nova subaba dentro da aba atual
+    var nome = (window.prompt('Nome da nova subaba:', 'Subaba ' + (diarioCurAba().subabas.length + 1)) || '').trim();
+    if (!nome) return;
+    diarioCurAba().subabas.push({ nome:nome, paginas:[''] });
+    diarioSub = diarioCurAba().subabas.length - 1; diarioPage = 0;
+    diarioCloseSubmenu(); diarioRender(); diarioText.focus(); diarioBcastStruct(); diarioSave();
+  }
+  function diarioRenameSub(sidx) {
+    var nome = (window.prompt('Renomear subaba:', diarioCurAba().subabas[sidx].nome) || '').trim();
+    if (!nome) return;
+    diarioCurAba().subabas[sidx].nome = nome;
+    diarioBuildSubmenu(); diarioRenderTabs(); diarioBcastStruct(); diarioSave();
+  }
+  function diarioDeleteSub(sidx) {
+    if (diarioCurAba().subabas.length <= 1) { window.alert('A aba precisa de pelo menos uma subaba.'); return; }
+    if (!window.confirm('Excluir a subaba "' + diarioCurAba().subabas[sidx].nome + '"?')) return;
+    diarioCurAba().subabas.splice(sidx, 1);
+    if (diarioSub >= diarioCurAba().subabas.length) diarioSub = diarioCurAba().subabas.length - 1;
     diarioPage = 0;
-    diarioRender(); diarioText.focus(); diarioBcastStruct(); diarioSave();
+    diarioCloseSubmenu(); diarioRender(); diarioText.focus(); diarioBcastStruct(); diarioSave();
   }
   function diarioRunSearch() {
     var q = diarioSearchInput.value.trim().toLowerCase();
@@ -1438,28 +1540,31 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     if (!q || !Array.isArray(diarioAbas)) return;
     var frag = document.createDocumentFragment(), n = 0;
     diarioAbas.forEach(function(a, ti){
-      a.paginas.forEach(function(txt, pi){
-        var low = (txt || '').toLowerCase(), idx = low.indexOf(q);
-        if (idx < 0) return;
-        n++;
-        var start = Math.max(0, idx - 24);
-        var snip = (start > 0 ? '…' : '') + txt.substring(start, idx + q.length + 34).replace(/\s+/g, ' ') + '…';
-        var el = document.createElement('div');
-        el.className = 'diario-sr-item';
-        el.innerHTML = '<span class="diario-sr-loc">' + esc(a.nome) + ' · pág ' + (pi + 1) + '</span><span class="diario-sr-snip">' + esc(snip) + '</span>';
-        (function(ti, pi, idx){
-          el.addEventListener('click', function(){
-            diarioTab = ti; diarioPage = pi; diarioRender();
-            diarioSearchInput.value = ''; diarioSearchResults.innerHTML = '';
-            try {
-              diarioText.focus();
-              diarioText.setSelectionRange(idx, idx + q.length);
-              var before = (diarioCurPages()[pi] || '').substring(0, idx);
-              diarioText.scrollTop = Math.max(0, (before.split('\n').length - 2) * 30);
-            } catch (_) {}
-          });
-        })(ti, pi, idx);
-        frag.appendChild(el);
+      (a.subabas || []).forEach(function(sb, si){
+        (sb.paginas || []).forEach(function(txt, pi){
+          var low = (txt || '').toLowerCase(), idx = low.indexOf(q);
+          if (idx < 0) return;
+          n++;
+          var start = Math.max(0, idx - 24);
+          var snip = (start > 0 ? '…' : '') + txt.substring(start, idx + q.length + 34).replace(/\s+/g, ' ') + '…';
+          var loc = esc(a.nome) + ' › ' + esc(sb.nome) + ' · pág ' + (pi + 1);
+          var el = document.createElement('div');
+          el.className = 'diario-sr-item';
+          el.innerHTML = '<span class="diario-sr-loc">' + loc + '</span><span class="diario-sr-snip">' + esc(snip) + '</span>';
+          (function(ti, si, pi, idx){
+            el.addEventListener('click', function(){
+              diarioTab = ti; diarioSub = si; diarioPage = pi; diarioCloseSubmenu(); diarioRender();
+              diarioSearchInput.value = ''; diarioSearchResults.innerHTML = '';
+              try {
+                diarioText.focus();
+                diarioText.setSelectionRange(idx, idx + q.length);
+                var before = (diarioCurPages()[pi] || '').substring(0, idx);
+                diarioText.scrollTop = Math.max(0, (before.split('\n').length - 2) * 30);
+              } catch (_) {}
+            });
+          })(ti, si, pi, idx);
+          frag.appendChild(el);
+        });
       });
     });
     if (!n) { diarioSearchResults.innerHTML = '<div class="diario-sr-empty">Nada encontrado.</div>'; return; }
@@ -1470,9 +1575,9 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   diarioText.addEventListener('input', function() {
     diarioEnsure();
     diarioCurPages()[diarioPage] = diarioText.value;
-    var t = diarioTab, i = diarioPage, val = diarioText.value;
+    var t = diarioTab, s = diarioSub, i = diarioPage, val = diarioText.value;
     if (_diarioBcastT) clearTimeout(_diarioBcastT);
-    _diarioBcastT = setTimeout(function(){ send('diario-pg', { t:t, i:i, text:val }); }, 250);
+    _diarioBcastT = setTimeout(function(){ send('diario-pg', { t:t, s:s, i:i, text:val }); }, 250);
     diarioSave();
   });
   document.getElementById('diarioPrev').addEventListener('click', function(){ if (diarioPage > 0) { diarioPage--; diarioRender(); diarioText.focus(); } });
@@ -1481,11 +1586,18 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     diarioEnsure(); diarioCurPages().push(''); diarioPage = diarioCurPages().length - 1; diarioRender(); diarioText.focus();
     diarioBcastStruct(); diarioSave();
   });
+  document.getElementById('diarioAddSub').addEventListener('click', diarioAddSub);
   document.getElementById('diarioClose').addEventListener('click', closeDiario);
   document.getElementById('diarioBtn').addEventListener('click', openDiario);
   diarioOverlay.addEventListener('click', function(e){ if (e.target === diarioOverlay) closeDiario(); });
+  document.addEventListener('click', function(e){
+    if (!diarioSubmenu.classList.contains('show')) return;
+    if (diarioSubmenu.contains(e.target) || (e.target.classList && e.target.classList.contains('diario-tab-caret'))) return;
+    diarioCloseSubmenu();
+  });
   document.addEventListener('keydown', function(e){
     if (e.key !== 'Escape' || !diarioOverlay.classList.contains('show')) return;
+    if (diarioSubmenu.classList.contains('show')) { diarioCloseSubmenu(); return; }
     if (document.activeElement === diarioSearchInput) { diarioSearchInput.value = ''; diarioSearchResults.innerHTML = ''; diarioSearchInput.blur(); return; }
     if (document.activeElement !== diarioText) closeDiario();
   });
