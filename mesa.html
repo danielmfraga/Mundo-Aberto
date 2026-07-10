@@ -307,7 +307,7 @@ body {
 .diario-subitem.active { background:rgba(180,150,95,0.42); color:#6b3f1d; font-weight:700; }
 .diario-subitem-x { border:none; background:transparent; color:#a98a5a; font-size:13px; line-height:1; cursor:pointer; padding:0 1px; opacity:0.6; }
 .diario-subitem-x:hover { color:#c0392b; opacity:1; }
-.diario-mention { display:none; position:fixed; z-index:40; min-width:170px; max-width:240px; max-height:210px; overflow-y:auto; background:#fbf6e6; border:1px solid rgba(120,90,40,0.5); border-radius:7px; box-shadow:0 10px 24px rgba(60,40,10,0.42); padding:4px; }
+.diario-mention { display:none; position:fixed; z-index:40; min-width:170px; max-width:240px; max-height:290px; overflow-y:auto; background:#fbf6e6; border:1px solid rgba(120,90,40,0.5); border-radius:7px; box-shadow:0 10px 24px rgba(60,40,10,0.42); padding:4px; }
 .diario-mention.show { display:block; }
 .diario-mention-item { display:flex; align-items:center; gap:8px; padding:5px 7px; border-radius:5px; cursor:pointer; color:#3a2e1c; font-family:Georgia,serif; font-size:13px; }
 .diario-mention-item.active, .diario-mention-item:hover { background:rgba(180,150,95,0.32); }
@@ -1597,7 +1597,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     return rect;
   }
   function diarioHideMention() { diarioMention.classList.remove('show'); _diarioMentionMatches = null; }
-  function diarioHighlightMention() { Array.prototype.forEach.call(diarioMention.children, function(ch, i){ ch.classList.toggle('active', i === _diarioMentionIdx); }); }
+  function diarioHighlightMention() { Array.prototype.forEach.call(diarioMention.children, function(ch, i){ var on = i === _diarioMentionIdx; ch.classList.toggle('active', on); if (on && ch.scrollIntoView) ch.scrollIntoView({ block:'nearest' }); }); }
   function diarioSyncPage() {   // grava a página atual (HTML) no modelo + broadcast + save
     diarioEnsure();
     diarioCurPages()[diarioPage] = diarioText.innerHTML;
@@ -1634,7 +1634,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     var m = node.textContent.substring(0, range.startOffset).match(/(^|\s| )@([^\s@ ]*)$/);
     if (!m) { diarioHideMention(); return; }
     var query = m[2].toLowerCase();
-    var matches = diarioChars.filter(function(c){ return c.name.toLowerCase().indexOf(query) >= 0; }).slice(0, 6);
+    var matches = diarioChars.filter(function(c){ return c.name.toLowerCase().indexOf(query) >= 0; }).slice(0, 50);
     if (!matches.length) { diarioHideMention(); return; }
     _diarioMentionMatches = matches; _diarioMentionIdx = 0;
     diarioMention.innerHTML = '';
