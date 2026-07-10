@@ -287,8 +287,9 @@ body {
 .diario-navbtn:hover:not(:disabled) { background:rgba(120,90,40,0.14); }
 .diario-navbtn:disabled { opacity:0.35; cursor:default; }
 .diario-counter { min-width:88px; text-align:center; font-family:var(--font-mono); font-size:11px; letter-spacing:0.08em; color:#6b3f1d; }
-.diario-addpg { margin-left:auto; padding:5px 12px; border-radius:5px; border:1px solid rgba(120,90,40,0.4); background:transparent; color:#6b3f1d; font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; }
-.diario-addpg:hover { background:rgba(120,90,40,0.14); }
+.diario-addpg { margin-left:auto; padding:5px 13px; border-radius:5px; border:1px solid #ff9d3d; background:rgba(255,157,61,0.08); color:#ff9d3d; font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; text-shadow:0 0 6px rgba(255,157,61,0.55); animation:diarioNeon 1.9s ease-in-out infinite; }
+.diario-addpg:hover { background:rgba(255,157,61,0.18); box-shadow:0 0 15px rgba(255,157,61,0.6); }
+@keyframes diarioNeon { 0%,100% { box-shadow:0 0 6px rgba(255,157,61,0.28); } 50% { box-shadow:0 0 13px rgba(255,157,61,0.6); } }
 .diario-tabs { display:flex; align-items:flex-end; gap:4px; padding:8px 12px 0; overflow-x:auto; background:rgba(205,182,138,0.25); border-bottom:1px solid rgba(120,90,40,0.28); }
 .diario-tabs::-webkit-scrollbar { height:5px; }
 .diario-tabs::-webkit-scrollbar-thumb { background:rgba(120,90,40,0.3); border-radius:3px; }
@@ -300,10 +301,7 @@ body {
 .diario-tab-x:hover { color:#c0392b; opacity:1; }
 .diario-tab-add { flex:0 0 auto; border:1px dashed rgba(120,90,40,0.45); background:transparent; color:#7a5a30; width:26px; height:29px; border-radius:6px 6px 0 0; cursor:pointer; font-size:16px; line-height:1; }
 .diario-tab-add:hover { background:rgba(180,150,95,0.2); }
-.diario-search-btn { background:transparent; border:none; color:#8a6a3a; font-size:14px; line-height:1; cursor:pointer; padding:2px 4px; }
-.diario-search-btn:hover { color:#6b3f1d; }
-.diario-search { display:none; padding:10px 14px; background:#efe4c8; border-bottom:1px solid rgba(120,90,40,0.35); box-shadow:inset 0 -8px 12px -10px rgba(60,40,10,0.35); }
-.diario-search.show { display:block; }
+.diario-search { display:block; padding:10px 14px; background:#efe4c8; border-bottom:1px solid rgba(120,90,40,0.35); box-shadow:inset 0 -8px 12px -10px rgba(60,40,10,0.35); }
 .diario-search-input { width:100%; box-sizing:border-box; padding:8px 11px; border:1px solid rgba(120,90,40,0.4); border-radius:6px; background:#fbf6e6; color:#2b2418; font-family:Georgia,serif; font-size:14px; outline:none; }
 .diario-search-input:focus { border-color:rgba(120,90,40,0.7); }
 .diario-search-results { max-height:200px; overflow-y:auto; margin-top:8px; }
@@ -558,7 +556,6 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     <div class="diario-head">
       <span class="diario-title">Diário da Mesa</span>
       <span class="diario-status" id="diarioStatus"></span>
-      <button class="diario-search-btn" id="diarioSearchBtn" type="button" title="Buscar no diário">&#128269;</button>
       <button class="diario-close" id="diarioClose" type="button" title="Fechar (Esc)">&#10005;</button>
     </div>
     <div class="diario-search" id="diarioSearch">
@@ -1435,10 +1432,6 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     diarioPage = 0;
     diarioRender(); diarioText.focus(); diarioBcastStruct(); diarioSave();
   }
-  function diarioToggleSearch() {
-    var showing = diarioSearch.classList.toggle('show');
-    if (showing) { diarioSearchInput.value = ''; diarioSearchResults.innerHTML = ''; setTimeout(function(){ diarioSearchInput.focus(); }, 20); }
-  }
   function diarioRunSearch() {
     var q = diarioSearchInput.value.trim().toLowerCase();
     diarioSearchResults.innerHTML = '';
@@ -1457,7 +1450,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
         (function(ti, pi, idx){
           el.addEventListener('click', function(){
             diarioTab = ti; diarioPage = pi; diarioRender();
-            diarioSearch.classList.remove('show');
+            diarioSearchInput.value = ''; diarioSearchResults.innerHTML = '';
             try {
               diarioText.focus();
               diarioText.setSelectionRange(idx, idx + q.length);
@@ -1472,7 +1465,6 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     if (!n) { diarioSearchResults.innerHTML = '<div class="diario-sr-empty">Nada encontrado.</div>'; return; }
     diarioSearchResults.appendChild(frag);
   }
-  document.getElementById('diarioSearchBtn').addEventListener('click', diarioToggleSearch);
   diarioSearchInput.addEventListener('input', diarioRunSearch);
 
   diarioText.addEventListener('input', function() {
@@ -1494,7 +1486,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   diarioOverlay.addEventListener('click', function(e){ if (e.target === diarioOverlay) closeDiario(); });
   document.addEventListener('keydown', function(e){
     if (e.key !== 'Escape' || !diarioOverlay.classList.contains('show')) return;
-    if (diarioSearch.classList.contains('show')) { diarioSearch.classList.remove('show'); return; }
+    if (document.activeElement === diarioSearchInput) { diarioSearchInput.value = ''; diarioSearchResults.innerHTML = ''; diarioSearchInput.blur(); return; }
     if (document.activeElement !== diarioText) closeDiario();
   });
 
