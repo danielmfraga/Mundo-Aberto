@@ -1,2 +1,8 @@
 arquivo-morto/
 _restore_daniel.json
+
+# backups locais dos dados do Supabase — NUNCA commitar (repo é público)
+backups/
+
+# deps
+node_modules/
