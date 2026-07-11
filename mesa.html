@@ -299,31 +299,52 @@ body {
 }
 .som-search input:focus { border-color:rgba(160,130,255,0.6); }
 .som-list { flex:1 1 auto; overflow-y:auto; padding:0 16px 12px; min-height:0; }
-.som-row { display:flex; align-items:center; gap:9px; padding:9px 4px; border-bottom:1px solid rgba(255,255,255,0.05); }
+.som-row { display:flex; align-items:center; gap:6px; padding:9px 4px; border-bottom:1px solid rgba(255,255,255,0.05); }
 .som-row-main { flex:1 1 auto; min-width:0; }
 .som-row .nm { font-family:var(--font-mono); font-size:12.5px; color:var(--fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .som-row .tags { font-size:9.5px; color:var(--fg-faint); letter-spacing:0.04em; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .som-row.playing .nm { color:#c3a6ff; text-shadow:0 0 7px rgba(160,130,255,0.5); }
 .som-ico {
-  flex:0 0 auto; width:30px; height:30px; border-radius:6px; border:1px solid var(--line);
+  flex:0 0 auto; width:28px; height:28px; border-radius:6px; border:1px solid var(--line);
   background:rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center;
-  font-size:14px; cursor:pointer; transition:border-color .13s, box-shadow .13s, background .13s; user-select:none;
+  font-size:13px; cursor:pointer; transition:border-color .13s, box-shadow .13s, background .13s; user-select:none;
 }
 .som-ico:hover { border-color:rgba(160,130,255,0.55); }
 .som-ico.share.on { border-color:#c3a6ff; background:rgba(160,130,255,0.16); box-shadow:0 0 9px rgba(160,130,255,0.35); }
 .som-ico.prev.on { border-color:#7ee0ff; box-shadow:0 0 9px rgba(126,224,255,0.3); }
+.som-ico.save { border-color:rgba(120,220,140,0.5); }
+.som-ico.save:hover { box-shadow:0 0 9px rgba(120,220,140,0.4); }
+/* arrastar áudio → pad */
+.som-row-main[draggable=true] { cursor:grab; }
+.som-row-main.dragging { opacity:0.45; }
+.som-pad.drop-hover { border-color:#c3a6ff; background:rgba(160,130,255,0.22); box-shadow:0 0 14px rgba(160,130,255,0.45); }
+/* edição inline (renomear + tags) */
+.som-row.editing { align-items:flex-start; }
+.som-row-edit { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:5px; }
+.som-row-edit input { width:100%; box-sizing:border-box; background:rgba(0,0,0,0.3); border:1px solid var(--line); border-radius:5px; color:var(--fg); font-family:var(--font-mono); font-size:11.5px; padding:6px 8px; outline:none; }
+.som-row-edit input:focus { border-color:rgba(160,130,255,0.6); }
 .som-empty { text-align:center; color:var(--fg-faint); font-family:var(--font-mono); font-size:11px; padding:26px 10px; line-height:1.8; }
 .som-add { border-top:1px solid rgba(160,130,255,0.14); padding:10px 16px; flex:0 0 auto; }
 .som-add-btn {
+  width:100%; display:block; text-align:center;
   font-family:var(--font-mono); font-size:10px; letter-spacing:0.14em; text-transform:uppercase;
   color:#c3a6ff; background:rgba(160,130,255,0.1); border:1px solid rgba(160,130,255,0.4);
-  border-radius:6px; padding:8px 12px; cursor:pointer; transition:background .15s;
+  border-radius:6px; padding:9px 12px; cursor:pointer; transition:background .15s, color .15s, border-color .15s;
 }
 .som-add-btn:hover { background:rgba(160,130,255,0.18); }
-.som-add-form { display:none; gap:6px; flex-wrap:wrap; align-items:center; margin-top:9px; }
-.som-add-form.show { display:flex; }
-.som-add-form input[type=text] { flex:1 1 120px; min-width:0; box-sizing:border-box; background:rgba(0,0,0,0.3); border:1px solid var(--line); border-radius:5px; color:var(--fg); font-family:var(--font-mono); font-size:11px; padding:7px 9px; outline:none; }
+.som-add-btn.ready { color:#ff7a7a; background:rgba(255,85,102,0.14); border-color:rgba(255,85,102,0.6); }
+.som-add-btn.ready:hover { background:rgba(255,85,102,0.24); box-shadow:0 0 14px rgba(255,85,102,0.35); }
+.som-add-btn[disabled] { opacity:0.6; cursor:default; }
+.som-add.staging .som-add-hint { display:none; }
+.som-add-form { display:none; flex-direction:column; gap:6px; margin-top:9px; }
+.som-add.staging .som-add-form { display:flex; }
+.som-add.multi #somNome { display:none; }
+.som-add-form input[type=text] { width:100%; box-sizing:border-box; background:rgba(0,0,0,0.3); border:1px solid var(--line); border-radius:5px; color:var(--fg); font-family:var(--font-mono); font-size:11px; padding:7px 9px; outline:none; }
 .som-add-form input[type=text]:focus { border-color:rgba(160,130,255,0.6); }
+.som-add-fileinfo { display:flex; align-items:center; gap:8px; }
+.som-add-fileinfo #somAddFileName { flex:1 1 auto; min-width:0; font-family:var(--font-mono); font-size:10px; color:#c3a6ff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.som-add-cancel { flex:0 0 auto; background:none; border:none; color:var(--fg-faint); font-family:var(--font-mono); font-size:10px; cursor:pointer; padding:2px 4px; }
+.som-add-cancel:hover { color:var(--danger); }
 .som-add-form .file-lbl { font-family:var(--font-mono); font-size:10px; color:var(--fg-dim); cursor:pointer; border:1px dashed var(--line); border-radius:5px; padding:8px 10px; white-space:nowrap; }
 .som-add-form .file-lbl:hover { border-color:rgba(160,130,255,0.5); color:var(--fg); }
 .som-add-form .go { color:#c3a6ff; background:rgba(160,130,255,0.12); border:1px solid rgba(160,130,255,0.45); border-radius:5px; font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; padding:8px 12px; cursor:pointer; }
@@ -668,15 +689,16 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       <input type="text" id="somSearch" placeholder="Buscar por nome ou tipo (mistério, prisão, taverna…)" autocomplete="off">
     </div>
     <div class="som-list" id="somList"></div>
-    <div class="som-add">
-      <button class="som-add-btn" id="somAddBtn" type="button">&#65291; Adicionar áudio</button><span class="som-add-hint">máx 1 MB · até 50 áudios</span>
+    <div class="som-add" id="somAdd">
+      <input type="file" id="somFile" accept="audio/*" multiple hidden>
+      <button class="som-add-btn" id="somAddBtn" type="button">&#65291; Adicionar áudio</button>
       <div class="som-add-form" id="somAddForm">
-        <label class="file-lbl" id="somFileLbl">Escolher arquivo…<input type="file" id="somFile" accept="audio/*" hidden></label>
+        <div class="som-add-fileinfo"><span id="somAddFileName"></span><button class="som-add-cancel" id="somAddCancel" type="button">&#10005; limpar</button></div>
         <input type="text" id="somNome" placeholder="Nome">
         <input type="text" id="somTags" placeholder="tags: mistério, tensão">
-        <button class="go" id="somGo" type="button">Enviar</button>
-        <div class="som-add-status" id="somAddStatus"></div>
       </div>
+      <div class="som-add-hint" id="somAddHint">máx 1 MB · até 50 áudios</div>
+      <div class="som-add-status" id="somAddStatus"></div>
     </div>
   </div>
 </div>
@@ -1824,21 +1846,16 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   var savedVol = parseFloat(localStorage.getItem('mesaSomVol'));
   if (!isNaN(savedVol)) { somVol = savedVol; somVolEl.value = Math.round(savedVol*100); }
   somVolEl.addEventListener('input', function(){ somSetVol(this.value/100); });
-  document.getElementById('somAddBtn').addEventListener('click', function(){ document.getElementById('somAddForm').classList.toggle('show'); });
-  var somFileEl = document.getElementById('somFile'), somFileLbl = document.getElementById('somFileLbl');
-  somFileEl.addEventListener('change', function(){
-    var f = this.files && this.files[0];
-    somFileLbl.childNodes[0].nodeValue = f ? (f.name.length>22 ? f.name.slice(0,20)+'…' : f.name) : 'Escolher arquivo…';
-    var nomeEl = document.getElementById('somNome');
-    if (f && !nomeEl.value) nomeEl.value = f.name.replace(/\.[^.]+$/,'');
-  });
-  document.getElementById('somGo').addEventListener('click', function(){
-    var f = somFileEl.files && somFileEl.files[0];
-    somUpload(f, document.getElementById('somNome').value, document.getElementById('somTags').value, document.getElementById('somAddStatus'), function(){
-      somFileEl.value = ''; document.getElementById('somNome').value = ''; document.getElementById('somTags').value = '';
-      somFileLbl.childNodes[0].nodeValue = 'Escolher arquivo…';
-    });
-  });
+  somAddEl         = document.getElementById('somAdd');
+  somFileEl        = document.getElementById('somFile');
+  somAddBtnEl      = document.getElementById('somAddBtn');
+  somNomeEl        = document.getElementById('somNome');
+  somTagsEl        = document.getElementById('somTags');
+  somAddFileNameEl = document.getElementById('somAddFileName');
+  somAddStatusEl   = document.getElementById('somAddStatus');
+  somAddBtnEl.addEventListener('click', function(){ if (somStaged.length) somDoUpload(); else somFileEl.click(); });
+  somFileEl.addEventListener('change', function(){ somStage(this.files); });
+  document.getElementById('somAddCancel').addEventListener('click', somAddIdle);
   diarioOverlay.addEventListener('click', function(e){ if (e.target === diarioOverlay) closeDiario(); });
   document.addEventListener('click', function(e){
     if (!diarioSubmenu.classList.contains('show')) return;
@@ -1867,6 +1884,10 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   var somPreviewId = null;
   var somVol = 0.8;
   var somOverlay, somList, somPadsEl, somSearchEl, somBtn;
+  var somStaged = [];        // arquivos escolhidos aguardando envio
+  var somPending = 0;        // uploads confirmados no lote atual (p/ o cap de 50)
+  var somDraggingId = null;  // id do áudio sendo arrastado p/ um pad
+  var somEditingId = null;   // id do áudio em edição inline (renomear)
 
   function somPadsGet() {
     var raw; try { raw = JSON.parse(localStorage.getItem(SOM_PADS_KEY) || '[]'); } catch(e){ raw = []; }
@@ -1902,10 +1923,10 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       if (!id || !t) {
         pad.className = 'som-pad empty';
         pad.innerHTML = '<span class="pad-plus">+</span>';
-        pad.title = 'Fixe um áudio da lista (📌) neste slot';
+        pad.title = 'Arraste um áudio aqui (ou use 📌)';
       } else {
         pad.className = 'som-pad filled' + (somShared[id] ? ' on' : '');
-        pad.title = t.nome + ' — clique para tocar/parar pra todos';
+        pad.title = t.nome + ' — clique para tocar/parar pra todos (arraste outro p/ trocar)';
         pad.innerHTML = '<span class="pad-name">' + esc(t.nome) + '</span><span class="pad-x" title="Tirar do slot">✕</span>';
         pad.addEventListener('click', function(e){
           if (e.target && e.target.classList.contains('pad-x')) {
@@ -1915,6 +1936,15 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
           somShareToggle(t);
         });
       }
+      // soltar um áudio arrastado da lista neste slot (troca o que estiver)
+      pad.addEventListener('dragover', function(e){ e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; pad.classList.add('drop-hover'); });
+      pad.addEventListener('dragleave', function(){ pad.classList.remove('drop-hover'); });
+      pad.addEventListener('drop', function(e){
+        e.preventDefault(); pad.classList.remove('drop-hover');
+        var dropId = (e.dataTransfer && e.dataTransfer.getData('text/plain')) || somDraggingId;
+        if (!dropId) return;
+        var p = somPadsGet(); p[i] = String(dropId); somPadsSet(p); somRenderPads();
+      });
       somPadsEl.appendChild(pad);
     });
   }
@@ -1942,20 +1972,71 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     if (!rows.length) { somList.innerHTML = '<div class="som-empty">Nada encontrado pra “' + esc(q) + '”.</div>'; return; }
     somList.innerHTML = '';
     rows.forEach(function(t){
-      var shared = !!somShared[t.id], prev = somPreviewId === t.id;
       var row = document.createElement('div');
+
+      // ── modo edição (renomear nome + tags) ──
+      if (somEditingId === t.id) {
+        row.className = 'som-row editing';
+        row.innerHTML =
+          '<div class="som-row-edit">' +
+            '<input class="ed-nome" type="text" value="' + esc(t.nome) + '" placeholder="Nome">' +
+            '<input class="ed-tags" type="text" value="' + esc(t.tags.join(', ')) + '" placeholder="tags (separadas por vírgula)">' +
+          '</div>' +
+          '<span class="som-ico save" title="Salvar">✔️</span>' +
+          '<span class="som-ico cancel" title="Cancelar">✕</span>';
+        var doSave = function(){
+          var nome = row.querySelector('.ed-nome').value.trim();
+          var tags = row.querySelector('.ed-tags').value.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+          somSaveEdit(t.id, nome, tags);
+        };
+        row.querySelector('.save').addEventListener('click', doSave);
+        row.querySelector('.cancel').addEventListener('click', function(){ somEditingId = null; somRenderList(); });
+        row.querySelector('.ed-nome').addEventListener('keydown', function(e){ if (e.key==='Enter') doSave(); if (e.key==='Escape'){ somEditingId=null; somRenderList(); } });
+        row.querySelector('.ed-tags').addEventListener('keydown', function(e){ if (e.key==='Enter') doSave(); if (e.key==='Escape'){ somEditingId=null; somRenderList(); } });
+        somList.appendChild(row);
+        setTimeout(function(){ var n = row.querySelector('.ed-nome'); if (n) n.focus(); }, 20);
+        return;
+      }
+
+      // ── linha normal ──
+      var shared = !!somShared[t.id], prev = somPreviewId === t.id;
       row.className = 'som-row' + (shared ? ' playing' : '');
       var tagsHtml = t.tags.length ? '<div class="tags">' + esc(t.tags.join(' · ')) + '</div>' : '';
       row.innerHTML =
-        '<div class="som-row-main"><div class="nm" title="' + esc(t.nome) + '">' + esc(t.nome) + '</div>' + tagsHtml + '</div>' +
+        '<div class="som-row-main" draggable="true"><div class="nm" title="' + esc(t.nome) + '">' + esc(t.nome) + '</div>' + tagsHtml + '</div>' +
         '<span class="som-ico prev' + (prev?' on':'') + '" title="Prévia — só você ouve">🎧</span>' +
         '<span class="som-ico share' + (shared?' on':'') + '" title="Tocar pra todos na mesa">📢</span>' +
-        '<span class="som-ico pin" title="Fixar num slot da mesa">📌</span>';
+        '<span class="som-ico pin" title="Fixar num slot da mesa">📌</span>' +
+        '<span class="som-ico edit" title="Renomear / editar tags">✏️</span>';
       row.querySelector('.prev').addEventListener('click', function(){ somPreviewToggle(t); });
       row.querySelector('.share').addEventListener('click', function(){ somShareToggle(t); });
       row.querySelector('.pin').addEventListener('click', function(){ somPinToPad(t.id); });
+      row.querySelector('.edit').addEventListener('click', function(){ somEditingId = t.id; somRenderList(); });
+      // arrastar o áudio (pela área do nome) até um pad
+      var main = row.querySelector('.som-row-main');
+      main.addEventListener('dragstart', function(e){ e.dataTransfer.setData('text/plain', t.id); e.dataTransfer.effectAllowed = 'copy'; somDraggingId = t.id; main.classList.add('dragging'); });
+      main.addEventListener('dragend', function(){ main.classList.remove('dragging'); somDraggingId = null; });
       somList.appendChild(row);
     });
+  }
+
+  // Renomear nome + tags de um áudio (precisa da policy de UPDATE anon no Supabase)
+  function somSaveEdit(id, nome, tags) {
+    if (!nome) { alert('O nome não pode ficar vazio.'); return; }
+    fetch(SB_URL + '/rest/v1/mesa_som?id=eq.' + encodeURIComponent(id), {
+      method:'PATCH',
+      headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Content-Type':'application/json', 'Prefer':'return=representation' },
+      body: JSON.stringify({ nome:nome, tags:tags })
+    }).then(function(r){
+      return r.json().then(function(rows){ return { ok:r.ok, status:r.status, rows:rows }; });
+    }).then(function(res){
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      if (!Array.isArray(res.rows) || !res.rows.length) throw new Error('0 linhas alteradas — falta a policy de UPDATE (rode o SQL do setup).');
+      var t = somTrack(String(id)); if (t) { t.nome = nome; t.tags = tags; }
+      somEditingId = null;
+      somRefreshUI();
+      send('som-lib', {});
+    }).catch(function(err){ alert('Não deu pra renomear: ' + (err && err.message || err)); });
   }
 
   function somUpdateBtn() { if (somBtn) somBtn.classList.toggle('playing', Object.keys(somShared).length > 0); }
@@ -2007,15 +2088,14 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     localStorage.setItem('mesaSomVol', String(somVol));
   }
 
-  // Upload de novo áudio → Storage (bucket mesa-som) + linha em mesa_som
-  function somUpload(file, nomeIn, tagsIn, statusEl, done) {
-    if (!sbClient || !sbClient.storage) { statusEl.textContent = 'Storage indisponível (supabase-js não carregou).'; return; }
-    if (!file) { statusEl.textContent = 'Escolha um arquivo de áudio.'; return; }
-    if (somTracks.length >= SOM_MAX_UPLOADS) { statusEl.textContent = 'Limite de ' + SOM_MAX_UPLOADS + ' áudios atingido nesta fase.'; return; }
-    if (file.size > SOM_MAX_KB * 1024) { statusEl.textContent = 'Pesado demais (' + Math.round(file.size/1024) + ' KB). Limite: ' + SOM_MAX_KB + ' KB.'; return; }
+  // Envia UM arquivo → Storage (bucket mesa-som) + linha em mesa_som. cb(errOrNull)
+  function somUploadOne(file, nomeIn, tagsIn, cb) {
+    if (!sbClient || !sbClient.storage) return cb('Storage indisponível (supabase-js não carregou)');
+    if (!file) return cb('sem arquivo');
+    if (somTracks.length + somPending >= SOM_MAX_UPLOADS) return cb('limite de ' + SOM_MAX_UPLOADS + ' áudios atingido');
+    if (file.size > SOM_MAX_KB * 1024) return cb('pesado demais (' + Math.round(file.size/1024) + ' KB, máx ' + SOM_MAX_KB + ')');
     var safe = (file.name || 'audio').replace(/[^\w.\-]+/g,'_');
-    var path = Date.now() + '-' + safe;
-    statusEl.textContent = 'Enviando…';
+    var path = Date.now() + '-' + Math.random().toString(36).slice(2,7) + '-' + safe;
     sbClient.storage.from('mesa-som').upload(path, file, { contentType:file.type || 'audio/mpeg', upsert:false })
       .then(function(res){
         if (res.error) throw res.error;
@@ -2023,20 +2103,73 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
         var url = pub && pub.data ? pub.data.publicUrl : null;
         if (!url) throw new Error('URL pública não obtida');
         var tagArr = (tagsIn||'').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+        var nome = nomeIn || (file.name || safe).replace(/\.[^.]+$/,'');
         return fetch(SB_URL + '/rest/v1/mesa_som', {
           method:'POST',
           headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Content-Type':'application/json', 'Prefer':'return=minimal' },
-          body: JSON.stringify({ nome:(nomeIn||safe), tags:tagArr, url:url })
+          body: JSON.stringify({ nome:nome, tags:tagArr, url:url })
         });
       })
-      .then(function(r){
-        if (r && !r.ok) throw new Error('Supabase ' + r.status);
-        statusEl.textContent = 'Enviado ✓';
-        somLoad(function(){ somRefreshUI(); });
-        send('som-lib', {});          // avisa os outros: biblioteca mudou
-        if (done) done();
-      })
-      .catch(function(err){ statusEl.textContent = 'Falhou: ' + (err && err.message || err); });
+      .then(function(r){ if (r && !r.ok) throw new Error('Supabase ' + r.status); somPending++; cb(null); })
+      .catch(function(err){ cb((err && err.message) || String(err)); });
+  }
+
+  // Envia o lote escolhido (1 ou vários), em sequência
+  function somDoUpload() {
+    if (!somStaged.length) return;
+    var files = somStaged.slice(), single = files.length === 1;
+    var tags = somTagsEl.value, nomeSingle = somNomeEl.value;
+    var i = 0, okCount = 0, failCount = 0, lastErr = '';
+    somPending = 0;
+    somAddBtnEl.disabled = true;
+    (function next(){
+      if (i >= files.length) {
+        somAddBtnEl.disabled = false;
+        somPending = 0;
+        if (okCount) { somLoad(function(){ somRefreshUI(); }); send('som-lib', {}); }
+        somAddIdle();
+        if (single && failCount) somAddStatusEl.textContent = 'Falhou: ' + lastErr;
+        else somAddStatusEl.textContent = failCount
+          ? (okCount + ' enviado(s) · ' + failCount + ' com erro (' + lastErr + ')')
+          : (okCount + (okCount > 1 ? ' enviados ✓' : ' enviado ✓'));
+        return;
+      }
+      var f = files[i];
+      somAddStatusEl.textContent = files.length > 1 ? ('Enviando ' + (i+1) + '/' + files.length + '…') : 'Enviando…';
+      somUploadOne(f, single ? nomeSingle : '', tags, function(err){
+        if (err) { failCount++; lastErr = err; } else okCount++;
+        i++; next();
+      });
+    })();
+  }
+
+  // refs da área de adicionar (atribuídos na fiação)
+  var somAddEl, somFileEl, somAddBtnEl, somNomeEl, somTagsEl, somAddFileNameEl, somAddStatusEl;
+
+  function somAddIdle() {
+    somStaged = [];
+    if (somAddEl) somAddEl.classList.remove('staging','multi');
+    if (somFileEl) somFileEl.value = '';
+    if (somNomeEl) { somNomeEl.value = ''; somNomeEl.style.display = ''; }
+    if (somTagsEl) somTagsEl.value = '';
+    if (somAddFileNameEl) somAddFileNameEl.textContent = '';
+    if (somAddBtnEl) { somAddBtnEl.classList.remove('ready'); somAddBtnEl.disabled = false; somAddBtnEl.textContent = '＋ Adicionar áudio'; }
+  }
+  function somStage(fileList) {
+    var files = Array.prototype.slice.call(fileList || []);
+    if (!files.length) return;
+    somStaged = files;
+    somAddEl.classList.add('staging');
+    somAddEl.classList.toggle('multi', files.length > 1);
+    somAddBtnEl.classList.add('ready');
+    somAddBtnEl.textContent = files.length > 1 ? ('Enviar ' + files.length + ' arquivos') : 'Enviar arquivo';
+    if (files.length === 1) {
+      somAddFileNameEl.textContent = files[0].name;
+      if (!somNomeEl.value) somNomeEl.value = files[0].name.replace(/\.[^.]+$/,'');
+    } else {
+      somAddFileNameEl.textContent = files.length + ' áudios — nome vem do arquivo';
+    }
+    somAddStatusEl.textContent = '';
   }
 
   function openSom() {

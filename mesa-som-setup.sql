@@ -27,6 +27,11 @@ drop policy if exists mesa_som_insert_anon on public.mesa_som;
 create policy mesa_som_insert_anon on public.mesa_som
   for insert with check (true);
 
+-- UPDATE: necessário pra renomear áudio / editar tags pela mesa
+drop policy if exists mesa_som_update_anon on public.mesa_som;
+create policy mesa_som_update_anon on public.mesa_som
+  for update using (true) with check (true);
+
 -- 2) Bucket público "mesa-som" -------------------------------
 --  file_size_limit = 1 MB (1048576 bytes) → trava real no servidor.
 --  allowed_mime_types = só áudio.
