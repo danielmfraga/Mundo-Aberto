@@ -280,18 +280,22 @@ body {
 .som-close:hover { color:var(--danger); }
 .som-pads { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; padding:14px 16px; border-bottom:1px solid rgba(160,130,255,0.14); flex:0 0 auto; }
 .som-pad {
-  position:relative; aspect-ratio:1/1; border-radius:8px; border:1px dashed rgba(160,130,255,0.3);
-  background:rgba(160,130,255,0.04); display:flex; align-items:center; justify-content:center; text-align:center;
-  cursor:pointer; padding:5px; transition:box-shadow .15s, background .15s, border-color .15s; overflow:hidden;
+  position:relative; min-height:64px; border-radius:8px; border:1px dashed rgba(160,130,255,0.3);
+  background:rgba(160,130,255,0.04); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+  cursor:pointer; padding:6px 4px 5px; gap:4px; transition:box-shadow .15s, background .15s, border-color .15s; overflow:hidden;
 }
 .som-pad.filled { border-style:solid; border-color:rgba(160,130,255,0.5); background:rgba(160,130,255,0.08); }
 .som-pad.filled:hover { box-shadow:0 0 12px rgba(160,130,255,0.3); }
-.som-pad .pad-name { font-family:var(--font-mono); font-size:9px; line-height:1.2; letter-spacing:0.03em; color:#d8c9ff; text-transform:uppercase; word-break:break-word; }
+.som-pad .pad-name { flex:1 1 auto; display:flex; align-items:center; font-family:var(--font-mono); font-size:9px; line-height:1.2; letter-spacing:0.03em; color:#d8c9ff; text-transform:uppercase; word-break:break-word; }
 .som-pad.empty .pad-plus { font-size:22px; color:rgba(160,130,255,0.4); font-weight:300; }
 .som-pad.on { border-color:#c3a6ff; background:rgba(160,130,255,0.2); box-shadow:0 0 16px rgba(160,130,255,0.45); }
-.som-pad .pad-x { position:absolute; top:1px; right:4px; font-size:11px; color:var(--fg-faint); opacity:0; transition:opacity .12s; }
+.som-pad .pad-x { position:absolute; top:1px; right:4px; font-size:11px; color:var(--fg-faint); opacity:0; transition:opacity .12s; z-index:2; }
 .som-pad.filled:hover .pad-x { opacity:1; }
 .som-pad .pad-x:hover { color:var(--danger); }
+/* fader individual por pad */
+.pad-vol { -webkit-appearance:none; appearance:none; width:90%; height:3px; border-radius:3px; background:rgba(160,130,255,0.28); cursor:pointer; margin:0; flex:0 0 auto; }
+.pad-vol::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:10px; height:10px; border-radius:50%; background:#c3a6ff; cursor:pointer; box-shadow:0 0 4px rgba(160,130,255,0.7); }
+.pad-vol::-moz-range-thumb { width:10px; height:10px; border:none; border-radius:50%; background:#c3a6ff; cursor:pointer; }
 .som-search { padding:12px 16px 8px; flex:0 0 auto; }
 .som-search input {
   width:100%; box-sizing:border-box; background:rgba(0,0,0,0.3); border:1px solid var(--line);
@@ -1845,6 +1849,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   var somVolEl = document.getElementById('somVol');
   var savedVol = parseFloat(localStorage.getItem('mesaSomVol'));
   if (!isNaN(savedVol)) { somVol = savedVol; somVolEl.value = Math.round(savedVol*100); }
+  try { somGain = JSON.parse(localStorage.getItem('mesaSomGain')) || {}; } catch(e){ somGain = {}; }
   somVolEl.addEventListener('input', function(){ somSetVol(this.value/100); });
   somAddEl         = document.getElementById('somAdd');
   somFileEl        = document.getElementById('somFile');
@@ -1882,6 +1887,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   var somLoaded = false;
   var somShared = {};        // id → HTMLAudioElement tocando pra todos
   var somPreview = {};       // id → HTMLAudioElement (prévias locais empilháveis, só eu)
+  var somGain = {};          // id → ganho individual 0..1 (fader do pad; sincronizado)
   var somVol = 0.8;
   var somOverlay, somList, somPadsEl, somSearchEl, somBtn;
   var somStaged = [];        // arquivos escolhidos aguardando envio
@@ -1926,16 +1932,24 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
         pad.title = 'Arraste um áudio aqui (ou use 📌)';
       } else {
         var padLabel = (t.tags && t.tags.length) ? t.tags[0] : t.nome;   // mostra a TAG (clima); nome vai no tooltip
+        var gainPct = Math.round((somGain[id] == null ? 1 : somGain[id]) * 100);
         pad.className = 'som-pad filled' + (somShared[id] ? ' on' : '');
-        pad.title = t.nome + (t.tags && t.tags.length ? ' — ' + t.tags.join(', ') : '') + ' · clique p/ tocar/parar (arraste outro p/ trocar)';
-        pad.innerHTML = '<span class="pad-name">' + esc(padLabel) + '</span><span class="pad-x" title="Tirar do slot">✕</span>';
+        pad.title = t.nome + (t.tags && t.tags.length ? ' — ' + t.tags.join(', ') : '') + ' · clique p/ tocar/parar · fader = volume só deste';
+        pad.innerHTML = '<span class="pad-name">' + esc(padLabel) + '</span>' +
+                        '<input class="pad-vol" type="range" min="0" max="100" value="' + gainPct + '" title="Volume deste som">' +
+                        '<span class="pad-x" title="Tirar do slot">✕</span>';
         pad.addEventListener('click', function(e){
           if (e.target && e.target.classList.contains('pad-x')) {
             e.stopPropagation();
             var p = somPadsGet(); p[i] = null; somPadsSet(p); somRenderPads(); return;
           }
+          if (e.target && e.target.classList.contains('pad-vol')) return;   // mexeu no fader: não toca/para
           somShareToggle(t);
         });
+        var vol = pad.querySelector('.pad-vol');
+        vol.addEventListener('click', function(e){ e.stopPropagation(); });
+        vol.addEventListener('input',  function(){ somGain[id] = Math.max(0, Math.min(1, this.value/100)); somApplyVol(id); }); // ao vivo (local)
+        vol.addEventListener('change', function(){ somSetGain(id, this.value/100, true); });                                    // soltou → salva + avisa a mesa
       }
       // soltar um áudio arrastado da lista neste slot (troca o que estiver)
       pad.addEventListener('dragover', function(e){ e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; pad.classList.add('drop-hover'); });
@@ -2048,7 +2062,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   function somPreviewToggle(t) {
     if (somPreview[t.id]) { somStopPreviewOne(t.id); somRenderList(); return; }
     if (Object.keys(somPreview).length >= SOM_MAX_LAYERS) { alert('Máximo de ' + SOM_MAX_LAYERS + ' prévias ao mesmo tempo. Pare uma antes (🎧).'); return; }
-    var a = new Audio(t.url); a.loop = true; a.volume = somVol;
+    var a = new Audio(t.url); a.loop = true; a.volume = somVolFor(t.id);
     a.play().catch(function(){});
     somPreview[t.id] = a;
     somRenderList();
@@ -2065,7 +2079,8 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     var id = String(p.id);
     if (somShared[id]) return;                       // idempotente
     if (!somTrack(id)) somTracks.push({ id:id, nome:p.nome||'(áudio)', tags:[], url:p.url });
-    var a = new Audio(p.url); a.loop = true; a.volume = somVol;
+    if (p.gain != null) { somGain[id] = p.gain; somPersistGain(); }   // recebe o equilíbrio de quem já tá tocando
+    var a = new Audio(p.url); a.loop = true; a.volume = somVolFor(id);
     a.play().catch(function(){});
     somShared[id] = a;
     somRefreshUI();
@@ -2079,15 +2094,31 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   function somStateSnapshot() {
     return Object.keys(somShared).map(function(id){
       var t = somTrack(id);
-      return { id:id, url:t?t.url:somShared[id].src, nome:t?t.nome:'' };
+      return { id:id, url:t?t.url:somShared[id].src, nome:t?t.nome:'', gain:(somGain[id]==null?1:somGain[id]) };
     });
   }
 
+  // volume efetivo de uma faixa = master × ganho individual (0..1)
+  function somVolFor(id) { var g = somGain[String(id)]; return somVol * (g == null ? 1 : g); }
+  function somApplyVol(id) {
+    id = String(id);
+    if (somShared[id])  somShared[id].volume  = somVolFor(id);
+    if (somPreview[id]) somPreview[id].volume = somVolFor(id);
+  }
+  function somPersistGain() { try { localStorage.setItem('mesaSomGain', JSON.stringify(somGain)); } catch(e){} }
   function somSetVol(v) {
     somVol = Math.max(0, Math.min(1, v));
-    Object.keys(somShared).forEach(function(id){ somShared[id].volume = somVol; });
-    Object.keys(somPreview).forEach(function(id){ somPreview[id].volume = somVol; });
+    Object.keys(somShared).forEach(somApplyVol);
+    Object.keys(somPreview).forEach(somApplyVol);
     localStorage.setItem('mesaSomVol', String(somVol));
+  }
+  // ajusta o ganho de uma faixa; broadcast=true avisa a mesa (fader do pad)
+  function somSetGain(id, g, broadcast) {
+    id = String(id);
+    somGain[id] = Math.max(0, Math.min(1, g));
+    somApplyVol(id);
+    somPersistGain();
+    if (broadcast) send('som-gain', { id:id, gain:somGain[id] });
   }
 
   // Envia UM arquivo → Storage (bucket mesa-som) + linha em mesa_som. cb(errOrNull)
@@ -2208,6 +2239,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     else if (event === 'som-state') { if (payload && Array.isArray(payload.playing)) payload.playing.forEach(somStartShared); }
     else if (event === 'som-state-req') { var snap = somStateSnapshot(); if (snap.length) send('som-state', { playing:snap }); }
     else if (event === 'som-lib') { if (somLoaded) somLoad(function(){ somRefreshUI(); }); }
+    else if (event === 'som-gain') { if (payload && payload.id != null) { somGain[String(payload.id)] = payload.gain; somPersistGain(); somApplyVol(payload.id); somRenderPads(); } }
   }
   function initRealtime() {
     if (!window.supabase || !window.supabase.createClient) return;
@@ -2224,7 +2256,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     channel.on('broadcast', { event:'mesa-ctx-req' }, function(m){ dispatch('mesa-ctx-req', m.payload); });
     channel.on('broadcast', { event:'diario-pg' }, function(m){ dispatch('diario-pg', m.payload); });
     channel.on('broadcast', { event:'diario-struct' }, function(m){ dispatch('diario-struct', m.payload); });
-    ['som-play','som-stop','som-state','som-state-req','som-lib'].forEach(function(ev){
+    ['som-play','som-stop','som-state','som-state-req','som-lib','som-gain'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
     channel.subscribe(function(status){
