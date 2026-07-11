@@ -263,12 +263,13 @@ body {
 .som-btn:hover { background:rgba(160,130,255,0.16); box-shadow:0 0 14px rgba(160,130,255,0.28); }
 .som-btn.playing::after { content:''; position:absolute; top:9px; right:11px; width:7px; height:7px; border-radius:50%; background:#c3a6ff; box-shadow:0 0 8px #c3a6ff; animation:somPulse 1.2s infinite; }
 @keyframes somPulse { 0%,100%{opacity:1;} 50%{opacity:0.25;} }
-.som-overlay { position:fixed; inset:0; z-index:9992; display:none; align-items:center; justify-content:center; background:rgba(6,10,16,0.78); padding:20px; }
-.som-overlay.show { display:flex; }
+/* drawer retrátil na borda direita — não-modal: vídeo e rail seguem visíveis/usáveis */
+.som-overlay { position:fixed; top:0; right:0; height:100vh; width:250px; max-width:88vw; z-index:9992; display:flex; transform:translateX(calc(100% + 24px)); transition:transform .28s ease; will-change:transform; pointer-events:none; }
+.som-overlay.show { transform:translateX(0); pointer-events:auto; }
 .som-panel {
-  width:min(560px,95vw); height:min(84vh,760px); display:flex; flex-direction:column;
-  background:rgba(11,16,26,0.98); border:1px solid rgba(160,130,255,0.4); border-radius:10px;
-  box-shadow:0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(160,130,255,0.08); overflow:hidden;
+  width:100%; height:100%; display:flex; flex-direction:column;
+  background:rgba(11,16,26,0.985); border-left:1px solid rgba(160,130,255,0.4); border-radius:0;
+  box-shadow:-14px 0 42px rgba(0,0,0,0.55); overflow:hidden;
 }
 .som-head { display:flex; align-items:center; gap:10px; padding:13px 16px; border-bottom:1px solid rgba(160,130,255,0.18); }
 .som-head .led { width:6px; height:6px; border-radius:50%; background:#c3a6ff; box-shadow:0 0 7px #c3a6ff; flex:0 0 auto; }
@@ -328,6 +329,7 @@ body {
 .som-add-form .go { color:#c3a6ff; background:rgba(160,130,255,0.12); border:1px solid rgba(160,130,255,0.45); border-radius:5px; font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; padding:8px 12px; cursor:pointer; }
 .som-add-form .go:hover { background:rgba(160,130,255,0.2); }
 .som-add-status { font-family:var(--font-mono); font-size:10px; color:var(--fg-faint); flex:1 1 100%; margin-top:2px; }
+.som-add-hint { font-family:var(--font-mono); font-size:9px; color:var(--fg-faint); letter-spacing:0.06em; margin-left:8px; }
 
 /* ── Diário da Mesa (moleskine compartilhado) ── */
 .diario-btn { color:#e7b768; background:rgba(210,150,70,0.08); border-color:rgba(210,150,70,0.45); }
@@ -667,7 +669,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     </div>
     <div class="som-list" id="somList"></div>
     <div class="som-add">
-      <button class="som-add-btn" id="somAddBtn" type="button">&#65291; Adicionar áudio</button>
+      <button class="som-add-btn" id="somAddBtn" type="button">&#65291; Adicionar áudio</button><span class="som-add-hint">máx 1 MB · até 50 áudios</span>
       <div class="som-add-form" id="somAddForm">
         <label class="file-lbl" id="somFileLbl">Escolher arquivo…<input type="file" id="somFile" accept="audio/*" hidden></label>
         <input type="text" id="somNome" placeholder="Nome">
@@ -1813,7 +1815,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   somPadsEl   = document.getElementById('somPads');
   somSearchEl = document.getElementById('somSearch');
   somBtn      = document.getElementById('somBtn');
-  somBtn.addEventListener('click', openSom);
+  somBtn.addEventListener('click', toggleSom);
   document.getElementById('somClose').addEventListener('click', closeSom);
   somOverlay.addEventListener('click', function(e){ if (e.target === somOverlay) closeSom(); });
   somSearchEl.addEventListener('input', somRenderList);
@@ -1856,6 +1858,8 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   // áudios podem tocar em camadas. Quem entra depois pede o estado atual
   // (som-state-req) e recebe o que já está tocando (som-state).
   var SOM_PADS_KEY = 'mesaSomPads:' + SALA;
+  var SOM_MAX_UPLOADS = 50;    // teto de áudios na biblioteca (fase inicial)
+  var SOM_MAX_KB = 1024;       // teto por arquivo: 1 MB
   var somTracks = [];        // [{id,nome,tags:[],url}]
   var somLoaded = false;
   var somShared = {};        // id → HTMLAudioElement tocando pra todos
@@ -2007,6 +2011,8 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   function somUpload(file, nomeIn, tagsIn, statusEl, done) {
     if (!sbClient || !sbClient.storage) { statusEl.textContent = 'Storage indisponível (supabase-js não carregou).'; return; }
     if (!file) { statusEl.textContent = 'Escolha um arquivo de áudio.'; return; }
+    if (somTracks.length >= SOM_MAX_UPLOADS) { statusEl.textContent = 'Limite de ' + SOM_MAX_UPLOADS + ' áudios atingido nesta fase.'; return; }
+    if (file.size > SOM_MAX_KB * 1024) { statusEl.textContent = 'Pesado demais (' + Math.round(file.size/1024) + ' KB). Limite: ' + SOM_MAX_KB + ' KB.'; return; }
     var safe = (file.name || 'audio').replace(/[^\w.\-]+/g,'_');
     var path = Date.now() + '-' + safe;
     statusEl.textContent = 'Enviando…';
@@ -2027,6 +2033,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
         if (r && !r.ok) throw new Error('Supabase ' + r.status);
         statusEl.textContent = 'Enviado ✓';
         somLoad(function(){ somRefreshUI(); });
+        send('som-lib', {});          // avisa os outros: biblioteca mudou
         if (done) done();
       })
       .catch(function(err){ statusEl.textContent = 'Falhou: ' + (err && err.message || err); });
@@ -2034,10 +2041,12 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 
   function openSom() {
     somOverlay.classList.add('show');
+    if (somBtn) somBtn.classList.add('open');
     if (!somLoaded) { somList.innerHTML = '<div class="som-empty">Carregando…</div>'; somLoad(function(){ somRefreshUI(); }); }
     else somRefreshUI();
   }
-  function closeSom() { somOverlay.classList.remove('show'); }
+  function closeSom() { somOverlay.classList.remove('show'); if (somBtn) somBtn.classList.remove('open'); }
+  function toggleSom() { if (somOverlay.classList.contains('show')) closeSom(); else openSom(); }
 
   // ── Realtime (Supabase broadcast) ─────────────────────────────────
   var channel = null;
@@ -2063,6 +2072,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     else if (event === 'som-stop') somStopShared(payload.id);
     else if (event === 'som-state') { if (payload && Array.isArray(payload.playing)) payload.playing.forEach(somStartShared); }
     else if (event === 'som-state-req') { var snap = somStateSnapshot(); if (snap.length) send('som-state', { playing:snap }); }
+    else if (event === 'som-lib') { if (somLoaded) somLoad(function(){ somRefreshUI(); }); }
   }
   function initRealtime() {
     if (!window.supabase || !window.supabase.createClient) return;
@@ -2079,7 +2089,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     channel.on('broadcast', { event:'mesa-ctx-req' }, function(m){ dispatch('mesa-ctx-req', m.payload); });
     channel.on('broadcast', { event:'diario-pg' }, function(m){ dispatch('diario-pg', m.payload); });
     channel.on('broadcast', { event:'diario-struct' }, function(m){ dispatch('diario-struct', m.payload); });
-    ['som-play','som-stop','som-state','som-state-req'].forEach(function(ev){
+    ['som-play','som-stop','som-state','som-state-req','som-lib'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
     channel.subscribe(function(status){
