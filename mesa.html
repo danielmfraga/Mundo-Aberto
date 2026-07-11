@@ -1877,11 +1877,11 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   var SOM_PADS_KEY = 'mesaSomPads:' + SALA;
   var SOM_MAX_UPLOADS = 50;    // teto de áudios na biblioteca (fase inicial)
   var SOM_MAX_KB = 1024;       // teto por arquivo: 1 MB
+  var SOM_MAX_LAYERS = 5;      // máximo de sons tocando ao mesmo tempo (por modo)
   var somTracks = [];        // [{id,nome,tags:[],url}]
   var somLoaded = false;
   var somShared = {};        // id → HTMLAudioElement tocando pra todos
-  var somPreviewA = null;    // prévia local (só eu)
-  var somPreviewId = null;
+  var somPreview = {};       // id → HTMLAudioElement (prévias locais empilháveis, só eu)
   var somVol = 0.8;
   var somOverlay, somList, somPadsEl, somSearchEl, somBtn;
   var somStaged = [];        // arquivos escolhidos aguardando envio
@@ -1925,9 +1925,10 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
         pad.innerHTML = '<span class="pad-plus">+</span>';
         pad.title = 'Arraste um áudio aqui (ou use 📌)';
       } else {
+        var padLabel = (t.tags && t.tags.length) ? t.tags[0] : t.nome;   // mostra a TAG (clima); nome vai no tooltip
         pad.className = 'som-pad filled' + (somShared[id] ? ' on' : '');
-        pad.title = t.nome + ' — clique para tocar/parar pra todos (arraste outro p/ trocar)';
-        pad.innerHTML = '<span class="pad-name">' + esc(t.nome) + '</span><span class="pad-x" title="Tirar do slot">✕</span>';
+        pad.title = t.nome + (t.tags && t.tags.length ? ' — ' + t.tags.join(', ') : '') + ' · clique p/ tocar/parar (arraste outro p/ trocar)';
+        pad.innerHTML = '<span class="pad-name">' + esc(padLabel) + '</span><span class="pad-x" title="Tirar do slot">✕</span>';
         pad.addEventListener('click', function(e){
           if (e.target && e.target.classList.contains('pad-x')) {
             e.stopPropagation();
@@ -1999,7 +2000,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       }
 
       // ── linha normal ──
-      var shared = !!somShared[t.id], prev = somPreviewId === t.id;
+      var shared = !!somShared[t.id], prev = !!somPreview[t.id];
       row.className = 'som-row' + (shared ? ' playing' : '');
       var tagsHtml = t.tags.length ? '<div class="tags">' + esc(t.tags.join(' · ')) + '</div>' : '';
       row.innerHTML =
@@ -2042,21 +2043,22 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   function somUpdateBtn() { if (somBtn) somBtn.classList.toggle('playing', Object.keys(somShared).length > 0); }
   function somRefreshUI() { somRenderPads(); somRenderList(); somUpdateBtn(); }
 
-  // Prévia local (só eu)
-  function somStopPreview() { if (somPreviewA) { try { somPreviewA.pause(); } catch(e){} somPreviewA = null; } somPreviewId = null; }
+  // Prévia local (só eu) — empilha até SOM_MAX_LAYERS
+  function somStopPreviewOne(id) { var a = somPreview[id]; if (a) { try { a.pause(); } catch(e){} delete somPreview[id]; } }
   function somPreviewToggle(t) {
-    if (somPreviewId === t.id) { somStopPreview(); somRenderList(); return; }
-    somStopPreview();
+    if (somPreview[t.id]) { somStopPreviewOne(t.id); somRenderList(); return; }
+    if (Object.keys(somPreview).length >= SOM_MAX_LAYERS) { alert('Máximo de ' + SOM_MAX_LAYERS + ' prévias ao mesmo tempo. Pare uma antes (🎧).'); return; }
     var a = new Audio(t.url); a.loop = true; a.volume = somVol;
     a.play().catch(function(){});
-    somPreviewA = a; somPreviewId = t.id;
+    somPreview[t.id] = a;
     somRenderList();
   }
 
   // Compartilhado (todos) — o dispatch (self:true) executa de fato p/ mim e p/ todos
   function somShareToggle(t) {
-    if (somShared[t.id]) send('som-stop', { id:t.id });
-    else send('som-play', { id:t.id, url:t.url, nome:t.nome });
+    if (somShared[t.id]) { send('som-stop', { id:t.id }); return; }
+    if (Object.keys(somShared).length >= SOM_MAX_LAYERS) { alert('Máximo de ' + SOM_MAX_LAYERS + ' sons ao mesmo tempo na mesa. Pare um (📢) antes.'); return; }
+    send('som-play', { id:t.id, url:t.url, nome:t.nome });
   }
   function somStartShared(p) {
     if (!p || !p.id || !p.url) return;
@@ -2084,7 +2086,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   function somSetVol(v) {
     somVol = Math.max(0, Math.min(1, v));
     Object.keys(somShared).forEach(function(id){ somShared[id].volume = somVol; });
-    if (somPreviewA) somPreviewA.volume = somVol;
+    Object.keys(somPreview).forEach(function(id){ somPreview[id].volume = somVol; });
     localStorage.setItem('mesaSomVol', String(somVol));
   }
 
