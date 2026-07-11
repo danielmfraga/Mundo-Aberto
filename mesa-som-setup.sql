@@ -1,6 +1,9 @@
 -- ============================================================
 --  MESA DE SOM — setup do Supabase (rodar UMA vez)
---  Cole no SQL Editor do Supabase e execute.
+--  Cole TUDO no SQL Editor do Supabase e clique RUN.
+--  Faz: tabela + policies + bucket público + teto de 1 MB por
+--  arquivo (trava no servidor) + permissão de upload anônimo.
+--  Não precisa clicar em nenhuma outra tela.
 -- ============================================================
 
 -- 1) Tabela de metadados dos áudios ---------------------------
@@ -24,24 +27,26 @@ drop policy if exists mesa_som_insert_anon on public.mesa_som;
 create policy mesa_som_insert_anon on public.mesa_som
   for insert with check (true);
 
--- 2) Bucket de Storage ----------------------------------------
---  NO PAINEL: Storage → New bucket → nome "mesa-som" → marque "Public bucket" → Save.
---  (bucket público = leitura pública dos áudios via getPublicUrl)
+-- 2) Bucket público "mesa-som" -------------------------------
+--  file_size_limit = 1 MB (1048576 bytes) → trava real no servidor.
+--  allowed_mime_types = só áudio.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('mesa-som', 'mesa-som', true, 1048576, array['audio/*'])
+on conflict (id) do update
+  set public             = true,
+      file_size_limit    = 1048576,
+      allowed_mime_types = array['audio/*'];
 
--- 3) Política de upload anônimo no bucket ---------------------
---  Necessária para o botão "＋ Adicionar áudio" da mesa funcionar.
---  (rode DEPOIS de criar o bucket acima)
+-- 3) Permissão de upload anônimo no bucket -------------------
+--  (a leitura já é pública porque o bucket é público)
 drop policy if exists mesa_som_upload_anon on storage.objects;
 create policy mesa_som_upload_anon on storage.objects
   for insert to anon
   with check (bucket_id = 'mesa-som');
 
 -- ------------------------------------------------------------------
---  Se preferir NÃO permitir upload pela mesa (só via painel do
---  Supabase), pule o passo 3 e suba os arquivos manualmente no
---  bucket; depois insira as linhas à mão, ex:
---
---  insert into public.mesa_som (nome, tags, url) values
---    ('Chuva na floresta', array['natureza','calmo'],
---     'https://mxyqqfsyybluavwlrhsa.supabase.co/storage/v1/object/public/mesa-som/chuva.mp3');
+--  Se a linha do passo 2 der erro de permissão no seu projeto,
+--  crie o bucket pela tela (Storage → New bucket → nome "mesa-som"
+--  → marque "Public" → em Additional config, File size limit = 1 MB)
+--  e rode só os passos 1 e 3.
 -- ------------------------------------------------------------------
