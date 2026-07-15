@@ -267,10 +267,14 @@ body {
 .som-overlay { position:fixed; top:0; right:0; height:100vh; width:250px; max-width:88vw; z-index:9992; display:flex; transform:translateX(calc(100% + 24px)); transition:transform .28s ease; will-change:transform; pointer-events:none; }
 .som-overlay.show { transform:translateX(0); pointer-events:auto; }
 .som-panel {
-  width:100%; height:100%; display:flex; flex-direction:column;
+  position:relative; width:100%; height:100%; display:flex; flex-direction:column;
   background:rgba(11,16,26,0.985); border-left:1px solid rgba(160,130,255,0.4); border-radius:0;
   box-shadow:-14px 0 42px rgba(0,0,0,0.55); overflow:hidden;
 }
+/* alça de redimensionar (borda esquerda) */
+.som-resize { position:absolute; left:0; top:0; bottom:0; width:11px; z-index:6; cursor:ew-resize; touch-action:none; }
+.som-resize::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:rgba(160,130,255,0.22); transition:background .15s, box-shadow .15s; }
+.som-resize:hover::before, .som-resize.active::before { background:rgba(160,130,255,0.8); box-shadow:0 0 10px rgba(160,130,255,0.5); }
 .som-head { display:flex; align-items:center; gap:10px; padding:13px 16px; border-bottom:1px solid rgba(160,130,255,0.18); }
 .som-head .led { width:6px; height:6px; border-radius:50%; background:#c3a6ff; box-shadow:0 0 7px #c3a6ff; flex:0 0 auto; }
 .som-title { font-family:var(--font-mono); font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:#c3a6ff; flex:1 1 auto; }
@@ -683,6 +687,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 <!-- Mesa de Som (soundboard compartilhado) -->
 <div class="som-overlay" id="somOverlay">
   <div class="som-panel">
+    <div class="som-resize" id="somResize" title="Arraste para redimensionar"></div>
     <div class="som-head">
       <span class="led"></span>
       <span class="som-title">Mesa de Som</span>
@@ -1846,6 +1851,19 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   document.getElementById('somClose').addEventListener('click', closeSom);
   somOverlay.addEventListener('click', function(e){ if (e.target === somOverlay) closeSom(); });
   somSearchEl.addEventListener('input', somRenderList);
+  // ── Redimensionar o drawer (arrastar a borda esquerda) ──
+  var somResize = document.getElementById('somResize');
+  function somClampW(w){ return Math.max(240, Math.min(w, Math.min(window.innerWidth * 0.88, 900))); }
+  var savedSomW = parseInt(localStorage.getItem('mesaSomW'), 10);
+  if (!isNaN(savedSomW)) somOverlay.style.width = somClampW(savedSomW) + 'px';
+  if (somResize) {
+    var somResizing = false;
+    function somResizeEnd(){ if (!somResizing) return; somResizing = false; somResize.classList.remove('active'); document.body.style.userSelect = ''; localStorage.setItem('mesaSomW', String(parseInt(somOverlay.style.width, 10) || 250)); }
+    somResize.addEventListener('pointerdown', function(e){ somResizing = true; somResize.classList.add('active'); try { somResize.setPointerCapture(e.pointerId); } catch(_){} document.body.style.userSelect = 'none'; e.preventDefault(); });
+    window.addEventListener('pointermove', function(e){ if (somResizing) somOverlay.style.width = somClampW(window.innerWidth - e.clientX) + 'px'; });
+    window.addEventListener('pointerup', somResizeEnd);
+    window.addEventListener('pointercancel', somResizeEnd);
+  }
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && somOverlay.classList.contains('show')) closeSom(); });
   var somVolEl = document.getElementById('somVol');
   var savedVol = parseFloat(localStorage.getItem('mesaSomVol'));
