@@ -318,6 +318,7 @@ body {
 .som-ico.prev.on { border-color:#7ee0ff; box-shadow:0 0 9px rgba(126,224,255,0.3); }
 .som-ico.save { border-color:rgba(120,220,140,0.5); }
 .som-ico.save:hover { box-shadow:0 0 9px rgba(120,220,140,0.4); }
+.som-ico.del:hover { border-color:var(--danger); box-shadow:0 0 9px rgba(255,85,102,0.4); }
 /* arrastar áudio → pad */
 .som-row-main[draggable=true] { cursor:grab; }
 .som-row-main.dragging { opacity:0.45; }
@@ -1998,6 +1999,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
             '<input class="ed-tags" type="text" value="' + esc(t.tags.join(', ')) + '" placeholder="tags (separadas por vírgula)">' +
           '</div>' +
           '<span class="som-ico save" title="Salvar">✔️</span>' +
+          '<span class="som-ico del" title="Excluir áudio">🗑️</span>' +
           '<span class="som-ico cancel" title="Cancelar">✕</span>';
         var doSave = function(){
           var nome = row.querySelector('.ed-nome').value.trim();
@@ -2005,6 +2007,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
           somSaveEdit(t.id, nome, tags);
         };
         row.querySelector('.save').addEventListener('click', doSave);
+        row.querySelector('.del').addEventListener('click', function(){ somDelete(t); });
         row.querySelector('.cancel').addEventListener('click', function(){ somEditingId = null; somRenderList(); });
         row.querySelector('.ed-nome').addEventListener('keydown', function(e){ if (e.key==='Enter') doSave(); if (e.key==='Escape'){ somEditingId=null; somRenderList(); } });
         row.querySelector('.ed-tags').addEventListener('keydown', function(e){ if (e.key==='Enter') doSave(); if (e.key==='Escape'){ somEditingId=null; somRenderList(); } });
@@ -2052,6 +2055,32 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       somRefreshUI();
       send('som-lib', {});
     }).catch(function(err){ alert('Não deu pra renomear: ' + (err && err.message || err)); });
+  }
+
+  // Excluir áudio: apaga a linha (mesa_som) + o arquivo do Storage + limpa pads/reprodução
+  function somStoragePath(url) { var m = String(url||'').match(/\/mesa-som\/(.+)$/); return m ? decodeURIComponent(m[1]) : null; }
+  function somDelete(t) {
+    if (!confirm('Excluir “' + t.nome + '” da biblioteca?\nApaga pra todos e não dá pra desfazer.')) return;
+    if (somShared[t.id]) send('som-stop', { id:t.id });   // para se estiver tocando
+    somStopPreviewOne(t.id);
+    var pads = somPadsGet(), mudou = false;                // tira dos slots (local)
+    for (var i=0;i<pads.length;i++){ if (pads[i]===String(t.id)){ pads[i]=null; mudou=true; } }
+    if (mudou) somPadsSet(pads);
+    fetch(SB_URL + '/rest/v1/mesa_som?id=eq.' + encodeURIComponent(t.id), {
+      method:'DELETE',
+      headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Prefer':'return=representation' }
+    }).then(function(r){ return r.json().then(function(rows){ return { ok:r.ok, status:r.status, rows:rows }; }); })
+      .then(function(res){
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        if (!Array.isArray(res.rows) || !res.rows.length) throw new Error('0 linhas — falta a policy de DELETE (rode o SQL do setup).');
+        // apaga o arquivo do Storage (best-effort; precisa da policy de delete no bucket)
+        var path = somStoragePath(t.url);
+        if (path && sbClient && sbClient.storage) { sbClient.storage.from('mesa-som').remove([path]).then(function(){}, function(){}); }
+        somTracks = somTracks.filter(function(x){ return x.id !== String(t.id); });
+        somEditingId = null;
+        somRefreshUI();
+        send('som-lib', {});
+      }).catch(function(err){ alert('Não deu pra excluir: ' + (err && err.message || err)); });
   }
 
   function somUpdateBtn() { if (somBtn) somBtn.classList.toggle('playing', Object.keys(somShared).length > 0); }

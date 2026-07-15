@@ -32,6 +32,11 @@ drop policy if exists mesa_som_update_anon on public.mesa_som;
 create policy mesa_som_update_anon on public.mesa_som
   for update using (true) with check (true);
 
+-- DELETE: necessário pra excluir áudio pela mesa (linha + arquivo)
+drop policy if exists mesa_som_delete_anon on public.mesa_som;
+create policy mesa_som_delete_anon on public.mesa_som
+  for delete using (true);
+
 -- 2) Bucket público "mesa-som" -------------------------------
 --  file_size_limit = 1 MB (1048576 bytes) → trava real no servidor.
 --  allowed_mime_types = só áudio.
@@ -48,6 +53,12 @@ drop policy if exists mesa_som_upload_anon on storage.objects;
 create policy mesa_som_upload_anon on storage.objects
   for insert to anon
   with check (bucket_id = 'mesa-som');
+
+-- Permitir excluir arquivo do bucket (pra o botão de excluir da mesa)
+drop policy if exists mesa_som_delete_obj_anon on storage.objects;
+create policy mesa_som_delete_obj_anon on storage.objects
+  for delete to anon
+  using (bucket_id = 'mesa-som');
 
 -- ------------------------------------------------------------------
 --  Se a linha do passo 2 der erro de permissão no seu projeto,
