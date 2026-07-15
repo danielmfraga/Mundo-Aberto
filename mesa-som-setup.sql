@@ -1,7 +1,7 @@
 -- ============================================================
 --  MESA DE SOM — setup do Supabase (rodar UMA vez)
 --  Cole TUDO no SQL Editor do Supabase e clique RUN.
---  Faz: tabela + policies + bucket público + teto de 1 MB por
+--  Faz: tabela + policies + bucket público + teto de 5 MB por
 --  arquivo (trava no servidor) + permissão de upload anônimo.
 --  Não precisa clicar em nenhuma outra tela.
 -- ============================================================
@@ -38,13 +38,13 @@ create policy mesa_som_delete_anon on public.mesa_som
   for delete using (true);
 
 -- 2) Bucket público "mesa-som" -------------------------------
---  file_size_limit = 1 MB (1048576 bytes) → trava real no servidor.
+--  file_size_limit = 5 MB (5242880 bytes) → trava real no servidor.
 --  allowed_mime_types = só áudio.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('mesa-som', 'mesa-som', true, 1048576, array['audio/*'])
+values ('mesa-som', 'mesa-som', true, 5242880, array['audio/*'])
 on conflict (id) do update
   set public             = true,
-      file_size_limit    = 1048576,
+      file_size_limit    = 5242880,
       allowed_mime_types = array['audio/*'];
 
 -- 3) Permissão de upload anônimo no bucket -------------------
@@ -63,6 +63,6 @@ create policy mesa_som_delete_obj_anon on storage.objects
 -- ------------------------------------------------------------------
 --  Se a linha do passo 2 der erro de permissão no seu projeto,
 --  crie o bucket pela tela (Storage → New bucket → nome "mesa-som"
---  → marque "Public" → em Additional config, File size limit = 1 MB)
+--  → marque "Public" → em Additional config, File size limit = 5 MB)
 --  e rode só os passos 1 e 3.
 -- ------------------------------------------------------------------
