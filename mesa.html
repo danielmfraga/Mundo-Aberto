@@ -48,6 +48,23 @@ body {
 .brand { font-family:var(--font-mono); font-size:11px; letter-spacing:0.4em; text-transform:uppercase; color:var(--holo); cursor:pointer; transition:color .2s; }
 .brand:hover { color:var(--fg); }
 .brand[contenteditable="true"] { outline:none; border-bottom:1px solid rgba(78,211,232,0.5); color:var(--fg); }
+/* ── Histórico da linha do tempo (contexto da mesa) ── */
+.brand-wrap { display:flex; align-items:center; gap:9px; position:relative; }
+.ctx-hist-btn { background:none; border:none; cursor:pointer; padding:2px 3px; line-height:1; font-size:12px; opacity:0.4; transition:opacity .15s; }
+.ctx-hist-btn:hover, .ctx-hist-btn.open { opacity:1; }
+.ctx-hist {
+  display:none; position:absolute; top:calc(100% + 14px); left:50%; transform:translateX(-50%);
+  width:min(340px,90vw); max-height:60vh; overflow-y:auto; z-index:9995;
+  background:rgba(11,19,32,0.98); border:1px solid var(--holo-soft); border-radius:8px;
+  box-shadow:0 14px 40px rgba(0,0,0,0.6); padding:10px 0; text-align:left;
+}
+.ctx-hist.show { display:block; }
+.ctx-hist-title { font-family:var(--font-mono); font-size:9.5px; letter-spacing:0.2em; text-transform:uppercase; color:var(--fg-faint); padding:2px 14px 8px; }
+.ctx-hist-item { padding:8px 14px; border-top:1px solid rgba(255,255,255,0.05); }
+.ctx-hist-item .t { font-family:var(--font-mono); font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--holo); line-height:1.35; }
+.ctx-hist-item.now .t { text-shadow:0 0 8px rgba(78,211,232,0.55); }
+.ctx-hist-item .m { font-family:var(--font-mono); font-size:9.5px; color:var(--fg-faint); margin-top:3px; letter-spacing:0.04em; }
+.ctx-hist-empty { font-family:var(--font-mono); font-size:10.5px; color:var(--fg-faint); padding:10px 14px; text-align:center; line-height:1.7; }
 .who { display:flex; align-items:center; gap:10px; font-family:var(--font-mono); font-size:10px; letter-spacing:0.12em; color:var(--fg-dim); }
 .conn-dot { width:7px; height:7px; border-radius:50%; background:var(--danger); box-shadow:0 0 6px var(--danger); transition:all .3s; }
 .conn-dot.on { background:#3ddc84; box-shadow:0 0 6px #3ddc84; }
@@ -605,7 +622,11 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 
 <div class="topbar">
   <a class="back-link" href="index.html"><span style="font-size:14px;line-height:1;">&#8592;</span>Voltar</a>
-  <div class="brand" id="mesaBrand" title="Clique para editar o contexto da mesa">Mesa · Mundo Aberto</div>
+  <div class="brand-wrap">
+    <div class="brand" id="mesaBrand" title="Clique para editar o contexto da mesa">Mesa · Mundo Aberto</div>
+    <button class="ctx-hist-btn" id="ctxHistBtn" type="button" title="Histórico da linha do tempo">&#128336;</button>
+    <div class="ctx-hist" id="ctxHist"></div>
+  </div>
   <div class="who">
     <span class="conn-dot" id="connDot"></span>
     <span id="whoName" class="who-name" title="Trocar nome">—</span>
@@ -2396,8 +2417,65 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   mesaBrand.addEventListener('blur', function() {
     mesaBrand.contentEditable = 'false';
     var v = mesaBrand.textContent.trim() || DEFAULT_CONTEXTO;
+    var mudou = (v !== _contextoAntes);
     applyContexto(v);
     send('mesa-ctx', { text:v });
+    if (mudou) ctxSaveRemote(v);            // só registra no histórico se realmente mudou
+  });
+
+  // ── Histórico da linha do tempo (cada mudança do contexto vira uma linha) ──
+  var CTX_HIST = '/rest/v1/mesa_ctx_hist';
+  var ctxHistEl = document.getElementById('ctxHist');
+  var ctxHistBtn = document.getElementById('ctxHistBtn');
+
+  function ctxSaveRemote(texto) {
+    return fetch(SB_URL + CTX_HIST, {
+      method:'POST',
+      headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Content-Type':'application/json', 'Prefer':'return=minimal' },
+      body: JSON.stringify({ sala:SALA, texto:texto, autor:(nome || null) })
+    }).catch(function(){});
+  }
+  // valor atual = última linha do histórico (Supabase manda; localStorage vira só cache)
+  (function ctxLoadRemote(){
+    sbGet(CTX_HIST + '?sala=eq.' + encodeURIComponent(SALA) + '&select=texto&order=criado_em.desc&limit=1')
+      .then(function(rows){ if (Array.isArray(rows) && rows[0] && rows[0].texto) applyContexto(rows[0].texto); })
+      .catch(function(){});
+  })();
+
+  function ctxHistRender() {
+    ctxHistEl.innerHTML = '<div class="ctx-hist-title">Linha do tempo</div><div class="ctx-hist-empty">Carregando…</div>';
+    sbGet(CTX_HIST + '?sala=eq.' + encodeURIComponent(SALA) + '&select=texto,autor,criado_em&order=criado_em.desc&limit=100')
+      .then(function(rows){
+        var html = '<div class="ctx-hist-title">Linha do tempo</div>';
+        if (!Array.isArray(rows) || !rows.length) {
+          html += '<div class="ctx-hist-empty">Nenhuma mudança registrada ainda.<br>Edite a data acima que ela entra aqui.</div>';
+        } else {
+          rows.forEach(function(r, i){
+            var d = new Date(r.criado_em);
+            var q = ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+            html += '<div class="ctx-hist-item' + (i===0 ? ' now' : '') + '">' +
+                      '<div class="t">' + esc(r.texto) + (i===0 ? ' · agora' : '') + '</div>' +
+                      '<div class="m">' + (r.autor ? esc(r.autor) + ' · ' : '') + 'mudou em ' + q + '</div>' +
+                    '</div>';
+          });
+        }
+        ctxHistEl.innerHTML = html;
+      })
+      .catch(function(){
+        ctxHistEl.innerHTML = '<div class="ctx-hist-title">Linha do tempo</div><div class="ctx-hist-empty">Não deu pra carregar.<br>(a tabela <b>mesa_ctx_hist</b> já foi criada?)</div>';
+      });
+  }
+  ctxHistBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    var abrir = !ctxHistEl.classList.contains('show');
+    ctxHistEl.classList.toggle('show', abrir);
+    ctxHistBtn.classList.toggle('open', abrir);
+    if (abrir) ctxHistRender();
+  });
+  document.addEventListener('click', function(e){
+    if (!ctxHistEl.classList.contains('show')) return;
+    if (ctxHistEl.contains(e.target)) return;
+    ctxHistEl.classList.remove('show'); ctxHistBtn.classList.remove('open');
   });
 
   // ── Nome / boot ───────────────────────────────────────────────────
