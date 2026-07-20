@@ -1019,7 +1019,23 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       var sides = parseInt((g.label.match(/(\d+)/) || [])[1], 10) || 6;
       var key = g.cls || 'std';
       if (!byColor[key]) { byColor[key] = []; order.push(key); }
-      byColor[key].push(g.faces.length + 'd' + sides + '@' + g.faces.join(','));
+      if (sides === 100) {
+        // d100 é um PAR percentil: dezena (d100) + unidade (d10). Um d100 sozinho
+        // só tem faces 00..90 — mandar "@85" nele é inválido e a lib rolava aleatório
+        // (era por isso que o 3D mostrava só dezena e divergia do chat).
+        var tens = [], units = [];
+        g.faces.forEach(function(v) {
+          var r = parseInt(v, 10); if (!(r >= 1 && r <= 100)) r = 100;
+          var a = Math.floor(r / 10) % 10;   // dezena (0 → mostra "00")
+          var b = r % 10;                    // unidade (0 → mostra "0")
+          tens.push(a === 0 ? 100 : a * 10); // face do d100: 10..100 (100 = "00")
+          units.push(b === 0 ? 10 : b);      // face do d10:  1..10  (10  = "0")
+        });
+        byColor[key].push(tens.length + 'd100@' + tens.join(','));
+        byColor[key].push(units.length + 'd10@' + units.join(','));
+      } else {
+        byColor[key].push(g.faces.length + 'd' + sides + '@' + g.faces.join(','));
+      }
     });
     if (!order.length) return playRollAnim(p, onDone);   // só moeda → CSS
 
