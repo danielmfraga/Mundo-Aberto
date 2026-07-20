@@ -925,6 +925,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     if (!total) return;
     var payload = { autor:nome, ts:Date.now(), groups:groups, sum: anyNum?sum:null };
     send('roll', payload);
+    counts = {}; renderTray();        // zera o tray: pronto pra próxima jogada
   }
 
   // ── Render rolagem ────────────────────────────────────────────────
