@@ -32,6 +32,11 @@ drop policy if exists mesa_ctx_hist_insert_anon on public.mesa_ctx_hist;
 create policy mesa_ctx_hist_insert_anon on public.mesa_ctx_hist
   for insert with check (true);
 
+-- DELETE: pra apagar uma entrada inserida errada (o ✕ na lista)
+drop policy if exists mesa_ctx_hist_delete_anon on public.mesa_ctx_hist;
+create policy mesa_ctx_hist_delete_anon on public.mesa_ctx_hist
+  for delete using (true);
+
 -- ------------------------------------------------------------------
 --  Só isso. A mesa passa a gravar cada mudança e o 🕘 ao lado da
 --  data abre a lista. Enquanto a tabela não existir, a mesa segue

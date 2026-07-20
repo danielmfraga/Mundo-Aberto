@@ -60,7 +60,11 @@ body {
 }
 .ctx-hist.show { display:block; }
 .ctx-hist-title { font-family:var(--font-mono); font-size:9.5px; letter-spacing:0.2em; text-transform:uppercase; color:var(--fg-faint); padding:2px 14px 8px; }
-.ctx-hist-item { padding:8px 14px; border-top:1px solid rgba(255,255,255,0.05); }
+.ctx-hist-item { display:flex; align-items:flex-start; gap:8px; padding:8px 14px; border-top:1px solid rgba(255,255,255,0.05); }
+.ctx-hist-item .body { flex:1 1 auto; min-width:0; }
+.ctx-hist-x { flex:0 0 auto; background:none; border:none; color:var(--fg-faint); cursor:pointer; font-size:11px; line-height:1; padding:2px 3px; opacity:0; transition:opacity .12s, color .12s; }
+.ctx-hist-item:hover .ctx-hist-x { opacity:1; }
+.ctx-hist-x:hover { color:var(--danger); }
 .ctx-hist-item .t { font-family:var(--font-mono); font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--holo); line-height:1.35; }
 .ctx-hist-item.now .t { text-shadow:0 0 8px rgba(78,211,232,0.55); }
 .ctx-hist-item .m { font-family:var(--font-mono); font-size:9.5px; color:var(--fg-faint); margin-top:3px; letter-spacing:0.04em; }
@@ -2444,7 +2448,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 
   function ctxHistRender() {
     ctxHistEl.innerHTML = '<div class="ctx-hist-title">Linha do tempo</div><div class="ctx-hist-empty">Carregando…</div>';
-    sbGet(CTX_HIST + '?sala=eq.' + encodeURIComponent(SALA) + '&select=texto,autor,criado_em&order=criado_em.desc&limit=100')
+    sbGet(CTX_HIST + '?sala=eq.' + encodeURIComponent(SALA) + '&select=id,texto,autor,criado_em&order=criado_em.desc&limit=100')
       .then(function(rows){
         var html = '<div class="ctx-hist-title">Linha do tempo</div>';
         if (!Array.isArray(rows) || !rows.length) {
@@ -2454,17 +2458,44 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
             var d = new Date(r.criado_em);
             var q = ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
             html += '<div class="ctx-hist-item' + (i===0 ? ' now' : '') + '">' +
-                      '<div class="t">' + esc(r.texto) + (i===0 ? ' · agora' : '') + '</div>' +
-                      '<div class="m">' + (r.autor ? esc(r.autor) + ' · ' : '') + 'mudou em ' + q + '</div>' +
+                      '<div class="body">' +
+                        '<div class="t">' + esc(r.texto) + (i===0 ? ' · agora' : '') + '</div>' +
+                        '<div class="m">' + (r.autor ? esc(r.autor) + ' · ' : '') + 'mudou em ' + q + '</div>' +
+                      '</div>' +
+                      '<button class="ctx-hist-x" data-id="' + esc(r.id) + '" title="Apagar esta entrada">&#10005;</button>' +
                     '</div>';
           });
         }
         ctxHistEl.innerHTML = html;
+        ctxHistEl.querySelectorAll('.ctx-hist-x').forEach(function(b){
+          b.addEventListener('click', function(e){ e.stopPropagation(); ctxHistDelete(b.dataset.id); });
+        });
       })
       .catch(function(){
         ctxHistEl.innerHTML = '<div class="ctx-hist-title">Linha do tempo</div><div class="ctx-hist-empty">Não deu pra carregar.<br>(a tabela <b>mesa_ctx_hist</b> já foi criada?)</div>';
       });
   }
+  // apaga uma entrada errada da linha do tempo (precisa da policy de DELETE)
+  function ctxHistDelete(id) {
+    if (!confirm('Apagar esta entrada da linha do tempo?')) return;
+    fetch(SB_URL + CTX_HIST + '?id=eq.' + encodeURIComponent(id), {
+      method:'DELETE',
+      headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Prefer':'return=representation' }
+    }).then(function(r){ return r.json().then(function(rows){ return { ok:r.ok, status:r.status, rows:rows }; }); })
+      .then(function(res){
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        if (!Array.isArray(res.rows) || !res.rows.length) throw new Error('0 linhas — falta a policy de DELETE (rode o SQL).');
+        ctxHistRender();
+        // se apagou a entrada mais recente, a data atual passa a ser a anterior → reaplica e avisa a mesa
+        return sbGet(CTX_HIST + '?sala=eq.' + encodeURIComponent(SALA) + '&select=texto&order=criado_em.desc&limit=1')
+          .then(function(rows){
+            var v = (Array.isArray(rows) && rows[0] && rows[0].texto) ? rows[0].texto : DEFAULT_CONTEXTO;
+            applyContexto(v);
+            send('mesa-ctx', { text:v });
+          });
+      }).catch(function(err){ alert('Não deu pra apagar: ' + (err && err.message || err)); });
+  }
+
   ctxHistBtn.addEventListener('click', function(e){
     e.stopPropagation();
     var abrir = !ctxHistEl.classList.contains('show');
