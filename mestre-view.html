@@ -592,12 +592,13 @@
     var fdv = (d.vitals && d.vitals['fdv-boxes']) || {};
     var desp = (d.vitals && d.vitals['desp-boxes'] && d.vitals['desp-boxes'].desp) || 0;
 
-    // Separa dots em cosmologia / atributos / habilidades
+    // Separa dots em SYNESIS / atributos / habilidades
     var ATTR_NAMES = ['Força','Destreza','Vigor','Carisma','Manipulação','Autocontrole','Inteligência','Raciocínio','Determinação'];
     var allDots  = d.dots || [];
-    var cosmoDot = allDots.find(function(x) { return x.name && x.name.toLowerCase() === 'cosmologia'; });
+    var isSyn = function(n) { n = (n || '').toLowerCase(); return n === 'synesis' || n === 'cosmologia'; };  // aceita o nome antigo
+    var cosmoDot = allDots.find(function(x) { return isSyn(x.name); });
     var attrDots = allDots.filter(function(x) { return ATTR_NAMES.indexOf(x.name) !== -1 && x.filled > 0; });
-    var skillDots = allDots.filter(function(x) { return ATTR_NAMES.indexOf(x.name) === -1 && x.name && x.name.toLowerCase() !== 'cosmologia' && x.filled > 0; });
+    var skillDots = allDots.filter(function(x) { return ATTR_NAMES.indexOf(x.name) === -1 && x.name && !isSyn(x.name) && x.filled > 0; });
     var skillsA = skillDots.slice(0, Math.ceil(skillDots.length / 2));
     var skillsB = skillDots.slice(Math.ceil(skillDots.length / 2));
 
@@ -652,10 +653,10 @@
     html += '</div>';
     html += '</div></div>';
 
-    // Cosmologia
+    // SYNESIS
     if (cosmoDot) {
       html += '<div class="card-divider"></div><div>';
-      html += '<div class="section-label">Cosmologia</div>';
+      html += '<div class="section-label">SYNESIS</div>';
       html += '<div class="dot-row">';
       html += '<div class="dots-row">' + renderDots(cosmoDot.filled, cosmoDot.max, 'cosmo-dot') + '</div>';
       html += '<span style="font-family:\'Share Tech Mono\',monospace;font-size:9px;color:rgba(123,47,255,0.6);margin-left:4px">' + cosmoDot.filled + '/' + cosmoDot.max + '</span>';
@@ -984,7 +985,7 @@
     var dotsRow = dot.closest('.dots-row');
     if (!dotsRow) return;
     var nameEl = row.querySelector('.dot-name');
-    var statName = nameEl ? nameEl.textContent.trim() : (dot.classList.contains('cosmo-dot') ? 'Cosmologia' : null);
+    var statName = nameEl ? nameEl.textContent.trim() : (dot.classList.contains('cosmo-dot') ? 'SYNESIS' : null);
     if (!statName) return;
     var dots = Array.from(dotsRow.querySelectorAll('.dot'));
     var idx = dots.indexOf(dot);

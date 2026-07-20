@@ -1704,7 +1704,7 @@
           '<input class="ficha-name" data-key="name" value="' + escapeHtml(data.name || '') + '" placeholder="Nome do Personagem">' +
           '<div class="ficha-subtitle">Ficha de Personagem</div>' +
           '<div class="cosmo-row">' +
-            '<span class="cosmo-label">Cosmologia</span>' +
+            '<span class="cosmo-label">SYNESIS</span>' +
             buildDotsHTML('cosmo', cosmo, 10) +
           '</div>' +
         '</div>' +
@@ -2027,7 +2027,7 @@
           '<input class="ficha-name" data-key="name" value="' + escapeHtml(data.name || '') + '" placeholder="Nome do Personagem">' +
           '<div class="ficha-subtitle">Ficha de Vampiro · A Máscara</div>' +
           '<div class="cosmo-row">' +
-            '<span class="cosmo-label">Cosmologia</span>' +
+            '<span class="cosmo-label">SYNESIS</span>' +
             buildDotsHTML('cosmo', cosmo, 10) +
           '</div>' +
           '<div class="cosmo-row">' +
@@ -2201,7 +2201,7 @@
           var statName = grp.split(':')[1];
           if (val > 0) dots.push({ name: statName, filled: val });
         } else if (grp === 'cosmo') {
-          if (val > 0) dots.push({ name: 'Cosmologia', filled: val });
+          if (val > 0) dots.push({ name: 'SYNESIS', filled: val });
         }
       });
 
@@ -2320,7 +2320,7 @@
         if (!grp) return;
 
         if (grp === 'cosmo') {
-          if (val > 0) dots.push({ name: 'Cosmologia', filled: val });
+          if (val > 0) dots.push({ name: 'SYNESIS', filled: val });
         } else if (grp.indexOf('attr:') === 0 || grp.indexOf('skill:') === 0) {
           var statName = grp.split(':')[1];
           if (val > 0) dots.push({ name: statName, filled: val });

@@ -53,8 +53,8 @@ ${ATRIBUTOS.join(', ')}
 ## HABILIDADES (cada uma de 0 a 5)
 ${HABILIDADES.join(', ')}
 
-## COSMOLOGIA (de 0 a 10)
-Um único valor.
+## SYNESIS (de 0 a 10)
+Um único valor. Em fichas antigas pode estar escrito como "Cosmologia" — é o mesmo stat.
 
 ## VITAIS
 - Vitalidade (geralmente 5-10, indica resistência física)
@@ -222,9 +222,9 @@ ${HABILIDADES_VTM.join(', ')}
 Um único valor. Vampiros recém-Abraçados costumam ter 1. (Se a ficha indicar mais
 de 5, limite a 5.)
 
-## COSMOLOGIA (de 0 a 10)
-Um único valor — stat transversal do sistema Mundo Aberto. Pode não constar numa
-ficha física de V:tM; se não houver, retorne null.
+## SYNESIS (de 0 a 10)
+Um único valor — stat transversal do sistema Mundo Aberto (em fichas antigas aparece
+como "Cosmologia"). Pode não constar numa ficha física de V:tM; se não houver, retorne null.
 
 ## VITAIS
 - Vitalidade (trilha de saúde; geralmente 3-8 = Vigor + 3)
