@@ -1013,16 +1013,17 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   // mistura cores na mesma cena (ex: pretos + desespero). updateConfig É async
   // e precisa de await pra cor pegar antes de cada grupo spawnar.
   async function playRoll3D(p, onDone) {
-    var byColor = {}, order = [];
+    // IMPORTANTE: a lib faz notation.split('@') e só usa a 1ª parte. Então juntar
+    // tipos diferentes com '+' (ex: '1d100@80+1d10@5') faz o 2º dado NUNCA nascer.
+    // Por isso: um PASSO por grupo, cada um com um único '@'.
+    var steps = [];
     p.groups.forEach(function(g) {
       if (g.kind === 'coin') return;   // moeda não entra no 3D
       var sides = parseInt((g.label.match(/(\d+)/) || [])[1], 10) || 6;
-      var key = g.cls || 'std';
-      if (!byColor[key]) { byColor[key] = []; order.push(key); }
+      var cls = g.cls || 'std';
       if (sides === 100) {
-        // d100 é um PAR percentil: dezena (d100) + unidade (d10). Um d100 sozinho
-        // só tem faces 00..90 — mandar "@85" nele é inválido e a lib rolava aleatório
-        // (era por isso que o 3D mostrava só dezena e divergia do chat).
+        // d100 na lib = "Ten-Sided Dice (Tens Digit)" (só dezenas). Pra mostrar o
+        // número exato, usa o par percentil: dezena (d100) + unidade (d10).
         var tens = [], units = [];
         g.faces.forEach(function(v) {
           var r = parseInt(v, 10); if (!(r >= 1 && r <= 100)) r = 100;
@@ -1031,13 +1032,13 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
           tens.push(a === 0 ? 100 : a * 10); // face do d100: 10..100 (100 = "00")
           units.push(b === 0 ? 10 : b);      // face do d10:  1..10  (10  = "0")
         });
-        byColor[key].push(tens.length + 'd100@' + tens.join(','));
-        byColor[key].push(units.length + 'd10@' + units.join(','));
+        steps.push({ cls:cls, notation: tens.length  + 'd100@' + tens.join(',')  });
+        steps.push({ cls:cls, notation: units.length + 'd10@'  + units.join(',') });
       } else {
-        byColor[key].push(g.faces.length + 'd' + sides + '@' + g.faces.join(','));
+        steps.push({ cls:cls, notation: g.faces.length + 'd' + sides + '@' + g.faces.join(',') });
       }
     });
-    if (!order.length) return playRollAnim(p, onDone);   // só moeda → CSS
+    if (!steps.length) return playRollAnim(p, onDone);   // só moeda → CSS
 
     var settled = false, timer = null;
     function toCss() {
@@ -1060,11 +1061,10 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       // add() SÓ funciona depois que o grupo anterior PAROU (chamar durante a
       // queda quebra a lib). Então espera cada grupo (await). A "gravidade alta"
       // na config faz cada grupo parar rápido, deixando as ondas bem curtas.
-      for (var i = 0; i < order.length; i++) {
-        var notation = byColor[order[i]].join('+');
-        await box.updateConfig({ theme_customColorset: colorObjFor(order[i]) });
-        if (i === 0) await box.roll(notation);
-        else await box.add(notation);
+      for (var i = 0; i < steps.length; i++) {
+        await box.updateConfig({ theme_customColorset: colorObjFor(steps[i].cls) });
+        if (i === 0) await box.roll(steps[i].notation);
+        else await box.add(steps[i].notation);
       }
       finish();
     } catch (e) { console.warn('[mesa] erro no 3D:', e); toCss(); }
