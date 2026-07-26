@@ -266,18 +266,34 @@ body {
   border-radius:6px; padding:12px; cursor:pointer; transition:all .15s;
 }
 .wb-btn:hover { background:rgba(78,211,232,0.16); box-shadow:0 0 14px rgba(78,211,232,0.3); }
-.wb-overlay { position:fixed; inset:0; z-index:9990; background:rgba(0,0,0,0.82); display:none; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:18px; }
+.wb-overlay { position:fixed; inset:0; z-index:9990; background:rgba(0,0,0,0.82); display:none; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:18px; overflow:auto; }
 .wb-overlay.show { display:flex; }
-.wb-toolbar { display:flex; align-items:center; gap:9px; background:#0b1320; border:1px solid var(--line-strong); border-radius:8px; padding:9px 14px; }
-.wb-tool { width:26px; height:26px; cursor:pointer; padding:0; transition:transform .1s, border-color .15s, box-shadow .15s; }
+.wb-toolbar { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:7px; max-width:94vw; background:#0b1320; border:1px solid var(--line-strong); border-radius:8px; padding:8px 12px; }
+.wb-tool { width:25px; height:25px; cursor:pointer; padding:0; transition:transform .1s, border-color .15s, box-shadow .15s; }
 .wb-color { border-radius:50%; border:2px solid rgba(255,255,255,0.18); display:inline-block; }
 .wb-color.active { border-color:#fff; transform:scale(1.15); box-shadow:0 0 10px rgba(255,255,255,0.5); }
 .wb-icon { background:rgba(255,255,255,0.06); border:1px solid var(--line); color:var(--fg-dim); display:flex; align-items:center; justify-content:center; font-size:13px; border-radius:5px; }
 .wb-icon:hover { color:var(--fg); border-color:var(--holo-soft); }
 .wb-icon.active { color:var(--holo); border-color:var(--holo); box-shadow:0 0 8px rgba(78,211,232,0.3); }
-.wb-close-btn { margin-left:8px; color:var(--danger); border-color:rgba(255,85,102,0.4); }
+.wb-close-btn { color:var(--danger); border-color:rgba(255,85,102,0.4); }
 .wb-close-btn:hover { color:#fff; background:var(--danger); border-color:var(--danger); }
+/* espessura do traço (vale pro pincel, formas, borracha e tamanho do texto) */
+.wb-size { width:62px; accent-color:var(--holo); cursor:pointer; flex:0 0 auto; }
+/* swatch "outra cor": o <input type=color> fica invisível por cima da bolinha */
+.wb-color-custom { position:relative; overflow:hidden; background:#8b5cf6; }
+.wb-color-custom input { position:absolute; inset:-6px; width:200%; height:200%; padding:0; border:none; background:none; opacity:0; cursor:pointer; }
+/* o stage embrulha o canvas: serve de âncora pro canvas de prévia e pro campo de texto */
+/* coluna igual ao overlay de antes: com o eixo principal na altura, o canvas
+   continua encolhendo mantendo a proporção quando o max-height é que limita */
+.wb-stage { position:relative; display:inline-flex; flex-direction:column; align-items:center; max-width:100%; min-height:0; }
 #wbCanvas { background:#fff; border-radius:8px; max-width:92vw; max-height:78vh; box-shadow:0 0 40px rgba(0,0,0,0.6); cursor:crosshair; touch-action:none; }
+#wbCanvas.wb-cursor-text { cursor:text; }
+/* prévia das formas enquanto arrasta — camada separada pra não apagar traço que chega de outro jogador */
+#wbPreview { position:absolute; left:0; top:0; width:100%; height:100%; border-radius:8px; pointer-events:none; }
+.wb-text-inline {
+  position:absolute; z-index:5; font-family:'Segoe UI', system-ui, sans-serif; line-height:1.15;
+  background:transparent; border:1px dashed rgba(0,0,0,0.45); border-radius:4px; padding:0 3px; outline:none; min-width:70px;
+}
 
 /* ── Mesa de Som (soundboard compartilhado) ── */
 .som-btn { color:#c3a6ff; background:rgba(160,130,255,0.08); border-color:rgba(160,130,255,0.45); position:relative; }
@@ -495,7 +511,8 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   /* no mobile o grid empilha; mantém o quadro cheio e o vídeo como tira no topo */
   body.wb-on.wb-split .video-panel, body.wb-on.wb-right .video-panel { top:10px; left:10px; right:10px; bottom:auto; width:auto; height:120px; }
   body.wb-split .wb-overlay, body.wb-right .wb-overlay { padding:140px 12px 12px; }
-  body.wb-split #wbCanvas, body.wb-right #wbCanvas { max-width:94vw; max-height:calc(100vh - 168px); }
+  body.wb-split #wbCanvas, body.wb-right #wbCanvas { max-width:94vw; max-height:calc(100vh - 250px); }
+  body.wb-top #wbCanvas { max-height:calc(100vh - 300px); }   /* a barra de ferramentas quebra em 2-3 linhas no estreito */
 }
 
 /* ── Personagens ── */
@@ -552,6 +569,16 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 .img-lb-close { position:fixed; top:16px; right:20px; width:36px; height:36px; border-radius:50%; background:rgba(0,0,0,0.6); border:1px solid var(--line-strong); color:var(--fg); font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:10001; transition:all .15s; }
 .img-lb-close:hover { color:#fff; border-color:var(--holo); box-shadow:0 0 12px rgba(78,211,232,0.3); }
 .img-lb-hint { position:fixed; bottom:14px; left:50%; transform:translateX(-50%); font-family:var(--font-mono); font-size:9px; letter-spacing:0.08em; color:var(--fg-faint); z-index:10001; pointer-events:none; }
+/* setas de navegação entre as imagens do chat */
+.img-lb-nav { position:fixed; top:50%; transform:translateY(-50%); width:44px; height:44px; border-radius:50%; background:rgba(0,0,0,0.6); border:1px solid var(--line-strong); color:var(--fg); font-size:26px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0 0 3px; z-index:10001; transition:all .15s; }
+.img-lb-nav:hover:not(:disabled) { color:#fff; border-color:var(--holo); box-shadow:0 0 12px rgba(78,211,232,0.3); }
+.img-lb-nav:disabled { opacity:0.22; cursor:default; }
+.img-lb-nav.hidden { display:none; }
+.img-lb-prev { left:18px; }
+.img-lb-next { right:18px; }
+.img-lb-count { position:fixed; bottom:34px; left:50%; transform:translateX(-50%); font-family:var(--font-mono); font-size:10px; letter-spacing:0.12em; color:var(--fg-dim); background:rgba(0,0,0,0.45); border:1px solid var(--line); border-radius:999px; padding:4px 11px; z-index:10001; pointer-events:none; font-variant-numeric:tabular-nums; }
+.img-lb-count:empty { display:none; }
+@media (max-width:640px) { .img-lb-nav { width:38px; height:38px; font-size:22px; } .img-lb-prev { left:8px; } .img-lb-next { right:8px; } }
 .chat-input-row { display:flex; gap:7px; padding:10px 11px; border-top:1px solid var(--line); flex:0 0 auto; align-items:center; }
 .chat-input {
   flex:1; background:rgba(78,211,232,0.04); border:1px solid var(--line); border-radius:4px;
@@ -702,11 +729,14 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 <!-- Canvas dos dados 3D (preenchido pela dice-box quando o 3D está ligado) -->
 <div id="dice3d"></div>
 
-<!-- Lightbox de imagem do chat (zoom) -->
+<!-- Lightbox de imagem do chat (zoom + navegação entre todas as imagens do chat) -->
 <div class="img-lightbox" id="imgLightbox">
   <button class="img-lb-close" id="imgLbClose" type="button" title="Fechar">&#10005;</button>
+  <button class="img-lb-nav img-lb-prev" id="imgLbPrev" type="button" title="Imagem anterior (&#8592;)">&#8249;</button>
   <img id="imgLbImg" src="" alt="">
-  <div class="img-lb-hint">role pra dar zoom · arraste pra mover · duplo clique reseta · esc fecha</div>
+  <button class="img-lb-nav img-lb-next" id="imgLbNext" type="button" title="Próxima imagem (&#8594;)">&#8250;</button>
+  <span class="img-lb-count" id="imgLbCount"></span>
+  <div class="img-lb-hint">role pra dar zoom · arraste pra mover · duplo clique reseta · &#8592; &#8594; troca de imagem · esc fecha</div>
 </div>
 
 <!-- Mesa de Som (soundboard compartilhado) -->
@@ -775,11 +805,21 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 <!-- Quadro branco compartilhado -->
 <div class="wb-overlay" id="wbOverlay">
   <div class="wb-toolbar">
+    <button class="wb-tool wb-icon wb-tool-btn active" data-tool="pen" type="button" title="Pincel">&#9998;</button>
+    <button class="wb-tool wb-icon wb-tool-btn" data-tool="eraser" type="button" title="Borracha">&#9003;</button>
+    <button class="wb-tool wb-icon wb-tool-btn" data-tool="arrow" type="button" title="Seta">&#8599;</button>
+    <button class="wb-tool wb-icon wb-tool-btn" data-tool="rect" type="button" title="Retângulo">&#9645;</button>
+    <button class="wb-tool wb-icon wb-tool-btn" data-tool="circle" type="button" title="Círculo">&#9711;</button>
+    <button class="wb-tool wb-icon wb-tool-btn" data-tool="text" type="button" title="Texto (clique no quadro e digite)">T</button>
+    <span class="wb-sep"></span>
+    <input class="wb-size" id="wbSize" type="range" min="2" max="20" step="1" value="3" title="Espessura do traço / tamanho do texto">
+    <span class="wb-sep"></span>
     <span class="wb-tool wb-color active" data-color="#111111" style="background:#111" title="Preto"></span>
     <span class="wb-tool wb-color" data-color="#e0473a" style="background:#e0473a" title="Vermelho"></span>
     <span class="wb-tool wb-color" data-color="#2f7bff" style="background:#2f7bff" title="Azul"></span>
     <span class="wb-tool wb-color" data-color="#22b455" style="background:#22b455" title="Verde"></span>
-    <button class="wb-tool wb-icon" id="wbEraser" type="button" title="Borracha">&#9003;</button>
+    <label class="wb-tool wb-color wb-color-custom" id="wbColorCustom" title="Outra cor"><input type="color" id="wbColorInput" value="#8b5cf6"></label>
+    <span class="wb-sep"></span>
     <button class="wb-tool wb-icon" id="wbClear" type="button" title="Limpar tudo">&#128465;</button>
     <span class="wb-sep"></span>
     <button class="wb-tool wb-icon wb-layout-btn" data-layout="top" type="button" title="Caras no topo">&#9600;</button>
@@ -787,7 +827,10 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     <button class="wb-tool wb-icon wb-layout-btn" data-layout="right" type="button" title="Caras na coluna à direita">&#9616;</button>
     <button class="wb-tool wb-icon wb-close-btn" id="wbClose" type="button" title="Fechar">&#10005;</button>
   </div>
-  <canvas id="wbCanvas" width="1280" height="720"></canvas>
+  <div class="wb-stage" id="wbStage">
+    <canvas id="wbCanvas" width="1280" height="720"></canvas>
+    <canvas id="wbPreview" width="1280" height="720"></canvas>
+  </div>
 </div>
 
 <!-- Seleção de personagem -->
@@ -1211,22 +1254,51 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     chatMsgs.scrollTop = chatMsgs.scrollHeight;
   }
 
-  // ── Lightbox: duplo clique numa imagem do chat → abre com zoom ─────
+  // ── Lightbox: clique numa imagem do chat → abre com zoom ──────────
+  // A galeria é o próprio DOM do chat (as imagens só são anexadas, nunca
+  // removidas), então dá pra reler a lista a cada passo e já contar as que
+  // chegaram enquanto o lightbox estava aberto.
   var imgLightbox = document.getElementById('imgLightbox');
   var imgLbImg = document.getElementById('imgLbImg');
-  var lbScale = 1, lbX = 0, lbY = 0, lbDragging = false, lbStart = null;
+  var imgLbPrev = document.getElementById('imgLbPrev');
+  var imgLbNext = document.getElementById('imgLbNext');
+  var imgLbCount = document.getElementById('imgLbCount');
+  var lbScale = 1, lbX = 0, lbY = 0, lbDragging = false, lbStart = null, lbIdx = 0;
   function lbApply() { imgLbImg.style.transform = 'translate(' + lbX + 'px,' + lbY + 'px) scale(' + lbScale + ')'; }
   function lbReset() { lbScale = 1; lbX = 0; lbY = 0; lbApply(); }
-  function openLightbox(src) { imgLbImg.src = src; lbReset(); imgLightbox.classList.add('show'); }
+  function lbGallery() { return Array.prototype.slice.call(chatMsgs.querySelectorAll('.msg-img')); }
+  function lbGo(i) {
+    var all = lbGallery();
+    if (!all.length) { closeLightbox(); return; }
+    lbIdx = Math.max(0, Math.min(i, all.length - 1));
+    imgLbImg.src = all[lbIdx].src;
+    lbReset();
+    var solo = all.length < 2;
+    imgLbPrev.classList.toggle('hidden', solo);
+    imgLbNext.classList.toggle('hidden', solo);
+    imgLbPrev.disabled = lbIdx === 0;
+    imgLbNext.disabled = lbIdx === all.length - 1;
+    imgLbCount.textContent = solo ? '' : (lbIdx + 1) + ' / ' + all.length;
+  }
+  function openLightbox(i) { imgLightbox.classList.add('show'); lbGo(i); }
   function closeLightbox() { imgLightbox.classList.remove('show'); imgLbImg.src = ''; }
 
   chatMsgs.addEventListener('click', function(e) {
     var img = e.target.closest('.msg-img');
-    if (img && img.src) { e.preventDefault(); openLightbox(img.src); }
+    if (!img || !img.src) return;
+    e.preventDefault();
+    openLightbox(lbGallery().indexOf(img));
   });
+  imgLbPrev.addEventListener('click', function(){ lbGo(lbIdx - 1); });
+  imgLbNext.addEventListener('click', function(){ lbGo(lbIdx + 1); });
   document.getElementById('imgLbClose').addEventListener('click', closeLightbox);
   imgLightbox.addEventListener('click', function(e){ if (e.target === imgLightbox) closeLightbox(); });
-  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && imgLightbox.classList.contains('show')) closeLightbox(); });
+  document.addEventListener('keydown', function(e){
+    if (!imgLightbox.classList.contains('show')) return;
+    if (e.key === 'Escape') closeLightbox();
+    else if (e.key === 'ArrowLeft')  { e.preventDefault(); lbGo(lbIdx - 1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); lbGo(lbIdx + 1); }
+  });
   imgLbImg.addEventListener('wheel', function(e){
     e.preventDefault();
     lbScale = Math.min(6, Math.max(1, lbScale * (e.deltaY < 0 ? 1.15 : 1/1.15)));
@@ -1425,54 +1497,165 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   loadTramasSessao(); renderTramas();
 
   // ── Quadro branco (compartilhado) ─────────────────────────────────
+  // Ferramentas: pincel, borracha, seta, retângulo, círculo e texto — todas
+  // transmitidas pros outros jogadores. Coordenadas vão sempre normalizadas
+  // (0..1) e são convertidas pro canvas fixo de 1280x720 em cada cliente.
   var wbOverlay = document.getElementById('wbOverlay');
+  var wbStage  = document.getElementById('wbStage');
   var wbCanvas = document.getElementById('wbCanvas');
   var wbCtx = wbCanvas.getContext('2d');
+  var wbPre = document.getElementById('wbPreview');
+  var wbPreCtx = wbPre.getContext('2d');
   var WB_W = 1280, WB_H = 720;
-  var wbColor = '#111111', wbErase = false, wbDrawing = false, wbLast = null;
+  var WB_SHAPES = ['arrow','rect','circle'];              // desenham arrastando, com prévia ao vivo
+  var WB_ME = Math.random().toString(36).slice(2);        // o canal é self:true — ignora o eco do próprio traço
+  var wbTool = 'pen', wbColor = '#111111', wbSize = 3;
+  var wbDrawing = false, wbLast = null, wbStart = null, wbText = null;
 
   function wbClearLocal() { wbCtx.fillStyle = '#ffffff'; wbCtx.fillRect(0, 0, WB_W, WB_H); }
   wbClearLocal();   // fundo branco inicial
+  function wbTextPx() { return 16 + wbSize * 2; }         // o texto acompanha a espessura escolhida (3 → 22px)
 
-  function wbDrawSeg(s) {
+  function wbDrawSeg(s, ctx) {
     if (!s) return;
-    wbCtx.strokeStyle = s.erase ? '#ffffff' : (s.color || '#111');
-    wbCtx.lineWidth = s.erase ? 28 : 3;
-    wbCtx.lineCap = 'round'; wbCtx.lineJoin = 'round';
-    wbCtx.beginPath();
-    wbCtx.moveTo(s.x0 * WB_W, s.y0 * WB_H);
-    wbCtx.lineTo(s.x1 * WB_W, s.y1 * WB_H);
-    wbCtx.stroke();
+    ctx = ctx || wbCtx;
+    var w = s.size || 3;
+    ctx.strokeStyle = s.erase ? '#ffffff' : (s.color || '#111');
+    ctx.lineWidth = s.erase ? Math.min(90, w * 8) : w;    // a borracha é bem mais grossa que o traço (com teto)
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(s.x0 * WB_W, s.y0 * WB_H);
+    ctx.lineTo(s.x1 * WB_W, s.y1 * WB_H);
+    ctx.stroke();
+  }
+  function wbDrawShape(s, ctx) {
+    if (!s) return;
+    ctx = ctx || wbCtx;
+    var x0 = s.x0 * WB_W, y0 = s.y0 * WB_H, x1 = s.x1 * WB_W, y1 = s.y1 * WB_H, w = s.size || 3;
+    ctx.strokeStyle = ctx.fillStyle = s.color || '#111';
+    ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    if (s.tool === 'rect') {
+      ctx.strokeRect(Math.min(x0,x1), Math.min(y0,y1), Math.abs(x1-x0), Math.abs(y1-y0));
+    } else if (s.tool === 'circle') {
+      ctx.beginPath();
+      ctx.ellipse((x0+x1)/2, (y0+y1)/2, Math.abs(x1-x0)/2, Math.abs(y1-y0)/2, 0, 0, Math.PI*2);
+      ctx.stroke();
+    } else {                                              // seta: linha + ponta preenchida
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+      var ang = Math.atan2(y1 - y0, x1 - x0), t = 10 + w * 2;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x1 - t * Math.cos(ang - Math.PI/7), y1 - t * Math.sin(ang - Math.PI/7));
+      ctx.lineTo(x1 - t * Math.cos(ang + Math.PI/7), y1 - t * Math.sin(ang + Math.PI/7));
+      ctx.closePath(); ctx.fill();
+    }
+  }
+  function wbDrawText(s, ctx) {
+    if (!s || !s.text) return;
+    ctx = ctx || wbCtx;
+    ctx.fillStyle = s.color || '#111';
+    ctx.font = (s.font || 22) + "px 'Segoe UI', system-ui, sans-serif";
+    ctx.textBaseline = 'top';
+    ctx.fillText(String(s.text), s.x * WB_W, s.y * WB_H);
   }
   function wbPoint(e) {
     var r = wbCanvas.getBoundingClientRect();
     return { x:(e.clientX - r.left) / r.width, y:(e.clientY - r.top) / r.height };
   }
-  wbCanvas.addEventListener('pointerdown', function(e){ wbDrawing = true; wbLast = wbPoint(e); try { wbCanvas.setPointerCapture(e.pointerId); } catch (_) {} });
+
+  // texto: abre um campo de verdade em cima do canvas, no ponto clicado
+  function wbCommitText(commit) {
+    if (!wbText) return;
+    var el = wbText.el, p = wbText.p, px = wbText.px;
+    wbText = null;                    // zera antes do remove(): o blur do remove não pode reentrar aqui
+    var v = el.value.trim();
+    el.remove();
+    if (commit && v) {
+      var t = { x:p.x, y:p.y, text:v, color:wbColor, font:px, by:WB_ME };
+      wbDrawText(t); send('wb-text', t);
+    }
+  }
+  function wbOpenText(e) {
+    wbCommitText(true);               // comita um texto pendente antes de abrir o próximo
+    var p = wbPoint(e), r = wbStage.getBoundingClientRect(), px = wbTextPx();
+    var el = document.createElement('input');
+    el.type = 'text'; el.className = 'wb-text-inline'; el.maxLength = 90;
+    el.style.left = (e.clientX - r.left) + 'px';
+    el.style.top  = (e.clientY - r.top) + 'px';
+    el.style.color = wbColor;
+    el.style.fontSize = (px * (r.width / WB_W)) + 'px';   // o campo acompanha a escala do canvas na tela
+    wbStage.appendChild(el);
+    wbText = { el:el, p:p, px:px };
+    el.focus();
+    el.addEventListener('keydown', function(ev){
+      ev.stopPropagation();           // Enter/Esc aqui não são do resto da mesa
+      if (ev.key === 'Enter')  { ev.preventDefault(); wbCommitText(true); }
+      if (ev.key === 'Escape') { ev.preventDefault(); wbCommitText(false); }
+    });
+    el.addEventListener('blur', function(){ wbCommitText(true); });
+  }
+
+  wbCanvas.addEventListener('pointerdown', function(e){
+    // sem o preventDefault o navegador rouba o foco logo depois do campo de texto abrir
+    e.preventDefault();
+    if (wbTool === 'text') { wbOpenText(e); return; }
+    wbCommitText(true);
+    wbDrawing = true;
+    wbStart = wbLast = wbPoint(e);
+    try { wbCanvas.setPointerCapture(e.pointerId); } catch (_) {}
+  });
   wbCanvas.addEventListener('pointermove', function(e){
     if (!wbDrawing) return;
     var p = wbPoint(e);
-    var seg = { x0:wbLast.x, y0:wbLast.y, x1:p.x, y1:p.y, color:wbColor, erase:wbErase };
+    if (WB_SHAPES.indexOf(wbTool) >= 0) {
+      // prévia na camada de cima: não toca no desenho já feito nem no que chega dos outros
+      wbPreCtx.clearRect(0, 0, WB_W, WB_H);
+      wbDrawShape({ tool:wbTool, x0:wbStart.x, y0:wbStart.y, x1:p.x, y1:p.y, color:wbColor, size:wbSize }, wbPreCtx);
+      wbLast = p;
+      return;
+    }
+    var seg = { x0:wbLast.x, y0:wbLast.y, x1:p.x, y1:p.y, color:wbColor, size:wbSize, erase:(wbTool === 'eraser'), by:WB_ME };
     wbDrawSeg(seg); send('wb-draw', seg); wbLast = p;
   });
-  function wbEnd(){ wbDrawing = false; }
+  function wbEnd(){
+    if (!wbDrawing) return;
+    wbDrawing = false;
+    if (WB_SHAPES.indexOf(wbTool) < 0) return;
+    wbPreCtx.clearRect(0, 0, WB_W, WB_H);
+    // clique sem arrastar não vira forma (evitaria um borrão de 1px)
+    if (Math.abs(wbLast.x - wbStart.x) + Math.abs(wbLast.y - wbStart.y) < 0.005) return;
+    var sh = { tool:wbTool, x0:wbStart.x, y0:wbStart.y, x1:wbLast.x, y1:wbLast.y, color:wbColor, size:wbSize, by:WB_ME };
+    wbDrawShape(sh); send('wb-shape', sh);
+  }
   wbCanvas.addEventListener('pointerup', wbEnd);
   wbCanvas.addEventListener('pointercancel', wbEnd);
 
-  document.querySelectorAll('.wb-color').forEach(function(sw){
-    sw.addEventListener('click', function(){
-      wbColor = sw.dataset.color; wbErase = false;
-      document.querySelectorAll('.wb-color').forEach(function(t){ t.classList.remove('active'); });
-      document.getElementById('wbEraser').classList.remove('active');
-      sw.classList.add('active');
-    });
+  var wbToolBtns = document.querySelectorAll('.wb-tool-btn');
+  function wbSetTool(name) {
+    wbCommitText(true);
+    wbTool = name;
+    wbToolBtns.forEach(function(b){ b.classList.toggle('active', b.dataset.tool === name); });
+    wbCanvas.classList.toggle('wb-cursor-text', name === 'text');
+  }
+  wbToolBtns.forEach(function(b){ b.addEventListener('click', function(){ wbSetTool(b.dataset.tool); }); });
+
+  document.getElementById('wbSize').addEventListener('input', function(){ wbSize = +this.value; });
+
+  var wbColorCustom = document.getElementById('wbColorCustom');
+  function wbSetColor(c, el) {
+    wbColor = c;
+    document.querySelectorAll('.wb-color').forEach(function(t){ t.classList.toggle('active', t === el); });
+    if (wbTool === 'eraser') wbSetTool('pen');   // escolher cor sai da borracha
+  }
+  document.querySelectorAll('.wb-color[data-color]').forEach(function(sw){
+    sw.addEventListener('click', function(){ wbSetColor(sw.dataset.color, sw); });
   });
-  document.getElementById('wbEraser').addEventListener('click', function(){
-    wbErase = true;
-    document.querySelectorAll('.wb-color').forEach(function(t){ t.classList.remove('active'); });
-    this.classList.add('active');
+  document.getElementById('wbColorInput').addEventListener('input', function(){
+    wbColorCustom.style.background = this.value;
+    wbSetColor(this.value, wbColorCustom);
   });
-  document.getElementById('wbClear').addEventListener('click', function(){ wbClearLocal(); send('wb-clear', {}); });
+
+  document.getElementById('wbClear').addEventListener('click', function(){ wbCommitText(false); wbClearLocal(); send('wb-clear', {}); });
   document.getElementById('wbClose').addEventListener('click', function(){ closeWhiteboardView(); send('wb-close', {}); });
   document.getElementById('wbBtn').addEventListener('click', function(){ openWhiteboardView(); send('wb-open', {}); });
 
@@ -1503,6 +1686,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     jitsiTile(true);   // mostra todas as caras na grade
   }
   function closeWhiteboardView() {
+    wbCommitText(false);              // descarta texto que ficou sendo digitado
     wbOverlay.classList.remove('show');
     document.body.classList.remove('wb-on','wb-top','wb-split','wb-right');
     jitsiTile(false);  // volta o vídeo ao normal
@@ -2310,7 +2494,10 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     else if (event === 'chat') renderChat(payload);
     else if (event === 'chars') applyChars(payload);
     else if (event === 'chars-req') { if (mesaChars.length) send('chars', mesaChars); }
-    else if (event === 'wb-draw') wbDrawSeg(payload);
+    // o canal é self:true, então o próprio traço volta como eco — quem desenhou já pintou local
+    else if (event === 'wb-draw')  { if (!payload || payload.by !== WB_ME) wbDrawSeg(payload); }
+    else if (event === 'wb-shape') { if (!payload || payload.by !== WB_ME) wbDrawShape(payload); }
+    else if (event === 'wb-text')  { if (!payload || payload.by !== WB_ME) wbDrawText(payload); }
     else if (event === 'wb-clear') wbClearLocal();
     else if (event === 'wb-open') openWhiteboardView();
     else if (event === 'wb-close') closeWhiteboardView();
@@ -2333,7 +2520,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     channel.on('broadcast', { event:'chat' }, function(m){ dispatch('chat', m.payload); });
     channel.on('broadcast', { event:'chars' }, function(m){ dispatch('chars', m.payload); });
     channel.on('broadcast', { event:'chars-req' }, function(m){ dispatch('chars-req', m.payload); });
-    ['wb-draw','wb-clear','wb-open','wb-close'].forEach(function(ev){
+    ['wb-draw','wb-shape','wb-text','wb-clear','wb-open','wb-close'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
     channel.on('broadcast', { event:'mesa-ctx' }, function(m){ dispatch('mesa-ctx', m.payload); });
