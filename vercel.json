@@ -6,8 +6,12 @@
   "functions": {
     "api/navegador.js":       { "maxDuration": 60 },
     "api/ingest-session.js":  { "maxDuration": 120 },
-    "api/jaas-webhook.js":    { "maxDuration": 60 }
+    "api/jaas-webhook.js":    { "maxDuration": 60 },
+    "api/limpar-mesa.js":     { "maxDuration": 60 }
   },
+  "crons": [
+    { "path": "/api/limpar-mesa", "schedule": "0 6 * * *" }
+  ],
   "headers": [
     {
       "source": "/sheet-sync.js",
