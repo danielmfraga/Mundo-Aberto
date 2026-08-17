@@ -258,6 +258,60 @@ body {
 @keyframes coinflip { from { transform:rotateX(0); } to { transform:rotateX(var(--spin,1440deg)); } }
 @keyframes coinland { 0% { transform:rotateX(0) scale(1); } 35% { transform:rotateX(0) scale(1.16); } 100% { transform:rotateX(0) scale(1); } }
 
+/* ── Baú (palavra lacrada, revelada pra todos) ── */
+.bau-btn { color:#e8c46a; background:rgba(232,196,106,0.07); border-color:rgba(232,196,106,0.4); }
+.bau-btn:hover { background:rgba(232,196,106,0.15); box-shadow:0 0 14px rgba(232,196,106,0.28); }
+.bau-overlay { position:fixed; inset:0; z-index:9993; background:rgba(0,0,0,0.82); display:none; align-items:center; justify-content:center; padding:18px; }
+.bau-overlay.show { display:flex; }
+.bau-box {
+  width:min(94vw,520px); max-height:88vh; display:flex; flex-direction:column;
+  background:rgba(11,16,26,0.99); border:1px solid rgba(232,196,106,0.35); border-radius:8px;
+  box-shadow:0 0 46px rgba(0,0,0,0.6); overflow:hidden;
+}
+.bau-head { display:flex; align-items:center; gap:10px; padding:13px 16px; border-bottom:1px solid rgba(232,196,106,0.18); flex:0 0 auto; }
+.bau-head .led { width:6px; height:6px; border-radius:50%; background:#e8c46a; box-shadow:0 0 7px #e8c46a; flex:0 0 auto; }
+.bau-title { font-family:var(--font-mono); font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:#e8c46a; flex:1 1 auto; }
+.bau-close { background:none; border:none; color:var(--fg-dim); font-size:17px; cursor:pointer; padding:0 4px; line-height:1; }
+.bau-close:hover { color:var(--danger); }
+.bau-novo { display:flex; flex-direction:column; gap:7px; padding:12px 16px; border-bottom:1px solid var(--line); flex:0 0 auto; }
+.bau-novo input {
+  background:rgba(232,196,106,0.05); border:1px solid var(--line); border-radius:4px; outline:none;
+  color:var(--fg); font-family:var(--font-display); font-size:13px; padding:8px 11px;
+}
+.bau-novo input:focus { border-color:rgba(232,196,106,0.5); }
+.bau-novo input::placeholder { color:var(--fg-faint); }
+.bau-lacrar { align-self:flex-end; background:rgba(232,196,106,0.1); border-color:rgba(232,196,106,0.45); color:#e8c46a; }
+.bau-lacrar:hover { background:rgba(232,196,106,0.2); border-color:#e8c46a; box-shadow:0 0 12px rgba(232,196,106,0.3); }
+.bau-lista { flex:1 1 auto; overflow-y:auto; padding:11px 16px 16px; display:flex; flex-direction:column; gap:9px; min-height:60px; }
+.bau-vazio { text-align:center; color:var(--fg-faint); font-family:var(--font-mono); font-size:10.5px; line-height:1.9; padding:16px 6px; }
+.bau-item { border:1px solid var(--line); border-radius:6px; padding:10px 12px; display:flex; align-items:center; gap:11px; }
+.bau-item.fechado { background:rgba(232,196,106,0.05); border-color:rgba(232,196,106,0.22); }
+.bau-item.aberto { background:rgba(78,211,232,0.04); }
+.bau-item .ic { font-size:19px; line-height:1; flex:0 0 auto; }
+.bau-item .bd { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:3px; }
+.bau-item .rot { font-family:var(--font-mono); font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:var(--fg-faint); }
+.bau-item .txt { font-size:14px; color:var(--fg); word-break:break-word; line-height:1.4; }
+.bau-item.fechado .txt { color:rgba(232,196,106,0.65); font-style:italic; }
+.bau-item .btn { flex:0 0 auto; }
+.bau-abrir { background:rgba(232,196,106,0.12); border-color:rgba(232,196,106,0.5); color:#e8c46a; }
+.bau-abrir:hover { background:rgba(232,196,106,0.24); border-color:#e8c46a; box-shadow:0 0 12px rgba(232,196,106,0.35); }
+/* confirmação — abrir é irreversível, então pergunta antes (dentro da mesa, não o confirm() do navegador) */
+.bau-conf { position:fixed; inset:0; z-index:10020; background:rgba(0,0,0,0.86); display:none; align-items:center; justify-content:center; padding:20px; }
+.bau-conf.show { display:flex; }
+.bau-conf-box { width:min(92vw,380px); background:#0b1018; border:1px solid rgba(232,196,106,0.45); border-radius:8px; padding:22px 20px; text-align:center; box-shadow:0 0 40px rgba(0,0,0,0.7); }
+.bau-conf-box h3 { font-family:var(--font-mono); font-size:13px; letter-spacing:0.16em; text-transform:uppercase; color:#e8c46a; margin-bottom:9px; }
+.bau-conf-box p { font-size:13px; color:var(--fg-dim); line-height:1.6; margin-bottom:17px; }
+.bau-conf-acoes { display:flex; gap:9px; justify-content:center; }
+/* revelação — aparece pra todo mundo na mesa, mesmo com o painel fechado */
+.bau-rev { position:fixed; inset:0; z-index:10040; background:rgba(6,4,0,0.9); display:none; align-items:center; justify-content:center; padding:26px; cursor:pointer; }
+.bau-rev.show { display:flex; animation:bauRev .5s ease-out; }
+.bau-rev-box { text-align:center; max-width:min(92vw,760px); }
+.bau-rev-rot { font-family:var(--font-mono); font-size:11px; letter-spacing:0.34em; text-transform:uppercase; color:#e8c46a; margin-bottom:20px; }
+.bau-rev-txt { font-family:var(--font-display); font-size:min(7vw,42px); line-height:1.35; color:#fff; text-shadow:0 0 34px rgba(232,196,106,0.5); word-break:break-word; }
+.bau-rev-quem { margin-top:22px; font-family:var(--font-mono); font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--fg-faint); }
+@keyframes bauRev { from { opacity:0; transform:scale(1.06); } to { opacity:1; transform:none; } }
+@media (prefers-reduced-motion:reduce) { .bau-rev.show { animation:none; } }
+
 /* ── Cronômetro (compartilhado) ── */
 .timer-panel { flex:0 0 auto; }          /* igual dados/personagens: não encolhe quando o rail aperta */
 .timer-body { padding:11px 13px; display:flex; flex-direction:column; gap:9px; }
@@ -800,6 +854,8 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 
     <button class="wb-btn som-btn" id="somBtn" title="Abrir a mesa de som (ambientação)">&#127925; Mesa de Som</button>
 
+    <button class="wb-btn bau-btn" id="bauBtn" title="Baú: guardar uma palavra lacrada pra revelar depois">&#128274; Baú</button>
+
     <div class="panel chat-panel">
       <div class="panel-head"><span class="led"></span><span class="panel-title">Chat</span></div>
       <div class="chat-msgs" id="chatMsgs"></div>
@@ -819,6 +875,43 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 
 <!-- Aba lateral: esconde/mostra a coluna de painéis pra ampliar a câmera -->
 <button class="rail-toggle" id="railToggle" title="Esconder painéis (ampliar câmera)" type="button">&#8250;</button>
+
+<!-- Baú: palavra lacrada que, ao ser aberta, aparece pra mesa inteira -->
+<div class="bau-overlay" id="bauOverlay">
+  <div class="bau-box">
+    <div class="bau-head">
+      <span class="led"></span><span class="bau-title">Baú</span>
+      <button class="bau-close" id="bauClose" type="button" title="Fechar">&#10005;</button>
+    </div>
+    <div class="bau-novo">
+      <input id="bauRotulo" type="text" maxlength="60" placeholder="Rótulo do baú (opcional) — o que se vê fechado">
+      <input id="bauConteudo" type="text" maxlength="240" placeholder="A palavra ou frase que fica lacrada…">
+      <button class="btn bau-lacrar" id="bauLacrar" type="button">Lacrar</button>
+    </div>
+    <div class="bau-lista" id="bauLista"></div>
+  </div>
+</div>
+
+<!-- Confirmação: abrir não tem volta -->
+<div class="bau-conf" id="bauConf">
+  <div class="bau-conf-box">
+    <h3>Abrir o baú?</h3>
+    <p id="bauConfTxt">Uma vez aberto, o conteúdo aparece pra mesa inteira. Não dá pra lacrar de novo.</p>
+    <div class="bau-conf-acoes">
+      <button class="btn btn-clear" id="bauConfNao" type="button">Deixa quieto</button>
+      <button class="btn bau-abrir" id="bauConfSim" type="button">Abrir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Revelação: aparece pra todos, mesmo com o painel do baú fechado -->
+<div class="bau-rev" id="bauRev" title="Clique pra fechar">
+  <div class="bau-rev-box">
+    <div class="bau-rev-rot" id="bauRevRot"></div>
+    <div class="bau-rev-txt" id="bauRevTxt"></div>
+    <div class="bau-rev-quem" id="bauRevQuem"></div>
+  </div>
+</div>
 
 <!-- Alarme do cronômetro: a tela toda pisca vermelho quando o tempo acaba -->
 <div class="timer-flash" id="timerFlash"><span>TEMPO!</span></div>
@@ -1668,6 +1761,143 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   });
 
   loadTramasSessao(); renderTramas();
+
+  // ── Baú (palavra lacrada, revelada pra mesa inteira) ──────────────
+  // O conteúdo NUNCA vem pro cliente enquanto o baú está fechado: a view
+  // mesa_bau_publico devolve NULL no campo. Abrir é uma chamada de função no
+  // banco (bau_abrir), que grava a abertura e só então devolve o texto. Sem
+  // isso o "lacre" seria só esconder na tela — e o baú existe justamente pra
+  // provar que a palavra foi escrita ANTES.
+  var bauOverlay  = document.getElementById('bauOverlay');
+  var bauLista    = document.getElementById('bauLista');
+  var bauRotulo   = document.getElementById('bauRotulo');
+  var bauConteudo = document.getElementById('bauConteudo');
+  var bauConf     = document.getElementById('bauConf');
+  var bauRev      = document.getElementById('bauRev');
+  var bauItens = [], bauPendente = null, _bauRevT = null, _bauRevId = null;
+
+  function bauRpc(fn, corpo) {
+    return fetch(SB_URL + '/rest/v1/rpc/' + fn, {
+      method:'POST',
+      headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Content-Type':'application/json' },
+      body: JSON.stringify(corpo)
+    }).then(function(r){
+      if (!r.ok) return r.text().then(function(t){ throw new Error('HTTP ' + r.status + ' ' + t.slice(0,140)); });
+      return r.json();
+    });
+  }
+
+  function bauCarregar() {
+    return sbGet('/rest/v1/mesa_bau_publico?sala=eq.' + encodeURIComponent(SALA) +
+                 '&select=id,rotulo,aberto,autor,aberto_por,conteudo&order=criado_em.asc')
+      .then(function(rows){
+        if (!Array.isArray(rows)) throw new Error((rows && rows.message) || 'tabela do baú não encontrada');
+        bauItens = rows; bauRender(); return rows;
+      })
+      .catch(function(e){
+        bauItens = [];
+        bauLista.innerHTML = '<div class="bau-vazio">O baú ainda não foi montado no banco.<br>' +
+          'Rode <b>mesa-bau-setup.sql</b> no SQL Editor do Supabase.<br>' +
+          '<span style="opacity:.6">' + esc(String(e.message || e)).slice(0,120) + '</span></div>';
+      });
+  }
+
+  function bauRender() {
+    if (!bauItens.length) {
+      bauLista.innerHTML = '<div class="bau-vazio">Nenhum baú ainda.<br>Escreva acima e lacre — ninguém vê até alguém abrir.</div>';
+      return;
+    }
+    bauLista.innerHTML = '';
+    bauItens.forEach(function(b){
+      var el = document.createElement('div');
+      el.className = 'bau-item ' + (b.aberto ? 'aberto' : 'fechado');
+      var rot = b.rotulo ? esc(b.rotulo) : (b.aberto ? 'aberto' : 'lacrado');
+      var quem = b.aberto
+        ? ('aberto por ' + esc(b.aberto_por || '?'))
+        : ('lacrado por ' + esc(b.autor || '?'));
+      el.innerHTML =
+        '<span class="ic">' + (b.aberto ? '&#128275;' : '&#128274;') + '</span>' +
+        '<span class="bd"><span class="rot">' + rot + ' · ' + quem + '</span>' +
+        '<span class="txt">' + (b.aberto ? esc(b.conteudo || '—') : '· · ·') + '</span></span>';
+      if (!b.aberto) {
+        var btn = document.createElement('button');
+        btn.className = 'btn bau-abrir'; btn.type = 'button'; btn.textContent = 'Abrir';
+        btn.addEventListener('click', function(){ bauPerguntar(b); });
+        el.appendChild(btn);
+      }
+      bauLista.appendChild(el);
+    });
+  }
+
+  // abrir não tem volta — pergunta antes
+  function bauPerguntar(b) {
+    bauPendente = b;
+    document.getElementById('bauConfTxt').textContent = b.rotulo
+      ? '“' + b.rotulo + '” vai se abrir pra mesa inteira. Não dá pra lacrar de novo.'
+      : 'O conteúdo aparece pra mesa inteira. Não dá pra lacrar de novo.';
+    bauConf.classList.add('show');
+  }
+  function bauFecharConf() { bauConf.classList.remove('show'); bauPendente = null; }
+
+  function bauAbrirConfirmado() {
+    var b = bauPendente;
+    bauFecharConf();
+    if (!b) return;
+    bauRpc('bau_abrir', { p_id:b.id, p_quem:nome }).then(function(texto){
+      var p = { id:b.id, rotulo:b.rotulo || '', conteudo:String(texto == null ? '' : texto), quem:nome };
+      bauRevelar(p);                 // mostra na hora pra quem abriu
+      send('bau-aberto', p);         // e pra mesa toda
+      bauCarregar();
+    }).catch(function(e){ alert('Não consegui abrir o baú: ' + e.message); });
+  }
+
+  // Idempotente por id: quem abriu revela na hora e o eco do broadcast chega
+  // logo depois — reabrir a mesma cena reiniciaria a animação à toa.
+  function bauRevelar(p) {
+    if (!p) return;
+    if (bauRev.classList.contains('show') && _bauRevId === p.id) return;
+    _bauRevId = p.id;
+    if (_bauRevT) { clearTimeout(_bauRevT); _bauRevT = null; }
+    document.getElementById('bauRevRot').textContent  = p.rotulo || '';
+    document.getElementById('bauRevTxt').textContent  = p.conteudo || '';
+    document.getElementById('bauRevQuem').textContent = p.quem ? ('aberto por ' + p.quem) : '';
+    bauRev.classList.add('show');
+    _bauRevT = setTimeout(bauFecharRev, 22000);   // some sozinho, mas dá tempo de ler
+  }
+  function bauFecharRev() {
+    if (_bauRevT) { clearTimeout(_bauRevT); _bauRevT = null; }
+    bauRev.classList.remove('show');
+  }
+
+  function bauLacrar() {
+    var texto = bauConteudo.value.trim();
+    if (!texto) { bauConteudo.focus(); return; }
+    var rot = bauRotulo.value.trim();
+    bauRpc('bau_guardar', { p_sala:SALA, p_rotulo:rot, p_conteudo:texto, p_autor:nome }).then(function(){
+      bauRotulo.value = ''; bauConteudo.value = '';
+      bauCarregar();
+      send('bau-novo', {});
+    }).catch(function(e){ alert('Não consegui lacrar: ' + e.message); });
+  }
+
+  document.getElementById('bauBtn').addEventListener('click', function(){
+    bauOverlay.classList.add('show'); bauCarregar();
+  });
+  document.getElementById('bauClose').addEventListener('click', function(){ bauOverlay.classList.remove('show'); });
+  bauOverlay.addEventListener('click', function(e){ if (e.target === bauOverlay) bauOverlay.classList.remove('show'); });
+  document.getElementById('bauLacrar').addEventListener('click', bauLacrar);
+  bauConteudo.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); bauLacrar(); } });
+  bauRotulo.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); bauConteudo.focus(); } });
+  document.getElementById('bauConfSim').addEventListener('click', bauAbrirConfirmado);
+  document.getElementById('bauConfNao').addEventListener('click', bauFecharConf);
+  bauConf.addEventListener('click', function(e){ if (e.target === bauConf) bauFecharConf(); });
+  bauRev.addEventListener('click', bauFecharRev);
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Escape') return;
+    if (bauRev.classList.contains('show')) { bauFecharRev(); return; }
+    if (bauConf.classList.contains('show')) { bauFecharConf(); return; }
+    if (bauOverlay.classList.contains('show')) bauOverlay.classList.remove('show');
+  });
 
   // ── Cronômetro (compartilhado) ────────────────────────────────────
   // Trafega o QUE FALTA (ms), não o instante do fim: cada cliente ancora no
@@ -2772,6 +3002,8 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     else if (event === 'wb-draw')  { if (!payload || payload.by !== WB_ME) wbDrawSeg(payload); }
     else if (event === 'wb-shape') { if (!payload || payload.by !== WB_ME) wbDrawShape(payload); }
     else if (event === 'wb-text')  { if (!payload || payload.by !== WB_ME) wbDrawText(payload); }
+    else if (event === 'bau-aberto') { bauRevelar(payload); if (bauOverlay.classList.contains('show')) bauCarregar(); }
+    else if (event === 'bau-novo') { if (bauOverlay.classList.contains('show')) bauCarregar(); }
     else if (event === 'timer') tmAplica(payload);
     else if (event === 'timer-req') { if (tmRodando || tmResta > 0) send('timer', { restaMs:tmRestante(), rodando:tmRodando, autor:tmAutor }); }
     else if (event === 'wb-clear') wbClearLocal();
@@ -2796,7 +3028,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     channel.on('broadcast', { event:'chat' }, function(m){ dispatch('chat', m.payload); });
     channel.on('broadcast', { event:'chars' }, function(m){ dispatch('chars', m.payload); });
     channel.on('broadcast', { event:'chars-req' }, function(m){ dispatch('chars-req', m.payload); });
-    ['timer','timer-req','wb-draw','wb-shape','wb-text','wb-clear','wb-open','wb-close'].forEach(function(ev){
+    ['bau-aberto','bau-novo','timer','timer-req','wb-draw','wb-shape','wb-text','wb-clear','wb-open','wb-close'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
     channel.on('broadcast', { event:'mesa-ctx' }, function(m){ dispatch('mesa-ctx', m.payload); });
