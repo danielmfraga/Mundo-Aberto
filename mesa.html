@@ -258,6 +258,51 @@ body {
 @keyframes coinflip { from { transform:rotateX(0); } to { transform:rotateX(var(--spin,1440deg)); } }
 @keyframes coinland { 0% { transform:rotateX(0) scale(1); } 35% { transform:rotateX(0) scale(1.16); } 100% { transform:rotateX(0) scale(1); } }
 
+/* ── Cronômetro (compartilhado) ── */
+.timer-panel { flex:0 0 auto; }          /* igual dados/personagens: não encolhe quando o rail aperta */
+.timer-body { padding:11px 13px; display:flex; flex-direction:column; gap:9px; }
+.timer-display {
+  font-family:var(--font-mono); font-size:30px; letter-spacing:0.06em; text-align:center;
+  color:var(--holo); text-shadow:0 0 14px rgba(78,211,232,0.35); font-variant-numeric:tabular-nums;
+  line-height:1.1; transition:color .3s, text-shadow .3s;
+}
+.timer-display.parado { color:var(--fg-faint); text-shadow:none; }
+.timer-display.acabando { color:var(--desp); text-shadow:0 0 14px rgba(255,157,61,0.5); }
+.timer-display.fim { color:var(--danger); text-shadow:0 0 16px rgba(255,85,102,0.6); }
+.timer-presets { display:flex; flex-wrap:wrap; gap:5px; }
+.timer-preset {
+  flex:1 1 auto; min-width:38px; padding:6px 4px; cursor:pointer; border-radius:4px;
+  font-family:var(--font-mono); font-size:10px; letter-spacing:0.08em;
+  background:rgba(78,211,232,0.06); border:1px solid var(--line); color:var(--fg-dim); transition:all .15s;
+}
+.timer-preset:hover { color:var(--holo); border-color:var(--holo-soft); background:rgba(78,211,232,0.14); }
+.timer-custom {
+  flex:1 1 54px; min-width:54px; text-align:center; padding:6px 4px; border-radius:4px; outline:none;
+  font-family:var(--font-mono); font-size:10px; letter-spacing:0.08em;
+  background:rgba(78,211,232,0.04); border:1px solid var(--line); color:var(--fg);
+}
+.timer-custom:focus { border-color:var(--holo-soft); }
+.timer-custom::placeholder { color:var(--fg-faint); }
+.timer-actions { display:flex; gap:8px; }
+.timer-who {
+  margin-left:auto; font-family:var(--font-mono); font-size:8.5px; letter-spacing:0.12em;
+  text-transform:uppercase; color:var(--fg-faint); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:110px;
+}
+/* Alarme: a tela inteira pisca vermelho quando o tempo acaba.
+   pointer-events:none — o alarme avisa, não bloqueia quem está usando a mesa. */
+.timer-flash {
+  position:fixed; inset:0; z-index:10050; display:none; pointer-events:none;
+  background:rgba(255,42,60,0.40); box-shadow:inset 0 0 170px 45px rgba(255,0,30,0.72);
+  align-items:center; justify-content:center;
+}
+.timer-flash.show { display:flex; animation:timerFlash .46s steps(1) 9; }
+.timer-flash span {
+  font-family:var(--font-mono); font-size:min(9vw,64px); letter-spacing:0.3em; font-weight:700;
+  color:#fff; text-shadow:0 0 26px rgba(0,0,0,0.6);
+}
+@keyframes timerFlash { 50% { opacity:0; } }
+@media (prefers-reduced-motion:reduce) { .timer-flash.show { animation:none; opacity:1; } }
+
 /* ── Quadro branco ── */
 .wb-btn {
   width:100%; flex:0 0 auto; display:flex; align-items:center; justify-content:center; gap:8px;
@@ -726,6 +771,29 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       <div class="rolllog" id="rollLog"></div>
     </div>
 
+    <div class="panel timer-panel">
+      <div class="panel-head">
+        <span class="led"></span><span class="panel-title">Cronômetro</span>
+        <span class="timer-who" id="timerWho"></span>
+      </div>
+      <div class="timer-body">
+        <div class="timer-display parado" id="timerDisplay">00:00</div>
+        <div class="timer-presets">
+          <button class="timer-preset" data-seg="30"  type="button">30s</button>
+          <button class="timer-preset" data-seg="60"  type="button">1m</button>
+          <button class="timer-preset" data-seg="180" type="button">3m</button>
+          <button class="timer-preset" data-seg="300" type="button">5m</button>
+          <button class="timer-preset" data-seg="600" type="button">10m</button>
+          <input class="timer-custom" id="timerCustom" type="text" placeholder="mm:ss" maxlength="6"
+                 title="Digite mm:ss (ou só os minutos) e aperte Enter pra armar">
+        </div>
+        <div class="timer-actions">
+          <button class="btn btn-clear" id="timerZerar" type="button">Zerar</button>
+          <button class="btn btn-roll" id="timerPausa" type="button">Pausar</button>
+        </div>
+      </div>
+    </div>
+
     <button class="wb-btn" id="wbBtn" title="Abrir quadro branco">&#9998; Quadro Branco</button>
 
     <button class="wb-btn diario-btn" id="diarioBtn" title="Abrir o diário da mesa">&#128214; Diário da Mesa</button>
@@ -751,6 +819,9 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 
 <!-- Aba lateral: esconde/mostra a coluna de painéis pra ampliar a câmera -->
 <button class="rail-toggle" id="railToggle" title="Esconder painéis (ampliar câmera)" type="button">&#8250;</button>
+
+<!-- Alarme do cronômetro: a tela toda pisca vermelho quando o tempo acaba -->
+<div class="timer-flash" id="timerFlash"><span>TEMPO!</span></div>
 
 <!-- Canvas dos dados 3D (preenchido pela dice-box quando o 3D está ligado) -->
 <div id="dice3d"></div>
@@ -1597,6 +1668,107 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   });
 
   loadTramasSessao(); renderTramas();
+
+  // ── Cronômetro (compartilhado) ────────────────────────────────────
+  // Trafega o QUE FALTA (ms), não o instante do fim: cada cliente ancora no
+  // próprio relógio ao receber. Relógio torto de uma máquina não desalinha a
+  // mesa — o custo é só a latência do broadcast (~100ms), irrelevante aqui.
+  // Cada um dispara o próprio alarme ao chegar em zero; não depende de um
+  // segundo evento chegar na hora certa.
+  var timerDisplay = document.getElementById('timerDisplay');
+  var timerWho     = document.getElementById('timerWho');
+  var timerPausa   = document.getElementById('timerPausa');
+  var timerCustom  = document.getElementById('timerCustom');
+  var timerFlash   = document.getElementById('timerFlash');
+  var TM_MAX_MS = 3 * 60 * 60 * 1000;      // teto de 3h, pra não armar bobagem
+  var tmFim = 0, tmResta = 0, tmRodando = false, tmAutor = '', tmAcabou = false;
+  var tmTicker = null, _tmFlashT = null;
+
+  function tmRestante() { return tmRodando ? Math.max(0, tmFim - Date.now()) : tmResta; }
+  function tmFmt(ms) {
+    var t = Math.ceil(ms / 1000);
+    var h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
+    var mm = ('0' + m).slice(-2), ss = ('0' + s).slice(-2);
+    return h > 0 ? h + ':' + mm + ':' + ss : mm + ':' + ss;
+  }
+  // aceita "5" (= 5 min), "1:30" e "0:45"
+  function tmParse(txt) {
+    var m = /^(\d{1,3})(?::([0-5]?\d))?$/.exec(String(txt || '').trim());
+    if (!m) return 0;
+    var ms = m[2] === undefined ? Number(m[1]) * 60000 : (Number(m[1]) * 60 + Number(m[2])) * 1000;
+    return Math.min(ms, TM_MAX_MS);
+  }
+
+  function tmPinta() {
+    var ms = tmRestante();
+    timerDisplay.textContent = tmFmt(ms);
+    timerDisplay.classList.toggle('parado',   ms === 0 && !tmAcabou);
+    timerDisplay.classList.toggle('fim',      ms === 0 && tmAcabou);
+    timerDisplay.classList.toggle('acabando', ms > 0 && ms <= 10000);
+    timerPausa.textContent = tmRodando ? 'Pausar' : 'Retomar';
+    timerPausa.disabled = ms === 0;
+    timerPausa.style.opacity = ms === 0 ? '0.4' : '';
+    timerWho.textContent = (ms > 0 && tmAutor) ? tmAutor : '';
+  }
+
+  function tmDesliga() { if (tmTicker) { clearInterval(tmTicker); tmTicker = null; } }
+  function tmTique() {
+    if (tmRodando && Date.now() >= tmFim) {
+      tmRodando = false; tmResta = 0; tmAcabou = true;
+      tmDesliga(); tmPinta(); tmAlarme();
+      return;
+    }
+    if (!tmRodando) { tmDesliga(); }
+    tmPinta();
+  }
+  function tmLiga() { if (!tmTicker && tmRodando) tmTicker = setInterval(tmTique, 200); }
+
+  function tmAlarme() {
+    tmFlashOff();
+    void timerFlash.offsetWidth;           // reinicia a animação se já estava piscando
+    timerFlash.classList.add('show');
+    _tmFlashT = setTimeout(tmFlashOff, 4400);
+  }
+  function tmFlashOff() {
+    if (_tmFlashT) { clearTimeout(_tmFlashT); _tmFlashT = null; }
+    timerFlash.classList.remove('show');
+  }
+
+  // estado que chegou do broadcast (ou do próprio clique, aplicado na hora)
+  function tmAplica(p) {
+    var ms = Math.max(0, Math.min(Number(p && p.restaMs) || 0, TM_MAX_MS));
+    tmAutor = (p && p.autor) || '';
+    tmRodando = !!(p && p.rodando) && ms > 0;
+    tmResta = ms;
+    tmFim = tmRodando ? Date.now() + ms : 0;
+    if (ms > 0) { tmAcabou = false; tmFlashOff(); }   // rearmou: cancela alarme em curso
+    tmDesliga(); tmLiga(); tmPinta();
+  }
+  function tmManda(ms, rodando) {
+    var p = { restaMs:ms, rodando:rodando, autor:nome };
+    tmAplica(p);           // aplica local na hora pro clique não parecer travado
+    send('timer', p);      // o eco só reancora ~100ms depois; sem diferença visível
+  }
+
+  document.querySelectorAll('.timer-preset').forEach(function(b){
+    b.addEventListener('click', function(){ tmManda(Number(b.dataset.seg) * 1000, true); });
+  });
+  timerCustom.addEventListener('keydown', function(e){
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    var ms = tmParse(timerCustom.value);
+    if (!ms) { timerCustom.value = ''; return; }
+    timerCustom.value = ''; timerCustom.blur();
+    tmManda(ms, true);
+  });
+  document.getElementById('timerZerar').addEventListener('click', function(){
+    tmAcabou = false; tmFlashOff(); tmManda(0, false);
+  });
+  timerPausa.addEventListener('click', function(){
+    var ms = tmRestante();
+    if (ms > 0) tmManda(ms, !tmRodando);
+  });
+  tmPinta();
 
   // ── Quadro branco (compartilhado) ─────────────────────────────────
   // Ferramentas: pincel, borracha, seta, retângulo, círculo e texto — todas
@@ -2600,6 +2772,8 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     else if (event === 'wb-draw')  { if (!payload || payload.by !== WB_ME) wbDrawSeg(payload); }
     else if (event === 'wb-shape') { if (!payload || payload.by !== WB_ME) wbDrawShape(payload); }
     else if (event === 'wb-text')  { if (!payload || payload.by !== WB_ME) wbDrawText(payload); }
+    else if (event === 'timer') tmAplica(payload);
+    else if (event === 'timer-req') { if (tmRodando || tmResta > 0) send('timer', { restaMs:tmRestante(), rodando:tmRodando, autor:tmAutor }); }
     else if (event === 'wb-clear') wbClearLocal();
     else if (event === 'wb-open') openWhiteboardView();
     else if (event === 'wb-close') closeWhiteboardView();
@@ -2622,7 +2796,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     channel.on('broadcast', { event:'chat' }, function(m){ dispatch('chat', m.payload); });
     channel.on('broadcast', { event:'chars' }, function(m){ dispatch('chars', m.payload); });
     channel.on('broadcast', { event:'chars-req' }, function(m){ dispatch('chars-req', m.payload); });
-    ['wb-draw','wb-shape','wb-text','wb-clear','wb-open','wb-close'].forEach(function(ev){
+    ['timer','timer-req','wb-draw','wb-shape','wb-text','wb-clear','wb-open','wb-close'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
     channel.on('broadcast', { event:'mesa-ctx' }, function(m){ dispatch('mesa-ctx', m.payload); });
@@ -2634,7 +2808,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     });
     channel.subscribe(function(status){
       document.getElementById('connDot').classList.toggle('on', status === 'SUBSCRIBED');
-      if (status === 'SUBSCRIBED') { send('chars-req', {}); send('mesa-ctx-req', {}); send('som-state-req', {}); }
+      if (status === 'SUBSCRIBED') { send('chars-req', {}); send('mesa-ctx-req', {}); send('som-state-req', {}); send('timer-req', {}); }
     });
   }
 
