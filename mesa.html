@@ -330,13 +330,18 @@ body {
   background:rgba(78,211,232,0.06); border:1px solid var(--line); color:var(--fg-dim); transition:all .15s;
 }
 .timer-preset:hover { color:var(--holo); border-color:var(--holo-soft); background:rgba(78,211,232,0.14); }
-.timer-custom {
-  flex:1 1 54px; min-width:54px; text-align:center; padding:6px 4px; border-radius:4px; outline:none;
-  font-family:var(--font-mono); font-size:10px; letter-spacing:0.08em;
+/* mm : ss em dois campos independentes — dá pra preencher só um dos lados */
+.timer-manual { display:flex; align-items:center; gap:6px; }
+.timer-campo {
+  flex:1 1 0; min-width:0; width:100%; text-align:center; padding:7px 2px; border-radius:4px; outline:none;
+  font-family:var(--font-mono); font-size:14px; letter-spacing:0.06em;
   background:rgba(78,211,232,0.04); border:1px solid var(--line); color:var(--fg);
 }
-.timer-custom:focus { border-color:var(--holo-soft); }
-.timer-custom::placeholder { color:var(--fg-faint); }
+.timer-campo:focus { border-color:var(--holo-soft); background:rgba(78,211,232,0.09); }
+.timer-campo::placeholder { color:var(--fg-faint); letter-spacing:0.1em; }
+.timer-sep2 { font-family:var(--font-mono); font-size:15px; color:var(--fg-faint); flex:0 0 auto; }
+.timer-play { flex:0 0 auto; background:rgba(61,220,132,0.1); border-color:rgba(61,220,132,0.45); color:#3ddc84; }
+.timer-play:hover { background:rgba(61,220,132,0.2); border-color:#3ddc84; box-shadow:0 0 12px rgba(61,220,132,0.3); }
 .timer-actions { display:flex; gap:8px; }
 .timer-who {
   margin-left:auto; font-family:var(--font-mono); font-size:8.5px; letter-spacing:0.12em;
@@ -838,8 +843,12 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
           <button class="timer-preset" data-seg="180" type="button">3m</button>
           <button class="timer-preset" data-seg="300" type="button">5m</button>
           <button class="timer-preset" data-seg="600" type="button">10m</button>
-          <input class="timer-custom" id="timerCustom" type="text" placeholder="mm:ss" maxlength="6"
-                 title="Digite mm:ss (ou só os minutos) e aperte Enter pra armar">
+        </div>
+        <div class="timer-manual">
+          <input class="timer-campo" id="timerMin" type="text" inputmode="numeric" maxlength="3" placeholder="__" title="Minutos (deixe vazio pra zero)">
+          <span class="timer-sep2">:</span>
+          <input class="timer-campo" id="timerSeg" type="text" inputmode="numeric" maxlength="2" placeholder="__" title="Segundos (deixe vazio pra zero)">
+          <button class="btn timer-play" id="timerPlay" type="button">&#9654; Play</button>
         </div>
         <div class="timer-actions">
           <button class="btn btn-clear" id="timerZerar" type="button">Zerar</button>
@@ -1908,7 +1917,8 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   var timerDisplay = document.getElementById('timerDisplay');
   var timerWho     = document.getElementById('timerWho');
   var timerPausa   = document.getElementById('timerPausa');
-  var timerCustom  = document.getElementById('timerCustom');
+  var timerMin     = document.getElementById('timerMin');
+  var timerSeg     = document.getElementById('timerSeg');
   var timerFlash   = document.getElementById('timerFlash');
   var TM_MAX_MS = 3 * 60 * 60 * 1000;      // teto de 3h, pra não armar bobagem
   var tmFim = 0, tmResta = 0, tmRodando = false, tmAutor = '', tmAcabou = false;
@@ -1921,12 +1931,17 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     var mm = ('0' + m).slice(-2), ss = ('0' + s).slice(-2);
     return h > 0 ? h + ':' + mm + ':' + ss : mm + ':' + ss;
   }
-  // aceita "5" (= 5 min), "1:30" e "0:45"
-  function tmParse(txt) {
-    var m = /^(\d{1,3})(?::([0-5]?\d))?$/.exec(String(txt || '').trim());
-    if (!m) return 0;
-    var ms = m[2] === undefined ? Number(m[1]) * 60000 : (Number(m[1]) * 60 + Number(m[2])) * 1000;
-    return Math.min(ms, TM_MAX_MS);
+  // Os dois campos são independentes: dá pra preencher só os minutos (10:__),
+  // só os segundos (__:5) ou os dois. Campo vazio conta como zero.
+  // Segundo acima de 59 não é erro — "__:90" vira 1:30.
+  function tmSoDigitos(txt) {
+    var d = String(txt == null ? '' : txt).replace(/\D/g, '');
+    return d === '' ? null : Number(d);
+  }
+  function tmDoCampo() {
+    var m = tmSoDigitos(timerMin.value), s = tmSoDigitos(timerSeg.value);
+    if (m === null && s === null) return 0;
+    return Math.min(((m || 0) * 60 + (s || 0)) * 1000, TM_MAX_MS);
   }
 
   function tmPinta() {
@@ -1983,13 +1998,22 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   document.querySelectorAll('.timer-preset').forEach(function(b){
     b.addEventListener('click', function(){ tmManda(Number(b.dataset.seg) * 1000, true); });
   });
-  timerCustom.addEventListener('keydown', function(e){
-    if (e.key !== 'Enter') return;
-    e.preventDefault();
-    var ms = tmParse(timerCustom.value);
-    if (!ms) { timerCustom.value = ''; return; }
-    timerCustom.value = ''; timerCustom.blur();
+  // Play dispara o tempo digitado. Com os campos vazios, retoma o que estava
+  // pausado — assim o botão nunca fica sem função aparente.
+  function tmPlay() {
+    var ms = tmDoCampo();
+    if (!ms) ms = tmRestante();
+    if (!ms) { timerMin.focus(); return; }
     tmManda(ms, true);
+  }
+  document.getElementById('timerPlay').addEventListener('click', tmPlay);
+  [timerMin, timerSeg].forEach(function(campo){
+    campo.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); campo.blur(); tmPlay(); } });
+    // só dígitos, sem depender de type=number (que enfeia com as setinhas)
+    campo.addEventListener('input', function(){
+      var limpo = campo.value.replace(/\D/g, '');
+      if (limpo !== campo.value) campo.value = limpo;
+    });
   });
   document.getElementById('timerZerar').addEventListener('click', function(){
     tmAcabou = false; tmFlashOff(); tmManda(0, false);
