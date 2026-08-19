@@ -41,7 +41,7 @@ export default function handler(req, res) {
       user: { id: userId, name: name, avatar: '', email: '', moderator: 'true' },
       features: {
         livestreaming: 'false',
-        recording: 'false',
+        recording: 'true',            // só cobra quando alguém aperta gravar (sem cobrança passiva, diferente da transcrição)
         transcription: process.env.JAAS_TRANSCRIPTION === '1' ? 'true' : 'false',
         'outbound-call': 'false'
       }
