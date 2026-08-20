@@ -86,8 +86,26 @@ begin
 end;
 $$;
 
+-- ------------------------------------------------------------------
+--  APAGAR — só baú JÁ ABERTO. A regra mora aqui, não na tela: assim
+--  ninguém consegue destruir uma palavra ainda lacrada antes da hora.
+--  Devolve true se apagou, false se não existe ou ainda está fechado.
+-- ------------------------------------------------------------------
+create or replace function public.bau_apagar(p_id bigint)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  with removido as (
+    delete from public.mesa_bau where id = p_id and aberto = true returning 1
+  )
+  select exists (select 1 from removido);
+$$;
+
 grant execute on function public.bau_guardar(text, text, text, text) to anon, authenticated;
 grant execute on function public.bau_abrir(bigint, text)             to anon, authenticated;
+grant execute on function public.bau_apagar(bigint)                  to anon, authenticated;
 
 -- ------------------------------------------------------------------
 --  CONFERIR se ficou tudo certo (opcional — pode rodar e depois apagar)

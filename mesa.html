@@ -33,11 +33,14 @@ body {
 }
 
 /* ── Top bar ── */
+/* grid de 3 colunas em vez de space-between: com 1fr nas laterais o bloco do
+   meio fica REALMENTE centrado, não importa a largura do que está nos lados. */
 .topbar {
-  display:flex; align-items:center; justify-content:space-between;
+  display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px;
   padding:14px 22px; border-bottom:1px solid var(--line-strong);
   position:relative;
 }
+.topbar > .who { justify-self:end; }
 .topbar::after { content:''; position:absolute; bottom:-1px; left:0; width:80px; height:1px; background:var(--holo); box-shadow:0 0 6px var(--holo-soft); }
 .back-link {
   display:flex; align-items:center; gap:7px; font-family:var(--font-mono); font-size:10px;
@@ -291,6 +294,13 @@ body {
 .bau-item .txt { font-size:14px; color:var(--fg); word-break:break-word; line-height:1.4; }
 .bau-item.fechado .txt { color:rgba(232,196,106,0.65); font-style:italic; }
 .bau-item .btn { flex:0 0 auto; }
+/* ✕ só nos abertos — discreto, aparece de verdade no hover da linha */
+.bau-x {
+  flex:0 0 auto; width:22px; height:22px; padding:0; border:none; border-radius:4px; cursor:pointer;
+  background:none; color:var(--fg-faint); font-size:11px; line-height:1; opacity:0.35; transition:all .15s;
+}
+.bau-item:hover .bau-x { opacity:1; }
+.bau-x:hover { color:#fff; background:var(--danger); }
 .bau-abrir { background:rgba(232,196,106,0.12); border-color:rgba(232,196,106,0.5); color:#e8c46a; }
 .bau-abrir:hover { background:rgba(232,196,106,0.24); border-color:#e8c46a; box-shadow:0 0 12px rgba(232,196,106,0.35); }
 /* confirmação — abrir é irreversível, então pergunta antes (dentro da mesa, não o confirm() do navegador) */
@@ -311,8 +321,8 @@ body {
 @media (prefers-reduced-motion:reduce) { .bau-rev.show { animation:none; } }
 
 /* ── Cronômetro (compartilhado) ── */
-/* grupo à esquerda da topbar: Voltar + cronômetro + baú */
-.tb-esq { display:flex; align-items:center; gap:13px; min-width:0; }
+/* bloco central: data + cronômetro + baú, na mesma linha */
+.tb-centro { display:flex; align-items:center; gap:14px; min-width:0; }
 .tb-timer { position:relative; display:flex; align-items:center; gap:2px; flex:0 0 auto;
   background:rgba(78,211,232,0.05); border:1px solid var(--line); border-radius:6px; padding:2px; }
 .tb-face { display:flex; align-items:center; gap:5px; background:none; border:none; cursor:pointer;
@@ -373,11 +383,16 @@ body {
 }
 .timer-who:empty { display:none; }
 .tb-bau-ico { font-size:12px; line-height:1; }
-/* tela estreita: a barra não comporta os dois com rótulo — some o texto, fica o cadeado */
-@media (max-width:820px) {
-  .tb-esq { gap:8px; }
+/* tela estreita: a barra não comporta tudo com rótulo — some o texto, fica o cadeado */
+@media (max-width:960px) {
+  .tb-centro { gap:9px; }
   .tb-bau-txt { display:none; }
   .tb-bau { padding:7px 9px; gap:0; }
+  .brand { letter-spacing:0.2em; }
+}
+@media (max-width:720px) {
+  .topbar { grid-template-columns:auto 1fr auto; gap:8px; padding:12px 14px; }
+  .tb-centro { flex-wrap:wrap; justify-content:center; row-gap:6px; }
 }
 /* Alarme: a tela inteira pisca vermelho quando o tempo acaba.
    pointer-events:none — o alarme avisa, não bloqueia quem está usando a mesa. */
@@ -810,8 +825,15 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 <body>
 
 <div class="topbar">
-  <div class="tb-esq">
-    <a class="back-link" href="index.html"><span style="font-size:14px;line-height:1;">&#8592;</span>Voltar</a>
+  <a class="back-link" href="index.html"><span style="font-size:14px;line-height:1;">&#8592;</span>Voltar</a>
+
+  <!-- Bloco central: data + cronômetro + baú, centralizados juntos -->
+  <div class="tb-centro">
+    <div class="brand-wrap">
+      <div class="brand" id="mesaBrand" title="Clique para editar o contexto da mesa">Mesa · Mundo Aberto</div>
+      <button class="ctx-hist-btn" id="ctxHistBtn" type="button" title="Histórico da linha do tempo">&#128336;</button>
+      <div class="ctx-hist" id="ctxHist"></div>
+    </div>
 
     <!-- Cronômetro: mostrador + ações no topo; presets e mm:ss no popover -->
     <div class="tb-timer" id="tbTimer">
@@ -843,11 +865,6 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     <button class="tb-bau" id="bauBtn" type="button" title="Baú: guardar uma palavra lacrada pra revelar depois"><span class="tb-bau-ico">&#128274;</span><span class="tb-bau-txt">Baú</span></button>
   </div>
 
-  <div class="brand-wrap">
-    <div class="brand" id="mesaBrand" title="Clique para editar o contexto da mesa">Mesa · Mundo Aberto</div>
-    <button class="ctx-hist-btn" id="ctxHistBtn" type="button" title="Histórico da linha do tempo">&#128336;</button>
-    <div class="ctx-hist" id="ctxHist"></div>
-  </div>
   <div class="who">
     <span class="conn-dot" id="connDot"></span>
     <span id="whoName" class="who-name" title="Trocar nome">—</span>
@@ -940,7 +957,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 <!-- Confirmação: abrir não tem volta -->
 <div class="bau-conf" id="bauConf">
   <div class="bau-conf-box">
-    <h3>Abrir o baú?</h3>
+    <h3 id="bauConfTitulo">Abrir o baú?</h3>
     <p id="bauConfTxt">Uma vez aberto, o conteúdo aparece pra mesa inteira. Não dá pra lacrar de novo.</p>
     <div class="bau-conf-acoes">
       <button class="btn btn-clear" id="bauConfNao" type="button">Deixa quieto</button>
@@ -1864,30 +1881,54 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
         '<span class="ic">' + (b.aberto ? '&#128275;' : '&#128274;') + '</span>' +
         '<span class="bd"><span class="rot">' + rot + ' · ' + quem + '</span>' +
         '<span class="txt">' + (b.aberto ? esc(b.conteudo || '—') : '· · ·') + '</span></span>';
-      if (!b.aberto) {
+      if (b.aberto) {
+        // já revelado: pode sair da lista sem perder nada
+        var x = document.createElement('button');
+        x.className = 'bau-x'; x.type = 'button'; x.title = 'Apagar este baú'; x.innerHTML = '&#10005;';
+        x.addEventListener('click', function(){ bauPerguntar(b, 'apagar'); });
+        el.appendChild(x);
+      } else {
         var btn = document.createElement('button');
         btn.className = 'btn bau-abrir'; btn.type = 'button'; btn.textContent = 'Abrir';
-        btn.addEventListener('click', function(){ bauPerguntar(b); });
+        btn.addEventListener('click', function(){ bauPerguntar(b, 'abrir'); });
         el.appendChild(btn);
       }
       bauLista.appendChild(el);
     });
   }
 
-  // abrir não tem volta — pergunta antes
-  function bauPerguntar(b) {
-    bauPendente = b;
-    document.getElementById('bauConfTxt').textContent = b.rotulo
-      ? '“' + b.rotulo + '” vai se abrir pra mesa inteira. Não dá pra lacrar de novo.'
-      : 'O conteúdo aparece pra mesa inteira. Não dá pra lacrar de novo.';
+  // abrir e apagar não têm volta — pergunta antes nos dois casos
+  function bauPerguntar(b, acao) {
+    bauPendente = { b:b, acao:acao };
+    var nomeBau = b.rotulo ? '“' + b.rotulo + '”' : 'Este baú';
+    var apagar = acao === 'apagar';
+    document.getElementById('bauConfTitulo').textContent = apagar ? 'Apagar o baú?' : 'Abrir o baú?';
+    document.getElementById('bauConfTxt').textContent = apagar
+      ? nomeBau + ' já foi aberto — some da lista pra todo mundo, sem volta.'
+      : (b.rotulo ? nomeBau + ' vai se abrir pra mesa inteira. Não dá pra lacrar de novo.'
+                  : 'O conteúdo aparece pra mesa inteira. Não dá pra lacrar de novo.');
+    document.getElementById('bauConfSim').textContent = apagar ? 'Apagar' : 'Abrir';
     bauConf.classList.add('show');
   }
   function bauFecharConf() { bauConf.classList.remove('show'); bauPendente = null; }
 
-  function bauAbrirConfirmado() {
-    var b = bauPendente;
+  function bauConfirmado() {
+    var p = bauPendente;
     bauFecharConf();
-    if (!b) return;
+    if (!p || !p.b) return;
+    if (p.acao === 'apagar') return bauApagar(p.b);
+    bauAbrir(p.b);
+  }
+
+  function bauApagar(b) {
+    bauRpc('bau_apagar', { p_id:b.id }).then(function(apagou){
+      if (apagou === false) { alert('Esse baú não foi apagado — só dá pra apagar baú já aberto.'); }
+      bauCarregar();
+      send('bau-novo', {});      // avisa a mesa que a lista mudou
+    }).catch(function(e){ alert('Não consegui apagar: ' + e.message); });
+  }
+
+  function bauAbrir(b) {
     bauRpc('bau_abrir', { p_id:b.id, p_quem:nome }).then(function(texto){
       var p = { id:b.id, rotulo:b.rotulo || '', conteudo:String(texto == null ? '' : texto), quem:nome };
       bauRevelar(p);                 // mostra na hora pra quem abriu
@@ -1933,7 +1974,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   document.getElementById('bauLacrar').addEventListener('click', bauLacrar);
   bauConteudo.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); bauLacrar(); } });
   bauRotulo.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); bauConteudo.focus(); } });
-  document.getElementById('bauConfSim').addEventListener('click', bauAbrirConfirmado);
+  document.getElementById('bauConfSim').addEventListener('click', bauConfirmado);
   document.getElementById('bauConfNao').addEventListener('click', bauFecharConf);
   bauConf.addEventListener('click', function(e){ if (e.target === bauConf) bauFecharConf(); });
   bauRev.addEventListener('click', bauFecharRev);
