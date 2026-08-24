@@ -1687,12 +1687,15 @@ function uploadCharImg(b64Src) {
     method: 'POST',
     headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': mime, 'x-upsert': 'true' },
     body: new Blob([arr], { type: mime })
-  }).then(function() {
+  }).then(function(r) {
+    // sem checar r.ok, um 400 do Storage passava por aqui como sucesso: a foto
+    // "atualizava" na tela e nunca chegava no bucket.
+    if (!r.ok) return r.text().then(function(t){ throw new Error('HTTP ' + r.status + ' — ' + t.slice(0, 160)); });
     var url = SB_URL + '/storage/v1/object/public/personagens/' + path + '?t=' + Date.now();
     var imgEl = document.getElementById('holoImg');
     if (imgEl) imgEl.src = url;
     if (typeof markDirtyNow === 'function') markDirtyNow();
-  }).catch(function() {});
+  }).catch(function(e) { alert('Não consegui salvar a foto: ' + (e && e.message || e)); });
 }
 
 // ── Supabase ──
@@ -2049,9 +2052,13 @@ function restoreSheet(data) {
           method: 'POST',
           headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': mime, 'x-upsert': 'true' },
           body: new Blob([arr], { type: mime })
-        }).then(function() {
+        }).then(function(r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
           saveRecord(SB_URL + '/storage/v1/object/public/personagens/' + path);
-        }).catch(function() { saveRecord(httpSrc); });
+        }).catch(function(e) {
+          alert('Não consegui salvar a foto: ' + (e && e.message || e));
+          saveRecord(httpSrc);   // salva o resto da ficha mesmo sem a foto nova
+        });
       } else { saveRecord(httpSrc); }
     } else { saveRecord(httpSrc); }
   });
