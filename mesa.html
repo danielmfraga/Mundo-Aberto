@@ -42,12 +42,6 @@ body {
 }
 .topbar > .who { justify-self:end; }
 .topbar::after { content:''; position:absolute; bottom:-1px; left:0; width:80px; height:1px; background:var(--holo); box-shadow:0 0 6px var(--holo-soft); }
-.back-link {
-  display:flex; align-items:center; gap:7px; font-family:var(--font-mono); font-size:10px;
-  letter-spacing:0.25em; color:var(--fg-faint); text-decoration:none; text-transform:uppercase;
-  transition:color 0.2s;
-}
-.back-link:hover { color:var(--fg); }
 .brand { font-family:var(--font-mono); font-size:11px; letter-spacing:0.4em; text-transform:uppercase; color:var(--holo); cursor:pointer; transition:color .2s; }
 .brand:hover { color:var(--fg); }
 .brand[contenteditable="true"] { outline:none; border-bottom:1px solid rgba(78,211,232,0.5); color:var(--fg); }
@@ -704,6 +698,15 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 
 /* ── Chat ── */
 .chat-panel { flex:1 1 auto; min-height:240px; }
+/* alvo do arrastar-e-soltar */
+.chat-panel.arrastando { border-color:var(--holo); box-shadow:0 0 0 1px var(--holo-soft), 0 0 22px rgba(78,211,232,0.25); }
+.chat-panel.arrastando::after {
+  content:'Solte aqui pra enviar'; position:absolute; inset:0; z-index:5; border-radius:6px;
+  display:flex; align-items:center; justify-content:center; text-align:center; padding:12px;
+  background:rgba(6,12,20,0.86); color:var(--holo);
+  font-family:var(--font-mono); font-size:10.5px; letter-spacing:0.2em; text-transform:uppercase;
+  pointer-events:none;   /* senão o overlay rouba o dragleave e ele fica piscando */
+}
 .chat-msgs { flex:1; overflow-y:auto; padding:12px 13px; display:flex; flex-direction:column; gap:10px; }
 .msg { font-size:13px; line-height:1.5; }
 .msg-head { font-family:var(--font-mono); font-size:9px; letter-spacing:0.1em; color:var(--fg-faint); margin-bottom:2px; }
@@ -825,7 +828,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 <body>
 
 <div class="topbar">
-  <a class="back-link" href="index.html"><span style="font-size:14px;line-height:1;">&#8592;</span>Voltar</a>
+  <span class="tb-vazio"></span><!-- coluna esquerda vazia: segura a grade pro bloco do meio seguir centralizado -->
 
   <!-- Bloco central: data + cronômetro + baú, centralizados juntos -->
   <div class="tb-centro">
@@ -926,7 +929,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
         <span class="bar"><i id="chatUploadBar"></i></span>
       </div>
       <div class="chat-input-row">
-        <input type="file" id="imgInput" accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm,video/quicktime,audio/mpeg,audio/mp4,audio/ogg,audio/wav,application/pdf" hidden>
+        <input type="file" id="imgInput" multiple accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm,video/quicktime,audio/mpeg,audio/mp4,audio/ogg,audio/wav,application/pdf" hidden>
         <button class="icon-btn" id="imgBtn" title="Enviar arquivo (imagem, vídeo, áudio ou PDF)">&#128206;</button>
         <input class="chat-input" id="chatInput" placeholder="Mensagem, link…" maxlength="2000">
         <button class="icon-btn" id="sendBtn" title="Enviar">&#10148;</button>
@@ -1627,17 +1630,14 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   }
   function chatUpHide() { chatUpEl.hidden = true; chatUpBar.style.width = '0%'; }
 
-  var imgInput = document.getElementById('imgInput');
-  document.getElementById('imgBtn').addEventListener('click', function(){ imgInput.click(); });
-  imgInput.addEventListener('change', function() {
-    var file = imgInput.files && imgInput.files[0];
-    imgInput.value = '';
-    if (!file) return;
+  // Sobe UM arquivo. A promise resolve sempre (inclusive em erro) pra fila seguir.
+  function chatSobeArquivo(file) {
+   return new Promise(function(pronto) {
     var kind = fileKind(file.type, file.name);
     var maxMB = CHAT_MAX_MB[kind] || 25;
     if (file.size > maxMB * 1024 * 1024) {
       alert('Arquivo muito grande: ' + fmtBytes(file.size) + '. O limite para ' + CHAT_ROTULO[kind] + ' é ' + maxMB + 'MB.');
-      return;
+      return pronto();
     }
     // extensão sai do nome do arquivo (mais confiável que o mime pra pdf/mp3)
     var ext = (file.name.match(/\.[a-z0-9]{1,5}$/i) || [''])[0].toLowerCase();
@@ -1662,16 +1662,68 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
         alert(xhr.status === 413
           ? 'O Supabase recusou o arquivo por tamanho (' + fmtBytes(file.size) + '). Tente um menor.'
           : 'Falha ao enviar ' + CHAT_ROTULO[kind] + ' (HTTP ' + xhr.status + ').');
-        return;
+        return pronto();
       }
       send('chat', { autor:nome, ts:Date.now(), file:{
         url: SB_URL + '/storage/v1/object/public/personagens/' + path,
         kind: kind, nome: file.name, mime: file.type, tam: file.size
       }});
+      pronto();
     });
-    xhr.addEventListener('error', function(){ chatUpHide(); alert('Falha ao enviar ' + CHAT_ROTULO[kind] + ': erro de rede.'); });
-    xhr.addEventListener('abort', chatUpHide);
+    xhr.addEventListener('error', function(){ chatUpHide(); alert('Falha ao enviar ' + CHAT_ROTULO[kind] + ': erro de rede.'); pronto(); });
+    xhr.addEventListener('abort', function(){ chatUpHide(); pronto(); });
     xhr.send(file);
+   });
+  }
+
+  // Arrastar várias de uma vez é natural — sobe uma por vez pra barra de
+  // progresso continuar querendo dizer alguma coisa.
+  function chatEnfileira(lista) {
+    var fila = Array.prototype.slice.call(lista || []);
+    (function proxima() {
+      if (!fila.length) return;
+      chatSobeArquivo(fila.shift()).then(proxima);
+    })();
+  }
+
+  var imgInput = document.getElementById('imgInput');
+  document.getElementById('imgBtn').addEventListener('click', function(){ imgInput.click(); });
+  imgInput.addEventListener('change', function() {
+    if (imgInput.files && imgInput.files.length) chatEnfileira(imgInput.files);
+    imgInput.value = '';
+  });
+
+  // ── Arrastar arquivo direto pro chat ──────────────────────────────
+  // O guard no document é o mais importante daqui: soltar um arquivo FORA da
+  // área faz o navegador abrir o arquivo e sair da mesa — derrubando a chamada
+  // de vídeo junto. Sem isso, um erro de mira custa a sessão.
+  var chatPanel = document.querySelector('.chat-panel');
+  var _arrastando = 0;
+  function temArquivo(e) {
+    var t = e.dataTransfer && e.dataTransfer.types;
+    return !!t && Array.prototype.indexOf.call(t, 'Files') >= 0;
+  }
+  ['dragenter','dragover','drop'].forEach(function(ev){
+    document.addEventListener(ev, function(e){ if (temArquivo(e)) e.preventDefault(); });
+  });
+  chatPanel.addEventListener('dragenter', function(e){
+    if (!temArquivo(e)) return;
+    _arrastando++; chatPanel.classList.add('arrastando');
+  });
+  chatPanel.addEventListener('dragleave', function(e){
+    if (!temArquivo(e)) return;
+    if (--_arrastando <= 0) { _arrastando = 0; chatPanel.classList.remove('arrastando'); }
+  });
+  chatPanel.addEventListener('dragover', function(e){
+    if (!temArquivo(e)) return;
+    e.preventDefault();
+    try { e.dataTransfer.dropEffect = 'copy'; } catch (_) {}
+  });
+  chatPanel.addEventListener('drop', function(e){
+    if (!temArquivo(e)) return;
+    e.preventDefault(); e.stopPropagation();
+    _arrastando = 0; chatPanel.classList.remove('arrastando');
+    chatEnfileira(e.dataTransfer.files);
   });
 
   // ── Personagens da mesa (lista compartilhada) ─────────────────────
