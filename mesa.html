@@ -547,21 +547,16 @@ body {
 .diario-btn { color:#e7b768; background:rgba(210,150,70,0.08); border-color:rgba(210,150,70,0.45); }
 .diario-btn:hover { background:rgba(210,150,70,0.16); box-shadow:0 0 14px rgba(210,150,70,0.28); }
 
-/* ── Sala Reservada: aparte privado (2ª sala JaaS, "porta: clica e entra") ── */
+/* ── Sala Reservada: aparte privado (breakout do Jitsi; rail sempre visível) ── */
 .resv-btn { color:#8fe6b2; background:rgba(90,220,140,0.08); border-color:rgba(90,220,140,0.45); position:relative; }
 .resv-btn:hover { background:rgba(90,220,140,0.16); box-shadow:0 0 14px rgba(90,220,140,0.28); }
 .resv-btn.active { color:#06210f; background:#8fe6b2; border-color:#8fe6b2; box-shadow:0 0 16px rgba(90,220,140,0.5); }
 .resv-btn.active::after { content:''; position:absolute; top:9px; right:11px; width:7px; height:7px; border-radius:50%; background:#06210f; animation:somPulse 1.2s infinite; }
-.resv-ov { position:fixed; inset:0; z-index:9995; background:rgba(4,8,14,0.95); display:none; flex-direction:column; padding:14px; gap:12px; }
-.resv-ov.show { display:flex; }
-.resv-head { display:flex; align-items:center; gap:12px; flex:0 0 auto; flex-wrap:wrap; }
-.resv-head .led { width:7px; height:7px; border-radius:50%; background:#8fe6b2; box-shadow:0 0 8px #8fe6b2; flex:0 0 auto; }
-.resv-title { font-family:var(--font-mono); font-size:13px; letter-spacing:0.2em; text-transform:uppercase; color:#8fe6b2; flex:0 0 auto; }
-.resv-sub { font-size:11px; color:var(--fg-faint); flex:1 1 auto; min-width:120px; }
-.resv-leave { display:flex; align-items:center; gap:7px; font-family:var(--font-mono); font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#ffb0b0; background:rgba(255,90,90,0.10); border:1px solid rgba(255,90,90,0.5); border-radius:6px; padding:10px 18px; cursor:pointer; transition:all .15s; flex:0 0 auto; }
-.resv-leave:hover { background:rgba(255,90,90,0.2); box-shadow:0 0 12px rgba(255,90,90,0.3); }
-.resv-stage { flex:1 1 auto; min-height:0; border:1px solid rgba(90,220,140,0.3); border-radius:8px; overflow:hidden; background:#000; }
-.resv-stage iframe { width:100%; height:100%; border:0; display:block; }
+.resv-banner { position:fixed; top:10px; left:50%; transform:translateX(-50%); z-index:9996; display:none; align-items:center; gap:8px; max-width:92vw; text-align:center;
+  font-family:var(--font-mono); font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#06210f;
+  background:#8fe6b2; border:1px solid #6fd39a; border-radius:8px; padding:9px 16px; cursor:pointer; box-shadow:0 4px 18px rgba(0,0,0,0.45); }
+.resv-banner.show { display:flex; }
+.resv-banner:hover { background:#a6ecc2; }
 .diario-overlay { position:fixed; inset:0; z-index:9992; display:none; align-items:center; justify-content:center; background:rgba(6,10,16,0.74); padding:20px; }
 .diario-overlay.show { display:flex; }
 .diario-book {
@@ -937,7 +932,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 
     <button class="wb-btn som-btn" id="somBtn" title="Abrir a mesa de som (ambientação)">&#127925; Mesa de Som</button>
 
-    <button class="wb-btn resv-btn" id="resvBtn" type="button" title="Sala reservada: aparte privado (clica e entra, clica e volta). Enquanto você está lá, a mesa principal não te ouve.">&#128682; Sala Reservada</button>
+    <button class="wb-btn resv-btn" id="resvBtn" type="button" title="Sala reservada: aparte privado por vídeo (clica e entra, clica e volta). A mesa não te ouve, e os dados rolados lá são secretos.">&#128682; Sala Reservada</button>
 
     <div class="panel chat-panel">
       <div class="panel-head"><span class="led"></span><span class="panel-title">Chat</span></div>
@@ -996,16 +991,8 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   </div>
 </div>
 
-<!-- Sala Reservada: 2ª sala de vídeo pra aparte privado; cobre a tela ("você desce pra lá") -->
-<div class="resv-ov" id="resvOv">
-  <div class="resv-head">
-    <span class="led"></span>
-    <span class="resv-title">&#128682; Sala Reservada</span>
-    <span class="resv-sub">Aparte privado · a mesa principal não te ouve enquanto você está aqui</span>
-    <button class="resv-leave" id="resvLeave" type="button">&#8617; Voltar pra mesa</button>
-  </div>
-  <div class="resv-stage" id="resvJitsi"></div>
-</div>
+<!-- Sala Reservada (breakout do Jitsi): faixa fixa que avisa quando você está na sub-sala privada -->
+<div class="resv-banner" id="resvBanner" title="Voltar pra mesa principal">&#128682; Você está no RESERVADO · os dados aqui são secretos — clique pra voltar pra mesa</div>
 
 <!-- Alarme do cronômetro: a tela toda pisca vermelho quando o tempo acaba -->
 <div class="timer-flash" id="timerFlash"><span>TEMPO!</span></div>
@@ -1250,8 +1237,8 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       groups.push({ label:d.label, cls:d.cls, kind:d.kind||'num', faces:faces });
     });
     if (!total) return;
-    var payload = { autor:nome, ts:Date.now(), groups:groups, sum: anyNum?sum:null };
-    send('roll', payload);
+    var payload = { autor:nome, ts:Date.now(), groups:groups, sum: anyNum?sum:null, secreto: resvDentro };
+    sendRoll(payload);                // no reservado vai só pros de lá (secreto); senão, pra mesa toda
     counts = {}; renderTray();        // zera o tray: pronto pra próxima jogada
   }
 
@@ -1269,8 +1256,9 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       });
     });
     var sumHtml = (p.sum!=null) ? '<span class="roll-sum">= '+p.sum+'</span>' : '';
+    var lock = p.secreto ? '<span title="Rolagem secreta (só o reservado viu)">&#128274;</span> ' : '';
     el.innerHTML =
-      '<div class="roll-meta"><span class="who-b">'+esc(p.autor||'?')+'</span><span>'+hhmm(p.ts)+'</span></div>' +
+      '<div class="roll-meta">'+lock+'<span class="who-b">'+esc(p.autor||'?')+'</span><span>'+hhmm(p.ts)+'</span></div>' +
       '<div class="roll-dice">'+dice+sumHtml+'</div>';
     rollLog.insertBefore(el, rollLog.firstChild);
     while (rollLog.children.length > 40) rollLog.removeChild(rollLog.lastChild);
@@ -3189,6 +3177,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 
   // ── Realtime (Supabase broadcast) ─────────────────────────────────
   var channel = null;
+  var sbRealtimeClient = null;   // client reaproveitado pelo canal secreto do reservado
   var jitsiApi = null;
   function send(event, payload) {
     if (channel) channel.send({ type:'broadcast', event:event, payload:payload });
@@ -3224,6 +3213,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   function initRealtime() {
     if (!window.supabase || !window.supabase.createClient) return;
     var client = sbClient || window.supabase.createClient(SB_URL, SB_KEY);
+    sbRealtimeClient = client;
     channel = client.channel('mesa:' + SALA, { config:{ broadcast:{ self:true } } });
     channel.on('broadcast', { event:'roll' }, function(m){ dispatch('roll', m.payload); });
     channel.on('broadcast', { event:'chat' }, function(m){ dispatch('chat', m.payload); });
@@ -3294,6 +3284,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
         interfaceConfigOverwrite: { MOBILE_APP_PROMO:false, SHOW_JITSI_WATERMARK:false, SHOW_WATERMARK_FOR_GUESTS:false }
       });
       setupTrxWatchdog();
+      setupResvBreakout();   // ouvintes do reservado (breakout) no vídeo principal
       // se o quadro já estiver aberto quando o vídeo terminar de carregar, alinha o tile view
       if (wbIsOpen()) jitsiTile(true);
     } catch (e) {
@@ -3301,77 +3292,103 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     }
   }
 
-  // ── Sala Reservada: 2ª sala JaaS pra aparte privado (Mestre + jogador) ──
-  // "Porta: clica e entra, clica e volta." Sem convite — privacidade no
-  // combinado da mesa. Ao entrar, muta o SEU mic na principal (a mesa não
-  // escuta o aparte, e ele não entra na transcrição/gravação); ao voltar,
-  // restaura. Nunca desconecta a principal — ela segue rodando por baixo.
-  var RESV_ROOM = ROOM + '-reservado';
-  var resvApi = null;
-  var resvMicEraMutado = null;   // estado do mic na principal ANTES de entrar (pra restaurar certo)
-  var resvBusy = false;
-  var resvOv = document.getElementById('resvOv');
+  // ── Sala Reservada: breakout room do Jitsi (jeito "Discord") ─────────────
+  // Mesma conexão: você PULA pra sub-sala e volta, sem re-autenticar. O rail
+  // (dados/chat) nunca some — você não sai da página, só o VÍDEO troca de sala.
+  // Áudio 100% isolado (a mesa não te ouve e você não ouve ela). E os DADOS
+  // rolados aqui são SECRETOS: vão por um canal Supabase à parte que só quem
+  // está no reservado assina (ver sendRoll / channelResv).
   var resvBtn = document.getElementById('resvBtn');
-  var resvLeave = document.getElementById('resvLeave');
+  var resvBanner = document.getElementById('resvBanner');
+  var resvRooms = {};          // último mapa de salas vindo do breakoutRoomsUpdated
+  var resvDentro = false;      // estou no reservado agora? (fonte: videoConferenceJoined.breakoutRoom)
+  var resvQuerEntrar = false;  // cliquei "entrar" e espero o breakout existir pra pular
+  var resvTimeout = null;      // watchdog: avisa se o reservado não abrir (breakout pode estar bloqueado)
 
-  function resvMutaPrincipal(entrar) {
-    if (!jitsiApi) return;                       // vídeo principal não configurado → nada a mutar
-    try {
-      if (entrar) {
-        jitsiApi.isAudioMuted().then(function(m) {
-          resvMicEraMutado = m;
-          if (!m) jitsiApi.executeCommand('toggleAudio');       // muta só se estava aberto
-        }).catch(function(){});
-      } else if (resvMicEraMutado === false) {                  // só reabre se FOMOS nós que mutamos
-        jitsiApi.isAudioMuted().then(function(m) {
-          if (m) jitsiApi.executeCommand('toggleAudio');
-        }).catch(function(){});
-        resvMicEraMutado = null;
-      } else {
-        resvMicEraMutado = null;
+  // acha a sala reservada = 1º breakout não-principal; escolha determinística
+  // (menor jid) pra que Mestre e jogador convirjam pra MESMA sala mesmo numa corrida
+  function resvAchaId() {
+    var cand = [];
+    Object.keys(resvRooms).forEach(function(k) {
+      var r = resvRooms[k];
+      if (r && !r.isMainRoom) cand.push(r);
+    });
+    if (!cand.length) return null;
+    cand.sort(function(a, b) { return String(a.jid || a.id) < String(b.jid || b.id) ? -1 : 1; });
+    return cand[0].id;
+  }
+
+  function resvSetUI(dentro) {
+    resvDentro = dentro;
+    resvBtn.classList.toggle('active', dentro);
+    resvBtn.innerHTML = dentro ? '&#128682; No Reservado · Voltar' : '&#128682; Sala Reservada';
+    if (resvBanner) resvBanner.classList.toggle('show', dentro);
+    if (dentro) resvJoinChannel(); else resvLeaveChannel();
+  }
+
+  // liga os ouvintes de breakout no vídeo principal (chamado ao criar o jitsiApi)
+  function setupResvBreakout() {
+    if (!jitsiApi) return;
+    jitsiApi.addListener('breakoutRoomsUpdated', function(rooms) {
+      resvRooms = rooms || {};
+      if (resvQuerEntrar) {
+        var id = resvAchaId();
+        if (id) { resvQuerEntrar = false; try { jitsiApi.executeCommand('joinBreakoutRoom', id); } catch (_) {} }
       }
-    } catch (_) {}
+    });
+    jitsiApi.addListener('videoConferenceJoined', function(e) {
+      // troquei de sala: e.breakoutRoom diz se a nova é um breakout (o reservado)
+      resvSetUI(!!(e && e.breakoutRoom));
+      if (resvDentro && resvTimeout) { clearTimeout(resvTimeout); resvTimeout = null; }
+    });
   }
 
-  async function resvEntrar() {
-    if (resvApi || resvBusy) return;
-    if (!window.JitsiMeetExternalAPI) { alert('Vídeo indisponível — a API do JaaS não carregou.'); return; }
-    resvBusy = true;
-    resvOv.classList.add('show');
-    resvBtn.classList.add('active');
-    resvBtn.innerHTML = '&#128682; No Reservado';
-    resvMutaPrincipal(true);
-    try {
-      var resp = await fetch('/api/jaas-token?name=' + encodeURIComponent(nome || 'Jogador'));
-      var data = await resp.json();
-      if (!resp.ok || !data.token) throw new Error((data && data.error) || 'token não gerado');
-      resvApi = new window.JitsiMeetExternalAPI('8x8.vc', {
-        roomName: JAAS_APP_ID + '/' + RESV_ROOM,
-        jwt: data.token,
-        parentNode: document.getElementById('resvJitsi'),
-        width:'100%', height:'100%',
-        configOverwrite: { prejoinPageEnabled:false, disableDeepLinking:true },
-        interfaceConfigOverwrite: { MOBILE_APP_PROMO:false, SHOW_JITSI_WATERMARK:false, SHOW_WATERMARK_FOR_GUESTS:false }
-      });
-      resvApi.addListener('readyToClose', resvSair);   // se sair pelo botão de desligar do próprio Jitsi
-    } catch (e) {
-      alert('Não deu pra entrar no reservado: ' + (e && e.message || e));
-      resvSair();
+  function resvEntrar() {
+    if (!jitsiApi) { alert('Entra na mesa (liga o vídeo) primeiro pra usar o reservado.'); return; }
+    if (resvDentro) return;
+    var id = resvAchaId();
+    if (id) {
+      try { jitsiApi.executeCommand('joinBreakoutRoom', id); } catch (_) {}   // já existe → pula direto
+    } else {
+      resvQuerEntrar = true;                                                  // não existe → cria e o handler pula
+      try { jitsiApi.executeCommand('addBreakoutRoom', 'Reservado'); } catch (_) {}
     }
-    resvBusy = false;
+    if (resvTimeout) clearTimeout(resvTimeout);
+    resvTimeout = setTimeout(function() {
+      if (!resvDentro) { resvQuerEntrar = false; alert('Não consegui abrir o Reservado. O breakout pode não estar liberado no plano JaaS — me avisa que eu troco pro outro modo.'); }
+      resvTimeout = null;
+    }, 6000);
   }
 
-  function resvSair() {
-    if (resvApi) { try { resvApi.dispose(); } catch (_) {} resvApi = null; }
-    resvOv.classList.remove('show');
-    resvBtn.classList.remove('active');
-    resvBtn.innerHTML = '&#128682; Sala Reservada';
-    resvMutaPrincipal(false);
+  function resvVoltar() {
+    if (jitsiApi) { try { jitsiApi.executeCommand('joinBreakoutRoom'); } catch (_) {} }   // sem arg → volta pra principal
   }
 
-  resvBtn.addEventListener('click', function() { if (resvApi) resvSair(); else resvEntrar(); });
-  resvLeave.addEventListener('click', resvSair);
-  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && resvApi) resvSair(); });
+  resvBtn.addEventListener('click', function() { if (resvDentro) resvVoltar(); else resvEntrar(); });
+  if (resvBanner) resvBanner.addEventListener('click', resvVoltar);
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && resvDentro) resvVoltar(); });
+
+  // ── Dados secretos: canal Supabase que só quem está no reservado assina ──
+  var channelResv = null;
+  function resvJoinChannel() {
+    if (channelResv || !sbRealtimeClient) return;
+    channelResv = sbRealtimeClient.channel('mesa:' + SALA + ':reservado', { config:{ broadcast:{ self:true } } });
+    channelResv.on('broadcast', { event:'roll' }, function(m) { dispatch('roll', m.payload); });
+    channelResv.subscribe();
+  }
+  function resvLeaveChannel() {
+    if (channelResv) { try { channelResv.unsubscribe(); } catch (_) {} channelResv = null; }
+  }
+  // roteia a rolagem: no reservado vai SÓ pro canal secreto; senão, pra mesa toda.
+  // à prova de vazamento: no reservado sem canal, mostra só local (nunca cai na mesa).
+  function sendRoll(payload) {
+    if (resvDentro) {
+      if (channelResv) channelResv.send({ type:'broadcast', event:'roll', payload:payload });
+      else dispatch('roll', payload);
+    } else {
+      send('roll', payload);
+    }
+  }
 
   // ── Contexto da mesa (data/situação atual do jogo) ───────────────
   var CONTEXTO_KEY = 'mesaContexto_' + SALA;
