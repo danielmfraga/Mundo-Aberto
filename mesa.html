@@ -3305,17 +3305,17 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   var resvQuerEntrar = false;  // cliquei "entrar" e espero o breakout existir pra pular
   var resvTimeout = null;      // watchdog: avisa se o reservado não abrir (breakout pode estar bloqueado)
 
-  // acha a sala reservada = 1º breakout não-principal; escolha determinística
-  // (menor jid) pra que Mestre e jogador convirjam pra MESMA sala mesmo numa corrida
-  function resvAchaId() {
+  // devolve o JID do 1º breakout não-principal (joinBreakoutRoom espera o jid).
+  // escolha determinística (menor jid) pra Mestre e jogador convergirem na MESMA sala.
+  function resvAchaJid() {
     var cand = [];
     Object.keys(resvRooms).forEach(function(k) {
       var r = resvRooms[k];
-      if (r && !r.isMainRoom) cand.push(r);
+      if (r && !r.isMainRoom) cand.push(r.jid || k);
     });
     if (!cand.length) return null;
-    cand.sort(function(a, b) { return String(a.jid || a.id) < String(b.jid || b.id) ? -1 : 1; });
-    return cand[0].id;
+    cand.sort();
+    return cand[0];
   }
 
   function resvSetUI(dentro) {
@@ -3330,12 +3330,13 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   function setupResvBreakout() {
     if (!jitsiApi) return;
     console.log('[reservado] listeners de breakout ligados no vídeo');
-    jitsiApi.addListener('breakoutRoomsUpdated', function(rooms) {
-      console.log('[reservado] breakoutRoomsUpdated', rooms);
-      resvRooms = rooms || {};
+    jitsiApi.addListener('breakoutRoomsUpdated', function(payload) {
+      // o payload vem embrulhado: { rooms: { <jid>: {...} } } — desembrulha
+      resvRooms = (payload && payload.rooms) ? payload.rooms : (payload || {});
+      console.log('[reservado] breakoutRoomsUpdated · salas=', resvRooms);
       if (resvQuerEntrar) {
-        var id = resvAchaId();
-        if (id) { resvQuerEntrar = false; try { jitsiApi.executeCommand('joinBreakoutRoom', id); console.log('[reservado] pulando pro breakout', id); } catch (e) { console.warn('[reservado] join erro', e); } }
+        var jid = resvAchaJid();
+        if (jid) { resvQuerEntrar = false; try { jitsiApi.executeCommand('joinBreakoutRoom', jid); console.log('[reservado] pulando pro breakout', jid); } catch (e) { console.warn('[reservado] join erro', e); } }
       }
     });
     jitsiApi.addListener('videoConferenceJoined', function(e) {
@@ -3347,16 +3348,15 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   }
 
   function resvEntrar() {
-    console.log('[reservado] resvEntrar · jitsiApi=', !!jitsiApi);
     if (!jitsiApi) { alert('Entra na mesa (liga o vídeo) primeiro pra usar o reservado.'); return; }
     if (resvDentro) return;
-    var id = resvAchaId();
-    console.log('[reservado] breakout existente? id=', id, '· salas=', resvRooms);
-    if (id) {
-      try { jitsiApi.executeCommand('joinBreakoutRoom', id); } catch (e) { console.warn('[reservado] join erro', e); }   // já existe → pula direto
+    var jid = resvAchaJid();
+    console.log('[reservado] resvEntrar · breakout existente jid=', jid);
+    if (jid) {
+      try { jitsiApi.executeCommand('joinBreakoutRoom', jid); } catch (e) { console.warn('[reservado] join erro', e); }   // já existe → pula direto
     } else {
-      resvQuerEntrar = true;                                                  // não existe → cria e o handler pula
-      try { jitsiApi.executeCommand('addBreakoutRoom', 'Reservado'); console.log('[reservado] addBreakoutRoom disparado'); } catch (e) { console.warn('[reservado] addBreakoutRoom erro', e); }
+      resvQuerEntrar = true;                                                  // não existe → cria e o handler pula ao chegar o update
+      try { jitsiApi.executeCommand('addBreakoutRoom', 'Reservado'); } catch (e) { console.warn('[reservado] addBreakoutRoom erro', e); }
     }
     if (resvTimeout) clearTimeout(resvTimeout);
     resvTimeout = setTimeout(function() {
