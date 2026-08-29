@@ -3329,18 +3329,15 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   // liga os ouvintes de breakout no vídeo principal (chamado ao criar o jitsiApi)
   function setupResvBreakout() {
     if (!jitsiApi) return;
-    console.log('[reservado] listeners de breakout ligados no vídeo');
     jitsiApi.addListener('breakoutRoomsUpdated', function(payload) {
       // o payload vem embrulhado: { rooms: { <jid>: {...} } } — desembrulha
       resvRooms = (payload && payload.rooms) ? payload.rooms : (payload || {});
-      console.log('[reservado] breakoutRoomsUpdated · salas=', resvRooms);
       if (resvQuerEntrar) {
         var jid = resvAchaJid();
-        if (jid) { resvQuerEntrar = false; try { jitsiApi.executeCommand('joinBreakoutRoom', jid); console.log('[reservado] pulando pro breakout', jid); } catch (e) { console.warn('[reservado] join erro', e); } }
+        if (jid) { resvQuerEntrar = false; try { jitsiApi.executeCommand('joinBreakoutRoom', jid); } catch (e) { console.warn('[reservado] join erro', e); } }
       }
     });
     jitsiApi.addListener('videoConferenceJoined', function(e) {
-      console.log('[reservado] videoConferenceJoined · breakoutRoom=', e && e.breakoutRoom, '· room=', e && e.roomName);
       // troquei de sala: e.breakoutRoom diz se a nova é um breakout (o reservado)
       resvSetUI(!!(e && e.breakoutRoom));
       if (resvDentro && resvTimeout) { clearTimeout(resvTimeout); resvTimeout = null; }
@@ -3351,7 +3348,6 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     if (!jitsiApi) { alert('Entra na mesa (liga o vídeo) primeiro pra usar o reservado.'); return; }
     if (resvDentro) return;
     var jid = resvAchaJid();
-    console.log('[reservado] resvEntrar · breakout existente jid=', jid);
     if (jid) {
       try { jitsiApi.executeCommand('joinBreakoutRoom', jid); } catch (e) { console.warn('[reservado] join erro', e); }   // já existe → pula direto
     } else {
@@ -3369,7 +3365,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     if (jitsiApi) { try { jitsiApi.executeCommand('joinBreakoutRoom'); } catch (_) {} }   // sem arg → volta pra principal
   }
 
-  resvBtn.addEventListener('click', function() { console.log('[reservado] CLIQUE no botão · dentro=', resvDentro, '· jitsiApi=', !!jitsiApi); if (resvDentro) resvVoltar(); else resvEntrar(); });
+  resvBtn.addEventListener('click', function() { if (resvDentro) resvVoltar(); else resvEntrar(); });
   if (resvBanner) resvBanner.addEventListener('click', resvVoltar);
   document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && resvDentro) resvVoltar(); });
 
