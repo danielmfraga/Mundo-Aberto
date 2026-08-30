@@ -255,7 +255,7 @@ body {
 @keyframes coinflip { from { transform:rotateX(0); } to { transform:rotateX(var(--spin,1440deg)); } }
 @keyframes coinland { 0% { transform:rotateX(0) scale(1); } 35% { transform:rotateX(0) scale(1.16); } 100% { transform:rotateX(0) scale(1); } }
 
-/* ── Baú (palavra lacrada, revelada pra todos) ── */
+/* ── Vault (palavra lacrada, revelada pra todos) ── */
 .bau-overlay { position:fixed; inset:0; z-index:9993; background:rgba(0,0,0,0.82); display:none; align-items:center; justify-content:center; padding:18px; }
 .bau-overlay.show { display:flex; }
 .bau-box {
@@ -315,7 +315,7 @@ body {
 @media (prefers-reduced-motion:reduce) { .bau-rev.show { animation:none; } }
 
 /* ── Cronômetro (compartilhado) ── */
-/* bloco central: data + cronômetro + baú, na mesma linha */
+/* bloco central: data + cronômetro + vault, na mesma linha */
 .tb-centro { display:flex; align-items:center; gap:14px; min-width:0; }
 .tb-timer { position:relative; display:flex; align-items:center; gap:2px; flex:0 0 auto;
   background:rgba(78,211,232,0.05); border:1px solid var(--line); border-radius:6px; padding:2px; }
@@ -841,7 +841,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 <div class="topbar">
   <span class="tb-vazio"></span><!-- coluna esquerda vazia: segura a grade pro bloco do meio seguir centralizado -->
 
-  <!-- Bloco central: data + cronômetro + baú, centralizados juntos -->
+  <!-- Bloco central: data + cronômetro + vault, centralizados juntos -->
   <div class="tb-centro">
     <div class="brand-wrap">
       <div class="brand" id="mesaBrand" title="Clique para editar o contexto da mesa">Mesa · Mundo Aberto</div>
@@ -954,15 +954,15 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 <!-- Aba lateral: esconde/mostra a coluna de painéis pra ampliar a câmera -->
 <button class="rail-toggle" id="railToggle" title="Esconder painéis (ampliar câmera)" type="button">&#8250;</button>
 
-<!-- Baú: palavra lacrada que, ao ser aberta, aparece pra mesa inteira -->
+<!-- Vault: palavra lacrada que, ao ser aberta, aparece pra mesa inteira -->
 <div class="bau-overlay" id="bauOverlay">
   <div class="bau-box">
     <div class="bau-head">
-      <span class="led"></span><span class="bau-title">Baú</span>
+      <span class="led"></span><span class="bau-title">Vault</span>
       <button class="bau-close" id="bauClose" type="button" title="Fechar">&#10005;</button>
     </div>
     <div class="bau-novo">
-      <input id="bauRotulo" type="text" maxlength="60" placeholder="Rótulo do baú (opcional) — o que se vê fechado">
+      <input id="bauRotulo" type="text" maxlength="60" placeholder="Rótulo do vault (opcional) — o que se vê fechado">
       <input id="bauConteudo" type="text" maxlength="240" placeholder="A palavra ou frase que fica lacrada…">
       <button class="btn bau-lacrar" id="bauLacrar" type="button">Lacrar</button>
     </div>
@@ -973,7 +973,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 <!-- Confirmação: abrir não tem volta -->
 <div class="bau-conf" id="bauConf">
   <div class="bau-conf-box">
-    <h3 id="bauConfTitulo">Abrir o baú?</h3>
+    <h3 id="bauConfTitulo">Abrir o vault?</h3>
     <p id="bauConfTxt">Uma vez aberto, o conteúdo aparece pra mesa inteira. Não dá pra lacrar de novo.</p>
     <div class="bau-conf-acoes">
       <button class="btn btn-clear" id="bauConfNao" type="button">Deixa quieto</button>
@@ -982,7 +982,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   </div>
 </div>
 
-<!-- Revelação: aparece pra todos, mesmo com o painel do baú fechado -->
+<!-- Revelação: aparece pra todos, mesmo com o painel do vault fechado -->
 <div class="bau-rev" id="bauRev" title="Clique pra fechar">
   <div class="bau-rev-box">
     <div class="bau-rev-rot" id="bauRevRot"></div>
@@ -1893,11 +1893,11 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 
   loadTramasSessao(); renderTramas();
 
-  // ── Baú (palavra lacrada, revelada pra mesa inteira) ──────────────
-  // O conteúdo NUNCA vem pro cliente enquanto o baú está fechado: a view
+  // ── Vault (palavra lacrada, revelada pra mesa inteira) ────────────
+  // O conteúdo NUNCA vem pro cliente enquanto o vault está fechado: a view
   // mesa_bau_publico devolve NULL no campo. Abrir é uma chamada de função no
   // banco (bau_abrir), que grava a abertura e só então devolve o texto. Sem
-  // isso o "lacre" seria só esconder na tela — e o baú existe justamente pra
+  // isso o "lacre" seria só esconder na tela — e o vault existe justamente pra
   // provar que a palavra foi escrita ANTES.
   var bauOverlay  = document.getElementById('bauOverlay');
   var bauLista    = document.getElementById('bauLista');
@@ -1922,12 +1922,12 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     return sbGet('/rest/v1/mesa_bau_publico?sala=eq.' + encodeURIComponent(SALA) +
                  '&select=id,rotulo,aberto,autor,aberto_por,conteudo&order=criado_em.asc')
       .then(function(rows){
-        if (!Array.isArray(rows)) throw new Error((rows && rows.message) || 'tabela do baú não encontrada');
+        if (!Array.isArray(rows)) throw new Error((rows && rows.message) || 'tabela do vault não encontrada');
         bauItens = rows; bauRender(); return rows;
       })
       .catch(function(e){
         bauItens = [];
-        bauLista.innerHTML = '<div class="bau-vazio">O baú ainda não foi montado no banco.<br>' +
+        bauLista.innerHTML = '<div class="bau-vazio">O vault ainda não foi montado no banco.<br>' +
           'Rode <b>mesa-bau-setup.sql</b> no SQL Editor do Supabase.<br>' +
           '<span style="opacity:.6">' + esc(String(e.message || e)).slice(0,120) + '</span></div>';
       });
@@ -1935,7 +1935,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 
   function bauRender() {
     if (!bauItens.length) {
-      bauLista.innerHTML = '<div class="bau-vazio">Nenhum baú ainda.<br>Escreva acima e lacre — ninguém vê até alguém abrir.</div>';
+      bauLista.innerHTML = '<div class="bau-vazio">Nenhum vault ainda.<br>Escreva acima e lacre — ninguém vê até alguém abrir.</div>';
       return;
     }
     bauLista.innerHTML = '';
@@ -1953,7 +1953,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       if (b.aberto) {
         // já revelado: pode sair da lista sem perder nada
         var x = document.createElement('button');
-        x.className = 'bau-x'; x.type = 'button'; x.title = 'Apagar este baú'; x.innerHTML = '&#10005;';
+        x.className = 'bau-x'; x.type = 'button'; x.title = 'Apagar este vault'; x.innerHTML = '&#10005;';
         x.addEventListener('click', function(){ bauPerguntar(b, 'apagar'); });
         el.appendChild(x);
       } else {
@@ -1969,9 +1969,9 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   // abrir e apagar não têm volta — pergunta antes nos dois casos
   function bauPerguntar(b, acao) {
     bauPendente = { b:b, acao:acao };
-    var nomeBau = b.rotulo ? '“' + b.rotulo + '”' : 'Este baú';
+    var nomeBau = b.rotulo ? '“' + b.rotulo + '”' : 'Este vault';
     var apagar = acao === 'apagar';
-    document.getElementById('bauConfTitulo').textContent = apagar ? 'Apagar o baú?' : 'Abrir o baú?';
+    document.getElementById('bauConfTitulo').textContent = apagar ? 'Apagar o vault?' : 'Abrir o vault?';
     document.getElementById('bauConfTxt').textContent = apagar
       ? nomeBau + ' já foi aberto — some da lista pra todo mundo, sem volta.'
       : (b.rotulo ? nomeBau + ' vai se abrir pra mesa inteira. Não dá pra lacrar de novo.'
@@ -1991,7 +1991,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 
   function bauApagar(b) {
     bauRpc('bau_apagar', { p_id:b.id }).then(function(apagou){
-      if (apagou === false) { alert('Esse baú não foi apagado — só dá pra apagar baú já aberto.'); }
+      if (apagou === false) { alert('Esse vault não foi apagado — só dá pra apagar vault já aberto.'); }
       bauCarregar();
       send('bau-novo', {});      // avisa a mesa que a lista mudou
     }).catch(function(e){ alert('Não consegui apagar: ' + e.message); });
@@ -2003,7 +2003,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       bauRevelar(p);                 // mostra na hora pra quem abriu
       send('bau-aberto', p);         // e pra mesa toda
       bauCarregar();
-    }).catch(function(e){ alert('Não consegui abrir o baú: ' + e.message); });
+    }).catch(function(e){ alert('Não consegui abrir o vault: ' + e.message); });
   }
 
   // Idempotente por id: quem abriu revela na hora e o eco do broadcast chega
