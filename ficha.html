@@ -165,6 +165,26 @@ body::after {
   text-transform: uppercase;
   margin-top: 8px;
 }
+.codinome-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 6px;
+}
+.codinome-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--fg-faint);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.codinome-val {
+  font-size: 15px;
+  font-style: italic;
+  color: var(--fg-dim);
+  min-height: 1.2em;
+}
 
 .cosmo-block {
   display: flex;
@@ -1107,6 +1127,10 @@ body::after {
     <div class="eyebrow"></div>
     <div class="title-block">
       <div class="title-name" contenteditable="true" spellcheck="false" data-field="name" data-placeholder="Nome do Personagem"></div>
+      <div class="codinome-row">
+        <span class="codinome-label">Codinome</span>
+        <div class="id-val codinome-val" contenteditable="true" spellcheck="false" data-field="codinome" data-placeholder="—"></div>
+      </div>
       <div class="title-sub">Ficha de Personagem</div>
       <div class="cosmo-block row">
         <span class="row-name">SYNESIS</span>
