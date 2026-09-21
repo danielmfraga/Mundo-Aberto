@@ -211,7 +211,6 @@ body {
 .chip.fome { background:var(--fome); border-color:var(--fome); color:#fff; box-shadow:0 0 7px rgba(224,71,58,0.5); }
 .chip.desp { background:var(--desp); border-color:var(--desp); color:#1a1206; box-shadow:0 0 7px rgba(255,157,61,0.45); }
 .chip.coin { min-width:auto; padding:0 9px; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; }
-.roll-sum { font-family:var(--font-mono); font-size:10px; color:var(--fg-dim); margin-left:6px; }
 .grp-sep { width:1px; align-self:stretch; background:var(--line); margin:0 2px; }
 
 /* ── Animação de rolagem (silhuetas dos dados girando + freando) ── */
@@ -1224,7 +1223,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   }
 
   function rollSelected() {
-    var groups = [], sum = 0, anyNum = false, total = 0;
+    var groups = [], total = 0;
     DICE.forEach(function(d) {
       var n = counts[d.id] || 0;
       if (!n) return;
@@ -1232,12 +1231,12 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       var faces = [];
       for (var i=0;i<n;i++) {
         if (d.kind === 'coin') { faces.push(randInt(2) === 0 ? 'Cara' : 'Coroa'); }
-        else { var v = 1 + randInt(d.sides); faces.push(v); sum+=v; anyNum=true; }
+        else { faces.push(1 + randInt(d.sides)); }
       }
       groups.push({ label:d.label, cls:d.cls, kind:d.kind||'num', faces:faces });
     });
     if (!total) return;
-    var payload = { autor:nome, ts:Date.now(), groups:groups, sum: anyNum?sum:null, secreto: resvDentro };
+    var payload = { autor:nome, ts:Date.now(), groups:groups, secreto: resvDentro };
     sendRoll(payload);                // no reservado vai só pros de lá (secreto); senão, pra mesa toda
     counts = {}; renderTray();        // zera o tray: pronto pra próxima jogada
   }
@@ -1255,11 +1254,10 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
         dice += '<span class="'+chipCls+'">'+esc(f)+'</span>';
       });
     });
-    var sumHtml = (p.sum!=null) ? '<span class="roll-sum">= '+p.sum+'</span>' : '';
     var lock = p.secreto ? '<span title="Rolagem secreta (só o reservado viu)">&#128274;</span> ' : '';
     el.innerHTML =
       '<div class="roll-meta">'+lock+'<span class="who-b">'+esc(p.autor||'?')+'</span><span>'+hhmm(p.ts)+'</span></div>' +
-      '<div class="roll-dice">'+dice+sumHtml+'</div>';
+      '<div class="roll-dice">'+dice+'</div>';
     rollLog.insertBefore(el, rollLog.firstChild);
     while (rollLog.children.length > 40) rollLog.removeChild(rollLog.lastChild);
   }
