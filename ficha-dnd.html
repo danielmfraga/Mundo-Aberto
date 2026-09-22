@@ -81,6 +81,14 @@ body::after {
   color: var(--dnd); background: rgba(11,19,32,0.94); border: 1px solid var(--dnd-soft); border-radius: 999px; padding: 6px 12px;
 }
 .preview-flag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--dnd); box-shadow: var(--glow-dnd); }
+/* o selo vira indicador do auto-save */
+.preview-flag[data-estado="salvo"]::before     { background: var(--ok); box-shadow: 0 0 8px rgba(61,220,132,0.6); }
+.preview-flag[data-estado="salvando"]::before  { animation: flagPulsa 0.9s ease-in-out infinite; }
+.preview-flag[data-estado="erro"], .preview-flag[data-estado="bloqueado"] { color: var(--danger); border-color: rgba(255,85,102,0.55); }
+.preview-flag[data-estado="erro"]::before, .preview-flag[data-estado="bloqueado"]::before { background: var(--danger); box-shadow: 0 0 8px rgba(255,85,102,0.6); }
+@keyframes flagPulsa { 50% { opacity: 0.25; } }
+/* somente leitura: outra aba já está editando, ou não deu pra carregar com segurança */
+body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: none; }
 
 .wrap { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 3.5rem 1.5rem 4rem; display: flex; flex-direction: column; gap: 2.2rem; }
 
@@ -368,7 +376,10 @@ body::after {
 <body>
 
 <a id="backBtn" href="personagens.html"><span style="font-size:14px;line-height:1;">&#8592;</span>Voltar</a>
-<div class="preview-flag" title="Fase 0: layout pra aprovação. Recarregar a página apaga o que foi digitado.">Prévia · nada é salvo</div>
+<!-- status do rascunho: salva sozinho, mas não aparece em nenhum lugar do app -->
+<div class="preview-flag" id="statusFlag" data-estado="carregando" title="Rascunho de teste: salva sozinho, mas não aparece em nenhuma tela do app.">
+  <span id="statusTxt">Rascunho · carregando…</span>
+</div>
 
 <div class="wrap">
 
@@ -722,20 +733,281 @@ body::after {
     if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('num')) { e.preventDefault(); e.target.blur(); }
   });
 
-  // ── Retrato: só pré-visualização local (nada sobe na Fase 0) ────────
+  // ══════════════════════════════════════════════════════════════════
+  //  RASCUNHO COM AUTO-SAVE
+  //  A ficha ainda está escondida: não pode aparecer em nenhuma tela do app.
+  //  Por isso o rascunho NÃO vai pra tabela `personagens` (que a lista de
+  //  personagens, a mesa e as menções do diário leem inteira). Vai como
+  //  arquivo JSON no Storage, numa pasta que nenhuma tela lê:
+  //      personagens/rascunho-dnd/<id>.json       estado atual
+  //      personagens/rascunho-dnd/<id>.v1.json    snapshot a cada 5 min
+  //      personagens/rascunho-dnd/<id>.v2.json    snapshot anterior
+  //  Quando a ficha "ganhar vida", o conteúdo muda pra tabela sem mexer
+  //  na captura — só troca onde grava.
+  // ══════════════════════════════════════════════════════════════════
+  var SB_URL = 'https://mxyqqfsyybluavwlrhsa.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eXFxZnN5eWJsdWF2d2xyaHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTM4MzEsImV4cCI6MjA5MzY2OTgzMX0.b0Ij7UGzbMLpqZjLYxoPEu2kGwEW52U_2NSDtpMGUPM';
+  var PASTA = 'rascunho-dnd/';
+  var LINHAS_PADRAO = { armas: 6, magias: 30 };   // o que a folha de papel traz pautado
+
+  function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+
+  // id do rascunho: vem da URL; sem id, retoma o último deste navegador; senão cria um
+  var qs = new URLSearchParams(location.search);
+  var RID = (qs.get('id') || ls('dndRascunhoAtual') || ('dnd_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)))
+    .replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 60);
+  if (qs.get('id') !== RID) { try { history.replaceState(null, '', location.pathname + '?id=' + RID); } catch (e) {} }
+  ls('dndRascunhoAtual', RID);
+
+  var cab = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
+  function urlObj(nome) { return SB_URL + '/storage/v1/object/personagens/' + PASTA + nome; }
+
+  // ── Status no selo ──────────────────────────────────────────────────
+  var flag = document.getElementById('statusFlag'), flagTxt = document.getElementById('statusTxt');
+  function status(estado, txt) { flag.dataset.estado = estado; flagTxt.textContent = txt; }
+  function hhmm() { var d = new Date(); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+
+  // ── Texto de um campo, com as quebras de linha ──────────────────────
+  // textContent come as linhas: ao dar Enter, o navegador cria <div>/<br>
+  // e textContent junta tudo. Aqui cada bloco e cada <br> vira \n.
+  function lerTexto(el) {
+    var out = '';
+    (function anda(n) {
+      for (var i = 0; i < n.childNodes.length; i++) {
+        var c = n.childNodes[i];
+        if (c.nodeType === 3) out += c.nodeValue;
+        else if (c.nodeName === 'BR') out += '\n';
+        else if (c.nodeType === 1) {
+          if (/^(DIV|P|LI)$/.test(c.nodeName) && out && out.slice(-1) !== '\n') out += '\n';
+          anda(c);
+        }
+      }
+    })(el);
+    return out.replace(/ /g, ' ').replace(/^\s+|\s+$/g, '');
+  }
+  // colar sempre como texto puro (igual o Caçador): sem isso vem formatação da página de origem
+  document.addEventListener('paste', function(e) {
+    var alvo = e.target.closest && e.target.closest('[contenteditable]');
+    if (!alvo) return;
+    e.preventDefault();
+    var t = (e.clipboardData || window.clipboardData).getData('text/plain') || '';
+    if (alvo.classList.contains('num') || alvo.classList.contains('fl-v')) t = t.replace(/\s*\n\s*/g, ' ');
+    document.execCommand('insertText', false, t);
+  });
+  // campo de uma linha: Enter sai do campo em vez de quebrar linha
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && e.target.classList && (e.target.classList.contains('fl-v') || e.target.classList.contains('cell'))) {
+      e.preventDefault(); e.target.blur();
+    }
+  });
+
+  // ── Captura: a ficha inteira vira um objeto ─────────────────────────
+  function linhasDe(tipo) {
+    var rows = tabela[tipo].querySelectorAll('.tbl-row:not(.tbl-head)'), out = [];
+    rows.forEach(function(r) {
+      var o = {};
+      r.querySelectorAll('.cell').forEach(function(c) { o[c.dataset.col] = lerTexto(c); });
+      r.querySelectorAll('.flag').forEach(function(f) { o[f.textContent.toLowerCase()] = f.classList.contains('on'); });
+      out.push(o);
+    });
+    // corta só as linhas vazias do FIM — as do meio ficam (quem pula linha no papel quer o espaço)
+    function vazia(o) { for (var k in o) if (o[k] === true || (typeof o[k] === 'string' && o[k])) return false; return true; }
+    while (out.length && vazia(out[out.length - 1])) out.pop();
+    return out;
+  }
+  var retratoUrl = null;
+  function captura() {
+    var d = { sheet_type: 'dnd', versao: 1, campos: {}, prof: {}, toggles: {}, morte: {}, armas: [], magias: [], retrato: retratoUrl };
+    document.querySelectorAll('[data-field]').forEach(function(el) { d.campos[el.dataset.field] = lerTexto(el); });
+    document.querySelectorAll('.prof[data-prof]').forEach(function(b) { if (b.dataset.estado) d.prof[b.dataset.prof] = b.dataset.estado; });
+    document.querySelectorAll('[data-tg]').forEach(function(b) { d.toggles[b.dataset.tg] = b.classList.contains('on'); });
+    document.querySelectorAll('.pips[data-grupo]').forEach(function(g) { d.morte[g.dataset.grupo] = g.querySelectorAll('.pip.on').length; });
+    d.armas = linhasDe('armas');
+    d.magias = linhasDe('magias');
+    return d;
+  }
+
+  // ── Restauração: o inverso exato da captura ─────────────────────────
+  function poeRetrato(url) {
+    retratoUrl = url || null;
+    var img = document.getElementById('holoImg'), ph = document.getElementById('retratoPh');
+    if (retratoUrl) { img.src = retratoUrl; img.style.display = 'block'; ph.style.display = 'none'; }
+    else { img.removeAttribute('src'); img.style.display = 'none'; ph.style.display = ''; }
+  }
+  function restaura(d) {
+    d = d || {};
+    var campos = d.campos || {};
+    document.querySelectorAll('[data-field]').forEach(function(el) {
+      el.textContent = campos[el.dataset.field] != null ? String(campos[el.dataset.field]) : '';
+    });
+    var prof = d.prof || {};
+    document.querySelectorAll('.prof[data-prof]').forEach(function(b) {
+      var e = prof[b.dataset.prof] || '';
+      if (b.dataset.ciclo !== 'pe' && e === 'e') e = 'p';   // salvaguarda não tem especialista
+      if (e) b.dataset.estado = e; else delete b.dataset.estado;
+      b.setAttribute('aria-pressed', e ? 'true' : 'false'); b.title = TITULO[e];
+    });
+    var tg = d.toggles || {};
+    document.querySelectorAll('[data-tg]').forEach(function(b) {
+      b.classList.toggle('on', !!tg[b.dataset.tg]); b.setAttribute('aria-pressed', tg[b.dataset.tg] ? 'true' : 'false');
+    });
+    var morte = d.morte || {};
+    document.querySelectorAll('.pips[data-grupo]').forEach(function(g) {
+      var n = Math.max(0, Math.min(3, +morte[g.dataset.grupo] || 0));
+      g.querySelectorAll('.pip').forEach(function(p, i) { p.classList.toggle('on', i < n); });
+    });
+    ['armas', 'magias'].forEach(function(tipo) {
+      var dados = Array.isArray(d[tipo]) ? d[tipo] : [];
+      tabela[tipo].querySelectorAll('.tbl-row:not(.tbl-head)').forEach(function(r) { r.remove(); });
+      var total = Math.max(LINHAS_PADRAO[tipo], dados.length);
+      for (var i = 0; i < total; i++) {
+        var row = novaLinha(tipo), o = dados[i] || {};
+        row.querySelectorAll('.cell').forEach(function(c) { c.textContent = o[c.dataset.col] != null ? String(o[c.dataset.col]) : ''; });
+        row.querySelectorAll('.flag').forEach(function(f) { f.classList.toggle('on', !!o[f.textContent.toLowerCase()]); });
+        tabela[tipo].appendChild(row);
+      }
+    });
+    poeRetrato(d.retrato);
+  }
+
+  // ── Uma aba por rascunho ────────────────────────────────────────────
+  // Duas abas no mesmo rascunho gravam uma por cima da outra, e a última
+  // ganha — horas de ficha somem sem aviso. A aba que já estava aberta
+  // continua dona; a que chega fica só olhando.
+  var ABA = Math.random().toString(36).slice(2);
+  var canal = ('BroadcastChannel' in window) ? new BroadcastChannel('ficha-dnd-rascunho') : null;
+  var dono = false, somenteLeitura = false;
+  function bloqueia(txt) {
+    somenteLeitura = true;
+    document.body.classList.add('somente-leitura');
+    status('bloqueado', txt);
+  }
+  if (canal) canal.onmessage = function(e) {
+    var m = e.data || {};
+    if (m.rid !== RID || m.aba === ABA) return;
+    if (m.tipo === 'abri' && dono) canal.postMessage({ tipo: 'ocupado', rid: RID, aba: ABA });
+    if (m.tipo === 'ocupado' && !dono) bloqueia('Aberto em outra aba · feche esta');
+  };
+  function esperaOutraAba() {
+    return new Promise(function(ok) {
+      if (!canal) return ok();
+      canal.postMessage({ tipo: 'abri', rid: RID, aba: ABA });
+      setTimeout(ok, 450);   // quem já estava aberto responde "ocupado" nesse intervalo
+    });
+  }
+
+  // ── Gravação ────────────────────────────────────────────────────────
+  function grava(nome, dados, keepalive) {
+    var corpo = JSON.stringify(dados);
+    // keepalive (o que sobrevive ao fechar a aba) recusa corpo acima de 64 KB
+    if (keepalive && corpo.length > 60000) keepalive = false;
+    return fetch(urlObj(nome), {
+      method: 'POST', keepalive: !!keepalive,
+      headers: Object.assign({ 'Content-Type': 'application/json', 'x-upsert': 'true', 'cache-control': 'no-cache' }, cab),
+      body: corpo
+    }).then(function(r) {
+      if (!r.ok) return r.text().then(function(t) { throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 120)); });
+    });
+  }
+  var carregado = false, sujo = false, salvando = false, denovo = false, tSalvar = null, tErro = null;
+  var ultimoSnapshot = null, mudouDesdeSnapshot = false;
+  function marca() {
+    if (!carregado || somenteLeitura) return;
+    sujo = true; mudouDesdeSnapshot = true;
+    status('salvando', 'Rascunho · editando…');
+    clearTimeout(tSalvar); tSalvar = setTimeout(salva, 800);
+  }
+  function salva(keepalive) {
+    if (!carregado || somenteLeitura) return Promise.resolve();
+    if (salvando) { denovo = true; return Promise.resolve(); }
+    salvando = true; clearTimeout(tErro);
+    var dados = captura(); dados.atualizado = new Date().toISOString();
+    status('salvando', 'Rascunho · salvando…');
+    return grava(RID + '.json', dados, keepalive).then(function() {
+      sujo = false;
+      status('salvo', 'Rascunho · salvo ' + hhmm());
+    }).catch(function(e) {
+      // não perde a edição: continua "sujo" e tenta de novo sozinho
+      status('erro', 'Não salvou · tentando de novo');
+      tErro = setTimeout(salva, 4000);
+      if (window.console) console.warn('[ficha-dnd] falha ao salvar:', e.message);
+    }).then(function() {
+      salvando = false;
+      if (denovo) { denovo = false; salva(); }
+    });
+  }
+  // snapshot a cada 5 min: v2 ← o snapshot anterior, v1 ← agora. O primeiro
+  // snapshot da sessão guarda como v2 o estado que existia ANTES de você mexer.
+  setInterval(function() {
+    if (!carregado || somenteLeitura || !mudouDesdeSnapshot) return;
+    var agora = captura(); agora.atualizado = new Date().toISOString();
+    var anterior = ultimoSnapshot;
+    (anterior ? grava(RID + '.v2.json', anterior) : Promise.resolve())
+      .then(function() { return grava(RID + '.v1.json', agora); })
+      .then(function() { ultimoSnapshot = agora; mudouDesdeSnapshot = false; })
+      .catch(function(e) { if (window.console) console.warn('[ficha-dnd] snapshot falhou:', e.message); });
+  }, 5 * 60 * 1000);
+  // fechar ou trocar de aba: grava o que estiver pendente (keepalive sobrevive ao fechamento)
+  function descarrega() { if (sujo && carregado && !somenteLeitura) { clearTimeout(tSalvar); salva(true); } }
+  window.addEventListener('pagehide', descarrega);
+  document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'hidden') descarrega(); });
+
+  // o que altera a ficha: digitação, e cliques nos controles (setTimeout 0: o save vê o DOM já alterado)
+  document.addEventListener('input', function(e) { if (e.target.closest && e.target.closest('.wrap')) marca(); });
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.prof, [data-tg], .pips[data-grupo] .pip, .flag, .tbl-del, [data-add]')) setTimeout(marca, 0);
+  }, true);
+
+  // ── Retrato: sobe pro Storage junto do rascunho ─────────────────────
   var fileInput = document.getElementById('fileInput');
-  document.getElementById('retrato').addEventListener('click', function() { fileInput.click(); });
+  document.getElementById('retrato').addEventListener('click', function() { if (!somenteLeitura) fileInput.click(); });
   fileInput.addEventListener('change', function() {
     var f = fileInput.files && fileInput.files[0];
+    fileInput.value = '';
     if (!f) return;
-    var r = new FileReader();
-    r.onload = function() {
-      var img = document.getElementById('holoImg');
-      img.src = r.result; img.style.display = 'block';
-      document.getElementById('retratoPh').style.display = 'none';
-    };
-    r.readAsDataURL(f);
+    if (f.size > 8 * 1024 * 1024) { alert('Imagem muito grande (máx 8MB).'); return; }
+    var ext = ((f.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg')).replace(/[^a-z0-9]/g, '');
+    var nome = RID + '-retrato.' + ext;
+    status('salvando', 'Rascunho · enviando retrato…');
+    fetch(urlObj(nome), { method: 'POST', headers: Object.assign({ 'Content-Type': f.type, 'x-upsert': 'true' }, cab), body: f })
+      .then(function(r) {
+        if (!r.ok) return r.text().then(function(t) { throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 120)); });
+        // ?v= fura o cache: a imagem nova tem o mesmo nome da anterior
+        poeRetrato(SB_URL + '/storage/v1/object/public/personagens/' + PASTA + nome + '?v=' + Date.now());
+        marca();
+      })
+      .catch(function(e) { status('erro', 'Retrato não subiu'); alert('Não consegui salvar o retrato: ' + e.message); });
   });
+
+  // ── Carregamento ────────────────────────────────────────────────────
+  // Só é rascunho NOVO se o Storage disser exatamente "não existe"
+  // (NoSuchKey). Qualquer outra falha — rede caída, servidor fora — trava
+  // a ficha em somente leitura: abrir vazia e deixar o auto-save gravar
+  // esse vazio por cima do personagem seria o pior erro possível aqui.
+  function carrega() {
+    return fetch(urlObj(RID + '.json') + '?t=' + Date.now(), { headers: cab, cache: 'no-store' }).then(function(r) {
+      return r.text().then(function(t) {
+        if (r.ok) return { existe: true, dados: JSON.parse(t) };
+        var j = null; try { j = JSON.parse(t); } catch (e) {}
+        if (j && (j.error === 'not_found' || j.code === 'NoSuchKey')) return { existe: false };
+        throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 120));
+      });
+    });
+  }
+  esperaOutraAba().then(function() {
+    if (somenteLeitura) return;
+    dono = true;
+    return carrega().then(function(res) {
+      if (somenteLeitura) return;
+      if (res.existe) { restaura(res.dados); ultimoSnapshot = res.dados; }
+      carregado = true;
+      status('salvo', res.existe ? 'Rascunho · carregado' : 'Rascunho novo · salva sozinho');
+    });
+  }).catch(function(e) {
+    bloqueia('Não carregou · recarregue a página');
+    if (window.console) console.warn('[ficha-dnd] falha ao carregar:', e.message);
+  });
+
 })();
 </script>
 </body>
