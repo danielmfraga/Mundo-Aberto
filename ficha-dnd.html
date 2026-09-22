@@ -15,682 +15,614 @@
 
 <!--
   FICHA D&D 5.5 — FASE 0 (prévia visual)
-  Página isolada: NÃO salva, NÃO carrega e NÃO fala com o Supabase. Não está
-  ligada a nenhum botão do app — só se chega nela pela URL. Serve pra aprovar o
-  layout antes de plugar no chassi de persistência (Fase 1).
 
-  Todo campo já nasce com data-field, no mesmo padrão do ficha.html, pra que a
-  Fase 1 só precise ligar captura/restauração — sem reescrever o markup.
-  Números são todos manuais por enquanto: a matemática do sistema fica pra depois.
+  A DISPOSIÇÃO segue a ficha oficial do Livro do Jogador 2024, página por
+  página. Cada bloco está no lugar em que o jogador de D&D já espera encontrá-lo
+  — foi medido no próprio PDF (posição de cada rótulo), não estimado. O estilo
+  visual é o da casa (chassi escuro, acento dourado); a geografia é a do D&D.
+
+  Página isolada: NÃO salva, NÃO carrega, NÃO fala com o Supabase, e nenhum
+  lugar do app aponta pra ela. Todo campo já nasce com data-field no padrão do
+  ficha.html, pra Fase 1 só ligar a persistência. Números manuais por enquanto.
 -->
 
 <style>
 :root {
-  /* chassi — idêntico ao das outras fichas */
   --bg-0: #04070d;
   --bg-1: #070c16;
   --bg-2: #0b1320;
   --line: rgba(120, 200, 220, 0.10);
   --line-strong: rgba(120, 200, 220, 0.20);
-
   --fg: #cfe9f0;
   --fg-dim: rgba(207, 233, 240, 0.55);
   --fg-faint: rgba(207, 233, 240, 0.32);
-
   --holo: #4ed3e8;
   --holo-soft: rgba(78, 211, 232, 0.55);
-  --accent: #ff7a3d;
   --danger: #ff5566;
   --ok: #3ddc84;
-
-  --glow-soft: 0 0 14px rgba(78, 211, 232, 0.25);
-
   --font-display: 'Space Grotesk', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* D&D — acento dourado sobre o chassi ciano (mesmo mecanismo do Vampiro) */
+  /* D&D — acento dourado sobre o chassi ciano */
   --dnd: #e0b457;
-  --dnd-soft: rgba(224, 180, 87, 0.50);
-  --dnd-faint: rgba(224, 180, 87, 0.14);
+  --dnd-soft: rgba(224, 180, 87, 0.45);
+  --dnd-line: rgba(224, 180, 87, 0.28);
+  --dnd-faint: rgba(224, 180, 87, 0.10);
   --glow-dnd: 0 0 10px rgba(224, 180, 87, 0.35);
 }
-
 * { margin: 0; padding: 0; box-sizing: border-box; }
-
 html, body {
-  background: var(--bg-0);
-  color: var(--fg);
-  font-family: var(--font-display);
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+  background: var(--bg-0); color: var(--fg); font-family: var(--font-display);
+  min-height: 100vh; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
 }
 body {
   background-image:
     radial-gradient(ellipse at 20% 0%, rgba(224,180,87,0.045), transparent 60%),
-    radial-gradient(ellipse at 80% 100%, rgba(78,211,232,0.035), transparent 60%),
-    linear-gradient(rgba(120,200,220,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(120,200,220,0.025) 1px, transparent 1px);
+    radial-gradient(ellipse at 80% 100%, rgba(78,211,232,0.03), transparent 60%),
+    linear-gradient(rgba(120,200,220,0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120,200,220,0.022) 1px, transparent 1px);
   background-size: auto, auto, 56px 56px, 56px 56px;
   background-attachment: fixed;
 }
 body::after {
-  content: '';
-  position: fixed; inset: 0;
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 100; opacity: 0.3; mix-blend-mode: multiply;
   background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px);
-  pointer-events: none; z-index: 100; opacity: 0.35; mix-blend-mode: multiply;
 }
 
-.sheet { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 2.5rem 1.75rem 4rem; }
-
 #backBtn {
-  position: fixed; top: 20px; left: 24px; z-index: 200;
-  display: flex; align-items: center; gap: 7px;
+  position: fixed; top: 20px; left: 24px; z-index: 200; display: flex; align-items: center; gap: 7px;
   font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
   color: rgba(207,233,240,0.3); text-decoration: none; transition: color 0.2s;
 }
 #backBtn:hover { color: rgba(207,233,240,0.7); }
-
-/* aviso honesto: nada aqui é salvo ainda */
 .preview-flag {
-  position: fixed; top: 16px; right: 20px; z-index: 200;
-  display: flex; align-items: center; gap: 8px;
+  position: fixed; top: 16px; right: 20px; z-index: 200; display: flex; align-items: center; gap: 8px;
   font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--dnd); background: rgba(11,19,32,0.92);
-  border: 1px solid var(--dnd-soft); border-radius: 999px; padding: 6px 12px;
+  color: var(--dnd); background: rgba(11,19,32,0.94); border: 1px solid var(--dnd-soft); border-radius: 999px; padding: 6px 12px;
 }
 .preview-flag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--dnd); box-shadow: var(--glow-dnd); }
 
-/* ───────── campos editáveis (mesmo comportamento das outras fichas) ───────── */
+.wrap { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 3.5rem 1.5rem 4rem; display: flex; flex-direction: column; gap: 2.2rem; }
+
+/* ───────── campos editáveis ───────── */
 [contenteditable] { outline: none; cursor: text; transition: background 0.15s, box-shadow 0.15s; }
 [contenteditable]:hover { background: rgba(78,211,232,0.05); }
 [contenteditable]:focus { background: rgba(78,211,232,0.09); box-shadow: inset 0 0 0 1px rgba(78,211,232,0.35); }
 [contenteditable]:empty::before { content: attr(data-placeholder); color: var(--fg-faint); font-style: italic; pointer-events: none; }
 
-/* ───────── HEADER ───────── */
-.header {
-  display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 2rem;
-  padding-bottom: 1.25rem; margin-bottom: 1.75rem;
-  border-bottom: 1px solid var(--line-strong); position: relative;
+/* ───────── a folha ───────── */
+.pagina {
+  position: relative; padding: 20px;
+  background: linear-gradient(180deg, rgba(11,19,32,0.78), rgba(7,12,22,0.86));
+  border: 1px solid var(--line-strong); border-radius: 16px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 40px 80px -40px rgba(0,0,0,0.85);
 }
-.header::after {
-  content: ''; position: absolute; bottom: -1px; left: 0; width: 80px; height: 1px;
-  background: var(--dnd); box-shadow: var(--glow-dnd);
+/* no computador a folha tem a proporção exata da oficial (612 × 791 pt); se o
+   conteúdo pedir mais, ela cresce — nunca corta. As caixas grandes esticam pra
+   preencher, como no papel. */
+@media (min-width: 981px) {
+  .pagina { aspect-ratio: 612 / 791; display: flex; flex-direction: column; }
+  .pagina > .corpo1, .pagina > .corpo2 { flex: 1; }
 }
-.eyebrow {
-  font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--dnd);
-  letter-spacing: 0.32em; text-transform: uppercase; display: flex; align-items: center; gap: 10px;
+.pagina-rodape {
+  position: absolute; bottom: -22px; left: 0; right: 0; display: flex; justify-content: space-between;
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--fg-faint);
 }
-.eyebrow::before { content: ''; width: 6px; height: 6px; background: var(--dnd); border-radius: 50%; box-shadow: 0 0 8px var(--dnd); }
-.title-block { text-align: center; }
-.title-name {
-  font-size: 38px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1;
-  border-radius: 3px; padding: 2px 6px; margin: -2px -6px;
-}
-.title-name:empty::before { font-style: normal; opacity: 0.5; }
-.codinome-row { display: flex; align-items: baseline; justify-content: center; gap: 7px; margin-top: 6px; }
-.codinome-label { font-family: var(--font-mono); font-size: 9px; color: var(--fg-faint); letter-spacing: 0.18em; text-transform: uppercase; }
-.codinome-val { font-size: 15px; font-style: italic; color: var(--fg-dim); min-height: 1.2em; border-radius: 3px; padding: 1px 4px; }
-.title-sub { font-family: var(--font-mono); font-size: 10px; color: var(--fg-faint); letter-spacing: 0.3em; text-transform: uppercase; margin-top: 8px; }
+.pagina-rodape b { color: var(--dnd); font-weight: 500; }
 
-.lvl-block { display: flex; justify-content: flex-end; gap: 14px; }
-.lvl-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.lvl-cell .k { font-family: var(--font-mono); font-size: 9px; color: var(--fg-faint); letter-spacing: 0.2em; text-transform: uppercase; }
-.lvl-num {
-  min-width: 58px; text-align: center; font-size: 22px; font-weight: 700; color: var(--dnd);
-  border: 1px solid var(--dnd-soft); border-radius: 8px; padding: 5px 8px; background: var(--dnd-faint);
+/* caixa padrão da ficha de D&D: borda arredondada + título centralizado em caixa alta */
+.bx { position: relative; border: 1px solid var(--dnd-line); border-radius: 11px; background: rgba(4,7,13,0.45); padding: 9px 11px 11px; min-width: 0; }
+.bx-t {
+  font-family: var(--font-display); font-weight: 700; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--dnd); text-align: center; line-height: 1.15;
 }
-.lvl-num.xp { font-size: 15px; color: var(--fg); border-color: var(--line-strong); background: rgba(120,200,220,0.03); min-width: 92px; padding: 9px 8px; }
+.bx-t.esq { text-align: left; }
+/* rótulo embaixo da linha — como no papel: escreve em cima, o nome do campo fica abaixo */
+.fl { display: flex; flex-direction: column; min-width: 0; }
+.fl-v { min-height: 1.55em; font-size: 14px; font-weight: 500; border-bottom: 1px solid var(--line-strong); border-radius: 3px 3px 0 0; padding: 1px 4px; word-break: break-word; }
+.fl-l { font-family: var(--font-display); font-size: 9.5px; color: var(--fg-faint); letter-spacing: 0.04em; margin-top: 3px; padding-left: 2px; }
+.num { font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; border-radius: 4px; min-width: 1.5ch; }
+.box-text { font-size: 12.5px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; border-radius: 4px; padding: 3px 4px; }
 
-/* ───────── LAYOUT ───────── */
-.body-grid { display: grid; grid-template-columns: 320px 1fr; gap: 1.75rem; }
-.col-left, .col-right { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
-
-/* ───────── BLACK BOX (foto) — reaproveitado das outras fichas ───────── */
-.device {
-  position: relative;
-  background: radial-gradient(ellipse at 50% 0%, rgba(224,180,87,0.05), transparent 70%), linear-gradient(180deg, var(--bg-2), var(--bg-1));
-  border: 1px solid var(--line); border-radius: 14px; padding: 1rem 1rem 1.25rem;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 30px 60px -30px rgba(0,0,0,0.8);
-}
-.device .corner { position: absolute; width: 10px; height: 10px; border: 1px solid var(--line-strong); }
-.device .corner.tl { top: 8px; left: 8px; border-right: 0; border-bottom: 0; }
-.device .corner.tr { top: 8px; right: 8px; border-left: 0; border-bottom: 0; }
-.device .corner.bl { bottom: 8px; left: 8px; border-right: 0; border-top: 0; }
-.device .corner.br { bottom: 8px; right: 8px; border-left: 0; border-top: 0; }
-.device-id { font-family: var(--font-mono); font-size: 9px; color: var(--fg-faint); letter-spacing: 0.2em; text-align: center; margin-bottom: 8px; text-transform: uppercase; }
-.device-id .led {
-  display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--holo);
-  box-shadow: 0 0 6px var(--holo); margin-right: 8px; vertical-align: middle; animation: ledPulse 2.4s ease-in-out infinite;
-}
-@keyframes ledPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
-.holo-projection { position: relative; width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
-.holo-ring { position: absolute; border-radius: 50%; border: 1px solid; pointer-events: none; }
-.ring1 { width: 92%; height: 92%; border-color: rgba(78,211,232,0.14); animation: rot 18s linear infinite; }
-.ring2 { width: 76%; height: 76%; border-color: rgba(224,180,87,0.14); border-style: dashed; animation: rot 32s linear infinite reverse; }
-.ring3 { width: 100%; height: 44%; border-color: rgba(78,211,232,0.08); transform: rotateX(72deg); animation: rotX 14s linear infinite; }
-@keyframes rot { to { transform: rotate(360deg); } }
-@keyframes rotX { from { transform: rotateX(72deg) rotate(0); } to { transform: rotateX(72deg) rotate(360deg); } }
-.holo-area {
-  position: relative; z-index: 2; width: 56%; aspect-ratio: 1; border-radius: 50%; overflow: hidden;
-  border: 2px solid rgba(0,255,231,0.5);
-  box-shadow: 0 0 12px rgba(0,255,231,0.7), 0 0 32px rgba(0,255,231,0.35), inset 0 0 30px rgba(0,255,231,0.12);
-  cursor: pointer; background: rgba(0,255,231,0.04); transition: box-shadow 0.3s ease;
-}
-.holo-area:hover { box-shadow: 0 0 22px rgba(0,255,231,0.85), 0 0 60px rgba(0,255,231,0.45), inset 0 0 30px rgba(0,255,231,0.22); }
-.holo-area img { width: 100%; height: 100%; object-fit: cover; filter: hue-rotate(180deg) saturate(1.5) brightness(0.9); mix-blend-mode: screen; display: none; }
-.upload-ph { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
-.upload-glyph { font-family: var(--font-mono); font-size: 28px; color: rgba(0,255,231,0.55); line-height: 1; animation: glyphPulse 3s ease-in-out infinite; }
-@keyframes glyphPulse { 0%,100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 0.85; transform: scale(1.06); } }
-.upload-text { font-family: var(--font-mono); font-size: 9px; color: rgba(0,255,231,0.55); letter-spacing: 0.16em; text-align: center; line-height: 1.5; text-transform: uppercase; }
-.holo-area::after {
-  content: ''; position: absolute; inset: 0; pointer-events: none; animation: holoScan 4s linear infinite;
-  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,255,231,0.07) 3px, rgba(0,255,231,0.07) 4px);
-}
-@keyframes holoScan { 0% { background-position: 0 0; } 100% { background-position: 0 100px; } }
-#fileInput { display: none; }
-
-/* ───────── identidade ───────── */
-.identity {
-  display: grid; grid-template-columns: 96px 1fr; gap: 7px 12px; align-items: center;
-  padding: 14px 16px; background: rgba(120,200,220,0.025); border: 1px solid var(--line); border-radius: 10px;
-}
-.id-key { font-family: var(--font-mono); font-size: 9px; color: var(--fg-faint); letter-spacing: 0.18em; text-transform: uppercase; }
-.id-val { font-size: 13px; font-weight: 500; letter-spacing: 0.01em; border-radius: 3px; padding: 2px 4px; margin: -2px -4px; min-height: 1em; }
-
-/* ───────── blocos genéricos ───────── */
-.panel { background: rgba(120,200,220,0.02); border: 1px solid var(--line); border-radius: 12px; padding: 1.1rem 1.35rem 1.35rem; position: relative; }
-.panel-head { display: flex; flex-wrap: wrap; row-gap: 4px; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 0.9rem; padding-bottom: 9px; border-bottom: 1px solid var(--line); }
-.panel-title { font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.28em; color: var(--dnd); text-transform: uppercase; }
-.panel-hint { font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.14em; color: var(--fg-faint); text-transform: uppercase; }
-.lbl { font-family: var(--font-mono); font-size: 8.5px; color: var(--fg-faint); letter-spacing: 0.18em; text-transform: uppercase; }
-
-.num {
-  font-family: var(--font-display); font-weight: 600; text-align: center; border-radius: 4px;
-  min-width: 2ch; padding: 1px 4px; font-variant-numeric: tabular-nums;
-}
-.box-text {
-  min-height: 72px; font-size: 13px; line-height: 1.6; color: var(--fg);
-  white-space: pre-wrap; word-break: break-word; border-radius: 5px; padding: 4px 6px; margin: -4px -6px;
-}
-.box-text.tall { min-height: 150px; }
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
-
-/* divisor de seção (substitui a "página 2" do papel) */
-.divider { display: flex; align-items: center; gap: 12px; margin: 0.4rem 0 -0.2rem; }
-.divider span { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.34em; color: var(--dnd); text-transform: uppercase; white-space: nowrap; }
-.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--dnd-soft), transparent); }
-
-/* ───────── toggles: proficiência, pips, flags ───────── */
+/* toggles */
 .prof {
-  width: 13px; height: 13px; flex: 0 0 auto; padding: 0; cursor: pointer; background: transparent;
-  border: 1px solid var(--fg-faint); border-radius: 50%; transition: all 0.15s; position: relative;
+  width: 12px; height: 12px; flex: 0 0 auto; padding: 0; cursor: pointer; background: transparent;
+  border: 1px solid var(--fg-faint); border-radius: 50%; transition: all 0.15s;
 }
 .prof:hover { border-color: var(--dnd); }
 .prof[data-estado="p"] { background: var(--dnd); border-color: var(--dnd); box-shadow: var(--glow-dnd); }
-/* especialista: losango — dobra o bônus de proficiência */
-.prof[data-estado="e"] { background: var(--dnd); border-color: var(--dnd); border-radius: 2px; transform: rotate(45deg) scale(0.92); box-shadow: 0 0 12px rgba(224,180,87,0.6); }
+.prof[data-estado="e"] { background: var(--dnd); border-color: var(--dnd); border-radius: 2px; transform: rotate(45deg) scale(0.9); box-shadow: 0 0 12px rgba(224,180,87,0.6); }
 .pip {
-  width: 15px; height: 15px; flex: 0 0 auto; padding: 0; cursor: pointer; background: transparent;
+  width: 14px; height: 14px; flex: 0 0 auto; padding: 0; cursor: pointer; background: transparent;
   border: 1px solid var(--line-strong); border-radius: 50%; transition: all 0.15s;
 }
 .pip:hover { border-color: var(--holo-soft); }
-.pip.on { background: var(--holo); border-color: var(--holo); box-shadow: var(--glow-soft); }
+.pip.on { background: var(--dnd); border-color: var(--dnd); box-shadow: var(--glow-dnd); }
 .pip.ok.on { background: var(--ok); border-color: var(--ok); box-shadow: 0 0 9px rgba(61,220,132,0.5); }
 .pip.bad.on { background: var(--danger); border-color: var(--danger); box-shadow: 0 0 9px rgba(255,85,102,0.5); }
-.pip.gold.on { background: var(--dnd); border-color: var(--dnd); box-shadow: var(--glow-dnd); }
+.chk { width: 12px; height: 12px; border-radius: 3px; }   /* quadradinho: treinamento com armadura */
 
-/* ───────── COMBATE (coluna esquerda) ───────── */
-.combat { display: grid; grid-template-columns: 1fr; gap: 12px; padding: 14px 16px 16px; background: rgba(120,200,220,0.025); border: 1px solid var(--line); border-radius: 10px; }
-.combat-top { display: grid; grid-template-columns: 88px 1fr; gap: 14px; align-items: stretch; }
-/* CA em forma de escudo */
-.ac-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.ac {
-  position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 3px;
-  padding: 11px 6px 22px; border: 1px solid var(--dnd-soft); background: var(--dnd-faint);
-  clip-path: polygon(0 0, 100% 0, 100% 64%, 50% 100%, 0 64%);
-}
-.ac .num { font-size: 28px; color: var(--dnd); line-height: 1; }
-.ac .lbl { color: var(--dnd); opacity: 0.8; }
-.shield-row { display: flex; align-items: center; justify-content: center; gap: 6px; }
-.hp { display: flex; flex-direction: column; gap: 7px; }
-.hp-row { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 6px; }
-.hp-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; border: 1px solid var(--line); border-radius: 6px; padding: 5px 4px 6px; background: rgba(4,7,13,0.4); }
-.hp-cell .num { font-size: 19px; }
-.hp-cell.cur .num { font-size: 23px; color: var(--ok); }
-.hp-bar { height: 4px; border-radius: 3px; background: rgba(120,200,220,0.08); overflow: hidden; }
-.hp-fill { height: 100%; width: 0; background: linear-gradient(90deg, rgba(61,220,132,0.45), var(--ok)); box-shadow: 0 0 6px rgba(61,220,132,0.45); transition: width 0.3s, background 0.3s; }
-.hp-fill.low { background: linear-gradient(90deg, rgba(255,85,102,0.45), var(--danger)); box-shadow: 0 0 6px rgba(255,85,102,0.5); }
-.sub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.sub-box { border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; background: rgba(4,7,13,0.35); display: flex; flex-direction: column; gap: 6px; }
-.sub-box .row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-.sub-box .num { font-size: 15px; }
-.death-line { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-.death-line .pips { display: flex; gap: 5px; }
-.insp {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  padding: 11px 16px; border: 1px solid var(--line); border-radius: 10px; background: rgba(120,200,220,0.025);
-}
-.insp .lbl { font-size: 9.5px; color: var(--dnd); }
+/* ═══════════════════ PÁGINA 1 ═══════════════════ */
+/* faixa superior: nome · nível · CA · PV/dados de vida/morte */
+.topo { display: grid; grid-template-columns: 40% 76px 92px 1fr; gap: 10px; align-items: stretch; margin-bottom: 10px; }
+.nome-box { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 14px; align-content: start; padding: 11px 14px 10px; }
+.nome-box .fl.full { grid-column: 1 / -1; }
+.nome-box .fl-v.nome { font-size: 22px; font-weight: 700; letter-spacing: 0.02em; }
+.codinome { font-size: 12px; font-style: italic; color: var(--fg-dim); }
 
-/* moedas */
-.coins { padding: 12px 14px 14px; background: rgba(120,200,220,0.025); border: 1px solid var(--line); border-radius: 10px; }
-.coins-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 8px; }
-.coin { display: flex; flex-direction: column; align-items: center; gap: 3px; border: 1px solid var(--line); border-radius: 50px; padding: 6px 2px; background: rgba(4,7,13,0.4); }
-.coin .num { font-size: 13px; }
-.coin .lbl { font-size: 8px; letter-spacing: 0.1em; }
-.coin.pc .lbl { color: #c98a5a; } .coin.pp .lbl { color: #b8c4cf; } .coin.pe .lbl { color: #8fb0c9; }
-.coin.po .lbl { color: var(--dnd); } .coin.pl .lbl { color: #e6e9ef; }
-
-/* ───────── faixa de números-chave ───────── */
-.strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.stat {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-  padding: 11px 6px; border: 1px solid var(--line); border-radius: 10px; background: rgba(120,200,220,0.025);
+/* nível no círculo, XP embaixo */
+.nivel { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 5px; padding-top: 2px; }
+.nivel-circ {
+  width: 66px; height: 66px; border-radius: 50%; border: 1px solid var(--dnd-soft); background: var(--dnd-faint);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset 0 0 14px rgba(224,180,87,0.10);
 }
-.stat .num { font-size: 24px; }
-.stat.key { border-color: var(--dnd-soft); background: var(--dnd-faint); }
-.stat.key .num { color: var(--dnd); }
+.nivel-circ .num { font-size: 26px; color: var(--dnd); line-height: 1; min-width: 34px; }
+.nivel-circ .fl-l { margin: 1px 0 0; padding: 0; }
+.nivel .xp .fl-v { font-size: 12px; text-align: center; min-width: 64px; }
+.nivel .xp .fl-l { text-align: center; padding: 0; }
 
-/* ───────── atributos ───────── */
-.abilities { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-items: start; }
-.ab {
-  min-width: 0;   /* sem isso o card não encolhe abaixo do conteúdo e estoura a grade no celular */
-  border: 1px solid var(--line); border-radius: 11px; padding: 12px 12px 12px;
-  background: linear-gradient(180deg, rgba(224,180,87,0.035), transparent 45%); display: flex; flex-direction: column; gap: 9px;
-}
-.ab-top { display: flex; align-items: center; gap: 11px; }
-.ab-mod {
-  width: 56px; height: 56px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
-  border: 1px solid var(--dnd-soft); background: var(--dnd-faint); box-shadow: inset 0 0 14px rgba(224,180,87,0.12);
-  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
-}
-.ab-mod .num { font-size: 22px; color: var(--dnd); }
-.ab-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.ab-name { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.2em; color: var(--fg); text-transform: uppercase; }
-.ab-score { display: flex; align-items: center; gap: 6px; }
-.ab-score .num { font-size: 13px; border: 1px solid var(--line-strong); border-radius: 5px; padding: 2px 7px; min-width: 38px; }
-.skills { display: flex; flex-direction: column; gap: 3px; }
-.skill { display: flex; align-items: center; gap: 8px; padding: 3px 4px; border-radius: 5px; }
-.skill:hover { background: rgba(120,200,220,0.035); }
-.skill .nm { flex: 1 1 auto; font-size: 12.5px; color: var(--fg-dim); min-width: 0; }
-.skill .num { font-size: 12.5px; min-width: 32px; color: var(--fg); }
-.skill.save { border-bottom: 1px dashed var(--line-strong); border-radius: 5px 5px 0 0; padding-bottom: 6px; margin-bottom: 3px; }
-.skill.save .nm { color: var(--fg); font-weight: 500; }
-.ab-empty { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; color: var(--fg-faint); padding: 2px 4px; }
+/* CA: escudo desenhado em SVG por trás — o conteúdo não é recortado */
+.ca { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 12px; min-height: 108px; }
+.ca svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.ca .rot { position: relative; font-size: 8.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dnd); text-align: center; line-height: 1.15; }
+.ca .num { position: relative; font-size: 30px; color: var(--fg); line-height: 1.1; margin-top: 3px; min-width: 40px; }
+.ca .escudo { position: relative; display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+.ca .escudo .fl-l { margin: 0; padding: 0; }
 
-/* ───────── tabelas (armas, magias) ───────── */
-.tbl { display: flex; flex-direction: column; }
-.tbl-row { display: grid; align-items: center; gap: 8px; padding: 6px 26px 6px 4px; border-bottom: 1px solid var(--line); position: relative; }
-.tbl-head { border-bottom: 1px solid var(--line-strong); padding-top: 0; }
-.tbl-head div { font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.16em; color: var(--fg-faint); text-transform: uppercase; }
-.tbl-row .cell { font-size: 12.5px; border-radius: 4px; padding: 3px 5px; min-height: 1.5em; word-break: break-word; }
+/* PV + dados de vida + salvaguardas contra morte, num bloco só (como no papel) */
+.vida { display: grid; grid-template-columns: 1.6fr 0.9fr 1fr; gap: 0; padding: 0; overflow: hidden; }
+.vida > div { padding: 9px 9px 10px; display: flex; flex-direction: column; gap: 6px; }
+.vida .bx-t { letter-spacing: 0.06em; font-size: 10px; }
+.vida > div + div { border-left: 1px solid var(--dnd-line); }
+.pv-corpo { display: grid; grid-template-columns: 1.15fr 1fr; gap: 8px; flex: 1; }
+.pv-atual { display: flex; flex-direction: column; justify-content: flex-end; }
+.pv-atual .fl-v { font-size: 28px; font-weight: 700; color: var(--ok); text-align: center; min-height: 42px; display: flex; align-items: flex-end; justify-content: center; }
+.pv-atual .fl-l { text-align: center; padding: 0; }
+.pv-lado { display: flex; flex-direction: column; gap: 5px; justify-content: space-between; }
+.pv-lado .fl-v { font-size: 15px; text-align: center; }
+.pv-lado .fl-l { text-align: center; padding: 0; }
+.dv .fl-v { font-size: 15px; text-align: center; }
+.dv .fl-l { text-align: center; padding: 0; }
+.morte-linha { display: flex; flex-direction: column; gap: 4px; }
+.morte-linha .pips { display: flex; gap: 6px; justify-content: center; }
+.morte-linha .fl-l { text-align: center; padding: 0; margin: 0; }
+.dv, .morte { justify-content: space-between; }
+
+/* corpo da página 1: coluna dos atributos (2 subcolunas) | área principal */
+.corpo1 { display: grid; grid-template-columns: 36% 1fr; gap: 10px; align-items: stretch; }
+.col-atr { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.atr-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex: 1; }
+.atr-col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.atr-col > .fill { flex: 1; }
+
+/* caixinha com número (bônus de proficiência, inspiração, faixa de iniciativa…) */
+.caixinha { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.caixinha .num { font-size: 22px; min-height: 30px; min-width: 44px; border: 1px solid var(--line-strong); border-radius: 8px; padding: 1px 8px; display: flex; align-items: center; justify-content: center; }
+.caixinha.dourada .num { color: var(--dnd); border-color: var(--dnd-soft); background: var(--dnd-faint); }
+
+/* atributo: título · [modificador grande | valor] · salvaguarda · perícias */
+.atr { display: flex; flex-direction: column; gap: 7px; }
+.atr-nums { display: flex; align-items: flex-end; justify-content: center; gap: 12px; }
+.atr-mod, .atr-val { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.atr-mod .num {
+  width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--dnd-soft); background: var(--dnd-faint);
+  display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--dnd);
+}
+.atr-val .num { width: 38px; height: 26px; border-radius: 13px; border: 1px solid var(--line-strong); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+.atr .fl-l { margin: 0; padding: 0; text-align: center; }
+.pers { display: flex; flex-direction: column; gap: 2px; }
+/* linha de perícia no padrão da ficha: ○ bônus  Nome */
+.per { display: flex; align-items: center; gap: 6px; padding: 1px 2px; border-radius: 4px; }
+.per .num { flex: 0 0 24px; font-size: 11px; border-bottom: 1px solid var(--line-strong); border-radius: 3px 3px 0 0; padding: 0 1px; }
+.per .nm { font-size: 11px; color: var(--fg-dim); flex: 1; min-width: 0; line-height: 1.25; }
+.per.salv { padding-bottom: 5px; margin-bottom: 3px; border-bottom: 1px solid var(--line); border-radius: 0; }
+.per.salv .nm { color: var(--fg); font-weight: 600; }
+
+/* inspiração heroica */
+.insp { display: flex; flex-direction: column; align-items: center; gap: 7px; justify-content: center; }
+.insp .pip { width: 22px; height: 22px; }
+
+/* treinamento */
+.treino { display: flex; flex-direction: column; gap: 8px; }
+.treino .arm { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 6px; }
+.treino .arm-t { font-family: var(--font-display); font-weight: 700; font-size: 8px; letter-spacing: 0.03em; text-transform: uppercase; color: var(--dnd); line-height: 1.15; }
+.treino .arm label { display: flex; align-items: center; gap: 4px; font-size: 10px; white-space: nowrap; color: var(--fg-dim); cursor: pointer; }
+.treino .sub-t { font-family: var(--font-display); font-weight: 700; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dnd); }
+.treino .box-text { min-height: 44px; border-bottom: 1px solid var(--line); border-radius: 4px 4px 0 0; }
+
+/* área principal */
+.col-princ { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.faixa { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.faixa .bx { padding: 8px 6px 9px; }
+.faixa .bx-t { font-size: 9.5px; }
+
+/* tabelas (armas, magias) */
+.tbl { display: flex; flex-direction: column; margin-top: 6px; }
+.tbl-row { display: grid; align-items: end; gap: 8px; padding: 3px 24px 3px 2px; position: relative; }
+.tbl-head { padding-top: 0; padding-bottom: 4px; }
+.tbl-head div { font-size: 9.5px; color: var(--fg-faint); letter-spacing: 0.02em; line-height: 1.15; }
+.tbl-row .cell { font-size: 12px; min-height: 1.6em; padding: 2px 4px; border-bottom: 1px solid var(--line-strong); border-radius: 3px 3px 0 0; word-break: break-word; }
 .tbl-row .cell.c { text-align: center; }
-.w-grid { grid-template-columns: 1.4fr 0.7fr 1.2fr 1.6fr; }
-.s-grid { grid-template-columns: 44px 1.5fr 0.9fr 0.8fr 76px 1.4fr; }
+.w-grid { grid-template-columns: 1.3fr 0.62fr 1.1fr 1.5fr; }
+.s-grid { grid-template-columns: 44px 1.6fr 0.8fr 0.72fr 70px 1.1fr; }
 .tbl-del {
-  position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
-  width: 20px; height: 20px; border: none; border-radius: 4px; background: none; cursor: pointer;
-  color: var(--fg-faint); font-size: 11px; opacity: 0; transition: all 0.15s;
+  position: absolute; right: 0; bottom: 5px; width: 18px; height: 18px; border: none; border-radius: 4px; background: none;
+  cursor: pointer; color: var(--fg-faint); font-size: 10px; opacity: 0; transition: all 0.15s;
 }
 .tbl-row:hover .tbl-del { opacity: 1; }
 .tbl-del:hover { color: #fff; background: var(--danger); }
 .tbl-add {
-  margin-top: 10px; align-self: flex-start; cursor: pointer;
-  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase;
-  color: var(--dnd); background: var(--dnd-faint); border: 1px dashed var(--dnd-soft); border-radius: 6px; padding: 7px 12px; transition: all 0.15s;
+  margin-top: 8px; align-self: flex-start; cursor: pointer; font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--dnd); background: transparent; border: 1px dashed var(--dnd-line); border-radius: 6px; padding: 5px 10px; transition: all 0.15s;
 }
-.tbl-add:hover { background: rgba(224,180,87,0.22); border-style: solid; }
-.flags { display: flex; gap: 4px; justify-content: center; }
+.tbl-add:hover { background: var(--dnd-faint); border-style: solid; }
+.flags { display: flex; gap: 3px; justify-content: center; padding-bottom: 2px; }
 .flag {
-  width: 21px; height: 21px; padding: 0; cursor: pointer; border-radius: 4px;
-  font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+  width: 19px; height: 19px; padding: 0; cursor: pointer; border-radius: 4px; font-family: var(--font-mono); font-size: 9px; font-weight: 700;
   color: var(--fg-faint); background: transparent; border: 1px solid var(--line-strong); transition: all 0.15s;
 }
 .flag:hover { border-color: var(--dnd-soft); color: var(--fg-dim); }
 .flag.on { color: #1a1206; background: var(--dnd); border-color: var(--dnd); box-shadow: var(--glow-dnd); }
 
-/* ───────── treinamento ───────── */
-.train { display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; align-items: center; }
-.armor-set { display: flex; flex-wrap: wrap; gap: 6px; }
-.armor-tg {
-  cursor: pointer; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--fg-faint); background: transparent; border: 1px solid var(--line-strong); border-radius: 999px; padding: 5px 11px; transition: all 0.15s;
+/* características de classe: uma caixa pautada em duas colunas, como no papel */
+.caract { flex: 1; display: flex; flex-direction: column; position: relative; }
+.caract::after { content: ""; position: absolute; top: 32px; bottom: 12px; left: 50%; width: 1px; background: var(--dnd-line); pointer-events: none; }
+.caract .box-text {
+  flex: 1; min-height: 250px; column-count: 2; column-gap: 26px;
 }
-.armor-tg:hover { color: var(--fg-dim); border-color: var(--dnd-soft); }
-.armor-tg.on { color: #1a1206; background: var(--dnd); border-color: var(--dnd); box-shadow: var(--glow-dnd); }
+.dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dupla .box-text { min-height: 180px; }
 
-/* ───────── conjuração ───────── */
-.cast-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1rem; }
-.cast-strip .stat .num { font-size: 20px; }
-.cast-strip .stat.attr .num { font-size: 14px; font-weight: 500; }
-.slots { display: grid; grid-template-columns: repeat(9, 1fr); gap: 7px; }
-.slot {
-  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 3px 9px;
-  border: 1px solid var(--line); border-radius: 9px; background: rgba(4,7,13,0.35);
+/* ═══════════════════ PÁGINA 2 ═══════════════════ */
+.corpo2 { display: grid; grid-template-columns: 64% 1fr; gap: 10px; align-items: stretch; }
+.col2-esq, .col2-dir { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.conj-topo { display: grid; grid-template-columns: 34% 1fr; gap: 10px; }
+
+/* conjuração: atributo em cima; número à esquerda, rótulo à direita */
+.conj { display: flex; flex-direction: column; gap: 7px; }
+.conj .fl-v { font-size: 13px; text-align: center; }
+.conj .fl-l { text-align: center; padding: 0; }
+.conj-lin { display: flex; align-items: center; gap: 9px; }
+.conj-lin .num { flex: 0 0 44px; height: 30px; border: 1px solid var(--line-strong); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.conj-lin.cd .num { color: var(--dnd); border-color: var(--dnd-soft); background: var(--dnd-faint); }
+.conj-lin span { font-family: var(--font-display); font-weight: 700; font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dnd); line-height: 1.2; }
+
+/* espaços de magia: 3 colunas × 3 círculos, cada um com duas caixinhas — o
+   cabeçalho da ficha oficial é "Total · Gasto", ou seja, número e número */
+.slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 12px; margin-top: 8px; }
+.slots-col { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.slots-h, .slot { display: grid; grid-template-columns: 1fr 26px 26px; gap: 4px; align-items: center; }
+.slots-h { font-size: 8.5px; color: var(--fg-faint); }
+.slots-h span + span { text-align: center; }
+.slot .circ { font-size: 10.5px; font-weight: 600; color: var(--fg-dim); white-space: nowrap; }
+.slot .num { font-size: 12px; border: 1px solid var(--line-strong); border-radius: 5px; height: 22px; display: flex; align-items: center; justify-content: center; }
+.slot .gasto { color: var(--dnd); }
+
+.magias { flex: 1; }
+
+/* aparência com retrato — o D&D guarda a aparência (e o retrato) na página 2 */
+.aparencia { display: flex; flex-direction: column; gap: 8px; }
+.ap-corpo { display: grid; grid-template-columns: 84px 1fr; gap: 10px; align-items: start; margin-top: 6px; }
+.retrato {
+  position: relative; width: 100%; aspect-ratio: 1; border-radius: 9px; overflow: hidden; cursor: pointer;
+  border: 1px solid var(--dnd-line); background: radial-gradient(ellipse at 50% 40%, rgba(224,180,87,0.08), rgba(4,7,13,0.6) 70%);
+  display: flex; align-items: center; justify-content: center; transition: border-color 0.2s, box-shadow 0.2s;
 }
-.slot .circ { font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--dnd); letter-spacing: 0.05em; }
-.slot .tot { display: flex; align-items: center; gap: 3px; }
-.slot .tot .num { font-size: 12px; border: 1px solid var(--line-strong); border-radius: 4px; min-width: 24px; padding: 1px 3px; }
-.slot .pips { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; min-height: 13px; }
-.slot .pip { width: 11px; height: 11px; }
+.retrato:hover { border-color: var(--dnd-soft); box-shadow: 0 0 16px rgba(224,180,87,0.18); }
+.retrato img { width: 100%; height: 100%; object-fit: cover; display: none; }
+.retrato .ph { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-faint); text-align: center; line-height: 1.6; }
+.retrato .ph b { display: block; font-size: 16px; color: var(--dnd); opacity: 0.6; font-weight: 400; margin-bottom: 4px; }
+#fileInput { display: none; }
+.aparencia .box-text { min-height: 84px; }
 
-/* ───────── itens sintonizados ───────── */
-.attune { display: flex; flex-direction: column; gap: 6px; }
-.attune-row { display: flex; align-items: center; gap: 9px; }
-.attune-row .cell { flex: 1 1 auto; font-size: 13px; border-bottom: 1px solid var(--line); padding: 4px 5px; border-radius: 4px 4px 0 0; }
+.historia, .equip { display: flex; flex-direction: column; }
+.historia { flex: 3 1 0; }   /* na oficial, história : equipamento ≈ 3 : 4 */
+.equip { flex: 4 1 0; }
+.historia .box-text, .equip .box-text { flex: 1; }
+.historia .box-text { min-height: 120px; }
+.historia .alin { margin-top: 8px; }
+.idiomas .box-text { min-height: 56px; }
+.equip .box-text { min-height: 150px; }
+.sint { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
+.sint .sub-t { font-size: 9.5px; color: var(--fg-faint); text-align: center; margin-bottom: 2px; }
+.sint-l { display: flex; align-items: center; gap: 7px; }
+.sint-l .cell { flex: 1; font-size: 12px; min-height: 1.6em; padding: 2px 4px; border-bottom: 1px solid var(--line-strong); border-radius: 3px 3px 0 0; }
+.moedas-g { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 7px; }
+.moeda { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.moeda .num { width: 100%; font-size: 13px; height: 26px; border: 1px solid var(--line-strong); border-radius: 13px; display: flex; align-items: center; justify-content: center; }
+.moeda span { font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; }
+.moeda.pc span { color: #c98a5a; } .moeda.pp span { color: #b8c4cf; } .moeda.ce span { color: #9fc0b6; }
+.moeda.po span { color: var(--dnd); } .moeda.pl span { color: #e6e9ef; }
 
-/* ───────── responsivo ───────── */
-@media (max-width: 1040px) {
-  .abilities { grid-template-columns: repeat(2, 1fr); }
-  .slots { grid-template-columns: repeat(5, 1fr); }
+/* ───────── responsivo: abaixo disso a folha não cabe mais em proporção ───────── */
+@media (max-width: 980px) {
+  .topo { grid-template-columns: 1fr 76px 92px; }
+  .topo .vida { grid-column: 1 / -1; }
+  .corpo1, .corpo2 { grid-template-columns: 1fr; }
+  .dupla { grid-template-columns: 1fr 1fr; }
 }
-@media (max-width: 860px) {
-  .body-grid { grid-template-columns: 1fr; }
-  .header { grid-template-columns: 1fr; text-align: center; gap: 1rem; }
-  .eyebrow { justify-content: center; }
-  .lvl-block { justify-content: center; }
-  .title-name { font-size: 28px; }
-  .two-col { grid-template-columns: 1fr; }
+@media (max-width: 640px) {
+  .wrap { padding: 3.5rem 0.75rem 4rem; }
+  .pagina { padding: 12px; }
+  .topo { grid-template-columns: 1fr 1fr; }
+  .topo .nome-box { grid-column: 1 / -1; }
+  .ca { min-height: 104px; width: 100%; max-width: 104px; justify-self: center; }   /* senão o escudo estica e achata */
+  .vida { grid-template-columns: 1fr 1fr; }
+  .vida > .pv { grid-column: 1 / -1; border-bottom: 1px solid var(--dnd-line); }
+  .vida > .dv { border-left: 0 !important; }
+  .faixa { grid-template-columns: repeat(2, 1fr); }
+  .dupla, .conj-topo { grid-template-columns: 1fr; }
+  .caract .box-text { column-count: 1; }
+  .caract::after { display: none; }   /* uma coluna só: a divisória cortaria o texto ao meio */
+  .slots { grid-template-columns: 1fr; }
+  .w-grid { grid-template-columns: 1fr 1fr; }
+  .s-grid { grid-template-columns: 36px 1fr 1fr; }
+  .tbl-head { display: none; }
   .preview-flag { top: auto; bottom: 14px; right: 50%; transform: translateX(50%); }
 }
-@media (max-width: 620px) {
-  .sheet { padding: 3.5rem 1rem 4rem; }
-  .abilities, .strip, .cast-strip { grid-template-columns: repeat(2, 1fr); }
-  .slots { grid-template-columns: repeat(3, 1fr); }
-  .w-grid { grid-template-columns: 1fr 1fr; }
-  .s-grid { grid-template-columns: 38px 1fr 1fr; }
-  .tbl-head { display: none; }
-}
-/* hexágono + "INTELIGÊNCIA" + margens pedem ~500px pra caber em 2 colunas */
-@media (max-width: 520px) {
-  .abilities { grid-template-columns: 1fr; }
+@media (max-width: 440px) {
+  .atr-cols { grid-template-columns: 1fr; }
 }
 </style>
 </head>
 <body>
 
-<div class="sheet">
-  <a id="backBtn" href="personagens.html"><span style="font-size:14px;line-height:1;">&#8592;</span>Voltar</a>
-  <div class="preview-flag" title="Fase 0: layout pra aprovação. Recarregar a página apaga o que foi digitado.">Prévia · nada é salvo</div>
+<a id="backBtn" href="personagens.html"><span style="font-size:14px;line-height:1;">&#8592;</span>Voltar</a>
+<div class="preview-flag" title="Fase 0: layout pra aprovação. Recarregar a página apaga o que foi digitado.">Prévia · nada é salvo</div>
 
-  <!-- ═════════════ CABEÇALHO ═════════════ -->
-  <header class="header">
-    <div class="eyebrow">D&amp;D · 5.5</div>
-    <div class="title-block">
-      <div class="title-name" contenteditable="true" spellcheck="false" data-field="name" data-placeholder="Nome do Personagem"></div>
-      <div class="codinome-row">
-        <span class="codinome-label">Codinome</span>
-        <div class="codinome-val" contenteditable="true" spellcheck="false" data-field="codinome" data-placeholder="—"></div>
+<div class="wrap">
+
+<!-- ═══════════════════════════ PÁGINA 1 ═══════════════════════════ -->
+<section class="pagina" aria-label="Página 1">
+
+  <div class="topo">
+    <!-- nome, antecedente, classe, espécie, subclasse -->
+    <div class="bx nome-box">
+      <div class="fl full">
+        <div class="fl-v nome" contenteditable="true" spellcheck="false" data-field="name"></div>
+        <div class="fl-l">nome do personagem &nbsp;·&nbsp; <span class="codinome" contenteditable="true" spellcheck="false" data-field="codinome" data-placeholder="codinome"></span></div>
       </div>
-      <div class="title-sub">Ficha de Personagem</div>
+      <div class="fl"><div class="fl-v" contenteditable="true" spellcheck="false" data-field="antecedente"></div><div class="fl-l">antecedente</div></div>
+      <div class="fl"><div class="fl-v" contenteditable="true" spellcheck="false" data-field="classe"></div><div class="fl-l">classe</div></div>
+      <div class="fl"><div class="fl-v" contenteditable="true" spellcheck="false" data-field="especie"></div><div class="fl-l">espécie</div></div>
+      <div class="fl"><div class="fl-v" contenteditable="true" spellcheck="false" data-field="subclasse"></div><div class="fl-l">subclasse</div></div>
     </div>
-    <div class="lvl-block">
-      <div class="lvl-cell"><span class="k">Nível</span><div class="num lvl-num" contenteditable="true" inputmode="numeric" data-field="nivel" data-placeholder="1"></div></div>
-      <div class="lvl-cell"><span class="k">Experiência</span><div class="num lvl-num xp" contenteditable="true" inputmode="numeric" data-field="xp" data-placeholder="0"></div></div>
+
+    <!-- nível no círculo, XP embaixo -->
+    <div class="nivel">
+      <div class="nivel-circ">
+        <div class="num" contenteditable="true" inputmode="numeric" data-field="nivel"></div>
+        <div class="fl-l">nível</div>
+      </div>
+      <div class="fl xp"><div class="fl-v num" contenteditable="true" inputmode="numeric" data-field="xp"></div><div class="fl-l">xp</div></div>
     </div>
-  </header>
 
-  <div class="body-grid">
+    <!-- classe de armadura -->
+    <div class="ca">
+      <svg viewBox="0 0 92 110" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M46 2 C62 9 76 11 89 10 L89 52 C89 78 70 96 46 108 C22 96 3 78 3 52 L3 10 C16 11 30 9 46 2 Z"
+              fill="rgba(224,180,87,0.09)" stroke="rgba(224,180,87,0.55)" stroke-width="1.2" vector-effect="non-scaling-stroke"/>
+      </svg>
+      <div class="rot">classe de<br>armadura</div>
+      <div class="num" contenteditable="true" inputmode="numeric" data-field="ca"></div>
+      <div class="escudo"><button class="pip" type="button" data-tg="escudo" title="Usando escudo" aria-pressed="false" style="width:11px;height:11px;"></button><span class="fl-l">escudo</span></div>
+    </div>
 
-    <!-- ═════════════ COLUNA ESQUERDA ═════════════ -->
-    <aside class="col-left">
-
-      <div class="device">
-        <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
-        <div class="device-id"><span class="led"></span>Black Box</div>
-        <div class="holo-projection">
-          <div class="holo-ring ring1"></div><div class="holo-ring ring2"></div><div class="holo-ring ring3"></div>
-          <div class="holo-area" id="holoArea" title="Clique para projetar uma imagem">
-            <div class="upload-ph" id="uploadPh">
-              <div class="upload-glyph">⧫</div>
-              <div class="upload-text">Clique para<br>projetar<br>personagem</div>
-            </div>
-            <img id="holoImg" alt="Personagem">
+    <!-- pontos de vida · dados de vida · salvaguardas contra morte -->
+    <div class="bx vida">
+      <div class="pv">
+        <div class="bx-t">Pontos de Vida</div>
+        <div class="pv-corpo">
+          <div class="pv-atual fl"><div class="fl-v num" contenteditable="true" inputmode="numeric" data-field="pv_atual"></div><div class="fl-l">atual</div></div>
+          <div class="pv-lado">
+            <div class="fl"><div class="fl-v num" contenteditable="true" inputmode="numeric" data-field="pv_temp"></div><div class="fl-l">temp</div></div>
+            <div class="fl"><div class="fl-v num" contenteditable="true" inputmode="numeric" data-field="pv_max"></div><div class="fl-l">máx.</div></div>
           </div>
+        </div>
+      </div>
+      <div class="dv">
+        <div class="bx-t">Dados<br>de Vida</div>
+        <div class="fl"><div class="fl-v num" contenteditable="true" data-field="dv_gasto"></div><div class="fl-l">gasto</div></div>
+        <div class="fl"><div class="fl-v num" contenteditable="true" data-field="dv_max"></div><div class="fl-l">máx.</div></div>
+      </div>
+      <div class="morte">
+        <div class="bx-t">Salvag.<br>contra Morte</div>
+        <div class="morte-linha"><div class="pips" data-grupo="morte_ok"><button class="pip ok" type="button"></button><button class="pip ok" type="button"></button><button class="pip ok" type="button"></button></div><div class="fl-l">sucessos</div></div>
+        <div class="morte-linha"><div class="pips" data-grupo="morte_falha"><button class="pip bad" type="button"></button><button class="pip bad" type="button"></button><button class="pip bad" type="button"></button></div><div class="fl-l">falhas</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="corpo1">
+
+    <!-- coluna dos atributos: duas subcolunas, como no papel -->
+    <div class="col-atr">
+      <div class="atr-cols">
+        <div class="atr-col" id="colA">
+          <div class="bx caixinha dourada">
+            <div class="bx-t">Bônus de<br>Proficiência</div>
+            <div class="num" contenteditable="true" data-field="proficiencia"></div>
+          </div>
+          <!-- FORÇA, DESTREZA, CONSTITUIÇÃO entram aqui pelo script -->
+          <div class="bx insp fill" id="inspBox">
+            <div class="bx-t">Inspiração<br>Heroica</div>
+            <button class="pip" type="button" data-tg="inspiracao" title="Tem inspiração heroica" aria-pressed="false"></button>
+          </div>
+        </div>
+        <div class="atr-col" id="colB">
+          <!-- INTELIGÊNCIA, SABEDORIA, CARISMA entram aqui pelo script -->
+        </div>
+      </div>
+
+      <div class="bx treino">
+        <div class="bx-t">Treinamento e Proficiência em Equipamentos</div>
+        <div class="arm">
+          <span class="arm-t">Treinamento<br>com Armadura</span>
+          <label><button class="pip chk" type="button" data-tg="arm_leve" aria-pressed="false"></button>Leve</label>
+          <label><button class="pip chk" type="button" data-tg="arm_media" aria-pressed="false"></button>Média</label>
+          <label><button class="pip chk" type="button" data-tg="arm_pesada" aria-pressed="false"></button>Pesada</label>
+          <label><button class="pip chk" type="button" data-tg="arm_escudo" aria-pressed="false"></button>Escudos</label>
+        </div>
+        <div><div class="sub-t">Armas</div><div class="box-text" contenteditable="true" spellcheck="false" data-field="prof_armas"></div></div>
+        <div><div class="sub-t">Ferramentas</div><div class="box-text" contenteditable="true" spellcheck="false" data-field="prof_ferramentas"></div></div>
+      </div>
+    </div>
+
+    <!-- área principal -->
+    <div class="col-princ">
+      <div class="faixa">
+        <div class="bx caixinha"><div class="bx-t">Iniciativa</div><div class="num" contenteditable="true" data-field="iniciativa"></div></div>
+        <div class="bx caixinha"><div class="bx-t">Deslocamento</div><div class="num" contenteditable="true" data-field="deslocamento"></div></div>
+        <div class="bx caixinha"><div class="bx-t">Tamanho</div><div class="num" contenteditable="true" spellcheck="false" data-field="tamanho" style="font-size:15px;"></div></div>
+        <div class="bx caixinha"><div class="bx-t">Percepção Passiva</div><div class="num" contenteditable="true" inputmode="numeric" data-field="percepcao_passiva"></div></div>
+      </div>
+
+      <div class="bx">
+        <div class="bx-t">Armas e Truques de Dano</div>
+        <div class="tbl" id="tblArmas">
+          <div class="tbl-row tbl-head w-grid"><div>Nome</div><div>Bôn. de Atq/CD</div><div>Dano &amp; Tipo</div><div>Observações</div></div>
+        </div>
+        <button class="tbl-add" type="button" data-add="armas">+ linha</button>
+      </div>
+
+      <div class="bx caract">
+        <div class="bx-t">Características de Classe</div>
+        <div class="box-text" contenteditable="true" spellcheck="false" data-field="caracteristicas_classe" style="margin-top:6px;"></div>
+      </div>
+
+      <div class="dupla">
+        <div class="bx"><div class="bx-t">Traço de Espécies</div><div class="box-text" contenteditable="true" spellcheck="false" data-field="tracos_especie" style="margin-top:6px;"></div></div>
+        <div class="bx"><div class="bx-t">Talentos</div><div class="box-text" contenteditable="true" spellcheck="false" data-field="talentos" style="margin-top:6px;"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pagina-rodape"><span>D&amp;D 5.5 · Ficha de Personagem</span><span><b>1</b> / 2</span></div>
+</section>
+
+<!-- ═══════════════════════════ PÁGINA 2 ═══════════════════════════ -->
+<section class="pagina" aria-label="Página 2">
+  <div class="corpo2">
+
+    <div class="col2-esq">
+      <div class="conj-topo">
+        <div class="bx conj">
+          <div class="fl"><div class="fl-v" contenteditable="true" spellcheck="false" data-field="conj_atributo"></div><div class="fl-l">atributo de conjuração</div></div>
+          <div class="conj-lin"><div class="num" contenteditable="true" data-field="conj_mod"></div><span>Mod. de Atributo<br>de Conjuração</span></div>
+          <div class="conj-lin cd"><div class="num" contenteditable="true" inputmode="numeric" data-field="conj_cd"></div><span>CD para<br>Evitar Magia</span></div>
+          <div class="conj-lin"><div class="num" contenteditable="true" data-field="conj_ataque"></div><span>Bônus de Ataque<br>Mágico</span></div>
+        </div>
+
+        <div class="bx">
+          <div class="bx-t">Espaços de Magia</div>
+          <div class="slots" id="slots"></div>
+        </div>
+      </div>
+
+      <div class="bx magias">
+        <div class="bx-t">Truques e Magias Preparadas</div>
+        <div class="tbl" id="tblMagias">
+          <div class="tbl-row tbl-head s-grid"><div class="c" style="text-align:center;">Círculo</div><div>Nome</div><div>Tempo de<br>Conjuração</div><div>Alcance</div><div style="text-align:center;">Concentração, Ritual<br>&amp; Material</div><div>Observações</div></div>
+        </div>
+        <button class="tbl-add" type="button" data-add="magias">+ linha</button>
+      </div>
+    </div>
+
+    <div class="col2-dir">
+      <!-- retrato pequeno, ao lado do texto: a caixa fica baixa como na ficha oficial -->
+      <div class="bx aparencia">
+        <div class="bx-t">Aparência</div>
+        <div class="ap-corpo">
+          <div class="retrato" id="retrato" title="Clique para escolher o retrato">
+            <div class="ph" id="retratoPh"><b>⧫</b>retrato</div>
+            <img id="holoImg" alt="Retrato do personagem">
+          </div>
+          <div class="box-text" contenteditable="true" spellcheck="false" data-field="aparencia"></div>
         </div>
         <input type="file" id="fileInput" accept="image/*">
       </div>
 
-      <div class="identity">
-        <div class="id-key">Classe</div><div class="id-val" contenteditable="true" spellcheck="false" data-field="classe" data-placeholder="—"></div>
-        <div class="id-key">Subclasse</div><div class="id-val" contenteditable="true" spellcheck="false" data-field="subclasse" data-placeholder="—"></div>
-        <div class="id-key">Espécie</div><div class="id-val" contenteditable="true" spellcheck="false" data-field="especie" data-placeholder="—"></div>
-        <div class="id-key">Antecedente</div><div class="id-val" contenteditable="true" spellcheck="false" data-field="antecedente" data-placeholder="—"></div>
-        <div class="id-key">Alinhamento</div><div class="id-val" contenteditable="true" spellcheck="false" data-field="alinhamento" data-placeholder="—"></div>
-        <div class="id-key">Tamanho</div><div class="id-val" contenteditable="true" spellcheck="false" data-field="tamanho" data-placeholder="—"></div>
+      <div class="bx historia">
+        <div class="bx-t">História e Personalidade</div>
+        <div class="box-text" contenteditable="true" spellcheck="false" data-field="historia" style="margin-top:6px;"></div>
+        <div class="fl alin"><div class="fl-v" contenteditable="true" spellcheck="false" data-field="alinhamento"></div><div class="fl-l">alinhamento</div></div>
       </div>
 
-      <!-- Combate: CA, PV, dados de vida, morte -->
-      <div class="combat">
-        <div class="combat-top">
-          <!-- o toggle de escudo fica FORA do escudo recortado: dentro, a ponta cortava a bolinha -->
-          <div class="ac-wrap">
-            <div class="ac">
-              <span class="lbl">CA</span>
-              <div class="num" contenteditable="true" inputmode="numeric" data-field="ca" data-placeholder="10"></div>
-            </div>
-            <div class="shield-row"><button class="pip gold" type="button" data-tg="escudo" title="Usando escudo"></button><span class="lbl">Escudo</span></div>
-          </div>
-          <div class="hp">
-            <span class="lbl" style="color:var(--ok);">Pontos de Vida</span>
-            <div class="hp-row">
-              <div class="hp-cell cur"><span class="lbl">Atual</span><div class="num" id="pvAtual" contenteditable="true" inputmode="numeric" data-field="pv_atual" data-placeholder="0"></div></div>
-              <div class="hp-cell"><span class="lbl">Temp</span><div class="num" contenteditable="true" inputmode="numeric" data-field="pv_temp" data-placeholder="0"></div></div>
-              <div class="hp-cell"><span class="lbl">Máx</span><div class="num" id="pvMax" contenteditable="true" inputmode="numeric" data-field="pv_max" data-placeholder="0"></div></div>
-            </div>
-            <div class="hp-bar"><div class="hp-fill" id="hpFill"></div></div>
-          </div>
-        </div>
-        <div class="sub-grid">
-          <div class="sub-box">
-            <span class="lbl">Dados de Vida</span>
-            <div class="row"><span class="lbl">Tipo</span><div class="num" contenteditable="true" spellcheck="false" data-field="dv_tipo" data-placeholder="d8"></div></div>
-            <div class="row"><span class="lbl">Gasto</span><div class="num" contenteditable="true" inputmode="numeric" data-field="dv_gasto" data-placeholder="0"></div></div>
-            <div class="row"><span class="lbl">Máx</span><div class="num" contenteditable="true" inputmode="numeric" data-field="dv_max" data-placeholder="1"></div></div>
-          </div>
-          <div class="sub-box">
-            <span class="lbl">Salvag. contra Morte</span>
-            <div class="death-line"><span class="lbl">Sucessos</span><div class="pips" data-grupo="morte_ok"><button class="pip ok" type="button"></button><button class="pip ok" type="button"></button><button class="pip ok" type="button"></button></div></div>
-            <div class="death-line"><span class="lbl">Falhas</span><div class="pips" data-grupo="morte_falha"><button class="pip bad" type="button"></button><button class="pip bad" type="button"></button><button class="pip bad" type="button"></button></div></div>
-          </div>
+      <div class="bx idiomas">
+        <div class="bx-t">Idiomas</div>
+        <div class="box-text" contenteditable="true" spellcheck="false" data-field="idiomas" style="margin-top:6px;"></div>
+      </div>
+
+      <div class="bx equip">
+        <div class="bx-t">Equipamento</div>
+        <div class="box-text" contenteditable="true" spellcheck="false" data-field="equipamento" style="margin-top:6px;"></div>
+        <div class="sint">
+          <div class="sub-t">Itens Mágicos Sintonizados</div>
+          <div class="sint-l"><button class="pip" type="button" data-tg="sint_1" aria-pressed="false"></button><div class="cell" contenteditable="true" spellcheck="false" data-field="sintonizado_1"></div></div>
+          <div class="sint-l"><button class="pip" type="button" data-tg="sint_2" aria-pressed="false"></button><div class="cell" contenteditable="true" spellcheck="false" data-field="sintonizado_2"></div></div>
+          <div class="sint-l"><button class="pip" type="button" data-tg="sint_3" aria-pressed="false"></button><div class="cell" contenteditable="true" spellcheck="false" data-field="sintonizado_3"></div></div>
         </div>
       </div>
 
-      <div class="insp">
-        <span class="lbl">Inspiração Heroica</span>
-        <button class="pip gold" type="button" data-tg="inspiracao" title="Tem inspiração heroica"></button>
-      </div>
-
-      <div class="coins">
-        <span class="lbl">Moedas</span>
-        <div class="coins-grid">
-          <div class="coin pc"><div class="num" contenteditable="true" inputmode="numeric" data-field="moeda_pc" data-placeholder="0"></div><span class="lbl">PC</span></div>
-          <div class="coin pp"><div class="num" contenteditable="true" inputmode="numeric" data-field="moeda_pp" data-placeholder="0"></div><span class="lbl">PP</span></div>
-          <div class="coin pe"><div class="num" contenteditable="true" inputmode="numeric" data-field="moeda_pe" data-placeholder="0"></div><span class="lbl">PE</span></div>
-          <div class="coin po"><div class="num" contenteditable="true" inputmode="numeric" data-field="moeda_po" data-placeholder="0"></div><span class="lbl">PO</span></div>
-          <div class="coin pl"><div class="num" contenteditable="true" inputmode="numeric" data-field="moeda_pl" data-placeholder="0"></div><span class="lbl">PL</span></div>
+      <div class="bx">
+        <div class="bx-t">Moedas</div>
+        <div class="moedas-g">
+          <div class="moeda pc" title="Cobre"><div class="num" contenteditable="true" inputmode="numeric" data-field="moeda_pc"></div><span>PC</span></div>
+          <div class="moeda pp" title="Prata"><div class="num" contenteditable="true" inputmode="numeric" data-field="moeda_pp"></div><span>PP</span></div>
+          <div class="moeda ce" title="Electro"><div class="num" contenteditable="true" inputmode="numeric" data-field="moeda_ce"></div><span>CE</span></div>
+          <div class="moeda po" title="Ouro"><div class="num" contenteditable="true" inputmode="numeric" data-field="moeda_po"></div><span>PO</span></div>
+          <div class="moeda pl" title="Platina"><div class="num" contenteditable="true" inputmode="numeric" data-field="moeda_pl"></div><span>PL</span></div>
         </div>
       </div>
+    </div>
 
-    </aside>
-
-    <!-- ═════════════ COLUNA PRINCIPAL ═════════════ -->
-    <main class="col-right">
-
-      <div class="strip">
-        <div class="stat key"><span class="lbl">Bônus de Proficiência</span><div class="num" contenteditable="true" data-field="proficiencia" data-placeholder="+2"></div></div>
-        <div class="stat"><span class="lbl">Iniciativa</span><div class="num" contenteditable="true" data-field="iniciativa" data-placeholder="+0"></div></div>
-        <div class="stat"><span class="lbl">Deslocamento</span><div class="num" contenteditable="true" data-field="deslocamento" data-placeholder="9m"></div></div>
-        <div class="stat"><span class="lbl">Percepção Passiva</span><div class="num" contenteditable="true" inputmode="numeric" data-field="percepcao_passiva" data-placeholder="10"></div></div>
-      </div>
-
-      <!-- Atributos + salvaguardas + perícias: montados pelo script a partir da tabela ATRIBUTOS -->
-      <section class="panel">
-        <div class="panel-head">
-          <h2 class="panel-title">Atributos &amp; Perícias</h2>
-          <span class="panel-hint">● proficiente &nbsp;·&nbsp; ◆ especialista</span>
-        </div>
-        <div class="abilities" id="abilities"></div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-head"><h2 class="panel-title">Armas &amp; Truques de Dano</h2></div>
-        <div class="tbl" id="tblArmas">
-          <div class="tbl-row tbl-head w-grid"><div>Nome</div><div>Atq / CD</div><div>Dano &amp; Tipo</div><div>Observações</div></div>
-        </div>
-        <button class="tbl-add" type="button" data-add="armas">+ Arma ou truque</button>
-      </section>
-
-      <section class="panel">
-        <div class="panel-head"><h2 class="panel-title">Características de Classe</h2></div>
-        <div class="box-text tall" contenteditable="true" spellcheck="false" data-field="caracteristicas_classe" data-placeholder="Recursos e habilidades da sua classe e subclasse…"></div>
-      </section>
-
-      <div class="two-col">
-        <section class="panel">
-          <div class="panel-head"><h2 class="panel-title">Traços de Espécie</h2></div>
-          <div class="box-text" contenteditable="true" spellcheck="false" data-field="tracos_especie" data-placeholder="Visão no escuro, resistências…"></div>
-        </section>
-        <section class="panel">
-          <div class="panel-head"><h2 class="panel-title">Talentos</h2></div>
-          <div class="box-text" contenteditable="true" spellcheck="false" data-field="talentos" data-placeholder="Talentos de origem e de nível…"></div>
-        </section>
-      </div>
-
-      <section class="panel">
-        <div class="panel-head"><h2 class="panel-title">Treinamento &amp; Proficiências</h2></div>
-        <div class="train">
-          <span class="lbl">Armaduras</span>
-          <div class="armor-set">
-            <button class="armor-tg" type="button" data-tg="arm_leve">Leve</button>
-            <button class="armor-tg" type="button" data-tg="arm_media">Média</button>
-            <button class="armor-tg" type="button" data-tg="arm_pesada">Pesada</button>
-            <button class="armor-tg" type="button" data-tg="arm_escudo">Escudos</button>
-          </div>
-          <span class="lbl">Armas</span>
-          <div class="id-val" contenteditable="true" spellcheck="false" data-field="prof_armas" data-placeholder="Simples, marciais…"></div>
-          <span class="lbl">Ferramentas</span>
-          <div class="id-val" contenteditable="true" spellcheck="false" data-field="prof_ferramentas" data-placeholder="Ferramentas de ladrão, instrumento…"></div>
-        </div>
-      </section>
-
-      <!-- ─────────── MAGIA (página 2 do papel) ─────────── -->
-      <div class="divider"><span>Magia</span></div>
-
-      <section class="panel">
-        <div class="panel-head"><h2 class="panel-title">Conjuração</h2></div>
-        <div class="cast-strip">
-          <div class="stat attr"><span class="lbl">Atributo</span><div class="num" contenteditable="true" spellcheck="false" data-field="conj_atributo" data-placeholder="—"></div></div>
-          <div class="stat"><span class="lbl">Modificador</span><div class="num" contenteditable="true" data-field="conj_mod" data-placeholder="+0"></div></div>
-          <div class="stat key"><span class="lbl">CD p/ Evitar</span><div class="num" contenteditable="true" inputmode="numeric" data-field="conj_cd" data-placeholder="8"></div></div>
-          <div class="stat"><span class="lbl">Ataque Mágico</span><div class="num" contenteditable="true" data-field="conj_ataque" data-placeholder="+0"></div></div>
-        </div>
-        <span class="lbl">Espaços de Magia</span>
-        <div class="slots" id="slots" style="margin-top:8px;"></div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-head">
-          <h2 class="panel-title">Truques &amp; Magias Preparadas</h2>
-          <span class="panel-hint">C concentração · R ritual · M material</span>
-        </div>
-        <div class="tbl" id="tblMagias">
-          <div class="tbl-row tbl-head s-grid"><div class="c">Círc.</div><div>Nome</div><div>Conjuração</div><div>Alcance</div><div class="c">C · R · M</div><div>Observações</div></div>
-        </div>
-        <button class="tbl-add" type="button" data-add="magias">+ Magia</button>
-      </section>
-
-      <!-- ─────────── PERSONAGEM ─────────── -->
-      <div class="divider"><span>Personagem</span></div>
-
-      <div class="two-col">
-        <section class="panel">
-          <div class="panel-head"><h2 class="panel-title">Aparência</h2></div>
-          <div class="box-text" contenteditable="true" spellcheck="false" data-field="aparencia" data-placeholder="Como o personagem se apresenta…"></div>
-        </section>
-        <section class="panel">
-          <div class="panel-head"><h2 class="panel-title">Idiomas</h2></div>
-          <div class="box-text" contenteditable="true" spellcheck="false" data-field="idiomas" data-placeholder="Comum, Élfico…"></div>
-        </section>
-      </div>
-
-      <section class="panel">
-        <div class="panel-head"><h2 class="panel-title">História &amp; Personalidade</h2></div>
-        <div class="box-text tall" contenteditable="true" spellcheck="false" data-field="historia" data-placeholder="Origem, ideais, vínculos, falhas…"></div>
-      </section>
-
-      <div class="two-col">
-        <section class="panel">
-          <div class="panel-head"><h2 class="panel-title">Equipamento</h2></div>
-          <div class="box-text tall" contenteditable="true" spellcheck="false" data-field="equipamento" data-placeholder="Mochila, corda, rações…"></div>
-        </section>
-        <section class="panel">
-          <div class="panel-head">
-            <h2 class="panel-title">Itens Sintonizados</h2>
-            <span class="panel-hint">máx. 3</span>
-          </div>
-          <div class="attune">
-            <div class="attune-row"><button class="pip gold" type="button" data-tg="sint_1"></button><div class="cell" contenteditable="true" spellcheck="false" data-field="sintonizado_1" data-placeholder="Item mágico…"></div></div>
-            <div class="attune-row"><button class="pip gold" type="button" data-tg="sint_2"></button><div class="cell" contenteditable="true" spellcheck="false" data-field="sintonizado_2" data-placeholder="Item mágico…"></div></div>
-            <div class="attune-row"><button class="pip gold" type="button" data-tg="sint_3"></button><div class="cell" contenteditable="true" spellcheck="false" data-field="sintonizado_3" data-placeholder="Item mágico…"></div></div>
-          </div>
-        </section>
-      </div>
-
-    </main>
   </div>
+  <div class="pagina-rodape"><span>D&amp;D 5.5 · Ficha de Personagem</span><span><b>2</b> / 2</span></div>
+</section>
+
 </div>
 
 <script>
 (function() {
   'use strict';
 
-  // ── Atributos, salvaguardas e perícias (D&D 5.5 / 2024) ─────────────
-  // Uma tabela só alimenta o markup inteiro: menos HTML repetido e um lugar
-  // único pra conferir se as 18 perícias estão no atributo certo.
+  // ── Atributos: coluna, ordem e perícias exatamente como na ficha oficial ─
+  // Coluna A (esquerda): Força, Destreza, Constituição. Coluna B: Inteligência,
+  // Sabedoria, Carisma. A ordem das perícias segue a ficha (conferida no PDF),
+  // não a ordem alfabética em português — Sabedoria começa por Lidar com Animais.
   var ATRIBUTOS = [
-    { id: 'for', nome: 'Força',        pericias: ['Atletismo'] },
-    { id: 'des', nome: 'Destreza',     pericias: ['Acrobacia', 'Furtividade', 'Prestidigitação'] },
-    { id: 'con', nome: 'Constituição', pericias: [] },
-    { id: 'int', nome: 'Inteligência', pericias: ['Arcanismo', 'História', 'Investigação', 'Natureza', 'Religião'] },
-    { id: 'sab', nome: 'Sabedoria',    pericias: ['Intuição', 'Lidar com Animais', 'Medicina', 'Percepção', 'Sobrevivência'] },
-    { id: 'car', nome: 'Carisma',      pericias: ['Atuação', 'Enganação', 'Intimidação', 'Persuasão'] }
+    { id: 'for', nome: 'Força',        col: 'A', pericias: ['Atletismo'] },
+    { id: 'des', nome: 'Destreza',     col: 'A', pericias: ['Acrobacia', 'Furtividade', 'Prestidigitação'] },
+    { id: 'con', nome: 'Constituição', col: 'A', pericias: [] },
+    { id: 'int', nome: 'Inteligência', col: 'B', pericias: ['Arcanismo', 'História', 'Investigação', 'Natureza', 'Religião'] },
+    { id: 'sab', nome: 'Sabedoria',    col: 'B', pericias: ['Lidar com Animais', 'Intuição', 'Medicina', 'Percepção', 'Sobrevivência'] },
+    { id: 'car', nome: 'Carisma',      col: 'B', pericias: ['Atuação', 'Enganação', 'Intimidação', 'Persuasão'] }
   ];
-  // "Lidar com Animais" -> "lidar_com_animais" (chave estável pro data-field)
   function slug(s) {
     return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
   }
-  function linha(opts) {
-    // opts: { classe, profKey, ciclo, nome, campo }
-    return '<div class="skill' + (opts.classe ? ' ' + opts.classe : '') + '">' +
-      '<button class="prof" type="button" data-prof="' + opts.profKey + '" data-ciclo="' + opts.ciclo + '" aria-pressed="false" title="Proficiência"></button>' +
-      '<span class="nm">' + opts.nome + '</span>' +
-      '<div class="num" contenteditable="true" data-field="' + opts.campo + '" data-placeholder="+0"></div>' +
-      '</div>';
+  // linha no padrão do papel: ○ bônus  Nome
+  function linha(chave, ciclo, nome, salv) {
+    return '<div class="per' + (salv ? ' salv' : '') + '">' +
+      '<button class="prof" type="button" data-prof="' + chave + '" data-ciclo="' + ciclo + '" aria-pressed="false" title="Proficiência"></button>' +
+      '<div class="num" contenteditable="true" data-field="' + chave + '"></div>' +
+      '<span class="nm">' + nome + '</span></div>';
   }
-  var html = '';
-  ATRIBUTOS.forEach(function(a) {
-    html += '<div class="ab">' +
-      '<div class="ab-top">' +
-        '<div class="ab-mod"><div class="num" contenteditable="true" data-field="' + a.id + '_mod" data-placeholder="+0"></div></div>' +
-        '<div class="ab-meta"><span class="ab-name">' + a.nome + '</span>' +
-          '<div class="ab-score"><span class="lbl">Valor</span><div class="num" contenteditable="true" inputmode="numeric" data-field="' + a.id + '_valor" data-placeholder="10"></div></div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="skills">' +
-        // salvaguarda: só proficiente ou não (não existe especialista em salvaguarda)
-        linha({ classe: 'save', profKey: a.id + '_salv', ciclo: 'p', nome: 'Salvaguarda', campo: a.id + '_salv' });
-    if (a.pericias.length) {
-      a.pericias.forEach(function(p) {
-        html += linha({ profKey: 'per_' + slug(p), ciclo: 'pe', nome: p, campo: 'per_' + slug(p) });
-      });
-    } else {
-      html += '<div class="ab-empty">Sem perícias associadas</div>';
-    }
-    html += '</div></div>';
+  var colA = document.getElementById('colA'), colB = document.getElementById('colB'), insp = document.getElementById('inspBox');
+  ATRIBUTOS.forEach(function(a, i) {
+    var el = document.createElement('div');
+    // o último de cada coluna estica pra as duas colunas terminarem alinhadas
+    el.className = 'bx atr' + (a.id === 'car' ? ' fill' : '');
+    var h = '<div class="bx-t">' + a.nome + '</div>' +
+      '<div class="atr-nums">' +
+        '<div class="atr-mod"><div class="num" contenteditable="true" data-field="' + a.id + '_mod"></div><span class="fl-l">modificador</span></div>' +
+        '<div class="atr-val"><div class="num" contenteditable="true" inputmode="numeric" data-field="' + a.id + '_valor"></div><span class="fl-l">valor</span></div>' +
+      '</div><div class="pers">' +
+      linha(a.id + '_salv', 'p', 'Salvaguarda', true);   // salvaguarda: só proficiente
+    a.pericias.forEach(function(p) { h += linha('per_' + slug(p), 'pe', p, false); });
+    el.innerHTML = h + '</div>';
+    if (a.col === 'A') colA.insertBefore(el, insp); else colB.appendChild(el);
   });
-  document.getElementById('abilities').innerHTML = html;
 
   // ── Proficiência: vazio → proficiente → especialista (perícias) ─────
   var TITULO = { '': 'Sem proficiência', p: 'Proficiente', e: 'Especialista (proficiência dobrada)' };
@@ -713,7 +645,6 @@ body::after {
   });
 
   // ── Salvaguardas contra a morte: clicar marca até ali ───────────────
-  // Clicar na 2ª bolinha marca 1 e 2; clicar de novo na última desmarca ela.
   document.querySelectorAll('.pips[data-grupo]').forEach(function(grupo) {
     var pips = grupo.querySelectorAll('.pip');
     pips.forEach(function(p, i) {
@@ -725,58 +656,38 @@ body::after {
     });
   });
 
-  // ── Espaços de magia: o total digitado define quantas bolinhas ──────
-  var slotsEl = document.getElementById('slots');
-  var circulos = '';
-  for (var c = 1; c <= 9; c++) {
-    circulos += '<div class="slot" data-circ="' + c + '">' +
-      '<span class="circ">' + c + 'º</span>' +
-      '<div class="tot"><span class="lbl">Total</span><div class="num" contenteditable="true" inputmode="numeric" data-field="slot_' + c + '_total" data-placeholder="0"></div></div>' +
-      '<div class="pips" title="Clique pra marcar um espaço gasto"></div>' +
-    '</div>';
-  }
-  slotsEl.innerHTML = circulos;
-  function desenhaSlot(slot) {
-    var tot = parseInt(slot.querySelector('[data-field]').textContent, 10);
-    tot = isNaN(tot) ? 0 : Math.max(0, Math.min(tot, 9));
-    var box = slot.querySelector('.pips');
-    var gastos = box.querySelectorAll('.pip.on').length;
-    box.innerHTML = '';
-    for (var i = 0; i < tot; i++) {
-      var p = document.createElement('button');
-      p.type = 'button'; p.className = 'pip gold' + (i < gastos ? ' on' : '');
-      p.title = 'Espaço gasto';
-      p.addEventListener('click', function() { this.classList.toggle('on'); });
-      box.appendChild(p);
+  // ── Espaços de magia: 3 colunas (1–3, 4–6, 7–9), Total e Gasto ──────
+  var slotsEl = document.getElementById('slots'), h = '';
+  for (var col = 0; col < 3; col++) {
+    h += '<div class="slots-col"><div class="slots-h"><span></span><span>Total</span><span>Gasto</span></div>';
+    for (var k = 1; k <= 3; k++) {
+      var c = col * 3 + k;
+      h += '<div class="slot" data-circ="' + c + '"><span class="circ">' + c + 'º Círculo</span>' +
+        '<div class="num" contenteditable="true" inputmode="numeric" data-field="slot_' + c + '_total"></div>' +
+        '<div class="num gasto" contenteditable="true" inputmode="numeric" data-field="slot_' + c + '_gasto"></div></div>';
     }
+    h += '</div>';
   }
-  slotsEl.querySelectorAll('.slot').forEach(function(slot) {
-    slot.querySelector('[data-field]').addEventListener('input', function() { desenhaSlot(slot); });
-  });
+  slotsEl.innerHTML = h;
 
-  // ── Tabelas com linhas (armas e magias) ─────────────────────────────
+  // ── Tabelas pautadas (armas, magias) ─────────────────────────────────
+  // No papel as linhas já vêm riscadas e vazias; aqui também. Sem exemplo:
+  // o cabeçalho da coluna já diz o que vai em cada uma.
   var MODELO = {
-    armas: { grid: 'w-grid', celulas: [
-      { k: 'nome', ph: 'Espada longa' }, { k: 'atq', ph: '+5', c: true },
-      { k: 'dano', ph: '1d8+3 cortante' }, { k: 'obs', ph: 'Versátil (1d10)' } ] },
-    magias: { grid: 's-grid', flags: true, celulas: [
-      { k: 'circ', ph: '0', c: true }, { k: 'nome', ph: 'Mísseis mágicos' },
-      { k: 'tempo', ph: '1 ação' }, { k: 'alcance', ph: '36m' }, { k: '__flags' }, { k: 'obs', ph: '—' } ] }
+    armas:  { grid: 'w-grid', celulas: [{ k: 'nome' }, { k: 'atq', c: true }, { k: 'dano' }, { k: 'obs' }] },
+    magias: { grid: 's-grid', celulas: [{ k: 'circ', c: true }, { k: 'nome' }, { k: 'tempo' }, { k: 'alcance' }, { k: '__flags' }, { k: 'obs' }] }
   };
-  // Só a primeira linha de cada tabela mostra o exemplo. Repetido em todas,
-  // "Espada longa" ×3 parecia conteúdo já preenchido, não uma dica.
-  function novaLinha(tipo, comExemplo) {
+  function novaLinha(tipo) {
     var m = MODELO[tipo];
     var row = document.createElement('div');
     row.className = 'tbl-row ' + m.grid;
     m.celulas.forEach(function(cel) {
       if (cel.k === '__flags') {
-        var f = document.createElement('div');
-        f.className = 'flags';
+        var f = document.createElement('div'); f.className = 'flags';
         ['C', 'R', 'M'].forEach(function(letra) {
           var b = document.createElement('button');
           b.type = 'button'; b.className = 'flag'; b.textContent = letra;
-          b.title = { C: 'Concentração', R: 'Ritual', M: 'Componente material' }[letra];
+          b.title = { C: 'Concentração', R: 'Ritual', M: 'Material necessário' }[letra];
           b.addEventListener('click', function() { b.classList.toggle('on'); });
           f.appendChild(b);
         });
@@ -785,8 +696,7 @@ body::after {
       }
       var d = document.createElement('div');
       d.className = 'cell' + (cel.c ? ' c' : '');
-      d.contentEditable = 'true'; d.spellcheck = false;
-      d.dataset.col = cel.k; d.dataset.placeholder = comExemplo ? cel.ph : '';
+      d.contentEditable = 'true'; d.spellcheck = false; d.dataset.col = cel.k;
       row.appendChild(d);
     });
     var del = document.createElement('button');
@@ -798,38 +708,23 @@ body::after {
   var tabela = { armas: document.getElementById('tblArmas'), magias: document.getElementById('tblMagias') };
   document.querySelectorAll('[data-add]').forEach(function(btn) {
     btn.addEventListener('click', function() {
-      // linha nova ganha o exemplo só se a tabela ainda estiver vazia
-      var vazia = !tabela[btn.dataset.add].querySelector('.tbl-row:not(.tbl-head)');
-      var row = novaLinha(btn.dataset.add, vazia);
+      var row = novaLinha(btn.dataset.add);
       tabela[btn.dataset.add].appendChild(row);
       row.querySelector('.cell').focus();
     });
   });
-  // começa com algumas linhas vazias, como a ficha de papel
-  for (var i = 0; i < 3; i++) tabela.armas.appendChild(novaLinha('armas', i === 0));
-  for (var j = 0; j < 4; j++) tabela.magias.appendChild(novaLinha('magias', j === 0));
-
-  // ── Barra de PV (só exibição: atual ÷ máximo) ───────────────────────
-  var pvAtual = document.getElementById('pvAtual'), pvMax = document.getElementById('pvMax'), hpFill = document.getElementById('hpFill');
-  function pintaPV() {
-    var a = parseInt(pvAtual.textContent, 10), m = parseInt(pvMax.textContent, 10);
-    var frac = (!isNaN(a) && !isNaN(m) && m > 0) ? Math.max(0, Math.min(a / m, 1)) : 0;
-    hpFill.style.width = (frac * 100) + '%';
-    hpFill.classList.toggle('low', frac > 0 && frac <= 0.3);
-  }
-  pvAtual.addEventListener('input', pintaPV);
-  pvMax.addEventListener('input', pintaPV);
+  // quantidade de linhas pautadas da ficha de papel
+  for (var i = 0; i < 6; i++) tabela.armas.appendChild(novaLinha('armas'));
+  for (var j = 0; j < 30; j++) tabela.magias.appendChild(novaLinha('magias'));   // 30, como no papel
 
   // ── Campos numéricos: Enter não quebra linha ────────────────────────
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('num')) {
-      e.preventDefault(); e.target.blur();
-    }
+    if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('num')) { e.preventDefault(); e.target.blur(); }
   });
 
-  // ── Foto: só pré-visualização local (nada sobe pro bucket na Fase 0) ─
+  // ── Retrato: só pré-visualização local (nada sobe na Fase 0) ────────
   var fileInput = document.getElementById('fileInput');
-  document.getElementById('holoArea').addEventListener('click', function() { fileInput.click(); });
+  document.getElementById('retrato').addEventListener('click', function() { fileInput.click(); });
   fileInput.addEventListener('change', function() {
     var f = fileInput.files && fileInput.files[0];
     if (!f) return;
@@ -837,7 +732,7 @@ body::after {
     r.onload = function() {
       var img = document.getElementById('holoImg');
       img.src = r.result; img.style.display = 'block';
-      document.getElementById('uploadPh').style.display = 'none';
+      document.getElementById('retratoPh').style.display = 'none';
     };
     r.readAsDataURL(f);
   });
