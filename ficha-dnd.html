@@ -90,21 +90,47 @@ body::after {
 /* somente leitura: outra aba já está editando, ou não deu pra carregar com segurança */
 body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: none; }
 
-.wrap { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 3.5rem 1.5rem 4rem; display: flex; flex-direction: column; gap: 2.2rem; }
+/* z-index acima das linhas de varredura: o efeito de tubo fica no chassi
+   escuro em volta, a folha branca fica limpa */
+.wrap { position: relative; z-index: 101; max-width: 960px; margin: 0 auto; padding: 3.5rem 1.5rem 4rem; display: flex; flex-direction: column; gap: 2.2rem; }
 
 /* ───────── campos editáveis ───────── */
 [contenteditable] { outline: none; cursor: text; transition: background 0.15s, box-shadow 0.15s; }
-[contenteditable]:hover { background: rgba(78,211,232,0.05); }
-[contenteditable]:focus { background: rgba(78,211,232,0.09); box-shadow: inset 0 0 0 1px rgba(78,211,232,0.35); }
+[contenteditable]:hover { background: rgba(28,29,33,0.045); }
+[contenteditable]:focus { background: rgba(176,138,46,0.14); box-shadow: inset 0 0 0 1px rgba(176,138,46,0.5); }
 [contenteditable]:empty::before { content: attr(data-placeholder); color: var(--fg-faint); font-style: italic; pointer-events: none; }
 
-/* ───────── a folha ───────── */
+/* ───────── a folha ─────────
+   A folha é BRANCA e o texto é preto ou cinza, como a ficha oficial em papel
+   (e como os quadrantes do D&D Beyond). O chassi escuro da casa continua em
+   volta: fundo, botão de voltar e selo de rascunho. Aqui dentro as variáveis
+   do tema são redefinidas — tudo que é descendente da folha herda o tema
+   claro sem precisar reescrever regra por regra.
+   O dourado deixa de ser cor de texto e vira só ornamento (--gold):
+   moldura dos atributos e marcador de especialista. */
 .pagina {
-  position: relative; padding: 20px;
-  background: linear-gradient(180deg, rgba(11,19,32,0.78), rgba(7,12,22,0.86));
-  border: 1px solid var(--line-strong); border-radius: 16px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 40px 80px -40px rgba(0,0,0,0.85);
+  --fg: #26272b;
+  --fg-dim: #5d626b;
+  --fg-faint: #8f959d;
+  --line: rgba(38,39,43,0.10);
+  --line-strong: rgba(38,39,43,0.26);
+  --dnd: #26272b;
+  --dnd-soft: rgba(38,39,43,0.38);
+  --dnd-line: rgba(38,39,43,0.17);
+  --dnd-faint: rgba(38,39,43,0.035);
+  --gold: #b08a2e;
+  --glow-dnd: none;
+  --ok: #2f7d4f;
+  --danger: #b5372c;
+
+  position: relative; padding: 20px; color: var(--fg);
+  background: linear-gradient(180deg, #f6f6f2, #ecece6);
+  border: 1px solid rgba(0,0,0,0.35); border-radius: 16px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 40px 80px -40px rgba(0,0,0,0.9);
 }
+/* o rodapé fica fora da folha, sobre o chassi escuro — mantém as cores de lá */
+.pagina > .pagina-rodape { color: rgba(207,233,240,0.32); }
+.pagina > .pagina-rodape b { color: #e0b457; }
 /* no computador a folha tem a proporção exata da oficial (612 × 791 pt); se o
    conteúdo pedir mais, ela cresce — nunca corta. As caixas grandes esticam pra
    preencher, como no papel. */
@@ -118,8 +144,13 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
 }
 .pagina-rodape b { color: var(--dnd); font-weight: 500; }
 
-/* caixa padrão da ficha de D&D: borda arredondada + título centralizado em caixa alta */
-.bx { position: relative; border: 1px solid var(--dnd-line); border-radius: 11px; background: rgba(4,7,13,0.45); padding: 9px 11px 11px; min-width: 0; }
+/* caixa padrão da ficha de D&D: borda arredondada + título centralizado em caixa alta.
+   O quadrante é branco sobre o papel levemente creme — é o que dá o degrau
+   de leitura entre "a folha" e "o bloco de informação". */
+.bx {
+  position: relative; border: 1px solid var(--dnd-line); border-radius: 11px; background: #fff;
+  padding: 9px 11px 11px; min-width: 0; box-shadow: 0 1px 2px rgba(38,39,43,0.06);
+}
 .bx-t {
   font-family: var(--font-display); font-weight: 700; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--dnd); text-align: center; line-height: 1.15;
@@ -138,13 +169,14 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
   border: 1px solid var(--fg-faint); border-radius: 50%; transition: all 0.15s;
 }
 .prof:hover { border-color: var(--dnd); }
-.prof[data-estado="p"] { background: var(--dnd); border-color: var(--dnd); box-shadow: var(--glow-dnd); }
-.prof[data-estado="e"] { background: var(--dnd); border-color: var(--dnd); border-radius: 2px; transform: rotate(45deg) scale(0.9); box-shadow: 0 0 12px rgba(224,180,87,0.6); }
+/* proficiente = bolinha preenchida, como na ficha de papel; especialista = losango dourado */
+.prof[data-estado="p"] { background: var(--dnd); border-color: var(--dnd); }
+.prof[data-estado="e"] { background: var(--gold); border-color: var(--gold); border-radius: 2px; transform: rotate(45deg) scale(0.9); }
 .pip {
   width: 14px; height: 14px; flex: 0 0 auto; padding: 0; cursor: pointer; background: transparent;
   border: 1px solid var(--line-strong); border-radius: 50%; transition: all 0.15s;
 }
-.pip:hover { border-color: var(--holo-soft); }
+.pip:hover { border-color: var(--dnd-soft); }
 .pip.on { background: var(--dnd); border-color: var(--dnd); box-shadow: var(--glow-dnd); }
 .pip.ok.on { background: var(--ok); border-color: var(--ok); box-shadow: 0 0 9px rgba(61,220,132,0.5); }
 .pip.bad.on { background: var(--danger); border-color: var(--danger); box-shadow: 0 0 9px rgba(255,85,102,0.5); }
@@ -162,7 +194,7 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
 .nivel { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 5px; padding-top: 2px; }
 .nivel-circ {
   width: 66px; height: 66px; border-radius: 50%; border: 1px solid var(--dnd-soft); background: var(--dnd-faint);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset 0 0 14px rgba(224,180,87,0.10);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset 0 0 14px rgba(38,39,43,0.05);
 }
 .nivel-circ .num { font-size: 26px; color: var(--dnd); line-height: 1; min-width: 34px; }
 .nivel-circ .fl-l { margin: 1px 0 0; padding: 0; }
@@ -208,15 +240,30 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
 .caixinha .num { font-size: 22px; min-height: 30px; min-width: 44px; border: 1px solid var(--line-strong); border-radius: 8px; padding: 1px 8px; display: flex; align-items: center; justify-content: center; }
 .caixinha.dourada .num { color: var(--dnd); border-color: var(--dnd-soft); background: var(--dnd-faint); }
 
-/* atributo: título · [modificador grande | valor] · salvaguarda · perícias */
+/* atributo: placa com moldura · salvaguarda · perícias
+   A moldura é desenhada aqui (traçado nosso, nada importado): placa de cantos
+   chanfrados, fita separando o nome, e uma mordida na borda de baixo onde a
+   moeda do valor puro encaixa. O modificador é o número grande — é ele que se
+   usa a mesa inteira; o valor puro quase não se lê, então vai pequeno. */
 .atr { display: flex; flex-direction: column; gap: 7px; }
-.atr-nums { display: flex; align-items: flex-end; justify-content: center; gap: 12px; }
-.atr-mod, .atr-val { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-.atr-mod .num {
-  width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--dnd-soft); background: var(--dnd-faint);
-  display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--dnd);
+.atr-placa {
+  position: relative; width: 100%; max-width: 132px; margin: 2px auto 18px;
+  padding: 7px 8px 34px; display: flex; flex-direction: column; align-items: center;
 }
-.atr-val .num { width: 38px; height: 26px; border-radius: 13px; border: 1px solid var(--line-strong); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+.mold { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.mold-corpo { fill: #fff; stroke: var(--dnd-soft); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+.mold-fita { fill: none; stroke: var(--gold); stroke-width: 1; vector-effect: non-scaling-stroke; opacity: 0.8; }
+/* conteúdo posicionado: sem isso a placa (que é absoluta) cobriria o texto */
+.atr-placa .bx-t { position: relative; font-size: 9.5px; letter-spacing: 0.1em; }
+.atr-mod { position: relative; font-size: 30px; line-height: 1.05; margin-top: 7px; min-width: 2.4ch; letter-spacing: 0.015em; }
+.atr-placa .fl-l { position: relative; font-size: 8px; letter-spacing: 0.07em; text-transform: uppercase; }
+/* a moeda encaixa na mordida da moldura (y = 92 de 108 do desenho) */
+.atr-val { position: absolute; left: 50%; top: 85.2%; transform: translate(-50%, -50%); }
+.atr-val .num {
+  width: 32px; height: 32px; border-radius: 50%; background: #fff; border: 1px solid var(--dnd-soft);
+  display: flex; align-items: center; justify-content: center; font-size: 13.5px;
+  box-shadow: 0 1px 2px rgba(38,39,43,0.10);
+}
 .atr .fl-l { margin: 0; padding: 0; text-align: center; }
 .pers { display: flex; flex-direction: column; gap: 2px; }
 /* linha de perícia no padrão da ficha: ○ bônus  Nome */
@@ -270,7 +317,7 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
   color: var(--fg-faint); background: transparent; border: 1px solid var(--line-strong); transition: all 0.15s;
 }
 .flag:hover { border-color: var(--dnd-soft); color: var(--fg-dim); }
-.flag.on { color: #1a1206; background: var(--dnd); border-color: var(--dnd); box-shadow: var(--glow-dnd); }
+.flag.on { color: #fff; background: var(--dnd); border-color: var(--dnd); box-shadow: var(--glow-dnd); }
 
 /* características de classe: uma caixa pautada em duas colunas, como no papel */
 .caract { flex: 1; display: flex; flex-direction: column; position: relative; }
@@ -313,10 +360,10 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
 .ap-corpo { display: grid; grid-template-columns: 84px 1fr; gap: 10px; align-items: start; margin-top: 6px; }
 .retrato {
   position: relative; width: 100%; aspect-ratio: 1; border-radius: 9px; overflow: hidden; cursor: pointer;
-  border: 1px solid var(--dnd-line); background: radial-gradient(ellipse at 50% 40%, rgba(224,180,87,0.08), rgba(4,7,13,0.6) 70%);
+  border: 1px solid var(--dnd-line); background: radial-gradient(ellipse at 50% 40%, #fff, #eceae4 75%);
   display: flex; align-items: center; justify-content: center; transition: border-color 0.2s, box-shadow 0.2s;
 }
-.retrato:hover { border-color: var(--dnd-soft); box-shadow: 0 0 16px rgba(224,180,87,0.18); }
+.retrato:hover { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(176,138,46,0.14); }
 .retrato img { width: 100%; height: 100%; object-fit: cover; display: none; }
 .retrato .ph { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-faint); text-align: center; line-height: 1.6; }
 .retrato .ph b { display: block; font-size: 16px; color: var(--dnd); opacity: 0.6; font-weight: 400; margin-bottom: 4px; }
@@ -339,8 +386,8 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
 .moeda { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .moeda .num { width: 100%; font-size: 13px; height: 26px; border: 1px solid var(--line-strong); border-radius: 13px; display: flex; align-items: center; justify-content: center; }
 .moeda span { font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; }
-.moeda.pc span { color: #c98a5a; } .moeda.pp span { color: #b8c4cf; } .moeda.ce span { color: #9fc0b6; }
-.moeda.po span { color: var(--dnd); } .moeda.pl span { color: #e6e9ef; }
+.moeda.pc span { color: #a2652f; } .moeda.pp span { color: #6f7a86; } .moeda.ce span { color: #4f7e6f; }
+.moeda.po span { color: var(--gold); } .moeda.pl span { color: #8a9099; }
 
 /* ───────── responsivo: abaixo disso a folha não cabe mais em proporção ───────── */
 @media (max-width: 980px) {
@@ -412,7 +459,7 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
     <div class="ca">
       <svg viewBox="0 0 92 110" preserveAspectRatio="none" aria-hidden="true">
         <path d="M46 2 C62 9 76 11 89 10 L89 52 C89 78 70 96 46 108 C22 96 3 78 3 52 L3 10 C16 11 30 9 46 2 Z"
-              fill="rgba(224,180,87,0.09)" stroke="rgba(224,180,87,0.55)" stroke-width="1.2" vector-effect="non-scaling-stroke"/>
+              fill="rgba(38,39,43,0.035)" stroke="rgba(38,39,43,0.45)" stroke-width="1.2" vector-effect="non-scaling-stroke"/>
       </svg>
       <div class="rot">classe de<br>armadura</div>
       <div class="num" contenteditable="true" inputmode="numeric" data-field="ca"></div>
@@ -619,15 +666,26 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
       '<div class="num" contenteditable="true" data-field="' + chave + '"></div>' +
       '<span class="nm">' + nome + '</span></div>';
   }
+  // Moldura do atributo — desenho nosso, traçado à mão aqui mesmo.
+  // Placa de cantos chanfrados, fita sob o nome e mordida embaixo pra moeda
+  // do valor puro. O desenho estica junto com a placa (preserveAspectRatio
+  // "none"), e a linha não engrossa (vector-effect).
+  var MOLDURA =
+    '<svg class="mold" viewBox="0 0 88 108" preserveAspectRatio="none" aria-hidden="true" focusable="false">' +
+      '<path class="mold-corpo" d="M10 3 H78 L85 10 V84 Q85 92 77 92 H56 A12 12 0 0 0 32 92 H11 Q3 92 3 84 V10 Z"/>' +
+      '<path class="mold-fita" d="M9 25 H79"/>' +
+    '</svg>';
+
   var colA = document.getElementById('colA'), colB = document.getElementById('colB'), insp = document.getElementById('inspBox');
   ATRIBUTOS.forEach(function(a, i) {
     var el = document.createElement('div');
     // o último de cada coluna estica pra as duas colunas terminarem alinhadas
     el.className = 'bx atr' + (a.id === 'car' ? ' fill' : '');
-    var h = '<div class="bx-t">' + a.nome + '</div>' +
-      '<div class="atr-nums">' +
-        '<div class="atr-mod"><div class="num" contenteditable="true" data-field="' + a.id + '_mod"></div><span class="fl-l">modificador</span></div>' +
-        '<div class="atr-val"><div class="num" contenteditable="true" inputmode="numeric" data-field="' + a.id + '_valor"></div><span class="fl-l">valor</span></div>' +
+    var h = '<div class="atr-placa">' + MOLDURA +
+        '<div class="bx-t">' + a.nome + '</div>' +
+        '<div class="num atr-mod" contenteditable="true" data-field="' + a.id + '_mod"></div>' +
+        '<span class="fl-l">modificador</span>' +
+        '<div class="atr-val"><div class="num" contenteditable="true" inputmode="numeric" title="valor do atributo" aria-label="valor do atributo" data-field="' + a.id + '_valor"></div></div>' +
       '</div><div class="pers">' +
       linha(a.id + '_salv', 'p', 'Salvaguarda', true);   // salvaguarda: só proficiente
     a.pericias.forEach(function(p) { h += linha('per_' + slug(p), 'pe', p, false); });
