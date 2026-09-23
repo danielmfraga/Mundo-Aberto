@@ -141,6 +141,21 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
 .dot:hover { border-color: rgba(180,80,255,0.65); }
 .dot.filled { background: #c264fe; border-color: #c264fe; box-shadow: 0 0 8px rgba(180,80,255,0.7), 0 0 18px rgba(180,80,255,0.25); }
 
+/* ───────── modo "sem papel" ─────────
+   Duas leituras da mesma ficha: com a folha creme por baixo (o padrão, que
+   é a ficha de papel), ou sem ela — aí os quadrantes brancos pousam direto
+   no fundo escolhido. Sem a folha, os blocos que não eram quadrante (nível
+   e classe de armadura) precisam de branco próprio, senão o texto preto
+   deles cai em cima do fundo e some. */
+body.sem-papel .pagina { background: none; border-color: transparent; box-shadow: none; padding: 0; }
+body.sem-papel .bx { box-shadow: 0 12px 30px -14px rgba(0,0,0,0.8); }
+body.sem-papel .nivel {
+  background: #fff; border: 1px solid var(--dnd-line); border-radius: 11px; padding: 9px 6px 10px;
+  box-shadow: 0 12px 30px -14px rgba(0,0,0,0.8);
+}
+body.sem-papel .ca svg path { fill: #fff; }
+body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
+
 /* ───────── plano de fundo trocável ─────────
    Começa onde a folha começa (o cabeçalho fica no chassi da casa) e sangra
    até as bordas da tela. Aceita cor sólida ou imagem; com imagem entra um
@@ -159,7 +174,7 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
   color: var(--fg-faint); background: rgba(11,19,32,0.94); border: 1px solid var(--line-strong); border-radius: 999px;
   padding: 6px 12px; transition: all 0.18s;
 }
-.fundo-bt:hover, .fundo-bt[aria-expanded="true"] { color: var(--dnd); border-color: var(--dnd-soft); }
+.fundo-bt:hover, .fundo-bt[aria-expanded="true"], .fundo-bt[aria-pressed="true"] { color: var(--dnd); border-color: var(--dnd-soft); }
 .fundo-pop {
   width: 208px; padding: 12px; border-radius: 12px; background: rgba(7,12,22,0.97);
   border: 1px solid var(--line-strong); box-shadow: 0 24px 50px -20px rgba(0,0,0,0.9);
@@ -553,6 +568,7 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
 
 <!-- fundo da ficha: cor ou imagem, por personagem -->
 <div class="fundo-ctrl">
+  <button type="button" class="fundo-bt" id="papelBt" aria-pressed="true" title="Com a folha creme por baixo, ou os quadros direto no fundo">Papel</button>
   <button type="button" class="fundo-bt" id="fundoBt" aria-expanded="false" aria-controls="fundoPop">Fundo</button>
   <div class="fundo-pop" id="fundoPop" hidden>
     <div class="fundo-t">Cor</div>
@@ -924,6 +940,16 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
     poeSynesis(ultimoCheio ? i : i + 1);
   });
 
+  // ── Papel: com a folha creme, ou os quadros direto no fundo ─────────
+  var papelBt = document.getElementById('papelBt'), comPapel = true;
+  function poePapel(v, sujar) {
+    comPapel = v !== false;
+    document.body.classList.toggle('sem-papel', !comPapel);
+    papelBt.setAttribute('aria-pressed', comPapel ? 'true' : 'false');
+    if (sujar) marca();
+  }
+  papelBt.addEventListener('click', function() { if (!somenteLeitura) poePapel(!comPapel, true); });
+
   // ── Página 2: começa dobrada ────────────────────────────────────────
   // De propósito não guarda o estado: quase toda sessão vive na página 1,
   // então o normal é abrir fechada e só estender quando precisar consultar.
@@ -1087,6 +1113,7 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
     document.querySelectorAll('.pips[data-grupo]').forEach(function(g) { d.morte[g.dataset.grupo] = g.querySelectorAll('.pip.on').length; });
     d.synesis = synDots.querySelectorAll('.dot.filled').length;
     d.fundo = { cor: fundo.cor, img: fundo.img, zoom: fundo.zoom, x: fundo.x, y: fundo.y };
+    d.papel = comPapel;
     d.armas = linhasDe('armas');
     d.magias = linhasDe('magias');
     return d;
@@ -1118,6 +1145,7 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
     });
     poeSynesis(d.synesis);
     poeFundo(d.fundo);
+    poePapel(d.papel !== false);   // rascunho antigo não tem o campo: entra com papel
     var morte = d.morte || {};
     document.querySelectorAll('.pips[data-grupo]').forEach(function(g) {
       var n = Math.max(0, Math.min(3, +morte[g.dataset.grupo] || 0));
