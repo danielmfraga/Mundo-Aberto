@@ -96,8 +96,15 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
 
 /* ───────── campos editáveis ───────── */
 [contenteditable] { outline: none; cursor: text; transition: background 0.15s, box-shadow 0.15s; }
-[contenteditable]:hover { background: rgba(28,29,33,0.045); }
-[contenteditable]:focus { background: rgba(176,138,46,0.14); box-shadow: inset 0 0 0 1px rgba(176,138,46,0.5); }
+/* passar o mouse já mostra o campo inteiro: a folha é densa e muita coisa é
+   só uma linha pautada — sem o contorno não dá pra saber onde o campo começa
+   e termina antes de clicar. Ao focar, o mesmo desenho fica mais firme. */
+[contenteditable]:hover:not(:focus) { background: rgba(176,138,46,0.13); box-shadow: inset 0 0 0 1px rgba(176,138,46,0.42); }
+[contenteditable]:focus { background: rgba(176,138,46,0.20); box-shadow: inset 0 0 0 1px rgba(176,138,46,0.75); }
+/* nos blocões de texto o contorno já basta: o mesmo tom de fundo numa área
+   grande vira uma mancha */
+.box-text:hover:not(:focus) { background: rgba(176,138,46,0.06); }
+.box-text:focus { background: rgba(176,138,46,0.10); }
 [contenteditable]:empty::before { content: attr(data-placeholder); color: var(--fg-faint); font-style: italic; pointer-events: none; }
 
 /* ───────── a folha ─────────
