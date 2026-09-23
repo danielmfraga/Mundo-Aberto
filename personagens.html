@@ -955,6 +955,8 @@
     .__tp-vampiro:hover { border-color: #c0392b; color: #c0392b; box-shadow: 0 0 20px rgba(192,57,43,0.25); background: rgba(192,57,43,0.06); }
     .__tp-cacador { border: 1px solid rgba(78,211,232,0.4); color: rgba(78,211,232,0.75); }
     .__tp-cacador:hover { border-color: #4ed3e8; color: #4ed3e8; box-shadow: 0 0 20px rgba(78,211,232,0.2); background: rgba(78,211,232,0.05); }
+    .__tp-dnd { border: 1px solid rgba(224,180,87,0.4); color: rgba(224,180,87,0.75); }
+    .__tp-dnd:hover { border-color: #e0b457; color: #e0b457; box-shadow: 0 0 20px rgba(224,180,87,0.22); background: rgba(224,180,87,0.06); }
 
     /* ── Botão Mestre ── */
     .mestre-btn {
@@ -1357,6 +1359,7 @@
       <div class="__tp-btns">
         <button class="__tp-btn __tp-vampiro" data-type="vampiro">⚰ Vampiro<span>A Máscara V5</span></button>
         <button class="__tp-btn __tp-cacador" data-type="cacador">⚔ Caçador<span>Mundo Aberto</span></button>
+        <button class="__tp-btn __tp-dnd" data-type="dnd" title="Em prova: ainda salva como rascunho, não entra na lista">🐉 D&amp;D<span>5.5 · em prova</span></button>
       </div>
       <div class="__sp-btns"><button class="__sp-cx" id="typePickerCancel">Cancelar</button></div>
     </div>
@@ -1430,7 +1433,8 @@
     // ── Holograma reutilizável ──
     function createHoloCard(charId, name, imgSrc, ledLabel, sheetData) {
       const isVampiro = sheetData && (sheetData.sheet_type === 'vampiro' || sheetData.vtmFields);
-      const fichaPage = isVampiro ? 'ficha-vampiro.html' : 'ficha.html';
+      const isDnd = sheetData && sheetData.sheet_type === 'dnd';
+      const fichaPage = isVampiro ? 'ficha-vampiro.html' : (isDnd ? 'ficha-dnd.html' : 'ficha.html');
       const href = fichaPage + '?id=' + charId + (ESP_PARAM ? '&esp=' + encodeURIComponent(ESP_PARAM) : '');
       const group = document.createElement('div');
       group.className = 'char-group';
@@ -1763,7 +1767,7 @@
         typePickerOverlay.classList.remove('open');
         clearSheetLocalStorage();
         const id = 'char_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-        const ficha = btn.dataset.type === 'vampiro' ? 'ficha-vampiro.html' : 'ficha.html';
+        const ficha = { vampiro: 'ficha-vampiro.html', dnd: 'ficha-dnd.html' }[btn.dataset.type] || 'ficha.html';
         window.location.href = ficha + '?id=' + id + (ESP_PARAM ? '&esp=' + encodeURIComponent(ESP_PARAM) : '');
       });
     });

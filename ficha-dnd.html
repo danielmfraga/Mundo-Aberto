@@ -819,9 +819,18 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
 
   // id do rascunho: vem da URL; sem id, retoma o último deste navegador; senão cria um
   var qs = new URLSearchParams(location.search);
+  // Entrando pela lista de personagens, o Voltar tem que devolver pro mesmo
+  // espaço de onde a pessoa veio — senão cai sempre na lista geral.
+  var ESP_PARAM = qs.get('esp');
+  var SUFIXO_ESP = ESP_PARAM ? '&esp=' + encodeURIComponent(ESP_PARAM) : '';
+  if (ESP_PARAM) {
+    var voltar = document.getElementById('backBtn');
+    if (voltar) voltar.href = 'personagens.html?esp=' + encodeURIComponent(ESP_PARAM);
+  }
+
   var RID = (qs.get('id') || ls('dndRascunhoAtual') || ('dnd_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)))
     .replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 60);
-  if (qs.get('id') !== RID) { try { history.replaceState(null, '', location.pathname + '?id=' + RID); } catch (e) {} }
+  if (qs.get('id') !== RID) { try { history.replaceState(null, '', location.pathname + '?id=' + RID + SUFIXO_ESP); } catch (e) {} }
   ls('dndRascunhoAtual', RID);
 
   var cab = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
