@@ -107,6 +107,46 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
 .box-text:focus { background: rgba(176,138,46,0.10); }
 [contenteditable]:empty::before { content: attr(data-placeholder); color: var(--fg-faint); font-style: italic; pointer-events: none; }
 
+/* ───────── cabeçalho: fica FORA da folha, no chassi escuro ─────────
+   Mesma entrada das fichas de Caçador e de Vampiro: nome, codinome, o que é
+   a folha e a trilha de Synesis. Synesis é do MUNDO, não do sistema — por
+   isso aparece em qualquer ficha. Como o nome e o codinome passaram a morar
+   aqui, saíram de dentro da folha. */
+.cab { position: relative; text-align: center; padding-bottom: 1.25rem; border-bottom: 1px solid var(--line-strong); }
+.cab::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 80px; height: 1px; background: var(--dnd); box-shadow: var(--glow-dnd); }
+.cab-nome {
+  font-family: var(--font-display); font-size: 38px; font-weight: 700; letter-spacing: 0.04em;
+  color: var(--fg); text-transform: uppercase; line-height: 1; border-radius: 3px; padding: 2px 6px; margin: -2px -6px;
+}
+.cab-cod { display: flex; align-items: baseline; justify-content: center; gap: 7px; margin-top: 7px; }
+.cab-cod-l { font-family: var(--font-mono); font-size: 9px; color: var(--fg-faint); letter-spacing: 0.18em; text-transform: uppercase; }
+.cab-cod-v { font-size: 15px; font-style: italic; color: var(--fg-dim); min-height: 1.2em; min-width: 4ch; border-radius: 3px; padding: 0 5px; }
+.cab-sub { font-family: var(--font-mono); font-size: 10px; color: var(--fg-faint); letter-spacing: 0.3em; text-transform: uppercase; margin-top: 8px; }
+.syn { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 11px; }
+.syn-t { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(155,80,255,0.75); text-shadow: 0 0 10px rgba(155,80,255,0.4); }
+.syn-d { display: flex; gap: 4px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; transition: all 0.12s; border: 1px solid rgba(140,60,255,0.35); background: rgba(140,60,255,0.05); }
+.dot:hover { border-color: rgba(180,80,255,0.65); }
+.dot.filled { background: #c264fe; border-color: #c264fe; box-shadow: 0 0 8px rgba(180,80,255,0.7), 0 0 18px rgba(180,80,255,0.25); }
+
+/* ───────── página 2 dobrada ─────────
+   Quase toda sessão acontece na página 1; a 2 é consulta (magias, história,
+   equipamento). Começa sempre fechada, de propósito — abrir é um clique. */
+.dobra { display: flex; flex-direction: column; gap: 2.2rem; }
+.dobra-bt {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer;
+  background: rgba(11,19,32,0.5); border: 1px solid var(--line-strong); border-radius: 12px; padding: 13px 16px;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--fg-dim); transition: all 0.18s;
+}
+.dobra-bt:hover { border-color: var(--dnd-soft); color: var(--dnd); background: rgba(224,180,87,0.05); }
+/* inline puro não aceita transform — sem o inline-block a seta não gira */
+.dobra-bt .seta { display: inline-block; font-size: 12px; line-height: 1; transition: transform 0.18s; }
+.dobra-bt[aria-expanded="true"] .seta { transform: rotate(90deg); }
+.dobra-bt .sub { font-size: 8.5px; letter-spacing: 0.12em; text-transform: none; color: var(--fg-faint); }
+/* sem o !important o display:flex do modo folha (>=981px) ignoraria o hidden */
+.pagina[hidden] { display: none !important; }
+
 /* ───────── a folha ─────────
    A folha é BRANCA e o texto é preto ou cinza, como a ficha oficial em papel
    (e como os quadrantes do D&D Beyond). O chassi escuro da casa continua em
@@ -192,7 +232,7 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
 /* ═══════════════════ PÁGINA 1 ═══════════════════ */
 /* faixa superior: nome · nível · CA · PV/dados de vida/morte */
 .topo { display: grid; grid-template-columns: 40% 76px 92px 1fr; gap: 10px; align-items: stretch; margin-bottom: 10px; }
-.nome-box { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 14px; align-content: start; padding: 11px 14px 10px; }
+.nome-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; align-content: center; padding: 11px 14px 10px; }
 .nome-box .fl.full { grid-column: 1 / -1; }
 .nome-box .fl-v.nome { font-size: 22px; font-weight: 700; letter-spacing: 0.02em; }
 .codinome { font-size: 12px; font-style: italic; color: var(--fg-dim); }
@@ -405,6 +445,8 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
 }
 @media (max-width: 640px) {
   .wrap { padding: 3.5rem 0.75rem 4rem; }
+  .cab-nome { font-size: 26px; }
+  .dobra-bt { flex-wrap: wrap; gap: 6px; letter-spacing: 0.16em; }
   .pagina { padding: 12px; }
   .topo { grid-template-columns: 1fr 1fr; }
   .topo .nome-box { grid-column: 1 / -1; }
@@ -437,16 +479,26 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
 
 <div class="wrap">
 
+<!-- ═══════════════════════════ CABEÇALHO ═══════════════════════════ -->
+<header class="cab">
+  <div class="cab-nome" contenteditable="true" spellcheck="false" data-field="name" data-placeholder="Nome do Personagem"></div>
+  <div class="cab-cod">
+    <span class="cab-cod-l">Codinome</span>
+    <div class="cab-cod-v" contenteditable="true" spellcheck="false" data-field="codinome" data-placeholder="—"></div>
+  </div>
+  <div class="cab-sub">Ficha de Personagem</div>
+  <div class="syn">
+    <span class="syn-t">Synesis</span>
+    <div class="syn-d" id="synDots" data-max="10"></div>
+  </div>
+</header>
+
 <!-- ═══════════════════════════ PÁGINA 1 ═══════════════════════════ -->
 <section class="pagina" aria-label="Página 1">
 
   <div class="topo">
     <!-- nome, antecedente, classe, espécie, subclasse -->
     <div class="bx nome-box">
-      <div class="fl full">
-        <div class="fl-v nome" contenteditable="true" spellcheck="false" data-field="name"></div>
-        <div class="fl-l">nome do personagem &nbsp;·&nbsp; <span class="codinome" contenteditable="true" spellcheck="false" data-field="codinome" data-placeholder="codinome"></span></div>
-      </div>
       <div class="fl"><div class="fl-v" contenteditable="true" spellcheck="false" data-field="antecedente"></div><div class="fl-l">antecedente</div></div>
       <div class="fl"><div class="fl-v" contenteditable="true" spellcheck="false" data-field="classe"></div><div class="fl-l">classe</div></div>
       <div class="fl"><div class="fl-v" contenteditable="true" spellcheck="false" data-field="especie"></div><div class="fl-l">espécie</div></div>
@@ -565,8 +617,14 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
   <div class="pagina-rodape"><span>D&amp;D 5.5 · Ficha de Personagem</span><span><b>1</b> / 2</span></div>
 </section>
 
-<!-- ═══════════════════════════ PÁGINA 2 ═══════════════════════════ -->
-<section class="pagina" aria-label="Página 2">
+<!-- ═══════════════════════════ PÁGINA 2 (dobrada) ═══════════════════════════ -->
+<div class="dobra">
+<button type="button" class="dobra-bt" id="dobraPg2" aria-expanded="false" aria-controls="pagina2">
+  <span class="seta">&#9654;</span>
+  <span>Página 2</span>
+  <span class="sub">magias · aparência · história · equipamento</span>
+</button>
+<section class="pagina" id="pagina2" aria-label="Página 2" hidden>
   <div class="corpo2">
 
     <div class="col2-esq">
@@ -644,6 +702,7 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
   </div>
   <div class="pagina-rodape"><span>D&amp;D 5.5 · Ficha de Personagem</span><span><b>2</b> / 2</span></div>
 </section>
+</div>
 
 </div>
 
@@ -745,6 +804,37 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
     h += '</div>';
   }
   slotsEl.innerHTML = h;
+
+  // ── Synesis: a trilha do mundo, igual à do Caçador e à do Vampiro ───
+  // Clicar enche até ali; clicar no último cheio esvazia aquele ponto.
+  var synDots = document.getElementById('synDots');
+  (function montaSynesis() {
+    var max = parseInt(synDots.dataset.max, 10) || 10;
+    for (var i = 0; i < max; i++) synDots.appendChild(document.createElement('div')).className = 'dot';
+  })();
+  function poeSynesis(n) {
+    n = Math.max(0, Math.min(synDots.children.length, +n || 0));
+    synDots.querySelectorAll('.dot').forEach(function(d, i) { d.classList.toggle('filled', i < n); });
+  }
+  synDots.addEventListener('click', function(e) {
+    var d = e.target.closest('.dot');
+    if (!d || somenteLeitura) return;
+    var pontos = Array.prototype.slice.call(synDots.querySelectorAll('.dot'));
+    var i = pontos.indexOf(d);
+    var ultimoCheio = d.classList.contains('filled') && pontos.every(function(p, j) { return j > i || p.classList.contains('filled'); });
+    poeSynesis(ultimoCheio ? i : i + 1);
+  });
+
+  // ── Página 2: começa dobrada ────────────────────────────────────────
+  // De propósito não guarda o estado: quase toda sessão vive na página 1,
+  // então o normal é abrir fechada e só estender quando precisar consultar.
+  var dobraBt = document.getElementById('dobraPg2'), pagina2 = document.getElementById('pagina2');
+  dobraBt.addEventListener('click', function() {
+    var aberta = dobraBt.getAttribute('aria-expanded') === 'true';
+    dobraBt.setAttribute('aria-expanded', aberta ? 'false' : 'true');
+    pagina2.hidden = aberta;
+    if (!aberta) pagina2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 
   // ── Tabelas pautadas (armas, magias) ─────────────────────────────────
   // No papel as linhas já vêm riscadas e vazias; aqui também. Sem exemplo:
@@ -896,6 +986,7 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
     document.querySelectorAll('.prof[data-prof]').forEach(function(b) { if (b.dataset.estado) d.prof[b.dataset.prof] = b.dataset.estado; });
     document.querySelectorAll('[data-tg]').forEach(function(b) { d.toggles[b.dataset.tg] = b.classList.contains('on'); });
     document.querySelectorAll('.pips[data-grupo]').forEach(function(g) { d.morte[g.dataset.grupo] = g.querySelectorAll('.pip.on').length; });
+    d.synesis = synDots.querySelectorAll('.dot.filled').length;
     d.armas = linhasDe('armas');
     d.magias = linhasDe('magias');
     return d;
@@ -925,6 +1016,7 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
     document.querySelectorAll('[data-tg]').forEach(function(b) {
       b.classList.toggle('on', !!tg[b.dataset.tg]); b.setAttribute('aria-pressed', tg[b.dataset.tg] ? 'true' : 'false');
     });
+    poeSynesis(d.synesis);
     var morte = d.morte || {};
     document.querySelectorAll('.pips[data-grupo]').forEach(function(g) {
       var n = Math.max(0, Math.min(3, +morte[g.dataset.grupo] || 0));
@@ -1029,7 +1121,7 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
   // o que altera a ficha: digitação, e cliques nos controles (setTimeout 0: o save vê o DOM já alterado)
   document.addEventListener('input', function(e) { if (e.target.closest && e.target.closest('.wrap')) marca(); });
   document.addEventListener('click', function(e) {
-    if (e.target.closest('.prof, [data-tg], .pips[data-grupo] .pip, .flag, .tbl-del, [data-add]')) setTimeout(marca, 0);
+    if (e.target.closest('.prof, [data-tg], .pips[data-grupo] .pip, .flag, .tbl-del, [data-add], .dot')) setTimeout(marca, 0);
   }, true);
 
   // ── Retrato: sobe pro Storage junto do rascunho ─────────────────────
