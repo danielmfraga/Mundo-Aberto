@@ -54,6 +54,7 @@
 html, body {
   background: var(--bg-0); color: var(--fg); font-family: var(--font-display);
   min-height: 100vh; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  overflow-x: hidden;   /* o fundo sangra com 100vw, que conta a barra de rolagem */
 }
 body {
   background-image:
@@ -128,6 +129,46 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
 .dot { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; transition: all 0.12s; border: 1px solid rgba(140,60,255,0.35); background: rgba(140,60,255,0.05); }
 .dot:hover { border-color: rgba(180,80,255,0.65); }
 .dot.filled { background: #c264fe; border-color: #c264fe; box-shadow: 0 0 8px rgba(180,80,255,0.7), 0 0 18px rgba(180,80,255,0.25); }
+
+/* ───────── plano de fundo trocável ─────────
+   Começa onde a folha começa (o cabeçalho fica no chassi da casa) e sangra
+   até as bordas da tela. Aceita cor sólida ou imagem; com imagem entra um
+   véu escuro por cima, senão a folha branca briga com a arte. */
+.folhas { position: relative; display: flex; flex-direction: column; gap: 2.2rem; }
+.fundo {
+  position: absolute; top: -20px; bottom: -20px; left: calc(50% - 50vw); width: 100vw;
+  pointer-events: none; background-size: cover; background-position: center; background-repeat: no-repeat;
+  transition: background-color 0.25s;
+}
+.fundo.tem-img::after { content: ''; position: absolute; inset: 0; background: rgba(4,7,13,0.42); }
+
+.fundo-ctrl { position: fixed; top: 48px; right: 20px; z-index: 200; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.fundo-bt {
+  cursor: pointer; font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--fg-faint); background: rgba(11,19,32,0.94); border: 1px solid var(--line-strong); border-radius: 999px;
+  padding: 6px 12px; transition: all 0.18s;
+}
+.fundo-bt:hover, .fundo-bt[aria-expanded="true"] { color: var(--dnd); border-color: var(--dnd-soft); }
+.fundo-pop {
+  width: 208px; padding: 12px; border-radius: 12px; background: rgba(7,12,22,0.97);
+  border: 1px solid var(--line-strong); box-shadow: 0 24px 50px -20px rgba(0,0,0,0.9);
+  display: flex; flex-direction: column; gap: 9px;
+}
+.fundo-pop[hidden] { display: none; }
+.fundo-t { font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--fg-faint); }
+.fundo-cores { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.fundo-cor { aspect-ratio: 1; border-radius: 50%; cursor: pointer; border: 1px solid rgba(255,255,255,0.18); padding: 0; transition: transform 0.12s, border-color 0.12s; }
+.fundo-cor:hover { transform: scale(1.14); border-color: var(--dnd); }
+.fundo-cor[aria-pressed="true"] { border-color: var(--dnd); box-shadow: 0 0 0 2px rgba(224,180,87,0.28); }
+.fundo-lin { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-dim); cursor: pointer; }
+.fundo-lin input[type="color"] { width: 34px; height: 22px; padding: 0; border: 1px solid var(--line-strong); border-radius: 5px; background: transparent; cursor: pointer; }
+.fundo-acao {
+  cursor: pointer; font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--fg-dim); background: transparent; border: 1px dashed var(--line-strong); border-radius: 7px; padding: 7px 9px; transition: all 0.15s;
+}
+.fundo-acao:hover { color: var(--dnd); border-color: var(--dnd-soft); border-style: solid; background: rgba(224,180,87,0.05); }
+.fundo-acao.apaga:hover { color: var(--danger); border-color: rgba(255,85,102,0.5); background: rgba(255,85,102,0.06); }
+#fundoFile { display: none; }
 
 /* ───────── página 2 dobrada ─────────
    Quase toda sessão acontece na página 1; a 2 é consulta (magias, história,
@@ -463,6 +504,7 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
   .s-grid { grid-template-columns: 36px 1fr 1fr; }
   .tbl-head { display: none; }
   .preview-flag { top: auto; bottom: 14px; right: 50%; transform: translateX(50%); }
+  .fundo-ctrl { top: 16px; right: 14px; }
 }
 @media (max-width: 440px) {
   .atr-cols { grid-template-columns: 1fr; }
@@ -475,6 +517,20 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
 <!-- status do rascunho: salva sozinho, mas não aparece em nenhum lugar do app -->
 <div class="preview-flag" id="statusFlag" data-estado="carregando" title="Rascunho de teste: salva sozinho, mas não aparece em nenhuma tela do app.">
   <span id="statusTxt">Rascunho · carregando…</span>
+</div>
+
+<!-- fundo da ficha: cor ou imagem, por personagem -->
+<div class="fundo-ctrl">
+  <button type="button" class="fundo-bt" id="fundoBt" aria-expanded="false" aria-controls="fundoPop">Fundo</button>
+  <div class="fundo-pop" id="fundoPop" hidden>
+    <div class="fundo-t">Cor</div>
+    <div class="fundo-cores" id="fundoCores"></div>
+    <label class="fundo-lin">Outra cor<input type="color" id="fundoCor" value="#04070d"></label>
+    <div class="fundo-t">Imagem</div>
+    <button type="button" class="fundo-acao" id="fundoUp">Enviar imagem…</button>
+    <button type="button" class="fundo-acao apaga" id="fundoLimpa">Tirar o fundo</button>
+    <input type="file" id="fundoFile" accept="image/*">
+  </div>
 </div>
 
 <div class="wrap">
@@ -492,6 +548,9 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
     <div class="syn-d" id="synDots" data-max="10"></div>
   </div>
 </header>
+
+<div class="folhas">
+<div class="fundo" id="fundo" aria-hidden="true"></div>
 
 <!-- ═══════════════════════════ PÁGINA 1 ═══════════════════════════ -->
 <section class="pagina" aria-label="Página 1">
@@ -702,6 +761,8 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
   </div>
   <div class="pagina-rodape"><span>D&amp;D 5.5 · Ficha de Personagem</span><span><b>2</b> / 2</span></div>
 </section>
+</div>
+
 </div>
 
 </div>
@@ -987,6 +1048,7 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
     document.querySelectorAll('[data-tg]').forEach(function(b) { d.toggles[b.dataset.tg] = b.classList.contains('on'); });
     document.querySelectorAll('.pips[data-grupo]').forEach(function(g) { d.morte[g.dataset.grupo] = g.querySelectorAll('.pip.on').length; });
     d.synesis = synDots.querySelectorAll('.dot.filled').length;
+    d.fundo = { cor: fundo.cor, img: fundo.img };
     d.armas = linhasDe('armas');
     d.magias = linhasDe('magias');
     return d;
@@ -1017,6 +1079,7 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
       b.classList.toggle('on', !!tg[b.dataset.tg]); b.setAttribute('aria-pressed', tg[b.dataset.tg] ? 'true' : 'false');
     });
     poeSynesis(d.synesis);
+    poeFundo(d.fundo);
     var morte = d.morte || {};
     document.querySelectorAll('.pips[data-grupo]').forEach(function(g) {
       var n = Math.max(0, Math.min(3, +morte[g.dataset.grupo] || 0));
@@ -1143,6 +1206,72 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
         marca();
       })
       .catch(function(e) { status('erro', 'Retrato não subiu'); alert('Não consegui salvar o retrato: ' + e.message); });
+  });
+
+  // ── Fundo da ficha: cor sólida ou imagem, por personagem ────────────
+  // Vai junto no rascunho, como o retrato. A imagem sobe pro mesmo lugar,
+  // com o nome <id>-fundo.<ext>.
+  var CORES = ['#04070d', '#10151f', '#1c1712', '#14201a', '#1e1216', '#2b2b33'];
+  var fundoEl = document.getElementById('fundo');
+  var fundoBt = document.getElementById('fundoBt'), fundoPop = document.getElementById('fundoPop');
+  var fundoCor = document.getElementById('fundoCor'), fundoFile = document.getElementById('fundoFile');
+  var fundo = { cor: '', img: '' };
+
+  (function montaCores() {
+    var caixa = document.getElementById('fundoCores');
+    CORES.forEach(function(c) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'fundo-cor'; b.style.background = c;
+      b.title = c; b.dataset.cor = c; b.setAttribute('aria-pressed', 'false');
+      caixa.appendChild(b);
+    });
+  })();
+
+  function poeFundo(f, sujar) {
+    fundo = { cor: (f && f.cor) || '', img: (f && f.img) || '' };
+    fundoEl.style.backgroundColor = fundo.cor || 'transparent';
+    fundoEl.style.backgroundImage = fundo.img ? 'url("' + fundo.img.replace(/"/g, '%22') + '")' : 'none';
+    fundoEl.classList.toggle('tem-img', !!fundo.img);
+    if (fundo.cor) fundoCor.value = fundo.cor;
+    document.querySelectorAll('.fundo-cor').forEach(function(b) {
+      b.setAttribute('aria-pressed', b.dataset.cor === fundo.cor ? 'true' : 'false');
+    });
+    if (sujar) marca();
+  }
+
+  fundoBt.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var aberto = fundoBt.getAttribute('aria-expanded') === 'true';
+    fundoBt.setAttribute('aria-expanded', aberto ? 'false' : 'true');
+    fundoPop.hidden = aberto;
+  });
+  function fechaFundo() { fundoBt.setAttribute('aria-expanded', 'false'); fundoPop.hidden = true; }
+  document.addEventListener('click', function(e) { if (!e.target.closest('.fundo-ctrl')) fechaFundo(); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') fechaFundo(); });
+
+  fundoPop.addEventListener('click', function(e) {
+    var b = e.target.closest('.fundo-cor');
+    if (b && !somenteLeitura) poeFundo({ cor: b.dataset.cor, img: fundo.img }, true);
+  });
+  fundoCor.addEventListener('input', function() { if (!somenteLeitura) poeFundo({ cor: fundoCor.value, img: fundo.img }, true); });
+  document.getElementById('fundoUp').addEventListener('click', function() { if (!somenteLeitura) fundoFile.click(); });
+  document.getElementById('fundoLimpa').addEventListener('click', function() { if (!somenteLeitura) poeFundo(null, true); });
+
+  fundoFile.addEventListener('change', function() {
+    var f = fundoFile.files && fundoFile.files[0];
+    fundoFile.value = '';
+    if (!f) return;
+    if (f.size > 8 * 1024 * 1024) { alert('Imagem muito grande (máx 8MB).'); return; }
+    var ext = ((f.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg')).replace(/[^a-z0-9]/g, '');
+    var nome = RID + '-fundo.' + ext;
+    status('salvando', 'Rascunho · enviando fundo…');
+    fetch(urlObj(nome), { method: 'POST', headers: Object.assign({ 'Content-Type': f.type, 'x-upsert': 'true' }, cab), body: f })
+      .then(function(r) {
+        if (!r.ok) return r.text().then(function(t) { throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 120)); });
+        // ?v= fura o cache: o arquivo novo tem o mesmo nome do anterior
+        poeFundo({ cor: fundo.cor, img: SB_URL + '/storage/v1/object/public/personagens/' + PASTA + nome + '?v=' + Date.now() }, true);
+      })
+      .catch(function(e) { status('erro', 'Fundo não subiu'); alert('Não consegui salvar o fundo: ' + e.message); });
   });
 
   // ── Carregamento ────────────────────────────────────────────────────
