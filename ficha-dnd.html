@@ -180,6 +180,21 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
 .fundo-acao:hover { color: var(--dnd); border-color: var(--dnd-soft); border-style: solid; background: rgba(224,180,87,0.05); }
 .fundo-acao.apaga:hover { color: var(--danger); border-color: rgba(255,85,102,0.5); background: rgba(255,85,102,0.06); }
 #fundoFile { display: none; }
+.fundo-enq { display: flex; flex-direction: column; gap: 8px; }
+.fundo-enq[hidden] { display: none; }
+/* o quadro mostra a imagem inteira; o alvo é o ponto dela que fica no centro */
+.enq-pad {
+  position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 8px; cursor: grab; touch-action: none;
+  border: 1px solid var(--line-strong); background-color: rgba(4,7,13,0.6);
+  background-size: contain; background-position: center; background-repeat: no-repeat;
+}
+.enq-pad:active { cursor: grabbing; }
+.enq-alvo {
+  position: absolute; width: 13px; height: 13px; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none;
+  border: 2px solid var(--dnd); background: rgba(224,180,87,0.3); box-shadow: 0 0 0 1px rgba(0,0,0,0.65), 0 0 10px rgba(224,180,87,0.5);
+}
+.fundo-lin input[type="range"] { flex: 1; min-width: 0; accent-color: var(--dnd); height: 16px; cursor: pointer; }
+.enq-val { font-family: var(--font-mono); font-size: 9px; color: var(--fg-faint); min-width: 4.5ch; text-align: right; }
 
 /* ───────── página 2 dobrada ─────────
    Quase toda sessão acontece na página 1; a 2 é consulta (magias, história,
@@ -190,7 +205,9 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
 .dobra { position: relative; display: flex; flex-direction: column; gap: 2.2rem; }
 .dobra-bt {
   width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer;
-  background: rgba(7,12,22,0.88); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  /* nada de backdrop-filter aqui: com uma imagem de fundo grande, desfocar o
+     que está atrás a cada quadro trava a aba. Fundo sólido resolve igual. */
+  background: rgba(7,12,22,0.94);
   border: 1px solid var(--line-strong); border-radius: 12px; padding: 13px 16px;
   font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase;
   color: var(--fg-dim); transition: all 0.18s;
@@ -543,6 +560,12 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
     <label class="fundo-lin">Outra cor<input type="color" id="fundoCor" value="#04070d"></label>
     <div class="fundo-t">Imagem</div>
     <button type="button" class="fundo-acao" id="fundoUp">Enviar imagem…</button>
+    <div class="fundo-enq" id="fundoEnq" hidden>
+      <div class="fundo-t">Enquadramento</div>
+      <div class="enq-pad" id="enqPad" title="Arraste pra mover a imagem"><span class="enq-alvo" id="enqAlvo"></span></div>
+      <label class="fundo-lin">Zoom<input type="range" id="enqZoom" min="20" max="400" step="1" value="100"><span class="enq-val" id="enqVal">100%</span></label>
+      <button type="button" class="fundo-acao" id="enqReset">Reenquadrar</button>
+    </div>
     <button type="button" class="fundo-acao apaga" id="fundoLimpa">Tirar o fundo</button>
     <input type="file" id="fundoFile" accept="image/*">
   </div>
@@ -1063,7 +1086,7 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
     document.querySelectorAll('[data-tg]').forEach(function(b) { d.toggles[b.dataset.tg] = b.classList.contains('on'); });
     document.querySelectorAll('.pips[data-grupo]').forEach(function(g) { d.morte[g.dataset.grupo] = g.querySelectorAll('.pip.on').length; });
     d.synesis = synDots.querySelectorAll('.dot.filled').length;
-    d.fundo = { cor: fundo.cor, img: fundo.img };
+    d.fundo = { cor: fundo.cor, img: fundo.img, zoom: fundo.zoom, x: fundo.x, y: fundo.y };
     d.armas = linhasDe('armas');
     d.magias = linhasDe('magias');
     return d;
@@ -1242,17 +1265,86 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
     });
   })();
 
+  // Enquadramento: `zoom` é a largura da imagem em % da largura da tela
+  // (100 = ocupa a tela inteira na horizontal) e `x`/`y` dizem qual ponto da
+  // imagem fica no centro. Medida em % da LARGURA: assim abrir a página 2,
+  // que estica a área pra baixo, não reenquadra a imagem sozinho.
+  var enqBox = document.getElementById('fundoEnq'), enqPad = document.getElementById('enqPad');
+  var enqAlvo = document.getElementById('enqAlvo'), enqZoom = document.getElementById('enqZoom'), enqVal = document.getElementById('enqVal');
+
   function poeFundo(f, sujar) {
-    fundo = { cor: (f && f.cor) || '', img: (f && f.img) || '' };
-    fundoEl.style.backgroundColor = fundo.cor || 'transparent';
-    fundoEl.style.backgroundImage = fundo.img ? 'url("' + fundo.img.replace(/"/g, '%22') + '")' : 'none';
+    f = f || {};
+    fundo = {
+      cor: f.cor || '', img: f.img || '',
+      zoom: +f.zoom > 0 ? +f.zoom : 100,
+      x: f.x == null ? 50 : +f.x,
+      y: f.y == null ? 50 : +f.y
+    };
+    aplicaFundo();
+    if (sujar) marca();
+  }
+  function aplicaFundo() {
+    var e = fundoEl.style;
+    var css = fundo.img ? 'url("' + fundo.img.replace(/"/g, '%22') + '")' : 'none';
+    e.backgroundColor = fundo.cor || 'transparent';
+    e.backgroundImage = css;
+    e.backgroundSize = fundo.img ? fundo.zoom + '% auto' : 'auto';
+    e.backgroundPosition = fundo.x + '% ' + fundo.y + '%';
     fundoEl.classList.toggle('tem-img', !!fundo.img);
     if (fundo.cor) fundoCor.value = fundo.cor;
     document.querySelectorAll('.fundo-cor').forEach(function(b) {
       b.setAttribute('aria-pressed', b.dataset.cor === fundo.cor ? 'true' : 'false');
     });
-    if (sujar) marca();
+    // espelha nos controles
+    enqBox.hidden = !fundo.img;
+    enqPad.style.backgroundImage = css;
+    enqAlvo.style.left = fundo.x + '%';
+    enqAlvo.style.top = fundo.y + '%';
+    enqZoom.value = fundo.zoom;
+    enqVal.textContent = fundo.zoom + '%';
   }
+
+  // Enquadramento inicial: o menor zoom que ainda cobre a área inteira —
+  // é o que a pessoa espera ver ao subir a imagem. Dali ela diminui, aumenta
+  // ou move.
+  function zoomQueCobre(url) {
+    return new Promise(function(ok) {
+      var i = new Image();
+      i.onload = function() {
+        var r = fundoEl.getBoundingClientRect();
+        var z = Math.ceil(100 * (r.height * i.naturalWidth) / (r.width * i.naturalHeight));
+        ok(Math.max(100, Math.min(400, z || 100)));
+      };
+      i.onerror = function() { ok(100); };
+      i.src = url;
+    });
+  }
+
+  // arrastar no quadro = escolher o ponto da imagem que fica no centro
+  function moveAlvo(ev) {
+    var r = enqPad.getBoundingClientRect();
+    fundo.x = Math.round(Math.max(0, Math.min(100, ((ev.clientX - r.left) / r.width) * 100)));
+    fundo.y = Math.round(Math.max(0, Math.min(100, ((ev.clientY - r.top) / r.height) * 100)));
+    aplicaFundo(); marca();
+  }
+  enqPad.addEventListener('pointerdown', function(ev) {
+    if (somenteLeitura || !fundo.img) return;
+    ev.preventDefault();
+    try { enqPad.setPointerCapture(ev.pointerId); } catch (e) {}
+    moveAlvo(ev);
+  });
+  enqPad.addEventListener('pointermove', function(ev) {
+    if (somenteLeitura || !fundo.img || !(ev.buttons & 1)) return;
+    moveAlvo(ev);
+  });
+  enqZoom.addEventListener('input', function() {
+    if (somenteLeitura) return;
+    fundo.zoom = +enqZoom.value; aplicaFundo(); marca();
+  });
+  document.getElementById('enqReset').addEventListener('click', function() {
+    if (somenteLeitura || !fundo.img) return;
+    zoomQueCobre(fundo.img).then(function(z) { poeFundo({ cor: fundo.cor, img: fundo.img, zoom: z, x: 50, y: 50 }, true); });
+  });
 
   fundoBt.addEventListener('click', function(e) {
     e.stopPropagation();
@@ -1284,7 +1376,8 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
       .then(function(r) {
         if (!r.ok) return r.text().then(function(t) { throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 120)); });
         // ?v= fura o cache: o arquivo novo tem o mesmo nome do anterior
-        poeFundo({ cor: fundo.cor, img: SB_URL + '/storage/v1/object/public/personagens/' + PASTA + nome + '?v=' + Date.now() }, true);
+        var url = SB_URL + '/storage/v1/object/public/personagens/' + PASTA + nome + '?v=' + Date.now();
+        return zoomQueCobre(url).then(function(z) { poeFundo({ cor: fundo.cor, img: url, zoom: z, x: 50, y: 50 }, true); });
       })
       .catch(function(e) { status('erro', 'Fundo não subiu'); alert('Não consegui salvar o fundo: ' + e.message); });
   });
