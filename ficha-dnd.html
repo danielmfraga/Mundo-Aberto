@@ -585,6 +585,10 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 }
 .modo-grade .inv-slot:hover { border-color: var(--gold); box-shadow: 0 2px 8px rgba(38,39,43,0.14); transform: translateY(-1px); }
 .modo-grade .inv-slot svg { width: 60%; height: 60%; fill: none; stroke: #45484f; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.modo-grade .inv-slot.mestre::after {
+  content: '\2b25'; position: absolute; top: 2px; right: 3px; font-size: 7px; color: var(--gold);
+}
+.modo-lista .inv-slot.mestre .nome::before { content: '\2b25 '; color: var(--gold); font-size: 9px; }
 .modo-grade .inv-slot.equipado { border-color: var(--gold); background: rgba(176,138,46,0.09); }
 .modo-grade .inv-slot .q {
   position: absolute; right: 2px; bottom: 1px; font-family: var(--font-mono); font-size: 8px; color: var(--fg-dim);
@@ -1373,6 +1377,64 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Uma vez por turno.'] },
     mst_raspar: { t: 'Maestria: Raspar', l: 'Errar deixa de ser errar à toa.', b: [
       'Errou o ataque? O alvo leva dano igual ao modificador do atributo que você usou.'] },
+    // ── o que cada classe entrega no nível 1 ──────────────────────────
+    cls_furia: { t: 'Fúria', l: 'O bárbaro liga o motor: mais dano, menos dano recebido.', b: [
+      'Entra em fúria com uma [[cnc_acao_bonus|ação bônus]] e dura 10 minutos.',
+      'Ganha dano extra no corpo a corpo, resistência a cortante, perfurante e concussão, e vantagem em Força.',
+      'Enquanto está em fúria não dá pra conjurar nem manter concentração.',
+      'Acaba antes se você passar um turno sem atacar, sem forçar salvaguarda e sem levar dano.'] },
+    cls_inspiracao_bardo: { t: 'Inspiração de Bardo', l: 'Um dado que você entrega pra outra pessoa usar.', b: [
+      '[[cnc_acao_bonus|Ação bônus]]: dá um d6 a um aliado que consiga te ouvir.',
+      'Ele soma esse dado num teste, ataque ou salvaguarda depois de rolar.',
+      'Usos iguais ao seu modificador de Carisma, de volta no [[cnc_descanso|descanso longo]].'] },
+    cls_magia_pacto: { t: 'Magia de Pacto', l: 'Poucos espaços, todos no talo — e voltam rápido.', b: [
+      'Todos os seus [[slots|espaços de magia]] são do círculo mais alto que você alcança.',
+      'São bem poucos, mas voltam no [[cnc_descanso|descanso curto]], não no longo.',
+      'Na prática: o bruxo dá dois tiros pesados por briga e recarrega no intervalo.'] },
+    cls_invocacoes: { t: 'Invocações Místicas', l: 'Os poderes fixos que o pacto te deu.', b: [
+      'Você escolhe de uma lista; algumas pedem nível ou um pacto específico.',
+      'Ao subir de nível dá pra trocar uma pela outra.',
+      'É o que mais personaliza um bruxo do outro.'] },
+    cls_ordem_divina: { t: 'Ordem Divina', l: 'O clérigo escolhe entre bater e conjurar.', b: [
+      'Protetor: proficiência com armas marciais e armadura pesada.',
+      'Taumaturgo: um [[cnc_truque|truque]] a mais e Sabedoria somando nos testes de conhecimento sagrado.',
+      'Escolha no nível 1, e não muda depois.'] },
+    cls_druidico: { t: 'Druídico', l: 'A língua secreta dos druidas.', b: [
+      'Só outro druida entende — dá pra deixar recado escondido em pedra, folha ou marca.',
+      'Quem não conhece percebe que há uma mensagem, mas não lê.'] },
+    cls_ordem_primitiva: { t: 'Ordem Primitiva', l: 'O druida escolhe entre magia e mato.', b: [
+      'Mágico: um [[cnc_truque|truque]] a mais e Sabedoria somando em Arcanismo e Natureza.',
+      'Guardião: proficiência com armas marciais e armadura média.'] },
+    cls_feiticaria_inata: { t: 'Feitiçaria Inata', l: 'O feiticeiro abre a torneira por um minuto.', b: [
+      '[[cnc_acao_bonus|Ação bônus]]: por 1 minuto, vantagem nos ataques de magia e +1 na CD das suas magias.',
+      'Bônus de proficiência vezes por [[cnc_descanso|descanso longo]].'] },
+    cls_inimigo_favorito: { t: 'Inimigo Favorito', l: 'Marca do Caçador de graça.', b: [
+      'Você tem Marca do Caçador sempre preparada.',
+      'Conjura sem gastar [[slots|espaço]], bônus de proficiência vezes por [[cnc_descanso|descanso longo]].'] },
+    cls_retomar_folego: { t: 'Retomar o Fôlego', l: 'O guerreiro se cura sozinho, no meio da briga.', b: [
+      '[[cnc_acao_bonus|Ação bônus]]: cura 1d10 + seu nível de guerreiro.',
+      'Começa com dois usos, e eles voltam no [[cnc_descanso|descanso curto]].'] },
+    cls_giria_ladrao: { t: 'Gíria de Ladrão', l: 'O código do submundo: dá pra conversar na frente de todo mundo.', b: [
+      'Mistura de gíria, sinal de mão e símbolo riscado em porta e parede.',
+      'Leva umas quatro vezes mais tempo pra dizer a mesma coisa — serve pra recado, não pra conversa.',
+      'Quem não conhece só ouve papo furado; nem desconfia que teve mensagem.',
+      'O ladino ainda aprende um idioma comum além dessa.'] },
+    cls_adepto_rituais: { t: 'Adepto de Rituais', l: 'Rituais saem de graça, direto do grimório.', b: [
+      'Qualquer magia do livro marcada como ritual, sem gastar [[slots|espaço]].',
+      'Nem precisa estar preparada — basta estar escrita.',
+      'Custa 10 minutos a mais que o normal.'] },
+    cls_recuperacao_arcana: { t: 'Recuperação Arcana', l: 'O mago recarrega no meio do dia.', b: [
+      'Num [[cnc_descanso|descanso curto]], recupera espaços de magia somando metade do seu nível, arredondado pra cima.',
+      'Uma vez por dia. Nenhum espaço pode ser de 6º círculo ou acima.'] },
+    cls_artes_marciais: { t: 'Artes Marciais', l: 'O corpo do monge vira arma de verdade.', b: [
+      'Ataque desarmado passa a causar d6.',
+      'Pode usar Destreza no lugar da Força nos ataques desarmados e com armas de monge.',
+      'Atacou? Ganha um ataque desarmado extra como [[cnc_acao_bonus|ação bônus]].'] },
+    cls_imposicao_maos: { t: 'Imposição das Mãos', l: 'Uma reserva de cura que o paladino carrega no dia.', b: [
+      'A reserva é 5 × seu nível de paladino, gasta do jeito que você quiser.',
+      '[[cnc_acao_bonus|Ação bônus]] e um toque; volta cheia no [[cnc_descanso|descanso longo]].',
+      'Gastando 5 pontos, cura uma doença ou um veneno em vez de PV.'] },
+
     // ── os 10 estilos de luta, cada um com o seu ──────────────────────
     est_arquearia: { t: 'Arquearia', l: '+2 nos ataques com armas à distância.', b: [
       'Soma direto no ataque, não no dano — é o estilo que mais acerta.',
@@ -2103,6 +2165,15 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
         var t = balao.querySelector('.balao-item-t[data-k="' + k + '"]');
         if (t && t.getAttribute('aria-expanded') !== 'true') t.click();
       });
+    }
+
+    if (d.extra) {
+      var txtExtra = d.extra();
+      if (txtExtra) {
+        var liExtra = document.createElement('li');
+        liExtra.appendChild(comTags(txtExtra));
+        balaoB.appendChild(liExtra);
+      }
     }
 
     balaoX.setAttribute('aria-label', pilha.length ? 'Voltar' : 'Fechar');
@@ -2916,12 +2987,30 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     vara:         { n: 'Vara (3 m)', c: 'geral', p: 3.5, d: 'cutucar de longe', o: 'Salva de armadilha', i: 'barra' }
   };
 
-  var inv = { itens: [], bonus: 0, dobra: false, modo: 'grade' };
+  var inv = { itens: [], bonus: 0, dobra: false, modo: 'grade', maestrias: [] };
+  // o verbete de maestria mostra quais armas ESTE personagem marcou
+  AJUDA.mst_maestria.extra = function() {
+    if (!inv.maestrias.length) return 'Neste personagem: nenhuma arma marcada ainda. Marque pelo botão direito no inventário.';
+    return 'Neste personagem: ' + inv.maestrias.map(function(id) {
+      return (ITENS[id] ? ITENS[id].n : id) + (nomeDaMaestria(ITENS[id] || {}) ? ' (' + nomeDaMaestria(ITENS[id]) + ')' : '');
+    }).join(', ') + '.';
+  };
   var invCorpo = document.getElementById('invCorpo'), invVazio = document.getElementById('invVazio');
   var invMenu = document.getElementById('invMenu'), invCargaPop = document.getElementById('invCargaPop');
   var catOv = document.getElementById('catOv'), catLista = document.getElementById('catLista');
   var catBusca = document.getElementById('catBusca'), catFiltro = '';
 
+  // Maestria é do PERSONAGEM com aquele tipo de arma, não da peça que ele
+  // carrega: por isso a lista guarda o id do catálogo, e não o item.
+  function temMaestria(id) { return id && inv.maestrias.indexOf(id) >= 0; }
+  function viraMaestria(id) {
+    var i = inv.maestrias.indexOf(id);
+    if (i >= 0) inv.maestrias.splice(i, 1); else inv.maestrias.push(id);
+  }
+  function nomeDaMaestria(d) {
+    var m = /Maestria:\s*([^·]+)/.exec(d.o || '');
+    return m ? m[1].trim() : null;
+  }
   function svgDe(cat) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + (ICONES[cat] || ICONES.geral) + '</svg>'; }
   function iconeDe(d) { return d.i || d.c; }
   function dadosDe(it) { return it.livre ? { n: it.nome, c: 'geral', p: +it.peso || 0, d: 'item avulso', o: '' } : (ITENS[it.id] || { n: it.id, c: 'geral', p: 0, d: '', o: '' }); }
@@ -2944,7 +3033,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       var d = dadosDe(it);
       var b = document.createElement('button');
       b.type = 'button';
-      b.className = 'inv-slot' + (it.eq ? ' equipado' : '');
+      b.className = 'inv-slot' + (it.eq ? ' equipado' : '') + (temMaestria(it.id) ? ' mestre' : '');
       b.dataset.i = i;
       b.title = d.n + (d.p ? ' · ' + num(d.p) + ' kg' : '');
       b.innerHTML = svgDe(iconeDe(d)) + '<span class="nome">' + d.n + '</span>' +
@@ -2967,7 +3056,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       itens: Array.isArray(d.itens) ? d.itens : [],
       bonus: +d.bonus || 0,
       dobra: !!d.dobra,
-      modo: d.modo === 'lista' ? 'lista' : 'grade'
+      modo: d.modo === 'lista' ? 'lista' : 'grade',
+      maestrias: Array.isArray(d.maestrias) ? d.maestrias : []
     };
     document.getElementById('invBonus').value = inv.bonus;
     document.getElementById('invDobra').checked = inv.dobra;
@@ -2984,6 +3074,10 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (d.d) b.push(d.d);
     if (d.o) b.push(comTermos(d.o));
     b.push('Peso: ' + num(d.p) + ' kg' + ((it.q || 1) > 1 ? '  (×' + it.q + ' = ' + num(d.p * it.q) + ' kg)' : ''));
+    var nm = nomeDaMaestria(d);
+    if (nm) b.push(temMaestria(it.id)
+      ? 'Maestria de ' + nm + ': VALENDO neste personagem.'
+      : 'Maestria de ' + nm + ': não marcada — sem ela o efeito não acontece. Botão direito para marcar.');
     ancora = elo; pilha = [];
     AJUDA.__item = { t: d.n, l: it.eq ? 'Equipado.' : 'No inventário.', b: b };
     abre('__item');
@@ -3035,6 +3129,9 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       invMenu.appendChild(b);
     }
     if (pode) bt(it.eq ? 'Desequipar' : 'Equipar', '', function() { it.eq = !it.eq; });
+    if (d.dd && nomeDaMaestria(d)) {
+      bt(temMaestria(it.id) ? 'Tirar maestria' : 'Marcar maestria (' + nomeDaMaestria(d) + ')', '', function() { viraMaestria(it.id); });
+    }
     bt('Mais um', '', function() { it.q = (it.q || 1) + 1; });
     bt('Menos um', '', function() { it.q = (it.q || 1) - 1; if (it.q <= 0) inv.itens.splice(i, 1); });
     var sep = document.createElement('div'); sep.className = 'sep'; invMenu.appendChild(sep);
@@ -3193,6 +3290,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     });
     return out;
   }
+  function idDoItem(d) {
+    var achado = null;
+    Object.keys(ITENS).forEach(function(id) { if (!achado && ITENS[id] === d) achado = id; });
+    return achado;
+  }
 
   // ── a tabela de armas ganha uma linha por arma equipada ────────────
   function armasAutomaticas(pb, mods) {
@@ -3209,6 +3311,12 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       var atq = m + (pb || 0);
       var dano = d.dd + (m ? sinal(m) : '') + ' ' + d.dt;
       var obs = d.o || '';
+      // maestria só conta pra quem tem: marcada vira visto, não marcada vira aviso
+      var nm = nomeDaMaestria(d);
+      if (nm) {
+        var marcada = inv.maestrias.indexOf(idDoItem(d)) >= 0;
+        obs = obs.replace('Maestria: ' + nm, 'Maestria: ' + nm + (marcada ? ' \u2713' : ' (sem maestria)'));
+      }
       if (d.ver) obs = 'Duas mãos: ' + d.ver + (m ? sinal(m) : '') + (obs ? ' · ' + obs : '');
 
       var row = document.createElement('div');
@@ -3280,6 +3388,21 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   // aqui, uma vez, ao abrir a ficha. Bullet que já tem marcação fica intacto.
   var TERMOS_AUTO = [
     ['Maestria em Armas', 'mst_maestria'],
+    ['Inspiração de Bardo', 'cls_inspiracao_bardo'],
+    ['Invocações Místicas', 'cls_invocacoes'],
+    ['Recuperação Arcana', 'cls_recuperacao_arcana'],
+    ['Imposição das Mãos', 'cls_imposicao_maos'],
+    ['Feitiçaria Inata', 'cls_feiticaria_inata'],
+    ['Inimigo Favorito', 'cls_inimigo_favorito'],
+    ['Adepto de Rituais', 'cls_adepto_rituais'],
+    ['Retomar o Fôlego', 'cls_retomar_folego'],
+    ['Ordem Primitiva', 'cls_ordem_primitiva'],
+    ['Gíria de Ladrão', 'cls_giria_ladrao'],
+    ['Artes Marciais', 'cls_artes_marciais'],
+    ['Magia de Pacto', 'cls_magia_pacto'],
+    ['Ordem Divina', 'cls_ordem_divina'],
+    ['Druídico', 'cls_druidico'],
+    ['Fúria', 'cls_furia'],
     ['Defesa sem Armadura', 'cnc_defesa_sem_armadura'],
     ['Inspiração Heroica', 'inspiracao'],
     ['espaços de magia', 'slots'],
