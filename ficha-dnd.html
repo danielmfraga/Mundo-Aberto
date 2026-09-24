@@ -2139,6 +2139,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       }
     })(el);
     if (!achou) return null;
+    // Só vale pra texto ESCRITO num campo. Em rótulo fixo ("Salvaguarda",
+    // "Arcanismo") o bloco já sabe o que é, e sabe melhor: a linha da
+    // salvaguarda dentro de FORÇA é a de Força, não a genérica.
+    var dono = achou.no.parentElement;
+    if (!dono || !dono.closest('[data-field], .cell')) return null;
 
     var idx = indice(), plano = semAcento(achou.texto), melhor = null;
     // 1) o termo que o cursor está tocando; ganha o mais longo
