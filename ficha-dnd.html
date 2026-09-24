@@ -967,7 +967,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   }
   // linha no padrão do papel: ○ bônus  Nome
   function linha(chave, ciclo, nome, salv) {
-    return '<div class="per' + (salv ? ' salv' : '') + '">' +
+    return '<div class="per' + (salv ? ' salv' : '') + '" data-ajuda="' + chave + '">' +
       '<button class="prof" type="button" data-prof="' + chave + '" data-ciclo="' + ciclo + '" aria-pressed="false" title="Proficiência"></button>' +
       '<div class="num" contenteditable="true" data-field="' + chave + '"></div>' +
       '<span class="nm">' + nome + '</span></div>';
@@ -1084,6 +1084,73 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   //  magia). Essa parte entra depois, com o livro na mão.
   // ══════════════════════════════════════════════════════════════════
   var AJUDA = {
+    for_salv: { t: 'Salvaguarda de Força', l: 'Segurar o próprio corpo no lugar.', b: [
+      'Resistir a ser empurrado, agarrado ou arrastado.',
+      'Portas mágicas, tentáculos, ventos que querem te levar.'] },
+    des_salv: { t: 'Salvaguarda de Destreza', l: 'Sair da frente a tempo.', b: [
+      'Bola de fogo, sopro de dragão, armadilha, desabamento.',
+      'Na maioria delas, passar significa metade do dano em vez de nenhum.'] },
+    con_salv: { t: 'Salvaguarda de Constituição', l: 'Aguentar o que já entrou no corpo.', b: [
+      'Veneno, doença, exaustão, petrificação.',
+      'É ela que mantém a CONCENTRAÇÃO quando você leva dano: CD 10 ou metade do dano, o que for maior.'] },
+    int_salv: { t: 'Salvaguarda de Inteligência', l: 'Defender a própria mente do que tenta reescrevê-la.', b: [
+      'Ilusões, ataques psíquicos, magias que mexem na memória.',
+      'Rara, e quase sempre perigosa quando aparece.'] },
+    sab_salv: { t: 'Salvaguarda de Sabedoria', l: 'Não deixar mexerem na sua vontade.', b: [
+      'Encantamento, medo, dominação, sugestão.',
+      'É a salvaguarda mais pedida do jogo — ser fraco nela dói.'] },
+    car_salv: { t: 'Salvaguarda de Carisma', l: 'Manter-se você mesmo, e onde você está.', b: [
+      'Banimento, possessão, ser arrancado pra outro plano.',
+      'Pouco frequente, mas quando falha costuma tirar o personagem da cena.'] },
+
+    per_atletismo: { t: 'Atletismo', l: 'Força aplicada ao corpo inteiro.', b: [
+      'Escalar, nadar, saltar mais longe que o normal.',
+      'Agarrar e empurrar alguém — e escapar de quem te agarrou.'] },
+    per_acrobacia: { t: 'Acrobacia', l: 'Equilíbrio e controle do corpo.', b: [
+      'Andar em corda bamba, pousar de pé, atravessar chão escorregadio.',
+      'Também serve pra escapar de um agarrão, no lugar do Atletismo.'] },
+    per_furtividade: { t: 'Furtividade', l: 'Não ser visto nem ouvido.', b: [
+      'Na 5.5 se esconder tem número fixo: CD 15, longe de olhos e sem barulho.',
+      'Escondido, você conta como invisível até fazer barulho, atacar ou aparecer.'] },
+    per_prestidigitacao: { t: 'Prestidigitação', l: 'Mão leve, dedo rápido.', b: [
+      'Bater carteira, plantar um objeto em alguém, esconder algo na palma.',
+      'Não confunda com abrir fechadura: aquilo é ferramenta de ladrão.'] },
+    per_arcanismo: { t: 'Arcanismo', l: 'O que você sabe sobre magia.', b: [
+      'Reconhecer uma magia sendo conjurada, identificar item mágico, entender planos e portais.'] },
+    per_historia: { t: 'História', l: 'O que já aconteceu no mundo.', b: [
+      'Reinos, guerras, linhagens, ruínas — quem construiu e por quê.'] },
+    per_investigacao: { t: 'Investigação', l: 'Deduzir a partir do que está ali.', b: [
+      'Vasculhar um cômodo, achar o mecanismo da armadilha, ligar as pistas.',
+      'Percepção é o sentido que NOTA; Investigação é o raciocínio que CONCLUI.'] },
+    per_natureza: { t: 'Natureza', l: 'Como o mundo vivo funciona.', b: [
+      'Terreno, plantas, bichos comuns, clima, ciclos.'] },
+    per_religiao: { t: 'Religião', l: 'Deuses, cultos e o que vem deles.', b: [
+      'Ritos, símbolos, hierarquias, e o que se sabe sobre mortos-vivos e celestiais.'] },
+    per_intuicao: { t: 'Intuição', l: 'Ler a pessoa, não a palavra.', b: [
+      'Perceber mentira, medo, intenção escondida.',
+      'É o contrário direto da Enganação de quem está na sua frente.'] },
+    per_lidar_com_animais: { t: 'Lidar com Animais', l: 'Entender e conduzir bichos.', b: [
+      'Acalmar um animal assustado, controlar montaria em situação difícil, adivinhar a intenção dele.'] },
+    per_medicina: { t: 'Medicina', l: 'Cuidar de corpo ferido ou doente.', b: [
+      'Estabilizar quem está em zero PV sem gastar magia.',
+      'Diagnosticar doença e descobrir a causa de uma morte.'] },
+    per_percepcao: { t: 'Percepção', l: 'Notar o que está lá, com os sentidos.', b: [
+      'Ouvir passos atrás da porta, ver o vulto, sentir o cheiro de fumaça.',
+      'É a perícia mais usada do jogo, e é ela que forma a Percepção Passiva.'] },
+    per_sobrevivencia: { t: 'Sobrevivência', l: 'Se virar longe da cidade.', b: [
+      'Rastrear, achar caminho, caçar, prever o tempo, evitar areia movediça.'] },
+    per_atuacao: { t: 'Atuação', l: 'Entreter quem está olhando.', b: [
+      'Música, dança, teatro, discurso — prender a plateia.',
+      'Não serve pra mentir: isso é Enganação.'] },
+    per_enganacao: { t: 'Enganação', l: 'Fazer acreditarem no que não é.', b: [
+      'Mentir com cara limpa, disfarçar intenção, blefar.',
+      'Na 5.5 entra na ação Influenciar, quando a sua abordagem é a lábia.'] },
+    per_intimidacao: { t: 'Intimidação', l: 'Conseguir pelo medo.', b: [
+      'Ameaça, presença, violência insinuada.',
+      'Funciona rápido e cobra depois: quem cede por medo raramente vira aliado.'] },
+    per_persuasao: { t: 'Persuasão', l: 'Conseguir pelo acordo.', b: [
+      'Convencer de boa-fé, negociar, acalmar os ânimos.',
+      'Na 5.5 é a abordagem que deixa o alvo mais bem disposto depois — ao contrário da Intimidação.'] },
     antecedente: { t: 'Antecedente', l: 'De onde você veio antes de virar aventureiro. Na 5.5 ele pesa muito mais do que pesava antes.', b: [
       'Distribui +2 e +1 (ou +1/+1/+1) entre três atributos — na 5.5 o aumento vem daqui, não da espécie.',
       'Dá duas perícias, uma ferramenta e um talento de origem, já no nível 1.',
