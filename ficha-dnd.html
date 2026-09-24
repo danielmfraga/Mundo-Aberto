@@ -544,6 +544,13 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 .volta-local button:hover { background: rgba(224,180,87,0.1); }
 .volta-local button#voltaLocalNao { color: var(--fg-faint); border-color: var(--line-strong); }
 
+/* campo que a ficha calcula sozinha: não se digita nele */
+.calc { cursor: default; }
+.calc:hover, .calc:focus { background: none !important; box-shadow: none !important; }
+.tbl-row.auto .cell { border-bottom-color: var(--dnd-line); background: rgba(176,138,46,0.05); }
+.tbl-row.auto .cell.c { color: var(--fg); }
+.tbl-row.auto .trava { position: absolute; right: 2px; bottom: 6px; font-size: 9px; color: var(--gold); opacity: 0.75; }
+
 /* ───────── inventário ─────────
    Quadros com ícone, como inventário de jogo, e um botão que vira lista pra
    quem prefere ler. O peso é a primeira conta da ficha: capacidade é
@@ -721,6 +728,18 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   border-bottom: 1px dotted rgba(224,180,87,0.6);
 }
 .tag:hover { color: #fff; border-bottom-color: #fff; }
+/* ficha do item do inventário: editar direto pelo balão, sem precisar do botão direito */
+.balao-acoes { margin-top: 11px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.balao-acoes button {
+  cursor: pointer; padding: 6px 10px; border-radius: 7px; background: transparent; border: 1px dashed rgba(224,180,87,0.35);
+  font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #e0b457;
+}
+.balao-acoes button:hover { background: rgba(224,180,87,0.08); border-style: solid; }
+.balao-acoes button.some { border-color: rgba(255,85,102,0.35); color: #ff8b96; }
+.balao-acoes button.some:hover { background: rgba(255,85,102,0.12); }
+.balao-acoes .qtd { display: flex; align-items: center; gap: 7px; }
+.balao-acoes .qtd button { padding: 4px 10px; font-size: 11px; }
+.balao-acoes .qtd span { min-width: 14px; text-align: center; font-family: var(--font-mono); font-size: 11.5px; color: rgba(207,233,240,0.85); }
 
 /* ───────── impressão / PDF ─────────
    A folha é desenhada pra 960px de largura. Deixar o papel (≈730px) refazer
@@ -1535,7 +1554,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     ca: { t: 'Classe de Armadura', l: 'O quanto é difícil te acertar: o ataque precisa igualar ou passar esse número.', b: [
       'Sem armadura: 10 + modificador de Destreza.',
       'Com armadura: a conta vem da armadura (a pesada ignora a Destreza).',
-      'Escudo soma +2 — é a bolinha do lado.'] },
+      'Escudo soma +2 — é a bolinha do lado.',
+      'Com armadura ou escudo equipado no inventário, a ficha calcula a CA sozinha.'] },
     pv: { t: 'Pontos de Vida', l: 'Quanto castigo você aguenta antes de cair.', b: [
       'No nível 1: o máximo do dado de vida + modificador de Constituição.',
       'PV temporários não somam com outros: fica sempre o maior dos dois.',
@@ -1551,7 +1571,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     proficiencia: { t: 'Bônus de Proficiência', l: 'O número que mostra o quanto você treinou. Um só, para tudo.', b: [
       '+2 do nível 1 ao 4, e sobe de um em um a cada quatro níveis, até +6 no nível 17.',
       'Soma em ataques, perícias, salvaguardas e CDs em que você é proficiente.',
-      'Nunca soma duas vezes — só dobra quando você é especialista.'] },
+      'Nunca soma duas vezes — só dobra quando você é especialista.',
+      'Aqui a ficha preenche sozinha, a partir do nível.'] },
     inspiracao: { t: 'Inspiração Heroica', l: 'Uma segunda chance guardada no bolso.', b: [
       'Gaste para rolar de novo qualquer d20 — e fique com o resultado novo, mesmo se for pior.',
       'Só dá para ter uma de cada vez.',
@@ -1559,7 +1580,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     modificador: { t: 'Modificador e valor', l: 'O número grande é o que entra em todas as contas; o pequeno é o atributo puro.', b: [
       'Modificador = (valor − 10) ÷ 2, arredondando para baixo.',
       '8 = −1  ·  10 ou 11 = +0  ·  14 = +2  ·  18 = +4.',
-      'O valor puro quase nunca é usado direto.'] },
+      'O valor puro quase nunca é usado direto.',
+      'Você escreve o valor; o modificador a ficha calcula.'] },
     atr_for: { t: 'Força', l: 'Músculo: empurrar, carregar, brigar de perto.', b: [
       'Ataque e dano das armas corpo a corpo comuns.',
       'Atletismo, agarrar e empurrar.',
@@ -1948,7 +1970,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
 
   // ── Captura: a ficha inteira vira um objeto ─────────────────────────
   function linhasDe(tipo) {
-    var rows = tabela[tipo].querySelectorAll('.tbl-row:not(.tbl-head)'), out = [];
+    var rows = tabela[tipo].querySelectorAll('.tbl-row:not(.tbl-head):not(.auto)'), out = [];
     rows.forEach(function(r) {
       var o = {};
       r.querySelectorAll('.cell').forEach(function(c) { o[c.dataset.col] = lerTexto(c); });
@@ -2011,7 +2033,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     });
     ['armas', 'magias'].forEach(function(tipo) {
       var dados = Array.isArray(d[tipo]) ? d[tipo] : [];
-      tabela[tipo].querySelectorAll('.tbl-row:not(.tbl-head)').forEach(function(r) { r.remove(); });
+      tabela[tipo].querySelectorAll('.tbl-row:not(.tbl-head)').forEach(function(r) { r.remove(); });   // as automáticas voltam no calcula()
       var total = Math.max(LINHAS_PADRAO[tipo], dados.length);
       for (var i = 0; i < total; i++) {
         var row = novaLinha(tipo), o = dados[i] || {};
@@ -2331,58 +2353,58 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   // n=nome · c=categoria · p=peso em kg · d=o número que importa · o=observações · e=dá pra equipar
   var ITENS = {
     // ── armas simples, corpo a corpo ──
-    adaga:        { n: 'Adaga', c: 'arma', p: 0.5, d: '1d4 perfurante', o: 'Acuidade, Leve, Arremesso 6/18 · Maestria: Nick', e: 1 },
-    bordao:       { n: 'Bordão', c: 'arma', p: 2, d: '1d6 concussão', o: 'Versátil (1d8) · Maestria: Derrubar', e: 1 },
-    clava:        { n: 'Clava', c: 'arma', p: 1, d: '1d4 concussão', o: 'Leve · Maestria: Lentidão', e: 1 },
-    clava_grande: { n: 'Clava Grande', c: 'arma', p: 5, d: '1d8 concussão', o: 'Duas mãos · Maestria: Empurrar', e: 1 },
-    foice_curta:  { n: 'Foice Curta', c: 'arma', p: 1, d: '1d4 cortante', o: 'Leve · Maestria: Nick', e: 1 },
-    lanca:        { n: 'Lança', c: 'arma', p: 1.5, d: '1d6 perfurante', o: 'Arremesso 6/18, Versátil (1d8) · Maestria: Debilitar', e: 1 },
-    machadinha:   { n: 'Machadinha', c: 'arma', p: 1, d: '1d6 cortante', o: 'Leve, Arremesso 6/18 · Maestria: Atormentar', e: 1 },
-    maca:         { n: 'Maça', c: 'arma', p: 2, d: '1d6 concussão', o: 'Maestria: Debilitar', e: 1 },
-    martelo_leve: { n: 'Martelo Leve', c: 'arma', p: 1, d: '1d4 concussão', o: 'Leve, Arremesso 6/18 · Maestria: Nick', e: 1 },
-    azagaia:      { n: 'Azagaia', c: 'arma', p: 1, d: '1d6 perfurante', o: 'Arremesso 9/36 · Maestria: Lentidão', e: 1 },
+    adaga:        { n: 'Adaga', c: 'arma', p: 0.5, d: '1d4 perfurante', o: 'Acuidade, Leve, Arremesso 6/18 · Maestria: Nick', e: 1, dd: '1d4', dt: 'perfurante', fin: 1 },
+    bordao:       { n: 'Bordão', c: 'arma', p: 2, d: '1d6 concussão', o: 'Versátil (1d8) · Maestria: Derrubar', e: 1, dd: '1d6', dt: 'concussão', ver: '1d8' },
+    clava:        { n: 'Clava', c: 'arma', p: 1, d: '1d4 concussão', o: 'Leve · Maestria: Lentidão', e: 1, dd: '1d4', dt: 'concussão' },
+    clava_grande: { n: 'Clava Grande', c: 'arma', p: 5, d: '1d8 concussão', o: 'Duas mãos · Maestria: Empurrar', e: 1, dd: '1d8', dt: 'concussão' },
+    foice_curta:  { n: 'Foice Curta', c: 'arma', p: 1, d: '1d4 cortante', o: 'Leve · Maestria: Nick', e: 1, dd: '1d4', dt: 'cortante' },
+    lanca:        { n: 'Lança', c: 'arma', p: 1.5, d: '1d6 perfurante', o: 'Arremesso 6/18, Versátil (1d8) · Maestria: Debilitar', e: 1, dd: '1d6', dt: 'perfurante', ver: '1d8' },
+    machadinha:   { n: 'Machadinha', c: 'arma', p: 1, d: '1d6 cortante', o: 'Leve, Arremesso 6/18 · Maestria: Atormentar', e: 1, dd: '1d6', dt: 'cortante' },
+    maca:         { n: 'Maça', c: 'arma', p: 2, d: '1d6 concussão', o: 'Maestria: Debilitar', e: 1, dd: '1d6', dt: 'concussão' },
+    martelo_leve: { n: 'Martelo Leve', c: 'arma', p: 1, d: '1d4 concussão', o: 'Leve, Arremesso 6/18 · Maestria: Nick', e: 1, dd: '1d4', dt: 'concussão' },
+    azagaia:      { n: 'Azagaia', c: 'arma', p: 1, d: '1d6 perfurante', o: 'Arremesso 9/36 · Maestria: Lentidão', e: 1, dd: '1d6', dt: 'perfurante' },
     // ── armas simples, à distância ──
-    arco_curto:   { n: 'Arco Curto', c: 'dist', p: 1, d: '1d6 perfurante', o: 'Munição 24/96, Duas mãos · Maestria: Atormentar', e: 1 },
-    besta_leve:   { n: 'Besta Leve', c: 'dist', p: 2.5, d: '1d8 perfurante', o: 'Munição 24/96, Recarga, Duas mãos · Maestria: Lentidão', e: 1 },
-    dardo:        { n: 'Dardo', c: 'dist', p: 0.15, d: '1d4 perfurante', o: 'Acuidade, Arremesso 6/18 · Maestria: Atormentar', e: 1 },
-    funda:        { n: 'Funda', c: 'dist', p: 0, d: '1d4 concussão', o: 'Munição 9/36 · Maestria: Lentidão', e: 1 },
+    arco_curto:   { n: 'Arco Curto', c: 'dist', p: 1, d: '1d6 perfurante', o: 'Munição 24/96, Duas mãos · Maestria: Atormentar', e: 1, dd: '1d6', dt: 'perfurante', rng: 1 },
+    besta_leve:   { n: 'Besta Leve', c: 'dist', p: 2.5, d: '1d8 perfurante', o: 'Munição 24/96, Recarga, Duas mãos · Maestria: Lentidão', e: 1, dd: '1d8', dt: 'perfurante', rng: 1 },
+    dardo:        { n: 'Dardo', c: 'dist', p: 0.15, d: '1d4 perfurante', o: 'Acuidade, Arremesso 6/18 · Maestria: Atormentar', e: 1, dd: '1d4', dt: 'perfurante', fin: 1 },
+    funda:        { n: 'Funda', c: 'dist', p: 0, d: '1d4 concussão', o: 'Munição 9/36 · Maestria: Lentidão', e: 1, dd: '1d4', dt: 'concussão', rng: 1 },
     // ── armas marciais, corpo a corpo ──
-    espada_longa: { n: 'Espada Longa', c: 'arma', p: 1.5, d: '1d8 cortante', o: 'Versátil (1d10) · Maestria: Debilitar', e: 1 },
-    espada_curta: { n: 'Espada Curta', c: 'arma', p: 1, d: '1d6 perfurante', o: 'Acuidade, Leve · Maestria: Atormentar', e: 1 },
-    espada_grande:{ n: 'Espada Grande', c: 'arma', p: 3, d: '2d6 cortante', o: 'Pesada, Duas mãos · Maestria: Raspar', e: 1 },
-    florete:      { n: 'Florete', c: 'arma', p: 1, d: '1d8 perfurante', o: 'Acuidade · Maestria: Atormentar', e: 1 },
-    cimitarra:    { n: 'Cimitarra', c: 'arma', p: 1.5, d: '1d6 cortante', o: 'Acuidade, Leve · Maestria: Nick', e: 1 },
-    machado_bat:  { n: 'Machado de Batalha', c: 'arma', p: 2, d: '1d8 cortante', o: 'Versátil (1d10) · Maestria: Derrubar', e: 1 },
-    machado_gr:   { n: 'Machado Grande', c: 'arma', p: 3.5, d: '1d12 cortante', o: 'Pesada, Duas mãos · Maestria: Fender', e: 1 },
-    martelo_guerra:{ n: 'Martelo de Guerra', c: 'arma', p: 2, d: '1d8 concussão', o: 'Versátil (1d10) · Maestria: Empurrar', e: 1 },
-    maca_estrela: { n: 'Maça Estrela', c: 'arma', p: 2, d: '1d8 perfurante', o: 'Maestria: Debilitar', e: 1 },
-    malho:        { n: 'Malho', c: 'arma', p: 5, d: '2d6 concussão', o: 'Pesada, Duas mãos · Maestria: Derrubar', e: 1 },
-    alabarda:     { n: 'Alabarda', c: 'arma', p: 3, d: '1d10 cortante', o: 'Pesada, Alcance, Duas mãos · Maestria: Fender', e: 1 },
-    glaive:       { n: 'Glaive', c: 'arma', p: 3, d: '1d10 cortante', o: 'Pesada, Alcance, Duas mãos · Maestria: Raspar', e: 1 },
-    pique:        { n: 'Pique', c: 'arma', p: 9, d: '1d10 perfurante', o: 'Pesada, Alcance, Duas mãos · Maestria: Empurrar', e: 1 },
-    tridente:     { n: 'Tridente', c: 'arma', p: 2, d: '1d8 perfurante', o: 'Arremesso 6/18, Versátil (1d10) · Maestria: Derrubar', e: 1 },
-    chicote:      { n: 'Chicote', c: 'arma', p: 1.5, d: '1d4 cortante', o: 'Acuidade, Alcance · Maestria: Lentidão', e: 1 },
-    lanca_montada:{ n: 'Lança Montada', c: 'arma', p: 3, d: '1d10 perfurante', o: 'Alcance, Duas mãos se não estiver montado · Maestria: Derrubar', e: 1 },
+    espada_longa: { n: 'Espada Longa', c: 'arma', p: 1.5, d: '1d8 cortante', o: 'Versátil (1d10) · Maestria: Debilitar', e: 1, dd: '1d8', dt: 'cortante', ver: '1d10' },
+    espada_curta: { n: 'Espada Curta', c: 'arma', p: 1, d: '1d6 perfurante', o: 'Acuidade, Leve · Maestria: Atormentar', e: 1, dd: '1d6', dt: 'perfurante', fin: 1 },
+    espada_grande:{ n: 'Espada Grande', c: 'arma', p: 3, d: '2d6 cortante', o: 'Pesada, Duas mãos · Maestria: Raspar', e: 1, dd: '2d6', dt: 'cortante' },
+    florete:      { n: 'Florete', c: 'arma', p: 1, d: '1d8 perfurante', o: 'Acuidade · Maestria: Atormentar', e: 1, dd: '1d8', dt: 'perfurante', fin: 1 },
+    cimitarra:    { n: 'Cimitarra', c: 'arma', p: 1.5, d: '1d6 cortante', o: 'Acuidade, Leve · Maestria: Nick', e: 1, dd: '1d6', dt: 'cortante', fin: 1 },
+    machado_bat:  { n: 'Machado de Batalha', c: 'arma', p: 2, d: '1d8 cortante', o: 'Versátil (1d10) · Maestria: Derrubar', e: 1, dd: '1d8', dt: 'cortante', ver: '1d10' },
+    machado_gr:   { n: 'Machado Grande', c: 'arma', p: 3.5, d: '1d12 cortante', o: 'Pesada, Duas mãos · Maestria: Fender', e: 1, dd: '1d12', dt: 'cortante' },
+    martelo_guerra:{ n: 'Martelo de Guerra', c: 'arma', p: 2, d: '1d8 concussão', o: 'Versátil (1d10) · Maestria: Empurrar', e: 1, dd: '1d8', dt: 'concussão', ver: '1d10' },
+    maca_estrela: { n: 'Maça Estrela', c: 'arma', p: 2, d: '1d8 perfurante', o: 'Maestria: Debilitar', e: 1, dd: '1d8', dt: 'perfurante' },
+    malho:        { n: 'Malho', c: 'arma', p: 5, d: '2d6 concussão', o: 'Pesada, Duas mãos · Maestria: Derrubar', e: 1, dd: '2d6', dt: 'concussão' },
+    alabarda:     { n: 'Alabarda', c: 'arma', p: 3, d: '1d10 cortante', o: 'Pesada, Alcance, Duas mãos · Maestria: Fender', e: 1, dd: '1d10', dt: 'cortante' },
+    glaive:       { n: 'Glaive', c: 'arma', p: 3, d: '1d10 cortante', o: 'Pesada, Alcance, Duas mãos · Maestria: Raspar', e: 1, dd: '1d10', dt: 'cortante' },
+    pique:        { n: 'Pique', c: 'arma', p: 9, d: '1d10 perfurante', o: 'Pesada, Alcance, Duas mãos · Maestria: Empurrar', e: 1, dd: '1d10', dt: 'perfurante' },
+    tridente:     { n: 'Tridente', c: 'arma', p: 2, d: '1d8 perfurante', o: 'Arremesso 6/18, Versátil (1d10) · Maestria: Derrubar', e: 1, dd: '1d8', dt: 'perfurante', ver: '1d10' },
+    chicote:      { n: 'Chicote', c: 'arma', p: 1.5, d: '1d4 cortante', o: 'Acuidade, Alcance · Maestria: Lentidão', e: 1, dd: '1d4', dt: 'cortante', fin: 1 },
+    lanca_montada:{ n: 'Lança Montada', c: 'arma', p: 3, d: '1d10 perfurante', o: 'Alcance, Duas mãos se não estiver montado · Maestria: Derrubar', e: 1, dd: '1d10', dt: 'perfurante' },
     // ── armas marciais, à distância ──
-    arco_longo:   { n: 'Arco Longo', c: 'dist', p: 1, d: '1d8 perfurante', o: 'Munição 45/180, Pesada, Duas mãos · Maestria: Lentidão', e: 1 },
-    besta_mao:    { n: 'Besta de Mão', c: 'dist', p: 1.5, d: '1d6 perfurante', o: 'Munição 9/36, Leve, Recarga · Maestria: Atormentar', e: 1 },
-    besta_pesada: { n: 'Besta Pesada', c: 'dist', p: 9, d: '1d10 perfurante', o: 'Munição 30/120, Pesada, Recarga, Duas mãos · Maestria: Empurrar', e: 1 },
+    arco_longo:   { n: 'Arco Longo', c: 'dist', p: 1, d: '1d8 perfurante', o: 'Munição 45/180, Pesada, Duas mãos · Maestria: Lentidão', e: 1, dd: '1d8', dt: 'perfurante', rng: 1 },
+    besta_mao:    { n: 'Besta de Mão', c: 'dist', p: 1.5, d: '1d6 perfurante', o: 'Munição 9/36, Leve, Recarga · Maestria: Atormentar', e: 1, dd: '1d6', dt: 'perfurante', rng: 1 },
+    besta_pesada: { n: 'Besta Pesada', c: 'dist', p: 9, d: '1d10 perfurante', o: 'Munição 30/120, Pesada, Recarga, Duas mãos · Maestria: Empurrar', e: 1, dd: '1d10', dt: 'perfurante', rng: 1 },
     flechas:      { n: 'Flechas (20)', c: 'dist', p: 0.5, d: 'munição', o: 'Para arcos', i: 'flecha' },
     virotes:      { n: 'Virotes (20)', c: 'dist', p: 0.75, d: 'munição', o: 'Para bestas', i: 'flecha' },
     // ── armaduras ──
-    acolchoada:   { n: 'Armadura Acolchoada', c: 'armadura', p: 4, d: 'CA 11 + DES', o: 'Leve · desvantagem em Furtividade', e: 1 },
-    couro:        { n: 'Armadura de Couro', c: 'armadura', p: 5, d: 'CA 11 + DES', o: 'Leve', e: 1 },
-    couro_batido: { n: 'Couro Batido', c: 'armadura', p: 6.5, d: 'CA 12 + DES', o: 'Leve', e: 1 },
-    peles:        { n: 'Armadura de Peles', c: 'armadura', p: 6, d: 'CA 12 + DES (máx 2)', o: 'Média', e: 1 },
-    camisao_malha:{ n: 'Camisão de Malha', c: 'armadura', p: 10, d: 'CA 13 + DES (máx 2)', o: 'Média', e: 1 },
-    brunea:       { n: 'Brunea', c: 'armadura', p: 22.5, d: 'CA 14 + DES (máx 2)', o: 'Média · desvantagem em Furtividade', e: 1 },
-    peitoral:     { n: 'Peitoral', c: 'armadura', p: 10, d: 'CA 14 + DES (máx 2)', o: 'Média', e: 1 },
-    meia_armadura:{ n: 'Meia-Armadura', c: 'armadura', p: 20, d: 'CA 15 + DES (máx 2)', o: 'Média · desvantagem em Furtividade', e: 1 },
-    cota_aneis:   { n: 'Cota de Anéis', c: 'armadura', p: 20, d: 'CA 14', o: 'Pesada · desvantagem em Furtividade', e: 1 },
-    cota_malha:   { n: 'Cota de Malha', c: 'armadura', p: 27.5, d: 'CA 16', o: 'Pesada · exige Força 13 · desvantagem em Furtividade', e: 1 },
-    talas:        { n: 'Armadura de Talas', c: 'armadura', p: 30, d: 'CA 17', o: 'Pesada · exige Força 15 · desvantagem em Furtividade', e: 1 },
-    placas:       { n: 'Armadura de Placas', c: 'armadura', p: 32.5, d: 'CA 18', o: 'Pesada · exige Força 15 · desvantagem em Furtividade', e: 1 },
-    escudo:       { n: 'Escudo', c: 'escudo', p: 3, d: '+2 na CA', o: 'Ocupa uma mão', e: 1 },
+    acolchoada:   { n: 'Armadura Acolchoada', c: 'armadura', p: 4, d: 'CA 11 + DES', o: 'Leve · desvantagem em Furtividade', e: 1, ca: 11, dm: 99, furt: 1 },
+    couro:        { n: 'Armadura de Couro', c: 'armadura', p: 5, d: 'CA 11 + DES', o: 'Leve', e: 1, ca: 11, dm: 99 },
+    couro_batido: { n: 'Couro Batido', c: 'armadura', p: 6.5, d: 'CA 12 + DES', o: 'Leve', e: 1, ca: 12, dm: 99 },
+    peles:        { n: 'Armadura de Peles', c: 'armadura', p: 6, d: 'CA 12 + DES (máx 2)', o: 'Média', e: 1, ca: 12, dm: 2 },
+    camisao_malha:{ n: 'Camisão de Malha', c: 'armadura', p: 10, d: 'CA 13 + DES (máx 2)', o: 'Média', e: 1, ca: 13, dm: 2 },
+    brunea:       { n: 'Brunea', c: 'armadura', p: 22.5, d: 'CA 14 + DES (máx 2)', o: 'Média · desvantagem em Furtividade', e: 1, ca: 14, dm: 2, furt: 1 },
+    peitoral:     { n: 'Peitoral', c: 'armadura', p: 10, d: 'CA 14 + DES (máx 2)', o: 'Média', e: 1, ca: 14, dm: 2 },
+    meia_armadura:{ n: 'Meia-Armadura', c: 'armadura', p: 20, d: 'CA 15 + DES (máx 2)', o: 'Média · desvantagem em Furtividade', e: 1, ca: 15, dm: 2, furt: 1 },
+    cota_aneis:   { n: 'Cota de Anéis', c: 'armadura', p: 20, d: 'CA 14', o: 'Pesada · desvantagem em Furtividade', e: 1, ca: 14, dm: 0, furt: 1 },
+    cota_malha:   { n: 'Cota de Malha', c: 'armadura', p: 27.5, d: 'CA 16', o: 'Pesada · exige Força 13 · desvantagem em Furtividade', e: 1, ca: 16, dm: 0, exf: 13, furt: 1 },
+    talas:        { n: 'Armadura de Talas', c: 'armadura', p: 30, d: 'CA 17', o: 'Pesada · exige Força 15 · desvantagem em Furtividade', e: 1, ca: 17, dm: 0, exf: 15, furt: 1 },
+    placas:       { n: 'Armadura de Placas', c: 'armadura', p: 32.5, d: 'CA 18', o: 'Pesada · exige Força 15 · desvantagem em Furtividade', e: 1, ca: 18, dm: 0, exf: 15, furt: 1 },
+    escudo:       { n: 'Escudo', c: 'escudo', p: 3, d: '+2 na CA', o: 'Ocupa uma mão', e: 1, esc: 2 },
     // ── ferramentas ──
     ferr_ladrao:  { n: 'Ferramentas de Ladrão', c: 'ferr', p: 0.5, d: 'abrir e desarmar', o: 'Fechaduras e armadilhas' },
     ferr_navegador:{ n: 'Ferramentas de Navegador', c: 'ferr', p: 1, d: 'rota e posição', o: 'Cartas, compasso, sextante' },
@@ -2475,7 +2497,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     document.getElementById('invDobra').checked = inv.dobra;
     invPinta();
   }
-  function mexeu() { invPinta(); marca(); }
+  function mexeu() { invPinta(); if (typeof calcula === 'function') calcula(); marca(); }
 
   // ── ficha do item, no mesmo balão do sumário ────────────────────────
   function mostraItem(i, elo) {
@@ -2613,6 +2635,128 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (e.key === 'Escape') { catOv.hidden = true; fechaMenu(); invCargaPop.hidden = true; }
   });
 
+  // ══════════════════════════════════════════════════════════════════
+  //  CONTAS DA FICHA
+  //  Até aqui todo número era digitado. Estes três param de ser:
+  //  1. bônus de proficiência, que sai do nível;
+  //  2. modificador, que sai do valor do atributo;
+  //  3. o que está equipado, que aparece sozinho no lugar certo —
+  //     arma na tabela de ataques, armadura e escudo na CA.
+  //  Campo calculado vira não-editável: digitar nele seria mentira, já
+  //  que a próxima conta apagaria.
+  // ══════════════════════════════════════════════════════════════════
+  function modDe(valor) {
+    var v = parseInt(valor, 10);
+    return isNaN(v) ? null : Math.floor((v - 10) / 2);
+  }
+  function sinal(n) { return (n >= 0 ? '+' : '-') + Math.abs(n); }
+  function campo(nome) { return document.querySelector('[data-field="' + nome + '"]'); }
+  function texto(nome) { var e = campo(nome); return e ? e.textContent.trim() : ''; }
+  function calculado(el, valor, dica) {
+    if (!el) return;
+    el.textContent = valor;
+    el.setAttribute('contenteditable', 'false');
+    el.classList.add('calc');
+    if (dica) el.title = dica;
+  }
+  function manual(el, dica) {
+    if (!el) return;
+    el.setAttribute('contenteditable', 'true');
+    el.classList.remove('calc');
+    el.title = dica || '';
+  }
+
+  // nível 1–4 = +2, e sobe de um em um a cada quatro níveis
+  function profDe(nivel) {
+    var n = parseInt(nivel, 10);
+    if (isNaN(n) || n < 1) return null;
+    return 2 + Math.floor((Math.min(n, 20) - 1) / 4);
+  }
+
+  function equipados() {
+    var out = [];
+    inv.itens.forEach(function(it) {
+      if (!it.eq || it.livre) return;
+      var d = ITENS[it.id];
+      if (d) out.push(d);
+    });
+    return out;
+  }
+
+  // ── a tabela de armas ganha uma linha por arma equipada ────────────
+  function armasAutomaticas(pb, mods) {
+    var alvo = tabela.armas;
+    alvo.querySelectorAll('.tbl-row.auto').forEach(function(r) { r.remove(); });
+    var cabeca = alvo.querySelector('.tbl-head'), antes = cabeca ? cabeca.nextSibling : alvo.firstChild;
+    equipados().forEach(function(d) {
+      if (!d.dd) return;   // só o que causa dano
+      // arma à distância usa Destreza; com Acuidade, o melhor dos dois
+      var m = mods.for;
+      if (d.rng) m = mods.des;
+      else if (d.fin) m = Math.max(mods.for == null ? -99 : mods.for, mods.des == null ? -99 : mods.des);
+      if (m == null || m === -99) m = 0;
+      var atq = m + (pb || 0);
+      var dano = d.dd + (m ? sinal(m) : '') + ' ' + d.dt;
+      var obs = d.o || '';
+      if (d.ver) obs = 'Duas mãos: ' + d.ver + (m ? sinal(m) : '') + (obs ? ' · ' + obs : '');
+
+      var row = document.createElement('div');
+      row.className = 'tbl-row auto w-grid';
+      [d.n, sinal(atq), dano, obs].forEach(function(t, i) {
+        var c = document.createElement('div');
+        c.className = 'cell' + (i === 1 ? ' c' : '');
+        c.textContent = t;
+        row.appendChild(c);
+      });
+      var trava = document.createElement('span');
+      trava.className = 'trava'; trava.textContent = '\u2b25';
+      trava.title = 'Vem do inventário: está equipada';
+      row.appendChild(trava);
+      alvo.insertBefore(row, antes);
+    });
+  }
+
+  // ── CA: só assume a conta quando há armadura ou escudo equipado ────
+  function classeDeArmadura(mods) {
+    var el = campo('ca');
+    if (!el) return;
+    var armadura = null, escudo = 0;
+    equipados().forEach(function(d) {
+      if (d.ca != null && !armadura) armadura = d;
+      if (d.esc) escudo += d.esc;
+    });
+    if (!armadura && !escudo) { manual(el, ''); return; }
+    var des = mods.des == null ? 0 : mods.des;
+    var base = armadura ? armadura.ca : 10;
+    var limite = armadura ? armadura.dm : 99;
+    var total = base + Math.min(des, limite == null ? 99 : limite) + escudo;
+    var dica = (armadura ? armadura.n : 'Sem armadura (10 + DES)') + (escudo ? ' + escudo' : '');
+    calculado(el, String(total), dica + ' — vem do inventário');
+  }
+
+  function calcula() {
+    // 1. proficiência, a partir do nível
+    var pb = profDe(texto('nivel'));
+    calculado(campo('proficiencia'), pb == null ? '' : sinal(pb), 'Sai do nível');
+
+    // 2. modificadores, a partir dos valores
+    var mods = {};
+    ATRIBUTOS.forEach(function(a) {
+      var m = modDe(texto(a.id + '_valor'));
+      mods[a.id] = m;
+      calculado(campo(a.id + '_mod'), m == null ? '' : sinal(m), 'Sai do valor de ' + a.nome);
+    });
+
+    // 3. o que está equipado aparece onde deve
+    armasAutomaticas(pb, mods);
+    classeDeArmadura(mods);
+  }
+  // o que muda as contas: nível e valores de atributo
+  document.addEventListener('input', function(e) {
+    var f = e.target.dataset && e.target.dataset.field;
+    if (f === 'nivel' || /_valor$/.test(f || '')) calcula();
+  });
+
   // ── Carregamento ────────────────────────────────────────────────────
   // Só é rascunho NOVO se o Storage disser exatamente "não existe"
   // (NoSuchKey). Qualquer outra falha — rede caída, servidor fora — trava
@@ -2650,6 +2794,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     return carrega().then(function(res) {
       if (somenteLeitura) return;
       if (res.existe) { restaura(res.dados); ultimoSnapshot = res.dados; }
+      calcula();
       carregado = true;
       status('salvo', res.existe ? 'Rascunho · carregado' : 'Rascunho novo · salva sozinho');
       checaCopiaLocal(res.existe ? res.dados : null);
