@@ -1377,6 +1377,166 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Uma vez por turno.'] },
     mst_raspar: { t: 'Maestria: Raspar', l: 'Errar deixa de ser errar à toa.', b: [
       'Errou o ataque? O alvo leva dano igual ao modificador do atributo que você usou.'] },
+    // ── Grau 2: as subclasses, por classe ─────────────────────────────
+    // Na 5.5 TODAS chegam no nível 3, então aqui não há o que aplicar
+    // antes disso: a lista serve pra escolher com antecedência.
+    sub_barbaro: { t: 'Bárbaro', l: 'Caminhos do bárbaro, escolhidos no nível 3.', b: [
+      '[[sbc_berserker|Caminho do Berserker]] — Fúria bruta, sem filtro: ataque extra e violência crescente.',
+      '[[sbc_coracao_selvagem|Caminho do Coração Selvagem]] — Chama o espírito de bichos e empresta o que eles têm de melhor.',
+      '[[sbc_arvore_mundo|Caminho da Árvore do Mundo]] — Puxa vida e espaço da árvore que liga os planos.',
+      '[[sbc_zelote|Caminho do Zelote]] — Fúria divina: bate com dano sagrado e custa a morrer de vez.'] },
+    sbc_berserker: { t: 'Caminho do Berserker', l: 'Fúria bruta, sem filtro: ataque extra e violência crescente.', b: [
+      'É a escolha mais direta: pouca regra nova, muito dano.'] },
+    sbc_coracao_selvagem: { t: 'Caminho do Coração Selvagem', l: 'Chama o espírito de bichos e empresta o que eles têm de melhor.', b: [
+      'Muda o que a fúria faz conforme o animal que você invoca.'] },
+    sbc_arvore_mundo: { t: 'Caminho da Árvore do Mundo', l: 'Puxa vida e espaço da árvore que liga os planos.', b: [
+      'Novidade da 5.5: cura, PV temporários e teleporte curto no meio da briga.'] },
+    sbc_zelote: { t: 'Caminho do Zelote', l: 'Fúria divina: bate com dano sagrado e custa a morrer de vez.', b: [
+      'Volta da morte mais fácil que qualquer outro bárbaro.'] },
+    sub_bardo: { t: 'Bardo', l: 'Colégios do bardo, escolhidos no nível 3.', b: [
+      '[[sbc_conhecimento|Colégio do Conhecimento]] — O bardo que sabe de tudo e rouba magia das outras classes.',
+      '[[sbc_bravura|Colégio da Bravura]] — O bardo que entra na linha de frente.',
+      '[[sbc_glamour|Colégio do Glamour]] — Encanto de fada: platéia hipnotizada e aliados protegidos.',
+      '[[sbc_danca|Colégio da Dança]] — Briga dançando: ágil, difícil de acertar e sempre em movimento.'] },
+    sbc_conhecimento: { t: 'Colégio do Conhecimento', l: 'O bardo que sabe de tudo e rouba magia das outras classes.', b: [
+      'Mais perícias, mais informação, mais versatilidade.'] },
+    sbc_bravura: { t: 'Colégio da Bravura', l: 'O bardo que entra na linha de frente.', b: [
+      'Armadura média, escudo e armas marciais.'] },
+    sbc_glamour: { t: 'Colégio do Glamour', l: 'Encanto de fada: platéia hipnotizada e aliados protegidos.', b: [
+      'Forte em cena social e em tirar o grupo do sufoco.'] },
+    sbc_danca: { t: 'Colégio da Dança', l: 'Briga dançando: ágil, difícil de acertar e sempre em movimento.', b: [
+      'Novidade da 5.5, com jeito de monge de bardo.'] },
+    sub_bruxo: { t: 'Bruxo', l: 'Patronos do bruxo, escolhidos no nível 3.', b: [
+      '[[sbc_corruptor|O Corruptor]] — Pacto com um demônio: dano, resistência e sorte emprestada.',
+      '[[sbc_arquifada|O Arquifada]] — Pacto com um senhor das fadas: ilusão, encanto e teleporte.',
+      '[[sbc_grande_antigo|O Grande Antigo]] — Pacto com algo do vazio: telepatia e loucura.',
+      '[[sbc_celestial|O Celestial]] — Pacto com um ser de luz: o bruxo que cura.'] },
+    sbc_corruptor: { t: 'O Corruptor', l: 'Pacto com um demônio: dano, resistência e sorte emprestada.', b: [
+      'O patrono mais direto — bate forte e aguenta.'] },
+    sbc_arquifada: { t: 'O Arquifada', l: 'Pacto com um senhor das fadas: ilusão, encanto e teleporte.', b: [
+      'Mexe com a cabeça dos outros e sai de qualquer enrascada.'] },
+    sbc_grande_antigo: { t: 'O Grande Antigo', l: 'Pacto com algo do vazio: telepatia e loucura.', b: [
+      'Ataca a mente, não o corpo.'] },
+    sbc_celestial: { t: 'O Celestial', l: 'Pacto com um ser de luz: o bruxo que cura.', b: [
+      'Único bruxo que segura o papel de curandeiro do grupo.'] },
+    sub_clerigo: { t: 'Clérigo', l: 'Domínios do clérigo, escolhidos no nível 3.', b: [
+      '[[sbc_vida|Domínio da Vida]] — A cura mais forte do jogo.',
+      '[[sbc_luz|Domínio da Luz]] — Fogo e luz divina: o clérigo que causa dano de área.',
+      '[[sbc_trapaca|Domínio da Trapaça]] — Ilusão, cópia e furtividade abençoadas.',
+      '[[sbc_guerra|Domínio da Guerra]] — Sacerdote soldado: armadura pesada e ataques extras.'] },
+    sbc_vida: { t: 'Domínio da Vida', l: 'A cura mais forte do jogo.', b: [
+      'Toda magia de cura sua devolve mais PV.'] },
+    sbc_luz: { t: 'Domínio da Luz', l: 'Fogo e luz divina: o clérigo que causa dano de área.', b: [
+      'Bom contra morto-vivo e contra grupo grande.'] },
+    sbc_trapaca: { t: 'Domínio da Trapaça', l: 'Ilusão, cópia e furtividade abençoadas.', b: [
+      'O clérigo que age escondido.'] },
+    sbc_guerra: { t: 'Domínio da Guerra', l: 'Sacerdote soldado: armadura pesada e ataques extras.', b: [
+      'Fica na frente com o guerreiro.'] },
+    sub_druida: { t: 'Druida', l: 'Círculos do druida, escolhidos no nível 3.', b: [
+      '[[sbc_terra|Círculo da Terra]] — Magia ligada ao tipo de terreno em que você aprendeu.',
+      '[[sbc_lua|Círculo da Lua]] — Vira bicho de verdade e briga nessa forma.',
+      '[[sbc_mar|Círculo do Mar]] — Tempestade e maré como arma.',
+      '[[sbc_astros|Círculo dos Astros]] — Lê constelações e assume a forma delas.'] },
+    sbc_terra: { t: 'Círculo da Terra', l: 'Magia ligada ao tipo de terreno em que você aprendeu.', b: [
+      'Ganha magias extras conforme a terra escolhida.'] },
+    sbc_lua: { t: 'Círculo da Lua', l: 'Vira bicho de verdade e briga nessa forma.', b: [
+      'A forma selvagem vira a principal arma.'] },
+    sbc_mar: { t: 'Círculo do Mar', l: 'Tempestade e maré como arma.', b: [
+      'Novidade da 5.5: aura de vento e água em volta de você.'] },
+    sbc_astros: { t: 'Círculo dos Astros', l: 'Lê constelações e assume a forma delas.', b: [
+      'Troca de forma conforme o que o grupo precisa: dano, cura ou controle.'] },
+    sub_feiticeiro: { t: 'Feiticeiro', l: 'Origens do feiticeiro, escolhidos no nível 3.', b: [
+      '[[sbc_draconica|Linhagem Dracônica]] — Sangue de dragão: mais vida, mais CA e dano do seu elemento.',
+      '[[sbc_selvagem|Magia Selvagem]] — A magia escapa do controle e acontece o que tiver que acontecer.',
+      '[[sbc_aberrante|Feitiçaria Aberrante]] — Poder psiônico vindo de algo que não devia ter te tocado.',
+      '[[sbc_mecanismo|Feitiçaria de Mecanismo]] — Ordem pura: a magia da engrenagem que rege o universo.'] },
+    sbc_draconica: { t: 'Linhagem Dracônica', l: 'Sangue de dragão: mais vida, mais CA e dano do seu elemento.', b: [
+      'A origem mais resistente — e a que mais dá cara ao personagem.'] },
+    sbc_selvagem: { t: 'Magia Selvagem', l: 'A magia escapa do controle e acontece o que tiver que acontecer.', b: [
+      'Tabela de efeitos aleatórios; diversão garantida, previsibilidade nenhuma.'] },
+    sbc_aberrante: { t: 'Feitiçaria Aberrante', l: 'Poder psiônico vindo de algo que não devia ter te tocado.', b: [
+      'Telepatia e magia da mente.'] },
+    sbc_mecanismo: { t: 'Feitiçaria de Mecanismo', l: 'Ordem pura: a magia da engrenagem que rege o universo.', b: [
+      'Anula aleatoriedade — sua e dos outros.'] },
+    sub_guardiao: { t: 'Guardião', l: 'Arquétipos do guardião, escolhidos no nível 3.', b: [
+      '[[sbc_cacador|Caçador]] — O guardião direto: escolhe como bater melhor em cada situação.',
+      '[[sbc_mestre_feras|Mestre das Feras]] — Luta junto com um companheiro animal.',
+      '[[sbc_perseguidor|Perseguidor Sombrio]] — Caçador do escuro: enxerga no breu e mata no primeiro turno.',
+      '[[sbc_andarilho_fadas|Andarilho das Fadas]] — Tocado pelas fadas: encanto, dano psíquico e lábia.'] },
+    sbc_cacador: { t: 'Caçador', l: 'O guardião direto: escolhe como bater melhor em cada situação.', b: [
+      'Simples de jogar, bom em qualquer grupo.'] },
+    sbc_mestre_feras: { t: 'Mestre das Feras', l: 'Luta junto com um companheiro animal.', b: [
+      'Na 5.5 a fera ficou bem mais útil e fácil de mandar.'] },
+    sbc_perseguidor: { t: 'Perseguidor Sombrio', l: 'Caçador do escuro: enxerga no breu e mata no primeiro turno.', b: [
+      'Iniciativa alta e um ataque extra no round 1.'] },
+    sbc_andarilho_fadas: { t: 'Andarilho das Fadas', l: 'Tocado pelas fadas: encanto, dano psíquico e lábia.', b: [
+      'O guardião mais social.'] },
+    sub_guerreiro: { t: 'Guerreiro', l: 'Arquétipos do guerreiro, escolhidos no nível 3.', b: [
+      '[[sbc_campeao|Campeão]] — Crítico mais fácil e atleta melhor. Nada pra decorar.',
+      '[[sbc_mestre_batalha|Mestre de Batalha]] — Manobras: derrubar, desarmar, provocar, comandar.',
+      '[[sbc_cavaleiro_arcano|Cavaleiro Arcano]] — Guerreiro que conjura magia de mago.',
+      '[[sbc_guerreiro_psi|Guerreiro Psi]] — Força da mente: escudo, empurrão e teleporte psiônicos.'] },
+    sbc_campeao: { t: 'Campeão', l: 'Crítico mais fácil e atleta melhor. Nada pra decorar.', b: [
+      'A escolha de quem quer bater sem gerenciar recurso.'] },
+    sbc_mestre_batalha: { t: 'Mestre de Batalha', l: 'Manobras: derrubar, desarmar, provocar, comandar.', b: [
+      'O guerreiro tático — o que mais tem escolha em combate.'] },
+    sbc_cavaleiro_arcano: { t: 'Cavaleiro Arcano', l: 'Guerreiro que conjura magia de mago.', b: [
+      'Arma encantada e proteção mágica.'] },
+    sbc_guerreiro_psi: { t: 'Guerreiro Psi', l: 'Força da mente: escudo, empurrão e teleporte psiônicos.', b: [
+      'Recursos pequenos e frequentes, sem parecer conjurador.'] },
+    sub_ladino: { t: 'Ladino', l: 'Arquétipos do ladino, escolhidos no nível 3.', b: [
+      '[[sbc_ladrao|Ladrão]] — O clássico: rápido com as mãos, escalada, itens mágicos.',
+      '[[sbc_assassino|Assassino]] — Mata quem não te viu chegar.',
+      '[[sbc_trapaceiro_arcano|Trapaceiro Arcano]] — Ladino com magia de mago, focada em ilusão e encantamento.',
+      '[[sbc_lamina_alma|Lâmina da Alma]] — Cria lâminas psiônicas do nada e ataca com a mente.'] },
+    sbc_ladrao: { t: 'Ladrão', l: 'O clássico: rápido com as mãos, escalada, itens mágicos.', b: [
+      'Age duas vezes com a ação bônus.'] },
+    sbc_assassino: { t: 'Assassino', l: 'Mata quem não te viu chegar.', b: [
+      'Dano brutal no primeiro turno contra alvo surpreso.'] },
+    sbc_trapaceiro_arcano: { t: 'Trapaceiro Arcano', l: 'Ladino com magia de mago, focada em ilusão e encantamento.', b: [
+      'Mão mágica invisível pra roubar de longe.'] },
+    sbc_lamina_alma: { t: 'Lâmina da Alma', l: 'Cria lâminas psiônicas do nada e ataca com a mente.', b: [
+      'Não precisa carregar arma, e fala por telepatia.'] },
+    sub_mago: { t: 'Mago', l: 'Escolas do mago, escolhidos no nível 3.', b: [
+      '[[sbc_abjurador|Abjurador]] — Escudo arcano ambulante: proteção e anular magia.',
+      '[[sbc_evocador|Evocador]] — Dano de área — sem acertar os aliados.',
+      '[[sbc_ilusionista|Ilusionista]] — Ilusões que quase viram verdade.',
+      '[[sbc_adivinho|Adivinho]] — Vê o que vem: troca rolagens do jogo por números que você já guardou.'] },
+    sbc_abjurador: { t: 'Abjurador', l: 'Escudo arcano ambulante: proteção e anular magia.', b: [
+      'O mago mais difícil de matar.'] },
+    sbc_evocador: { t: 'Evocador', l: 'Dano de área — sem acertar os aliados.', b: [
+      'Bola de fogo sem queimar o grupo.'] },
+    sbc_ilusionista: { t: 'Ilusionista', l: 'Ilusões que quase viram verdade.', b: [
+      'Resolve problema sem rolar ataque.'] },
+    sbc_adivinho: { t: 'Adivinho', l: 'Vê o que vem: troca rolagens do jogo por números que você já guardou.', b: [
+      'Um dos poderes mais fortes do livro.'] },
+    sub_monge: { t: 'Monge', l: 'Guerreiros do monge, escolhidos no nível 3.', b: [
+      '[[sbc_mao_aberta|Guerreiro da Mão Aberta]] — O monge puro: empurra, derruba e cura a si mesmo.',
+      '[[sbc_sombra|Guerreiro da Sombra]] — Escuridão, furtividade e teleporte entre sombras.',
+      '[[sbc_elementos|Guerreiro dos Elementos]] — Golpes com alcance, fogo, gelo e vento.',
+      '[[sbc_misericordia|Guerreiro da Misericórdia]] — Mãos que curam ou matam pelo mesmo toque.'] },
+    sbc_mao_aberta: { t: 'Guerreiro da Mão Aberta', l: 'O monge puro: empurra, derruba e cura a si mesmo.', b: [
+      'O mais forte no corpo a corpo simples.'] },
+    sbc_sombra: { t: 'Guerreiro da Sombra', l: 'Escuridão, furtividade e teleporte entre sombras.', b: [
+      'O monge infiltrador.'] },
+    sbc_elementos: { t: 'Guerreiro dos Elementos', l: 'Golpes com alcance, fogo, gelo e vento.', b: [
+      'Reescrito na 5.5, ficou bem mais simples de usar.'] },
+    sbc_misericordia: { t: 'Guerreiro da Misericórdia', l: 'Mãos que curam ou matam pelo mesmo toque.', b: [
+      'O monge que segura o papel de médico.'] },
+    sub_paladino: { t: 'Paladino', l: 'Juramentos do paladino, escolhidos no nível 3.', b: [
+      '[[sbc_devocao|Juramento da Devoção]] — O paladino de manual: honra, proteção e arma sagrada.',
+      '[[sbc_antigos|Juramento dos Antigos]] — Defensor da vida e da natureza, difícil de corromper.',
+      '[[sbc_vinganca|Juramento da Vingança]] — Caça um alvo até o fim.',
+      '[[sbc_gloria|Juramento da Glória]] — Heroísmo atlético: acelera e levanta o grupo.'] },
+    sbc_devocao: { t: 'Juramento da Devoção', l: 'O paladino de manual: honra, proteção e arma sagrada.', b: [
+      'Forte contra morto-vivo e criatura imunda.'] },
+    sbc_antigos: { t: 'Juramento dos Antigos', l: 'Defensor da vida e da natureza, difícil de corromper.', b: [
+      'Aura que protege o grupo inteiro contra magia.'] },
+    sbc_vinganca: { t: 'Juramento da Vingança', l: 'Caça um alvo até o fim.', b: [
+      'O paladino que mais causa dano.'] },
+    sbc_gloria: { t: 'Juramento da Glória', l: 'Heroísmo atlético: acelera e levanta o grupo.', b: [
+      'Bom pra quem gosta de estar sempre à frente.'] },
+
     // ── o que cada classe entrega no nível 1 ──────────────────────────
     cls_furia: { t: 'Fúria', l: 'O bárbaro liga o motor: mais dano, menos dano recebido.', b: [
       'Entra em fúria com uma [[cnc_acao_bonus|ação bônus]] e dura 10 minutos.',
@@ -1924,9 +2084,13 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       mais: 'Ver as 12 classes',
       lista: ['cls_barbaro', 'cls_bardo', 'cls_bruxo', 'cls_clerigo', 'cls_druida', 'cls_feiticeiro',
         'cls_guardiao', 'cls_guerreiro', 'cls_ladino', 'cls_mago', 'cls_monge', 'cls_paladino'] },
-    subclasse: { t: 'Subclasse', l: 'A especialização dentro da classe.', b: [
-      'Na 5.5 todas chegam no nível 3.',
-      'Não substitui a classe: soma em cima dela.'] },
+    subclasse: { t: 'Subclasse', l: 'A especialização dentro da classe — o que separa dois guerreiros.', b: [
+      'Na 5.5 TODAS chegam no nível 3, sem exceção.',
+      'Não substitui a classe: soma em cima dela.',
+      'Escolher cedo ajuda: várias pedem um jeito de jogar desde o nível 1.'],
+      mais: 'Ver as subclasses, por classe',
+      lista: ['sub_barbaro', 'sub_bardo', 'sub_bruxo', 'sub_clerigo', 'sub_druida', 'sub_feiticeiro',
+        'sub_guardiao', 'sub_guerreiro', 'sub_ladino', 'sub_mago', 'sub_monge', 'sub_paladino'] },
     especie: { t: 'Espécie', l: 'O corpo com que o personagem nasceu.', b: [
       'Dá deslocamento, tamanho, tipo de criatura e traços próprios (visão no escuro, resistências e por aí).',
       'Na 5.5 a espécie NÃO dá mais aumento de atributo — isso passou para o antecedente.',
@@ -3462,6 +3626,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (/^tal_/.test(chave) || /^est_/.test(chave)) return { r: 'Anotar em Talentos' };
     if (/^ferr_/.test(chave)) return { r: 'Anotar em Ferramentas' };
     if (/^item_/.test(chave) && ITEM_DO_TERMO[chave]) return { r: 'Pôr no inventário' };
+    if (/^sbc_/.test(chave)) return { r: 'Pôr em Subclasse' };
     if (/^ant_/.test(chave) || /^esp_/.test(chave) || /^cls_/.test(chave)) return { r: 'Aplicar na ficha' };
     return null;
   }
@@ -3489,6 +3654,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       if (!id) return null;
       poeItem(id);
       return (ITENS[id] ? ITENS[id].n : nome) + ' no inventário';
+    }
+    if (/^sbc_/.test(chave)) {
+      var cs = campo('subclasse');
+      if (cs) cs.textContent = nome;
+      return 'subclasse ' + nome;
     }
     if (/^cls_/.test(chave)) {
       var campoCls = campo('classe');
