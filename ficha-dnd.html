@@ -545,9 +545,11 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 .volta-local button#voltaLocalNao { color: var(--fg-faint); border-color: var(--line-strong); }
 
 /* ───────── impressão / PDF ─────────
-   No papel some tudo que é da tela — botões, selo, fundo, varredura — e o
-   cabeçalho inverte pra preto no branco. A dobra da página 2 é ignorada:
-   no PDF as duas páginas saem sempre, cada uma na sua folha. */
+   A folha é desenhada pra 960px de largura. Deixar o papel (≈730px) refazer
+   o layout embaralha tudo: a grade cai pro modo estreito, as colunas
+   empilham, o conteúdo vaza pra página seguinte e sobrepõe. Então aqui a
+   largura de projeto é mantida e o conjunto INTEIRO é encolhido até caber —
+   com a proporção da folha oficial travada, cada página sai numa folha. */
 @media print {
   @page { size: A4 portrait; margin: 8mm; }
   html, body {
@@ -556,13 +558,22 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
   }
   body::after, .fundo, #backBtn, .preview-flag, .fundo-ctrl, .volta-local,
   .dobra-bt, .tbl-add, .tbl-del, #fileInput, #fundoFile { display: none !important; }
-  .wrap { max-width: none !important; padding: 0 !important; gap: 10px !important; z-index: auto !important; }
-  .dobra { gap: 10px !important; }
+  /* campo vazio no papel é linha vazia, não texto cinza de dica */
+  [contenteditable]:empty::before { content: none !important; }
+  [contenteditable]:hover, [contenteditable]:focus { background: none !important; box-shadow: none !important; }
 
-  /* cabeçalho no branco */
+  .wrap {
+    width: 960px !important; max-width: none !important; padding: 0 !important;
+    gap: 14px !important; zoom: 0.80; z-index: auto !important;
+  }
+  /* a quebra vai no invólucro da página 2, não no break-after da página 1:
+     com zoom, o Chrome ignora o break-after e emenda as duas folhas */
+  .dobra { gap: 14px !important; break-before: page; page-break-before: always; }
+
+  /* cabeçalho no branco, e mais baixo: é ele que empurraria a folha pra fora */
   .cab { padding: 0 0 8px !important; border-bottom: 1px solid #bbb !important; }
   .cab::after { display: none !important; }
-  .cab-nome { color: #111 !important; text-shadow: none !important; font-size: 30px !important; }
+  .cab-nome { color: #111 !important; text-shadow: none !important; font-size: 26px !important; }
   .cab-cod-v { color: #333 !important; }
   .cab-cod-l, .cab-sub { color: #666 !important; }
   .cab-sub .led { background: #111 !important; box-shadow: none !important; animation: none !important; }
@@ -570,25 +581,28 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
   .dot { border-color: #8a6fbf !important; background: #fff !important; }
   .dot.filled { background: #7a4fd0 !important; border-color: #7a4fd0 !important; box-shadow: none !important; }
 
-  /* a folha: sem sombra, sem proporção travada, uma por página */
+  /* a folha: proporção da oficial travada, uma por página */
   .pagina {
-    background: #fff !important; border: 0 !important; box-shadow: none !important;
-    padding: 0 !important; aspect-ratio: auto !important; break-after: page; page-break-after: always;
+    background: #fff !important; border: 0 !important; box-shadow: none !important; padding: 0 !important;
+    display: flex !important; flex-direction: column !important; aspect-ratio: 612 / 791 !important;
+    break-after: page; page-break-after: always;
   }
+  .pagina > .corpo1, .pagina > .corpo2 { flex: 1; }
   .pagina:last-of-type { break-after: auto; page-break-after: auto; }
-  .pagina[hidden] { display: block !important; }   /* dobrada na tela, inteira no papel */
-  .bx { box-shadow: none !important; border-color: #b6b6b6 !important; break-inside: avoid; page-break-inside: avoid; }
+  .pagina[hidden] { display: flex !important; }   /* dobrada na tela, inteira no papel */
+  /* o rodapé é solto pra fora da folha na tela; no papel isso cai por cima
+     do que vem depois */
+  .pagina-rodape { position: static !important; margin-top: 8px !important; color: #888 !important; }
+  .pagina-rodape b { color: #555 !important; }
+  .bx { box-shadow: none !important; border-color: #b6b6b6 !important; }
   .bx, .nivel { background: #fff !important; }
 
-  /* o papel tem ~794px de largura, então as regras de tela estreita pegariam
-     e empilhariam tudo numa coluna só: aqui a grade da folha é devolvida */
+  /* desfaz o modo estreito: o papel tem ~730px e dispararia ele */
   .topo { grid-template-columns: 40% 76px 92px 1fr !important; }
   .topo .vida { grid-column: auto !important; }
   .corpo1 { grid-template-columns: 36% 1fr !important; }
   .corpo2 { grid-template-columns: 64% 1fr !important; }
-  .caract-cols { grid-template-columns: 1fr 1fr !important; }
   .caract-cols .box-text:first-child { border-right: 1px solid #ccc !important; border-bottom: 0 !important; }
-  .caract .box-text, .dupla .box-text { min-height: 0 !important; }
 }
 
 /* ───────── responsivo: abaixo disso a folha não cabe mais em proporção ───────── */
