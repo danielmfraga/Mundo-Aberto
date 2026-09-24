@@ -1849,11 +1849,71 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     sumBt.setAttribute('aria-pressed', sumario ? 'true' : 'false');
     if (!sumario) fechaBalao();
   });
+  // O que foi escrito na ficha volta a ser explicável: se a linha clicada
+  // tem o nome de algo que o Sumário conhece — um talento, uma ferramenta,
+  // uma arma do catálogo — abre o verbete daquilo em vez do verbete do
+  // quadro. Achar a linha é por geometria, e não pelo alvo do clique,
+  // porque no modo sumário os campos ficam sem pointer-events.
+  var POR_NOME = null;
+  function indice() {
+    if (POR_NOME) return POR_NOME;
+    POR_NOME = {};
+    Object.keys(AJUDA).forEach(function(k) {
+      var d = AJUDA[k];
+      if (d && d.t && k.indexOf('__') !== 0) POR_NOME[semAcento(d.t)] = { tipo: 'ajuda', k: k };
+    });
+    Object.keys(ITENS).forEach(function(id) {
+      var n = semAcento(ITENS[id].n);
+      if (!POR_NOME[n]) POR_NOME[n] = { tipo: 'item', k: id };
+    });
+    return POR_NOME;
+  }
+  function linhaNoPonto(el, x, y) {
+    var achou = null, faixa = document.createRange();
+    (function anda(no) {
+      if (achou) return;
+      if (no.nodeType === 3) {
+        var partes = no.nodeValue.split('\n'), pos = 0;
+        for (var j = 0; j < partes.length && !achou; j++) {
+          var t = partes[j], ini = pos, fim = pos + t.length;
+          pos = fim + 1;
+          if (!t.trim()) continue;
+          faixa.setStart(no, ini); faixa.setEnd(no, fim);
+          var rs = faixa.getClientRects();
+          for (var i = 0; i < rs.length; i++) {
+            var q = rs[i];
+            if (x >= q.left - 3 && x <= q.right + 3 && y >= q.top - 2 && y <= q.bottom + 2) { achou = t.trim(); break; }
+          }
+        }
+      } else if (no.nodeType === 1 && no.className !== 'balao') {
+        for (var i = 0; i < no.childNodes.length; i++) anda(no.childNodes[i]);
+      }
+    })(el);
+    return achou;
+  }
+  function mostraCatalogo(id, elo) {
+    var d = ITENS[id], b = [];
+    if (d.d) b.push(d.d);
+    if (d.o) b.push(d.o);
+    b.push('Peso: ' + num(d.p) + ' kg');
+    if (d.e) b.push('Dá para equipar, pelo inventário.');
+    AJUDA.__cat = { t: d.n, l: 'Item do catálogo.', b: b };
+    ancora = elo; pilha = [];
+    abre('__cat');
+  }
+
   // captura: em modo sumário o clique explica o campo em vez de entrar nele
   document.addEventListener('click', function(e) {
     if (!sumario || e.target.closest('.balao, .fundo-ctrl')) return;
     var el = e.target.closest('[data-ajuda]');
-    if (el) { e.preventDefault(); e.stopPropagation(); mostraBalao(el); } else fechaBalao();
+    if (!el) { fechaBalao(); return; }
+    e.preventDefault(); e.stopPropagation();
+    // a linha exata clicada tem prioridade sobre o quadro que a contém
+    var linha = linhaNoPonto(el, e.clientX, e.clientY);
+    var achado = linha && indice()[semAcento(linha)];
+    if (achado && achado.tipo === 'ajuda') { ancora = el; pilha = []; abre(achado.k); return; }
+    if (achado) { mostraCatalogo(achado.k, el); return; }
+    mostraBalao(el);
   }, true);
   document.addEventListener('keydown', function(e) { if (e.key === 'Escape') fechaBalao(); });
   window.addEventListener('resize', function() { if (!balao.hidden) posiciona(); });
