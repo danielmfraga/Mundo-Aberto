@@ -566,6 +566,41 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   background: none; border: 0; color: rgba(207,233,240,0.35); font-size: 13px; line-height: 1;
 }
 .balao-x:hover { color: #fff; }
+.balao.largo { width: 360px; }
+.balao { max-height: 78vh; overflow-y: auto; }
+.balao-voltar {
+  display: none; align-items: center; gap: 5px; margin-bottom: 7px; padding: 0; cursor: pointer;
+  background: none; border: 0; font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: rgba(207,233,240,0.42);
+}
+.balao-voltar:hover { color: #e0b457; }
+.balao.tem-volta .balao-voltar { display: flex; }
+/* grau 2: a lista que abre dentro do balão */
+.balao-mais {
+  margin-top: 11px; width: 100%; cursor: pointer; padding: 7px 9px; border-radius: 7px;
+  background: transparent; border: 1px dashed rgba(224,180,87,0.35);
+  font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #e0b457;
+}
+.balao-mais:hover { background: rgba(224,180,87,0.08); border-style: solid; }
+.balao-lista { margin-top: 9px; display: flex; flex-direction: column; }
+.balao-lista[hidden] { display: none; }
+.balao-item + .balao-item { border-top: 1px solid rgba(255,255,255,0.06); }
+.balao-item-t {
+  width: 100%; text-align: left; cursor: pointer; padding: 7px 2px; background: none; border: 0;
+  font-family: var(--font-display); font-weight: 600; font-size: 11.5px; color: rgba(207,233,240,0.88);
+}
+.balao-item-t::before { content: '+ '; color: #e0b457; }
+.balao-item-t[aria-expanded="true"]::before { content: '− '; }
+.balao-item-t:hover { color: #fff; }
+.balao-item-c { padding: 0 2px 9px; }
+.balao-item-c[hidden] { display: none; }
+.balao-item-c .balao-l { margin-top: 0; font-size: 11.5px; }
+/* grau 3: termo clicável dentro do texto */
+.tag {
+  padding: 0; background: none; border: 0; cursor: pointer; font: inherit; color: #e0b457;
+  border-bottom: 1px dotted rgba(224,180,87,0.6);
+}
+.tag:hover { color: #fff; border-bottom-color: #fff; }
 
 /* ───────── impressão / PDF ─────────
    A folha é desenhada pra 960px de largura. Deixar o papel (≈730px) refazer
@@ -697,6 +732,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
 <!-- balão do modo sumário -->
 <div class="balao" id="balao" hidden role="dialog" aria-live="polite">
   <button type="button" class="balao-x" id="balaoX" aria-label="Fechar">&#10005;</button>
+  <button type="button" class="balao-voltar" id="balaoVoltar">&#8592; voltar</button>
   <div class="balao-t" id="balaoT"></div>
   <div class="balao-l" id="balaoL"></div>
   <ul id="balaoB"></ul>
@@ -1084,6 +1120,162 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   //  magia). Essa parte entra depois, com o livro na mão.
   // ══════════════════════════════════════════════════════════════════
   var AJUDA = {
+    // ── Grau 2: os 16 antecedentes ────────────────────────────────────
+    // Atributos, talento, perícias e ferramenta conferidos contra o bloco do
+    // Marinheiro que o Daniel passou do livro. O EQUIPAMENTO só está aqui no
+    // Marinheiro, que veio verbatim — os outros quinze entram quando ele
+    // passar; é a parte que eu erraria de cabeça.
+    ant_acolito: { t: 'Acólito', l: 'Você serviu num templo, aprendeu os ritos e carrega um pouco do poder do seu deus.', b: [
+      'Atributos: Inteligência, Sabedoria, Carisma',
+      'Talento: [[tal_iniciado|Iniciado em Magia (Clérigo)]]',
+      'Perícias: [[per_intuicao|Intuição]], [[per_religiao|Religião]]',
+      'Ferramenta: [[ferr_caligrafia|Suprimentos de Caligrafia]]'] },
+    ant_andarilho: { t: 'Andarilho', l: 'Cresceu na rua, sem teto fixo, vivendo do que aparecia — e sobreviveu.', b: [
+      'Atributos: Destreza, Sabedoria, Carisma',
+      'Talento: [[tal_sortudo|Sortudo]]',
+      'Perícias: [[per_intuicao|Intuição]], [[per_furtividade|Furtividade]]',
+      'Ferramenta: [[ferr_ladrao|Ferramentas de Ladrão]]'] },
+    ant_artesao: { t: 'Artesão', l: 'Aprendeu um ofício de verdade: sabe fazer, consertar e reconhecer trabalho bem-feito.', b: [
+      'Atributos: Força, Destreza, Inteligência',
+      'Talento: [[tal_artesao|Artesão]]',
+      'Perícias: [[per_investigacao|Investigação]], [[per_persuasao|Persuasão]]',
+      'Ferramenta: [[ferr_artesao|Instrumentos de Artesão]]'] },
+    ant_artista: { t: 'Artista', l: 'Vive de plateia: palco, praça, taverna — onde houver gente olhando.', b: [
+      'Atributos: Força, Destreza, Carisma',
+      'Talento: [[tal_musico|Músico]]',
+      'Perícias: [[per_acrobacia|Acrobacia]], [[per_atuacao|Atuação]]',
+      'Ferramenta: [[ferr_instrumento|Instrumento Musical]]'] },
+    ant_charlatao: { t: 'Charlatão', l: 'Vende o que não tem para quem quer acreditar. O papel importa mais que a verdade.', b: [
+      'Atributos: Destreza, Constituição, Carisma',
+      'Talento: [[tal_habilidoso|Habilidoso]]',
+      'Perícias: [[per_enganacao|Enganação]], [[per_prestidigitacao|Prestidigitação]]',
+      'Ferramenta: [[ferr_falsificacao|Kit de Falsificação]]'] },
+    ant_criminoso: { t: 'Criminoso', l: 'Trabalhou fora da lei e aprendeu a entrar, sair e não ser pego.', b: [
+      'Atributos: Destreza, Constituição, Inteligência',
+      'Talento: [[tal_alerta|Alerta]]',
+      'Perícias: [[per_prestidigitacao|Prestidigitação]], [[per_furtividade|Furtividade]]',
+      'Ferramenta: [[ferr_ladrao|Ferramentas de Ladrão]]'] },
+    ant_eremita: { t: 'Eremita', l: 'Viveu longe de todos, cuidando de si — e virou bom em cuidar dos outros.', b: [
+      'Atributos: Constituição, Sabedoria, Carisma',
+      'Talento: [[tal_curandeiro|Curandeiro]]',
+      'Perícias: [[per_medicina|Medicina]], [[per_religiao|Religião]]',
+      'Ferramenta: [[ferr_herbalismo|Kit de Herbalismo]]'] },
+    ant_escriba: { t: 'Escriba', l: 'Passou a vida copiando, corrigindo e arquivando o que os outros escreveram.', b: [
+      'Atributos: Destreza, Inteligência, Sabedoria',
+      'Talento: [[tal_habilidoso|Habilidoso]]',
+      'Perícias: [[per_investigacao|Investigação]], [[per_percepcao|Percepção]]',
+      'Ferramenta: [[ferr_caligrafia|Suprimentos de Caligrafia]]'] },
+    ant_fazendeiro: { t: 'Fazendeiro', l: 'Terra, bicho e tempo ruim. Corpo endurecido por trabalho, não por treino.', b: [
+      'Atributos: Força, Constituição, Sabedoria',
+      'Talento: [[tal_resistente|Resistente]]',
+      'Perícias: [[per_lidar_com_animais|Lidar com Animais]], [[per_natureza|Natureza]]',
+      'Ferramenta: [[ferr_carpinteiro|Ferramentas de Carpinteiro]]'] },
+    ant_guarda: { t: 'Guarda', l: 'Ficou de sentinela em muralha ou portão, olhando o escuro por horas.', b: [
+      'Atributos: Força, Inteligência, Sabedoria',
+      'Talento: [[tal_alerta|Alerta]]',
+      'Perícias: [[per_atletismo|Atletismo]], [[per_percepcao|Percepção]]',
+      'Ferramenta: [[ferr_jogos|Conjunto de Jogos]]'] },
+    ant_guia: { t: 'Guia', l: 'Conhece o mato como quem conhece a própria casa, e leva os outros por ele.', b: [
+      'Atributos: Destreza, Constituição, Sabedoria',
+      'Talento: [[tal_iniciado|Iniciado em Magia (Druida)]]',
+      'Perícias: [[per_furtividade|Furtividade]], [[per_sobrevivencia|Sobrevivência]]',
+      'Ferramenta: [[ferr_cartografo|Ferramentas de Cartógrafo]]'] },
+    ant_marinheiro: { t: 'Marinheiro', l: 'Viveu no convés: cordame, maré, porto e briga de taverna.', b: [
+      'Atributos: Força, Destreza, Sabedoria',
+      'Talento: [[tal_valentao|Valentão de Taverna]]',
+      'Perícias: [[per_acrobacia|Acrobacia]], [[per_percepcao|Percepção]]',
+      'Ferramenta: [[ferr_navegador|Ferramentas de Navegador]]',
+      'Equipamento: (A) [[item_adaga|Adaga]], Ferramentas de Navegador, [[item_corda|Corda]], [[item_roupas|Roupas de Viagem]] e 20 PO; ou (B) 50 PO'] },
+    ant_mercador: { t: 'Mercador', l: 'Comprou barato, vendeu caro e atravessou estrada com carga nas costas.', b: [
+      'Atributos: Constituição, Inteligência, Carisma',
+      'Talento: [[tal_sortudo|Sortudo]]',
+      'Perícias: [[per_lidar_com_animais|Lidar com Animais]], [[per_persuasao|Persuasão]]',
+      'Ferramenta: [[ferr_navegador|Ferramentas de Navegador]]'] },
+    ant_nobre: { t: 'Nobre', l: 'Nasceu com nome e criados. Sabe como funciona uma corte — e como se usa isso.', b: [
+      'Atributos: Força, Inteligência, Carisma',
+      'Talento: [[tal_habilidoso|Habilidoso]]',
+      'Perícias: [[per_historia|História]], [[per_persuasao|Persuasão]]',
+      'Ferramenta: [[ferr_jogos|Conjunto de Jogos]]'] },
+    ant_sabio: { t: 'Sábio', l: 'Cresceu entre livros. Sabe muito, e sabe onde procurar o que não sabe.', b: [
+      'Atributos: Constituição, Inteligência, Sabedoria',
+      'Talento: [[tal_iniciado|Iniciado em Magia (Mago)]]',
+      'Perícias: [[per_arcanismo|Arcanismo]], [[per_historia|História]]',
+      'Ferramenta: [[ferr_caligrafia|Suprimentos de Caligrafia]]'] },
+    ant_soldado: { t: 'Soldado', l: 'Serviu numa tropa: marchou, obedeceu, lutou em formação e viu gente morrer.', b: [
+      'Atributos: Força, Destreza, Constituição',
+      'Talento: [[tal_atacante|Atacante Selvagem]]',
+      'Perícias: [[per_atletismo|Atletismo]], [[per_intimidacao|Intimidação]]',
+      'Ferramenta: [[ferr_jogos|Conjunto de Jogos]]'] },
+
+    // ── Grau 3: talentos de origem ────────────────────────────────────
+    tal_alerta: { t: 'Alerta', l: 'Você reage antes dos outros.', b: [
+      'Soma o bônus de proficiência na iniciativa.',
+      'Depois de rolar, pode trocar a sua iniciativa com a de um aliado disposto.'] },
+    tal_artesao: { t: 'Artesão (talento)', l: 'Você fabrica e compra melhor que os outros.', b: [
+      'Proficiência com três instrumentos de artesão à sua escolha.',
+      'Desconto de 20% ao comprar equipamento não mágico.',
+      'No descanso longo, pode fabricar itens simples com o material à mão.'] },
+    tal_curandeiro: { t: 'Curandeiro', l: 'Você cura com kit de medicina, sem gastar magia.', b: [
+      'Gastando um uso do kit, devolve 1d6 + bônus de proficiência PV a quem está caído ou ferido.',
+      'A mesma criatura só se beneficia de novo depois de um descanso.',
+      'Quando rola dados de cura, rola de novo qualquer 1.'] },
+    tal_sortudo: { t: 'Sortudo', l: 'Você tem pontos de sorte para gastar.', b: [
+      'Pontos = bônus de proficiência, recuperados no descanso longo.',
+      'Gaste um para rolar com vantagem, ou para dar desvantagem a quem ataca você.'] },
+    tal_iniciado: { t: 'Iniciado em Magia', l: 'Um pé na magia, sem ser conjurador.', b: [
+      'Dois truques e uma magia de 1º círculo da lista da classe indicada.',
+      'A magia de 1º círculo sai de graça uma vez por descanso longo — ou gastando espaço, se você tiver.',
+      'O antecedente diz de qual lista: Clérigo, Druida ou Mago.'] },
+    tal_musico: { t: 'Músico', l: 'Música que levanta o grupo.', b: [
+      'Proficiência com três instrumentos musicais.',
+      'Ao terminar um descanso, dá [[inspiracao|Inspiração Heroica]] a aliados que ouviram você tocar, até o seu bônus de proficiência.'] },
+    tal_atacante: { t: 'Atacante Selvagem', l: 'Quando acerta, acerta feio.', b: [
+      'Uma vez por turno, rola de novo os dados de dano de um ataque com arma e escolhe qual resultado usar.'] },
+    tal_habilidoso: { t: 'Habilidoso', l: 'Você aprendeu um pouco de tudo.', b: [
+      'Proficiência em três perícias ou ferramentas, à sua escolha, na combinação que quiser.'] },
+    tal_valentao: { t: 'Valentão de Taverna', l: 'Briga de bar: soco, banco na cabeça e empurrão.', b: [
+      'Seu ataque desarmado causa 1d4 em vez de 1 + Força.',
+      'Uma vez por turno, ao acertar desarmado, empurra o alvo 1,5 m.',
+      'Proficiência com armas improvisadas, e rola de novo qualquer 1 no dano delas.'] },
+    tal_resistente: { t: 'Resistente', l: 'Mais couro que os outros.', b: [
+      'Seus PV máximos sobem 2 por nível — e continuam subindo 2 a cada nível novo.'] },
+
+    // ── Grau 3: ferramentas ───────────────────────────────────────────
+    ferr_navegador: { t: 'Ferramentas de Navegador', l: 'Cartas náuticas, compasso e sextante.', b: [
+      'Traçar rota, ler carta, achar a posição pelas estrelas.',
+      'Ajuda a não se perder e a estimar quanto falta de viagem.'] },
+    ferr_ladrao: { t: 'Ferramentas de Ladrão', l: 'Gazuas, limas e arames.', b: [
+      'Abrir fechadura e desarmar armadilha — as duas coisas pedem essa proficiência.',
+      'É a ferramenta mais útil do jogo em masmorra.'] },
+    ferr_falsificacao: { t: 'Kit de Falsificação', l: 'Papel, selos, ceras e tintas.', b: [
+      'Forjar documentos, cartas, brasões e assinaturas.'] },
+    ferr_artesao: { t: 'Instrumentos de Artesão', l: 'O conjunto do ofício que você aprendeu.', b: [
+      'Cada tipo é uma proficiência: ferreiro, carpinteiro, joalheiro, alfaiate e por aí.',
+      'Serve pra fabricar, reparar e avaliar trabalho daquele ofício.'] },
+    ferr_caligrafia: { t: 'Suprimentos de Caligrafia', l: 'Pena, tinta e pergaminho bons.', b: [
+      'Escrever com capricho, reconhecer uma letra e desconfiar de assinatura forjada.'] },
+    ferr_carpinteiro: { t: 'Ferramentas de Carpinteiro', l: 'Serra, martelo, plaina.', b: [
+      'Construir e consertar em madeira: porta, ponte improvisada, barricada.'] },
+    ferr_jogos: { t: 'Conjunto de Jogos', l: 'Dados, cartas ou tabuleiro.', b: [
+      'Jogar bem, trapacear, e ler quem está do outro lado da mesa.',
+      'Dá conversa com soldado, guarda e taverneiro — que é metade do ponto.'] },
+    ferr_cartografo: { t: 'Ferramentas de Cartógrafo', l: 'Réguas, compassos e papel.', b: [
+      'Desenhar e ler mapas, estimar distância e reconhecer terreno pelo desenho.'] },
+    ferr_herbalismo: { t: 'Kit de Herbalismo', l: 'Sacos, pilão e ervas.', b: [
+      'Identificar planta, preparar remédio e, com tempo e material, fabricar poção de cura.'] },
+    ferr_instrumento: { t: 'Instrumento Musical', l: 'Alaúde, flauta, tambor — cada um é uma proficiência.', b: [
+      'Tocar para entreter, e acompanhar uma [[per_atuacao|Atuação]].'] },
+
+    // ── Grau 3: itens que aparecem no equipamento ─────────────────────
+    item_adaga: { t: 'Adaga', l: 'Arma simples, leve e discreta.', b: [
+      '1d4 de perfuração, com Acuidade (usa Força ou Destreza) e de arremesso (6/18 m).',
+      'Maestria Nick: o ataque extra de mão secundária sai de graça, sem gastar ação bônus.'] },
+    item_corda: { t: 'Corda', l: '15 metros de cânhamo.', b: [
+      'Escalar, amarrar, descer poço, prender prisioneiro.',
+      'Aguenta 3 personagens médios pendurados.'] },
+    item_roupas: { t: 'Roupas de Viagem', l: 'Roupa resistente de estrada, com capa e botas.', b: [
+      'Não dá bônus: é o que impede você de passar frio e chegar molhado.'] }
+,
     for_salv: { t: 'Salvaguarda de Força', l: 'Segurar o próprio corpo no lugar.', b: [
       'Resistir a ser empurrado, agarrado ou arrastado.',
       'Portas mágicas, tentáculos, ventos que querem te levar.'] },
@@ -1154,7 +1346,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     antecedente: { t: 'Antecedente', l: 'De onde você veio antes de virar aventureiro. Na 5.5 ele pesa muito mais do que pesava antes.', b: [
       'Distribui +2 e +1 (ou +1/+1/+1) entre três atributos — na 5.5 o aumento vem daqui, não da espécie.',
       'Dá duas perícias, uma ferramenta e um talento de origem, já no nível 1.',
-      'Escolhido na criação; não muda depois.'] },
+      'Escolhido na criação; não muda depois.'],
+      mais: 'Ver os 16 antecedentes',
+      lista: ['ant_acolito', 'ant_andarilho', 'ant_artesao', 'ant_artista', 'ant_charlatao', 'ant_criminoso',
+        'ant_eremita', 'ant_escriba', 'ant_fazendeiro', 'ant_guarda', 'ant_guia', 'ant_marinheiro',
+        'ant_mercador', 'ant_nobre', 'ant_sabio', 'ant_soldado'] },
     classe: { t: 'Classe', l: 'O que você faz numa aventura. É de onde vem a maior parte dos seus poderes.', b: [
       'Define o dado de vida, em quais duas salvaguardas você é proficiente e quais perícias pode escolher.',
       'A cada nível ela entrega características novas.'] },
@@ -1300,23 +1496,107 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   });
 
   var balao = document.getElementById('balao'), sumBt = document.getElementById('sumBt'), sumario = false;
-  function fechaBalao() { balao.hidden = true; }
-  function mostraBalao(el) {
-    var d = AJUDA[el.dataset.ajuda];
-    if (!d) return;
-    document.getElementById('balaoT').textContent = d.t;
-    document.getElementById('balaoL').textContent = d.l;
-    var ul = document.getElementById('balaoB');
+  var balaoT = document.getElementById('balaoT'), balaoL = document.getElementById('balaoL');
+  var balaoB = document.getElementById('balaoB'), balaoVoltar = document.getElementById('balaoVoltar');
+  var ancora = null, pilha = [];
+
+  // [[chave|rótulo]] vira um termo clicável (grau 3)
+  function comTags(txt) {
+    var frag = document.createDocumentFragment(), re = /\[\[([a-z0-9_]+)\|([^\]]+)\]\]/g, i = 0, m;
+    while ((m = re.exec(txt))) {
+      if (m.index > i) frag.appendChild(document.createTextNode(txt.slice(i, m.index)));
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'tag'; b.dataset.ir = m[1]; b.textContent = m[2];
+      frag.appendChild(b);
+      i = m.index + m[0].length;
+    }
+    if (i < txt.length) frag.appendChild(document.createTextNode(txt.slice(i)));
+    return frag;
+  }
+  function bullets(ul, lista) {
     ul.innerHTML = '';
-    (d.b || []).forEach(function(txt) { var li = document.createElement('li'); li.textContent = txt; ul.appendChild(li); });
+    (lista || []).forEach(function(txt) {
+      var li = document.createElement('li');
+      li.appendChild(comTags(txt));
+      ul.appendChild(li);
+    });
+  }
+  function fechaBalao() { balao.hidden = true; pilha = []; balao.classList.remove('tem-volta'); }
+
+  function abre(chave) {
+    var d = AJUDA[chave];
+    if (!d) return;
+    balao.dataset.chave = chave;
+    balaoT.textContent = d.t;
+    balaoL.innerHTML = ''; balaoL.appendChild(comTags(d.l));
+    bullets(balaoB, d.b);
+
+    // limpa o grau 2 anterior
+    var antigo = balao.querySelector('.balao-mais, .balao-lista');
+    while (antigo) { antigo.remove(); antigo = balao.querySelector('.balao-mais, .balao-lista'); }
+
+    if (d.lista && d.lista.length) {
+      var bt = document.createElement('button');
+      bt.type = 'button'; bt.className = 'balao-mais'; bt.textContent = d.mais || 'Ver a lista';
+      bt.setAttribute('aria-expanded', 'false');
+      var cx = document.createElement('div');
+      cx.className = 'balao-lista'; cx.hidden = true;
+      d.lista.forEach(function(k) {
+        var it = AJUDA[k];
+        if (!it) return;
+        var linha = document.createElement('div');
+        linha.className = 'balao-item';
+        var tt = document.createElement('button');
+        tt.type = 'button'; tt.className = 'balao-item-t'; tt.textContent = it.t;
+        tt.setAttribute('aria-expanded', 'false');
+        var corpo = document.createElement('div');
+        corpo.className = 'balao-item-c'; corpo.hidden = true;
+        var l = document.createElement('div');
+        l.className = 'balao-l'; l.appendChild(comTags(it.l));
+        var ul = document.createElement('ul');
+        bullets(ul, it.b);
+        corpo.appendChild(l); corpo.appendChild(ul);
+        tt.addEventListener('click', function() {
+          corpo.hidden = !corpo.hidden;
+          tt.setAttribute('aria-expanded', corpo.hidden ? 'false' : 'true');
+        });
+        linha.appendChild(tt); linha.appendChild(corpo);
+        cx.appendChild(linha);
+      });
+      bt.addEventListener('click', function() {
+        cx.hidden = !cx.hidden;
+        bt.setAttribute('aria-expanded', cx.hidden ? 'false' : 'true');
+        balao.classList.toggle('largo', !cx.hidden);
+      });
+      balao.appendChild(bt); balao.appendChild(cx);
+    }
+
+    balao.classList.toggle('tem-volta', pilha.length > 0);
+    balao.classList.remove('largo');   // só alarga quando a lista do grau 2 abre
     balao.hidden = false;
-    // encosta no bloco clicado, sem sair da tela
-    var r = el.getBoundingClientRect(), b = balao.getBoundingClientRect();
+    balao.scrollTop = 0;
+    posiciona();
+  }
+  function posiciona() {
+    if (!ancora) return;
+    var r = ancora.getBoundingClientRect(), b = balao.getBoundingClientRect();
     var x = Math.min(Math.max(12, r.left + r.width / 2 - b.width / 2), innerWidth - b.width - 12);
     var y = r.bottom + 10;
-    if (y + b.height > innerHeight - 12) y = Math.max(12, r.top - b.height - 10);
+    if (y + b.height > innerHeight - 12) y = Math.max(12, innerHeight - b.height - 12);
     balao.style.left = x + 'px'; balao.style.top = y + 'px';
   }
+  function mostraBalao(el) { ancora = el; pilha = []; abre(el.dataset.ajuda); }
+
+  balaoVoltar.addEventListener('click', function() {
+    var anterior = pilha.pop();
+    if (anterior) abre(anterior); else fechaBalao();
+  });
+  balao.addEventListener('click', function(e) {
+    var t = e.target.closest('.tag');
+    if (!t) return;
+    pilha.push(balao.dataset.chave);
+    abre(t.dataset.ir);
+  });
   document.getElementById('balaoX').addEventListener('click', fechaBalao);
   sumBt.addEventListener('click', function() {
     sumario = !sumario;
@@ -1331,6 +1611,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (el) { e.preventDefault(); e.stopPropagation(); mostraBalao(el); } else fechaBalao();
   }, true);
   document.addEventListener('keydown', function(e) { if (e.key === 'Escape') fechaBalao(); });
+  window.addEventListener('resize', function() { if (!balao.hidden) posiciona(); });
 
   // ── PDF: usa a impressão do navegador ("Salvar como PDF") ───────────
   document.getElementById('pdfBt').addEventListener('click', function() { window.print(); });
