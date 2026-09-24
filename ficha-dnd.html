@@ -678,6 +678,17 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 .cat-livre input[type="text"] { flex: 1; }
 .cat-livre input[type="number"] { width: 62px; }
 
+/* recado curto depois de pôr algo na ficha */
+.aviso {
+  position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 440;
+  padding: 9px 14px; border-radius: 999px; background: rgba(7,12,22,0.97);
+  border: 1px solid rgba(224,180,87,0.5); box-shadow: 0 18px 40px -16px rgba(0,0,0,0.9);
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #e0b457;
+  opacity: 0; transition: opacity 0.2s;
+}
+.aviso.on { opacity: 1; }
+.aviso[hidden] { display: none; }
+
 /* ───────── modo sumário ─────────
    Liga um "o que é isso?" em cima da ficha: os blocos ficam clicáveis e
    abrem um balão explicando o campo. Os campos param de aceitar digitação
@@ -755,7 +766,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   }
   body::after, .fundo, #backBtn, .preview-flag, .fundo-ctrl, .volta-local,
   .dobra-bt, .tbl-add, .tbl-del, #fileInput, #fundoFile, .balao,
-  .inv-bts, .inv-menu, .inv-carga-pop, .cat-ov { display: none !important; }
+  .inv-bts, .inv-menu, .inv-carga-pop, .cat-ov, .aviso { display: none !important; }
   /* no papel o inventário sai em lista, que é o que se lê */
   .inv-corpo.modo-grade { display: flex !important; flex-direction: column !important; }
   .modo-grade .inv-slot { aspect-ratio: auto !important; border: 0 !important; border-bottom: 1px solid #ddd !important; border-radius: 0 !important; justify-content: flex-start !important; gap: 7px; padding: 4px 2px !important; }
@@ -891,6 +902,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     </div>
   </div>
 </div>
+
+<div class="aviso" id="aviso" hidden></div>
 
 <!-- menu do botão direito no item -->
 <div class="inv-menu" id="invMenu" hidden></div>
@@ -1534,7 +1547,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     antecedente: { t: 'Antecedente', l: 'De onde você veio antes de virar aventureiro. Na 5.5 ele pesa muito mais do que pesava antes.', b: [
       'Distribui +2 e +1 (ou +1/+1/+1) entre três atributos — na 5.5 o aumento vem daqui, não da espécie.',
       'Dá duas perícias, uma ferramenta e um talento de origem, já no nível 1.',
-      'Escolhido na criação; não muda depois.'],
+      'Escolhido na criação; não muda depois.',
+      'Botão direito num termo abaixo põe ele na ficha; no nome do antecedente, aplica o pacote inteiro.'],
       mais: 'Ver os 16 antecedentes',
       lista: ['ant_acolito', 'ant_andarilho', 'ant_artesao', 'ant_artista', 'ant_charlatao', 'ant_criminoso',
         'ant_eremita', 'ant_escriba', 'ant_fazendeiro', 'ant_guarda', 'ant_guia', 'ant_marinheiro',
@@ -2807,6 +2821,102 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   document.addEventListener('input', function(e) {
     var f = e.target.dataset && e.target.dataset.field;
     if (f === 'nivel' || /_valor$/.test(f || '')) calcula();
+  });
+
+  // ══════════════════════════════════════════════════════════════════
+  //  PÔR NA FICHA
+  //  Botão direito num termo do Sumário e ele vai pro lugar dele: perícia
+  //  marca a bolinha, talento e ferramenta viram anotação no quadro certo,
+  //  item entra no inventário. No nome de um antecedente, aplica o pacote
+  //  inteiro — e aí a fonte é o próprio verbete, não uma segunda tabela.
+  // ══════════════════════════════════════════════════════════════════
+  var ITEM_DO_TERMO = { item_adaga: 'adaga', item_corda: 'corda', item_roupas: 'roupas_viagem' };
+  var avisoEl = document.getElementById('aviso'), tAviso = null;
+  function avisa(txt) {
+    avisoEl.textContent = txt;
+    avisoEl.hidden = false;
+    requestAnimationFrame(function() { avisoEl.classList.add('on'); });
+    clearTimeout(tAviso);
+    tAviso = setTimeout(function() {
+      avisoEl.classList.remove('on');
+      setTimeout(function() { avisoEl.hidden = true; }, 220);
+    }, 2600);
+  }
+  function anota(nomeCampo, txt) {
+    var el = campo(nomeCampo);
+    if (!el) return false;
+    var atual = lerTexto(el).trim();
+    if (atual.toLowerCase().split('\n').indexOf(txt.toLowerCase()) >= 0) return 'repetido';
+    el.textContent = atual ? atual + '\n' + txt : txt;
+    return true;
+  }
+  function destinoDe(chave) {
+    if (/^per_/.test(chave)) return { r: 'Marcar proficiência' };
+    if (/^tal_/.test(chave)) return { r: 'Anotar em Talentos' };
+    if (/^ferr_/.test(chave)) return { r: 'Anotar em Ferramentas' };
+    if (/^item_/.test(chave) && ITEM_DO_TERMO[chave]) return { r: 'Pôr no inventário' };
+    if (/^ant_/.test(chave)) return { r: 'Aplicar na ficha' };
+    return null;
+  }
+  function poeNaFicha(chave) {
+    var d = AJUDA[chave], nome = d ? d.t : chave;
+    if (/^per_/.test(chave)) {
+      var b = document.querySelector('.prof[data-prof="' + chave + '"]');
+      if (!b) return 'não achei essa perícia';
+      if (b.dataset.estado) return nome + ' já estava marcada';
+      b.dataset.estado = 'p';
+      b.setAttribute('aria-pressed', 'true');
+      b.title = TITULO.p;
+      return 'proficiência em ' + nome;
+    }
+    if (/^tal_/.test(chave)) {
+      var r = anota('talentos', nome);
+      return r === 'repetido' ? nome + ' já estava nos Talentos' : nome + ' nos Talentos';
+    }
+    if (/^ferr_/.test(chave)) {
+      var r2 = anota('prof_ferramentas', nome);
+      return r2 === 'repetido' ? nome + ' já estava nas Ferramentas' : nome + ' nas Ferramentas';
+    }
+    if (/^item_/.test(chave)) {
+      var id = ITEM_DO_TERMO[chave];
+      if (!id) return null;
+      poeItem(id);
+      return (ITENS[id] ? ITENS[id].n : nome) + ' no inventário';
+    }
+    if (/^ant_/.test(chave)) {
+      var campoAnt = campo('antecedente');
+      if (campoAnt) campoAnt.textContent = nome;
+      var feitos = 0;
+      (d.b || []).join(' ').replace(/\[\[([a-z0-9_]+)\|[^\]]+\]\]/g, function(_, k) {
+        if (poeNaFicha(k)) feitos++;
+        return '';
+      });
+      return 'antecedente ' + nome + ' aplicado (' + feitos + ' itens)';
+    }
+    return null;
+  }
+
+  balao.addEventListener('contextmenu', function(e) {
+    var alvo = e.target.closest('.tag, .balao-item-t');
+    if (!alvo || somenteLeitura) return;
+    var chave = alvo.dataset.ir || alvo.dataset.k;
+    var dest = chave && destinoDe(chave);
+    if (!dest) return;
+    e.preventDefault();
+    invMenu.innerHTML = '';
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = dest.r + ': ' + (AJUDA[chave] ? AJUDA[chave].t : chave);
+    b.addEventListener('click', function() {
+      fechaMenu();
+      var feito = poeNaFicha(chave);
+      if (feito) { calcula(); marca(); avisa(feito); }
+    });
+    invMenu.appendChild(b);
+    invMenu.hidden = false;
+    var r = invMenu.getBoundingClientRect();
+    invMenu.style.left = Math.min(e.clientX, innerWidth - r.width - 10) + 'px';
+    invMenu.style.top = Math.min(e.clientY, innerHeight - r.height - 10) + 'px';
   });
 
   // ── Carregamento ────────────────────────────────────────────────────
