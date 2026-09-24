@@ -544,6 +544,29 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 .volta-local button:hover { background: rgba(224,180,87,0.1); }
 .volta-local button#voltaLocalNao { color: var(--fg-faint); border-color: var(--line-strong); }
 
+/* ───────── modo sumário ─────────
+   Liga um "o que é isso?" em cima da ficha: os blocos ficam clicáveis e
+   abrem um balão explicando o campo. Os campos param de aceitar digitação
+   enquanto está ligado — é modo de leitura, não de preenchimento. */
+body.sumario [contenteditable] { pointer-events: none; }
+body.sumario [data-ajuda] { cursor: help; }
+body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); outline-offset: 2px; }
+.balao {
+  position: fixed; z-index: 400; width: 290px; max-width: calc(100vw - 24px); padding: 12px 13px 13px;
+  border-radius: 11px; background: rgba(7,12,22,0.985); border: 1px solid rgba(224,180,87,0.45);
+  box-shadow: 0 26px 56px -20px rgba(0,0,0,0.92);
+}
+.balao[hidden] { display: none; }
+.balao-t { font-family: var(--font-display); font-weight: 700; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: #e0b457; padding-right: 18px; }
+.balao-l { font-size: 12.5px; line-height: 1.5; color: rgba(207,233,240,0.9); margin-top: 6px; }
+.balao ul { margin: 8px 0 0; padding-left: 15px; display: flex; flex-direction: column; gap: 5px; }
+.balao li { font-size: 11.5px; line-height: 1.45; color: rgba(207,233,240,0.62); }
+.balao-x {
+  position: absolute; top: 7px; right: 8px; width: 20px; height: 20px; padding: 0; cursor: pointer;
+  background: none; border: 0; color: rgba(207,233,240,0.35); font-size: 13px; line-height: 1;
+}
+.balao-x:hover { color: #fff; }
+
 /* ───────── impressão / PDF ─────────
    A folha é desenhada pra 960px de largura. Deixar o papel (≈730px) refazer
    o layout embaralha tudo: a grade cai pro modo estreito, as colunas
@@ -557,7 +580,7 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
   body::after, .fundo, #backBtn, .preview-flag, .fundo-ctrl, .volta-local,
-  .dobra-bt, .tbl-add, .tbl-del, #fileInput, #fundoFile { display: none !important; }
+  .dobra-bt, .tbl-add, .tbl-del, #fileInput, #fundoFile, .balao { display: none !important; }
   /* campo vazio no papel é linha vazia, não texto cinza de dica */
   [contenteditable]:empty::before { content: none !important; }
   [contenteditable]:hover, [contenteditable]:focus { background: none !important; box-shadow: none !important; }
@@ -650,6 +673,7 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 
 <!-- fundo da ficha: cor ou imagem, por personagem -->
 <div class="fundo-ctrl">
+  <button type="button" class="fundo-bt" id="sumBt" aria-pressed="false" title="Modo de leitura: clique em qualquer bloco pra saber o que ele é">Sumário</button>
   <button type="button" class="fundo-bt" id="pdfBt" title="Imprimir a ficha ou salvar em PDF">PDF</button>
   <button type="button" class="fundo-bt" id="papelBt" aria-pressed="true" title="Com a folha creme por baixo, ou os quadros direto no fundo">Papel</button>
   <button type="button" class="fundo-bt" id="fundoBt" aria-expanded="false" aria-controls="fundoPop">Fundo</button>
@@ -668,6 +692,14 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
     <button type="button" class="fundo-acao apaga" id="fundoLimpa">Tirar o fundo</button>
     <input type="file" id="fundoFile" accept="image/*">
   </div>
+</div>
+
+<!-- balão do modo sumário -->
+<div class="balao" id="balao" hidden role="dialog" aria-live="polite">
+  <button type="button" class="balao-x" id="balaoX" aria-label="Fechar">&#10005;</button>
+  <div class="balao-t" id="balaoT"></div>
+  <div class="balao-l" id="balaoL"></div>
+  <ul id="balaoB"></ul>
 </div>
 
 <!-- edição que ficou só neste navegador -->
@@ -955,6 +987,7 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
     var el = document.createElement('div');
     // o último de cada coluna estica pra as duas colunas terminarem alinhadas
     el.className = 'bx atr' + (a.id === 'car' ? ' fill' : '');
+    el.dataset.ajuda = 'atr_' + a.id;
     var h = '<div class="atr-placa">' + MOLDURA +
         '<div class="bx-t">' + a.nome + '</div>' +
         '<div class="num atr-mod" contenteditable="true" data-field="' + a.id + '_mod"></div>' +
@@ -1042,6 +1075,195 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
     if (sujar) marca();
   }
   papelBt.addEventListener('click', function() { if (!somenteLeitura) poePapel(!comPapel, true); });
+
+  // ══════════════════════════════════════════════════════════════════
+  //  MODO SUMÁRIO — "o que é isso?" em cima da ficha
+  //  O texto abaixo é escrito em palavras nossas sobre as REGRAS da 5.5
+  //  (2024). Explica só o que o campo É e como a conta funciona — nada que
+  //  dependa da opção escolhida (qual antecedente, qual classe, qual
+  //  magia). Essa parte entra depois, com o livro na mão.
+  // ══════════════════════════════════════════════════════════════════
+  var AJUDA = {
+    antecedente: { t: 'Antecedente', l: 'De onde você veio antes de virar aventureiro. Na 5.5 ele pesa muito mais do que pesava antes.', b: [
+      'Distribui +2 e +1 (ou +1/+1/+1) entre três atributos — na 5.5 o aumento vem daqui, não da espécie.',
+      'Dá duas perícias, uma ferramenta e um talento de origem, já no nível 1.',
+      'Escolhido na criação; não muda depois.'] },
+    classe: { t: 'Classe', l: 'O que você faz numa aventura. É de onde vem a maior parte dos seus poderes.', b: [
+      'Define o dado de vida, em quais duas salvaguardas você é proficiente e quais perícias pode escolher.',
+      'A cada nível ela entrega características novas.'] },
+    subclasse: { t: 'Subclasse', l: 'A especialização dentro da classe.', b: [
+      'Na 5.5 todas chegam no nível 3.',
+      'Não substitui a classe: soma em cima dela.'] },
+    especie: { t: 'Espécie', l: 'O corpo com que o personagem nasceu.', b: [
+      'Dá deslocamento, tamanho, tipo de criatura e traços próprios (visão no escuro, resistências e por aí).',
+      'Na 5.5 a espécie NÃO dá mais aumento de atributo — isso passou para o antecedente.'] },
+    nivel: { t: 'Nível e XP', l: 'O quanto o personagem já andou.', b: [
+      'Cada nível novo traz características de classe e pode subir o bônus de proficiência.',
+      'A subida vem por XP ou por decisão do Mestre — os dois jeitos são oficiais.'] },
+    ca: { t: 'Classe de Armadura', l: 'O quanto é difícil te acertar: o ataque precisa igualar ou passar esse número.', b: [
+      'Sem armadura: 10 + modificador de Destreza.',
+      'Com armadura: a conta vem da armadura (a pesada ignora a Destreza).',
+      'Escudo soma +2 — é a bolinha do lado.'] },
+    pv: { t: 'Pontos de Vida', l: 'Quanto castigo você aguenta antes de cair.', b: [
+      'No nível 1: o máximo do dado de vida + modificador de Constituição.',
+      'PV temporários não somam com outros: fica sempre o maior dos dois.',
+      'Chegou a zero: você cai e começam as salvaguardas contra morte.'] },
+    dv: { t: 'Dados de Vida', l: 'O que te cura num descanso curto, sem depender de ninguém.', b: [
+      'Você tem um por nível, do tamanho do dado da sua classe.',
+      'No descanso curto você gasta quantos quiser: rola e soma o modificador de Constituição.',
+      'O descanso longo devolve metade do total, no mínimo um.'] },
+    morte: { t: 'Salvaguardas contra Morte', l: 'O que acontece quando você está em zero PV.', b: [
+      'No seu turno, role um d20 puro: 10 ou mais é sucesso, 9 ou menos é falha.',
+      'Três sucessos: você estabiliza. Três falhas: morre.',
+      'Tirar 1 conta como duas falhas; tirar 20 te põe de pé na hora com 1 PV.'] },
+    proficiencia: { t: 'Bônus de Proficiência', l: 'O número que mostra o quanto você treinou. Um só, para tudo.', b: [
+      '+2 do nível 1 ao 4, e sobe de um em um a cada quatro níveis, até +6 no nível 17.',
+      'Soma em ataques, perícias, salvaguardas e CDs em que você é proficiente.',
+      'Nunca soma duas vezes — só dobra quando você é especialista.'] },
+    inspiracao: { t: 'Inspiração Heroica', l: 'Uma segunda chance guardada no bolso.', b: [
+      'Gaste para rolar de novo qualquer d20 — e fique com o resultado novo, mesmo se for pior.',
+      'Só dá para ter uma de cada vez.',
+      'Na 5.5 várias espécies dão isso, além do Mestre.'] },
+    modificador: { t: 'Modificador e valor', l: 'O número grande é o que entra em todas as contas; o pequeno é o atributo puro.', b: [
+      'Modificador = (valor − 10) ÷ 2, arredondando para baixo.',
+      '8 = −1  ·  10 ou 11 = +0  ·  14 = +2  ·  18 = +4.',
+      'O valor puro quase nunca é usado direto.'] },
+    atr_for: { t: 'Força', l: 'Músculo: empurrar, carregar, brigar de perto.', b: [
+      'Ataque e dano das armas corpo a corpo comuns.',
+      'Atletismo, agarrar e empurrar.',
+      'Define quanto peso você carrega.'] },
+    atr_des: { t: 'Destreza', l: 'Corpo rápido e mão firme. É o atributo mais usado do jogo.', b: [
+      'Iniciativa, e a CA de quem não usa armadura pesada.',
+      'Armas leves, de arremesso e com Acuidade.',
+      'Acrobacia, Furtividade e Prestidigitação.'] },
+    atr_con: { t: 'Constituição', l: 'Fôlego e resistência. Ninguém sobe outro atributo antes desse.', b: [
+      'Entra nos pontos de vida de todo nível.',
+      'É a salvaguarda para manter a concentração numa magia.',
+      'Resistir a veneno, doença e cansaço.'] },
+    atr_int: { t: 'Inteligência', l: 'O que você estudou e o que consegue deduzir.', b: [
+      'Arcanismo, História, Investigação, Natureza e Religião.',
+      'É o atributo de conjuração do mago.'] },
+    atr_sab: { t: 'Sabedoria', l: 'Leitura do mundo e das pessoas — percepção, não erudição.', b: [
+      'Percepção, Intuição, Medicina, Lidar com Animais e Sobrevivência.',
+      'É o atributo de conjuração de clérigo e druida.',
+      'Manda na Percepção Passiva, que o Mestre consulta o tempo todo.'] },
+    atr_car: { t: 'Carisma', l: 'Presença e força de vontade — não é beleza.', b: [
+      'Atuação, Enganação, Intimidação e Persuasão.',
+      'É o atributo de conjuração de bardo, feiticeiro, bruxo e paladino.'] },
+    salvaguarda: { t: 'Salvaguarda', l: 'Resistir a algo que vem em cima de você: um sopro, um feitiço, um veneno.', b: [
+      'd20 + modificador do atributo, mais o bônus de proficiência se a bolinha estiver marcada.',
+      'Sua classe diz em quais duas você é proficiente.'] },
+    pericia: { t: 'Perícias', l: 'O que você sabe fazer. A bolinha do lado diz o quanto.', b: [
+      'd20 + modificador do atributo, mais a proficiência quando marcada.',
+      'Bolinha preta cheia = proficiente. Losango dourado = especialista, que DOBRA a proficiência.',
+      'A ordem aqui é a do papel, agrupada por atributo — não é alfabética.'] },
+    iniciativa: { t: 'Iniciativa', l: 'A ordem em que todo mundo age no combate.', b: [
+      'd20 + modificador de Destreza, rolado uma vez no começo da briga.'] },
+    deslocamento: { t: 'Deslocamento', l: 'Quanto você anda no seu turno.', b: [
+      'Vem da espécie; 30 pés (9 metros) para a maioria.',
+      'Dá para dividir o movimento antes e depois da ação.'] },
+    tamanho: { t: 'Tamanho', l: 'Pequeno, Médio, Grande… vem da espécie.', b: [
+      'Conta para agarrar, empurrar e passar por espaços apertados.'] },
+    percepcao_passiva: { t: 'Percepção Passiva', l: 'O que você nota sem ninguém pedir rolagem.', b: [
+      '10 + modificador de Sabedoria + proficiência em Percepção (dobrada, se for especialista).',
+      'É o número que o Mestre olha escondido para decidir se você viu a emboscada.'] },
+    armas: { t: 'Armas e Truques de Dano', l: 'Tudo com que você causa dano, numa lista só.', b: [
+      'Bônus de ataque = modificador do atributo + proficiência, quando você é proficiente na arma.',
+      'Acuidade deixa escolher entre Força e Destreza — o ladino vive disso.',
+      'Na 5.5 cada arma tem uma maestria (Nick, Vex, Derrubar…): anote nas observações.'] },
+    caracteristicas: { t: 'Características de Classe', l: 'Tudo que a classe e a subclasse te deram, nível a nível.', b: [
+      'São dois campos separados: o que você escreve de um lado fica nele.'] },
+    tracos: { t: 'Traço de Espécies', l: 'O que vem do corpo, não do treino.', b: [
+      'Visão no escuro, resistências, deslocamentos extras, truques natos.'] },
+    talentos: { t: 'Talentos', l: 'Melhorias que você escolhe.', b: [
+      'O talento de origem vem do antecedente, de graça, no nível 1.',
+      'Os outros entram no lugar de um aumento de atributo, nos níveis 4, 8, 12, 16 e 19 — algumas classes ganham mais.'] },
+    treino: { t: 'Treinamento e Proficiência', l: 'Com o que você sabe lidar sem atrapalhar.', b: [
+      'Usar armadura em que você não é treinado atrapalha ataques e perícias de Força e Destreza, e impede conjurar.',
+      'Ferramentas e idiomas vêm do antecedente, da classe e da espécie.'] },
+    conjuracao: { t: 'Conjuração', l: 'Os três números que toda magia sua usa.', b: [
+      'CD para evitar a magia = 8 + proficiência + modificador do atributo de conjuração.',
+      'Bônus de ataque mágico = proficiência + modificador do mesmo atributo.',
+      'O atributo vem da classe: INT no mago, SAB em clérigo e druida, CAR em bardo, feiticeiro, bruxo e paladino.'] },
+    slots: { t: 'Espaços de Magia', l: 'O combustível: cada magia conjurada gasta um espaço.', b: [
+      'Dá para gastar um espaço de círculo MAIOR que o da magia — várias ficam mais fortes assim.',
+      'Truques não gastam espaço: pode usar à vontade.',
+      'O descanso longo devolve todos.'] },
+    magias: { t: 'Truques e Magias Preparadas', l: 'A lista do que você consegue conjurar hoje.', b: [
+      'C = concentração: só uma dessas por vez, e levar dano pede salvaguarda de Constituição para não perder.',
+      'R = ritual: dá para conjurar sem gastar espaço, levando 10 minutos a mais.',
+      'M = precisa do componente material na mão.'] },
+    aparencia: { t: 'Aparência', l: 'A cara do personagem, e a foto.', b: [
+      'Clique no quadro para subir uma imagem.'] },
+    historia: { t: 'História e Personalidade', l: 'Quem ele é fora da ficha.', b: [
+      'O alinhamento, na linha de baixo, é uma bússola e não uma regra: descreve como o personagem age.'] },
+    idiomas: { t: 'Idiomas', l: 'O que você fala, lê e escreve.', b: [
+      'Vêm do antecedente, da classe e da espécie.'] },
+    equipamento: { t: 'Equipamento', l: 'O que você carrega.', b: [
+      'O peso máximo que dá para carregar é 15 × o valor puro de Força, em libras.'] },
+    sintonizados: { t: 'Itens Mágicos Sintonizados', l: 'Itens que exigem sintonia para funcionar de verdade.', b: [
+      'A sintonia leva um descanso curto e ocupa uma das três vagas.',
+      'No máximo três ao mesmo tempo, não importa o nível.'] },
+    moedas: { t: 'Moedas', l: 'O dinheiro do mundo.', b: [
+      '10 PC = 1 PP  ·  10 PP = 1 PO  ·  10 PO = 1 PL.',
+      'A CE (electro) vale meia PO — é rara, quase sempre tesouro antigo.'] }
+  };
+
+  // Onde cada explicação se pendura. Fica aqui, e não no HTML, pra ligar o
+  // sumário sem espalhar atributo por toda a ficha.
+  var ALVOS = [
+    ['[data-field="antecedente"]', 'antecedente', '.fl'], ['[data-field="classe"]', 'classe', '.fl'],
+    ['[data-field="especie"]', 'especie', '.fl'], ['[data-field="subclasse"]', 'subclasse', '.fl'],
+    ['.nivel', 'nivel'], ['.ca', 'ca'], ['.vida .pv', 'pv'], ['.vida .dv', 'dv'], ['.vida .morte', 'morte'],
+    ['.caixinha.dourada', 'proficiencia'], ['.insp', 'inspiracao'],
+    ['.atr-placa', 'modificador'], ['.per.salv', 'salvaguarda'], ['.per:not(.salv)', 'pericia'],
+    ['.faixa .bx:nth-child(1)', 'iniciativa'], ['.faixa .bx:nth-child(2)', 'deslocamento'],
+    ['.faixa .bx:nth-child(3)', 'tamanho'], ['.faixa .bx:nth-child(4)', 'percepcao_passiva'],
+    ['#tblArmas', 'armas', '.bx'], ['.caract', 'caracteristicas'],
+    ['.dupla .bx:nth-child(1)', 'tracos'], ['.dupla .bx:nth-child(2)', 'talentos'],
+    ['.treino', 'treino'], ['.conj', 'conjuracao'], ['#slots', 'slots', '.bx'], ['#tblMagias', 'magias', '.bx'],
+    ['.aparencia', 'aparencia'], ['.historia', 'historia'], ['.idiomas', 'idiomas'],
+    ['.equip', 'equipamento'], ['.sint', 'sintonizados'], ['.moedas-g', 'moedas']
+  ];
+  ALVOS.forEach(function(a) {
+    document.querySelectorAll(a[0]).forEach(function(el) {
+      var alvo = a[2] ? el.closest(a[2]) : el;
+      if (alvo && !alvo.dataset.ajuda) alvo.dataset.ajuda = a[1];
+    });
+  });
+
+  var balao = document.getElementById('balao'), sumBt = document.getElementById('sumBt'), sumario = false;
+  function fechaBalao() { balao.hidden = true; }
+  function mostraBalao(el) {
+    var d = AJUDA[el.dataset.ajuda];
+    if (!d) return;
+    document.getElementById('balaoT').textContent = d.t;
+    document.getElementById('balaoL').textContent = d.l;
+    var ul = document.getElementById('balaoB');
+    ul.innerHTML = '';
+    (d.b || []).forEach(function(txt) { var li = document.createElement('li'); li.textContent = txt; ul.appendChild(li); });
+    balao.hidden = false;
+    // encosta no bloco clicado, sem sair da tela
+    var r = el.getBoundingClientRect(), b = balao.getBoundingClientRect();
+    var x = Math.min(Math.max(12, r.left + r.width / 2 - b.width / 2), innerWidth - b.width - 12);
+    var y = r.bottom + 10;
+    if (y + b.height > innerHeight - 12) y = Math.max(12, r.top - b.height - 10);
+    balao.style.left = x + 'px'; balao.style.top = y + 'px';
+  }
+  document.getElementById('balaoX').addEventListener('click', fechaBalao);
+  sumBt.addEventListener('click', function() {
+    sumario = !sumario;
+    document.body.classList.toggle('sumario', sumario);
+    sumBt.setAttribute('aria-pressed', sumario ? 'true' : 'false');
+    if (!sumario) fechaBalao();
+  });
+  // captura: em modo sumário o clique explica o campo em vez de entrar nele
+  document.addEventListener('click', function(e) {
+    if (!sumario || e.target.closest('.balao, .fundo-ctrl')) return;
+    var el = e.target.closest('[data-ajuda]');
+    if (el) { e.preventDefault(); e.stopPropagation(); mostraBalao(el); } else fechaBalao();
+  }, true);
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') fechaBalao(); });
 
   // ── PDF: usa a impressão do navegador ("Salvar como PDF") ───────────
   document.getElementById('pdfBt').addEventListener('click', function() { window.print(); });
