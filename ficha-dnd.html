@@ -529,6 +529,68 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 .moeda.pc span { color: #a2652f; } .moeda.pp span { color: #6f7a86; } .moeda.ce span { color: #4f7e6f; }
 .moeda.po span { color: var(--gold); } .moeda.pl span { color: #8a9099; }
 
+/* barra de recuperação: aparece só quando sobrou edição neste navegador */
+.volta-local {
+  position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 300;
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px;
+  background: rgba(7,12,22,0.97); border: 1px solid rgba(224,180,87,0.5); box-shadow: 0 20px 40px -18px rgba(0,0,0,0.9);
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.1em; color: var(--fg-dim);
+}
+.volta-local[hidden] { display: none; }
+.volta-local button {
+  cursor: pointer; font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--dnd); background: transparent; border: 1px solid var(--dnd-soft); border-radius: 6px; padding: 5px 9px;
+}
+.volta-local button:hover { background: rgba(224,180,87,0.1); }
+.volta-local button#voltaLocalNao { color: var(--fg-faint); border-color: var(--line-strong); }
+
+/* ───────── impressão / PDF ─────────
+   No papel some tudo que é da tela — botões, selo, fundo, varredura — e o
+   cabeçalho inverte pra preto no branco. A dobra da página 2 é ignorada:
+   no PDF as duas páginas saem sempre, cada uma na sua folha. */
+@media print {
+  @page { size: A4 portrait; margin: 8mm; }
+  html, body {
+    background: #fff !important; overflow: visible !important;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  body::after, .fundo, #backBtn, .preview-flag, .fundo-ctrl, .volta-local,
+  .dobra-bt, .tbl-add, .tbl-del, #fileInput, #fundoFile { display: none !important; }
+  .wrap { max-width: none !important; padding: 0 !important; gap: 10px !important; z-index: auto !important; }
+  .dobra { gap: 10px !important; }
+
+  /* cabeçalho no branco */
+  .cab { padding: 0 0 8px !important; border-bottom: 1px solid #bbb !important; }
+  .cab::after { display: none !important; }
+  .cab-nome { color: #111 !important; text-shadow: none !important; font-size: 30px !important; }
+  .cab-cod-v { color: #333 !important; }
+  .cab-cod-l, .cab-sub { color: #666 !important; }
+  .cab-sub .led { background: #111 !important; box-shadow: none !important; animation: none !important; }
+  .syn-t { color: #5b3a8e !important; text-shadow: none !important; }
+  .dot { border-color: #8a6fbf !important; background: #fff !important; }
+  .dot.filled { background: #7a4fd0 !important; border-color: #7a4fd0 !important; box-shadow: none !important; }
+
+  /* a folha: sem sombra, sem proporção travada, uma por página */
+  .pagina {
+    background: #fff !important; border: 0 !important; box-shadow: none !important;
+    padding: 0 !important; aspect-ratio: auto !important; break-after: page; page-break-after: always;
+  }
+  .pagina:last-of-type { break-after: auto; page-break-after: auto; }
+  .pagina[hidden] { display: block !important; }   /* dobrada na tela, inteira no papel */
+  .bx { box-shadow: none !important; border-color: #b6b6b6 !important; break-inside: avoid; page-break-inside: avoid; }
+  .bx, .nivel { background: #fff !important; }
+
+  /* o papel tem ~794px de largura, então as regras de tela estreita pegariam
+     e empilhariam tudo numa coluna só: aqui a grade da folha é devolvida */
+  .topo { grid-template-columns: 40% 76px 92px 1fr !important; }
+  .topo .vida { grid-column: auto !important; }
+  .corpo1 { grid-template-columns: 36% 1fr !important; }
+  .corpo2 { grid-template-columns: 64% 1fr !important; }
+  .caract-cols { grid-template-columns: 1fr 1fr !important; }
+  .caract-cols .box-text:first-child { border-right: 1px solid #ccc !important; border-bottom: 0 !important; }
+  .caract .box-text, .dupla .box-text { min-height: 0 !important; }
+}
+
 /* ───────── responsivo: abaixo disso a folha não cabe mais em proporção ───────── */
 @media (max-width: 980px) {
   .topo { grid-template-columns: 1fr 76px 92px; }
@@ -574,6 +636,7 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 
 <!-- fundo da ficha: cor ou imagem, por personagem -->
 <div class="fundo-ctrl">
+  <button type="button" class="fundo-bt" id="pdfBt" title="Imprimir a ficha ou salvar em PDF">PDF</button>
   <button type="button" class="fundo-bt" id="papelBt" aria-pressed="true" title="Com a folha creme por baixo, ou os quadros direto no fundo">Papel</button>
   <button type="button" class="fundo-bt" id="fundoBt" aria-expanded="false" aria-controls="fundoPop">Fundo</button>
   <div class="fundo-pop" id="fundoPop" hidden>
@@ -591,6 +654,13 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
     <button type="button" class="fundo-acao apaga" id="fundoLimpa">Tirar o fundo</button>
     <input type="file" id="fundoFile" accept="image/*">
   </div>
+</div>
+
+<!-- edição que ficou só neste navegador -->
+<div class="volta-local" id="voltaLocal" hidden>
+  <span id="voltaLocalTxt"></span>
+  <button type="button" id="voltaLocalSim">Restaurar</button>
+  <button type="button" id="voltaLocalNao">Descartar</button>
 </div>
 
 <div class="wrap">
@@ -959,6 +1029,9 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
   }
   papelBt.addEventListener('click', function() { if (!somenteLeitura) poePapel(!comPapel, true); });
 
+  // ── PDF: usa a impressão do navegador ("Salvar como PDF") ───────────
+  document.getElementById('pdfBt').addEventListener('click', function() { window.print(); });
+
   // ── Página 2: começa dobrada ────────────────────────────────────────
   // De propósito não guarda o estado: quase toda sessão vive na página 1,
   // então o normal é abrir fechada e só estender quando precisar consultar.
@@ -1215,11 +1288,29 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
   }
   var carregado = false, sujo = false, salvando = false, denovo = false, tSalvar = null, tErro = null;
   var ultimoSnapshot = null, mudouDesdeSnapshot = false;
+  // Cópia de bolso: a cada mexida o estado inteiro também fica guardado
+  // NESTE navegador. Se a rede cair no meio, o trabalho não morre — ao
+  // reabrir, a ficha oferece de volta o que ficou só aqui.
+  var CHAVE_LOCAL = 'dndRascunhoLocal:' + RID, tLocal = null, ultimaFalhou = false, tMax = null;
+  var MAX_ESPERA = 10000;   // digitação sem pausa: grava assim mesmo a cada 10s
+  function guardaLocal() {
+    if (tLocal) return;
+    tLocal = setTimeout(function() {
+      tLocal = null;
+      try { var d = captura(); d.atualizado = new Date().toISOString(); localStorage.setItem(CHAVE_LOCAL, JSON.stringify(d)); } catch (e) {}
+    }, 1000);
+  }
+  function limpaLocal() { try { localStorage.removeItem(CHAVE_LOCAL); } catch (e) {} }
+
   function marca() {
     if (!carregado || somenteLeitura) return;
     sujo = true; mudouDesdeSnapshot = true;
+    guardaLocal();
     status('salvando', 'Rascunho · editando…');
     clearTimeout(tSalvar); tSalvar = setTimeout(salva, 800);
+    // sem isso, quem digita sem parar nunca dispara o salvamento: cada tecla
+    // adia os 800ms de novo. Este teto garante gravação a cada 10s.
+    if (!tMax) tMax = setTimeout(function() { tMax = null; salva(); }, MAX_ESPERA);
   }
   function salva(keepalive) {
     if (!carregado || somenteLeitura) return Promise.resolve();
@@ -1228,10 +1319,13 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
     var dados = captura(); dados.atualizado = new Date().toISOString();
     status('salvando', 'Rascunho · salvando…');
     return grava(RID + '.json', dados, keepalive).then(function() {
-      sujo = false;
+      sujo = false; ultimaFalhou = false;
+      clearTimeout(tMax); tMax = null;
+      limpaLocal();                       // já está no servidor: a cópia de bolso não serve mais
       status('salvo', 'Rascunho · salvo ' + hhmm());
     }).catch(function(e) {
       // não perde a edição: continua "sujo" e tenta de novo sozinho
+      ultimaFalhou = true;
       status('erro', 'Não salvou · tentando de novo');
       tErro = setTimeout(salva, 4000);
       if (window.console) console.warn('[ficha-dnd] falha ao salvar:', e.message);
@@ -1254,6 +1348,12 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
   // fechar ou trocar de aba: grava o que estiver pendente (keepalive sobrevive ao fechamento)
   function descarrega() { if (sujo && carregado && !somenteLeitura) { clearTimeout(tSalvar); salva(true); } }
   window.addEventListener('pagehide', descarrega);
+  // só atrapalha quando precisa: avisa ao fechar se a última gravação falhou
+  window.addEventListener('beforeunload', function(e) {
+    if (sujo && ultimaFalhou && !somenteLeitura) { e.preventDefault(); e.returnValue = ''; }
+  });
+  // clicar no selo força uma gravação agora
+  flag.addEventListener('click', function() { if (carregado && !somenteLeitura) { clearTimeout(tSalvar); salva(); } });
   document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'hidden') descarrega(); });
 
   // o que altera a ficha: digitação, e cliques nos controles (setTimeout 0: o save vê o DOM já alterado)
@@ -1434,6 +1534,22 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
       });
     });
   }
+  // Sobrou edição só neste navegador (rede caiu, aba fechou no meio)? Oferece.
+  function checaCopiaLocal(doServidor) {
+    var bruto = null, local = null;
+    try { bruto = localStorage.getItem(CHAVE_LOCAL); } catch (e) {}
+    if (!bruto) return;
+    try { local = JSON.parse(bruto); } catch (e) {}
+    if (!local || !local.atualizado) { limpaLocal(); return; }
+    if (doServidor && doServidor.atualizado && new Date(local.atualizado) <= new Date(doServidor.atualizado)) { limpaLocal(); return; }
+    var barra = document.getElementById('voltaLocal'), q = new Date(local.atualizado);
+    document.getElementById('voltaLocalTxt').textContent =
+      'Ficaram edições de ' + ('0' + q.getHours()).slice(-2) + ':' + ('0' + q.getMinutes()).slice(-2) + ' que não chegaram ao servidor.';
+    barra.hidden = false;
+    document.getElementById('voltaLocalSim').addEventListener('click', function() { restaura(local); barra.hidden = true; marca(); });
+    document.getElementById('voltaLocalNao').addEventListener('click', function() { limpaLocal(); barra.hidden = true; });
+  }
+
   esperaOutraAba().then(function() {
     if (somenteLeitura) return;
     dono = true;
@@ -1442,6 +1558,7 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
       if (res.existe) { restaura(res.dados); ultimoSnapshot = res.dados; }
       carregado = true;
       status('salvo', res.existe ? 'Rascunho · carregado' : 'Rascunho novo · salva sozinho');
+      checaCopiaLocal(res.existe ? res.dados : null);
     });
   }).catch(function(e) {
     bloqueia('Não carregou · recarregue a página');
