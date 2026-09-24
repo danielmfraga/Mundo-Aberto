@@ -1751,6 +1751,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
         tt.addEventListener('click', function() {
           corpo.hidden = !corpo.hidden;
           tt.setAttribute('aria-expanded', corpo.hidden ? 'false' : 'true');
+          posiciona();
         });
         linha.appendChild(tt); linha.appendChild(corpo);
         cx.appendChild(linha);
@@ -1759,6 +1760,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
         cx.hidden = !cx.hidden;
         bt.setAttribute('aria-expanded', cx.hidden ? 'false' : 'true');
         balao.classList.toggle('largo', !cx.hidden);
+        posiciona();
+        // sempre do começo: com a lista aberta o balão passa a rolar por
+        // dentro, e qualquer rolagem inicial faz ele parecer cortado no meio
+        // de uma frase
+        balao.scrollTop = 0;
       });
       balao.appendChild(bt); balao.appendChild(cx);
     }
@@ -1793,11 +1799,24 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   function posiciona() {
     if (!ancora) return;
     var r = ancora.getBoundingClientRect(), b = balao.getBoundingClientRect();
-    var x = Math.min(Math.max(12, r.left + r.width / 2 - b.width / 2), innerWidth - b.width - 12);
-    var y = r.bottom + 10;
-    if (y + b.height > innerHeight - 12) y = Math.max(12, innerHeight - b.height - 12);
+    var x = Math.min(Math.max(12, r.left + r.width / 2 - b.width / 2), Math.max(12, innerWidth - b.width - 12));
+    var y = r.bottom + 10;                                   // embaixo do bloco
+    if (y + b.height > innerHeight - 12) {
+      var acima = r.top - b.height - 10;
+      y = acima >= 12 ? acima : Math.max(12, innerHeight - b.height - 12);   // senão em cima, senão encosta
+    }
     balao.style.left = x + 'px'; balao.style.top = y + 'px';
   }
+  // O balão é fixo na tela: sem isso ele ficava parado enquanto a ficha
+  // rolava, longe do bloco que estava explicando. Agora acompanha o bloco —
+  // e se o bloco sai da tela, o balão fecha junto.
+  function segue() {
+    if (balao.hidden || !ancora) return;
+    var r = ancora.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > innerHeight) { fechaBalao(); return; }
+    posiciona();
+  }
+  window.addEventListener('scroll', segue, { passive: true });
   function mostraBalao(el) { ancora = el; pilha = []; abre(el.dataset.ajuda); }
 
   balao.addEventListener('click', function(e) {
