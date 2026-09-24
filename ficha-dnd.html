@@ -1523,7 +1523,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   }
   function fechaBalao() { balao.hidden = true; pilha = []; balao.classList.remove('tem-volta'); }
 
-  function abre(chave) {
+  function abre(chave, estado) {
     var d = AJUDA[chave];
     if (!d) return;
     balao.dataset.chave = chave;
@@ -1548,6 +1548,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
         linha.className = 'balao-item';
         var tt = document.createElement('button');
         tt.type = 'button'; tt.className = 'balao-item-t'; tt.textContent = it.t;
+        tt.dataset.k = k;
         tt.setAttribute('aria-expanded', 'false');
         var corpo = document.createElement('div');
         corpo.className = 'balao-item-c'; corpo.hidden = true;
@@ -1571,11 +1572,36 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       balao.appendChild(bt); balao.appendChild(cx);
     }
 
+    // Voltando do grau 3, a leitura continua de onde parou: a lista reabre,
+    // o item que estava aberto continua aberto e a rolagem volta pro ponto.
+    // Sem isso, "voltar" jogava a pessoa no começo do verbete.
+    if (estado && estado.lista) {
+      var btMais = balao.querySelector('.balao-mais');
+      if (btMais) btMais.click();
+      (estado.abertos || []).forEach(function(k) {
+        var t = balao.querySelector('.balao-item-t[data-k="' + k + '"]');
+        if (t && t.getAttribute('aria-expanded') !== 'true') t.click();
+      });
+    }
+
     balao.classList.toggle('tem-volta', pilha.length > 0);
-    balao.classList.remove('largo');   // só alarga quando a lista do grau 2 abre
+    if (pilha.length) {
+      var anterior = AJUDA[pilha[pilha.length - 1].chave];
+      balaoVoltar.textContent = '\u2190 voltar' + (anterior ? ' para ' + anterior.t : '');
+    }
     balao.hidden = false;
-    balao.scrollTop = 0;
     posiciona();
+    balao.scrollTop = (estado && estado.scroll) || 0;
+  }
+  // o que a pessoa estava lendo, pra devolver igualzinho depois
+  function estadoAtual() {
+    var lista = balao.querySelector('.balao-lista');
+    return {
+      chave: balao.dataset.chave,
+      lista: !!(lista && !lista.hidden),
+      abertos: Array.prototype.map.call(balao.querySelectorAll('.balao-item-t[aria-expanded="true"]'), function(b) { return b.dataset.k; }),
+      scroll: balao.scrollTop
+    };
   }
   function posiciona() {
     if (!ancora) return;
@@ -1589,12 +1615,12 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
 
   balaoVoltar.addEventListener('click', function() {
     var anterior = pilha.pop();
-    if (anterior) abre(anterior); else fechaBalao();
+    if (anterior) abre(anterior.chave, anterior); else fechaBalao();
   });
   balao.addEventListener('click', function(e) {
     var t = e.target.closest('.tag');
     if (!t) return;
-    pilha.push(balao.dataset.chave);
+    pilha.push(estadoAtual());
     abre(t.dataset.ir);
   });
   document.getElementById('balaoX').addEventListener('click', fechaBalao);
