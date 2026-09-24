@@ -712,7 +712,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
 }
 .balao-x:hover { color: #fff; }
 .balao.largo { width: 360px; }
-.balao { max-height: 78vh; overflow-y: auto; }
+.balao { max-height: 78vh; overflow-y: auto; overscroll-behavior: contain; }
 /* grau 2: a lista que abre dentro do balão */
 .balao-mais {
   margin-top: 11px; width: 100%; cursor: pointer; padding: 7px 9px; border-radius: 7px;
@@ -1420,7 +1420,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     esp_humano: { t: 'Humano', l: 'Sem dom nenhum de nascença — e por isso aprende qualquer coisa.', b: [
       'Tamanho: Médio ou Pequeno · Deslocamento: 9 m',
       'Habilidoso: proficiência em uma perícia à sua escolha',
-      'Versátil: um talento de origem além do que o antecedente já deu',
+      'Versátil: um [[cnc_talento_origem|talento de origem]] além do que o antecedente já deu',
       'Engenhoso: ganha [[inspiracao|Inspiração Heroica]] ao terminar um descanso longo'] },
     esp_orc: { t: 'Orc', l: 'Fôlego de sobra e o costume de não cair na primeira.', b: [
       'Tamanho: Médio · Deslocamento: 9 m',
@@ -1519,6 +1519,12 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Talento: [[tal_atacante|Atacante Selvagem]]',
       'Perícias: [[per_atletismo|Atletismo]], [[per_intimidacao|Intimidação]]',
       'Ferramenta: [[ferr_jogos|Conjunto de Jogos]]'] },
+
+    cnc_talento_origem: { t: 'Talento de Origem', l: 'O talento que já vem de fábrica, no nível 1 — antes de qualquer escolha de classe.', b: [
+      'Todo antecedente entrega um. É o que mais muda a cara do personagem no começo.',
+      'Ao contrário dos outros talentos, ele NÃO ocupa o lugar de um aumento de atributo.',
+      'São dez, todos pensados pra nível 1: [[tal_alerta|Alerta]], [[tal_artesao|Artesão]], [[tal_curandeiro|Curandeiro]], [[tal_sortudo|Sortudo]], [[tal_iniciado|Iniciado em Magia]], [[tal_musico|Músico]], [[tal_atacante|Atacante Selvagem]], [[tal_habilidoso|Habilidoso]], [[tal_valentao|Valentão de Taverna]] e [[tal_resistente|Resistente]].',
+      'O Humano ganha um segundo, além do que o antecedente deu.'] },
 
     // ── Grau 3: talentos de origem ────────────────────────────────────
     tal_alerta: { t: 'Alerta', l: 'Você reage antes dos outros.', b: [
@@ -1658,7 +1664,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Na 5.5 é a abordagem que deixa o alvo mais bem disposto depois — ao contrário da Intimidação.'] },
     antecedente: { t: 'Antecedente', l: 'De onde você veio antes de virar aventureiro. Na 5.5 ele pesa muito mais do que pesava antes.', b: [
       'Distribui +2 e +1 (ou +1/+1/+1) entre três atributos — na 5.5 o aumento vem daqui, não da espécie.',
-      'Dá duas perícias, uma ferramenta e um talento de origem, já no nível 1.',
+      'Dá duas perícias, uma ferramenta e um [[cnc_talento_origem|talento de origem]], já no nível 1.',
       'Escolhido na criação; não muda depois.',
       'Botão direito num termo abaixo põe ele na ficha; no nome do antecedente, aplica o pacote inteiro.'],
       mais: 'Ver os 16 antecedentes',
@@ -1760,7 +1766,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     tracos: { t: 'Traço de Espécies', l: 'O que vem do corpo, não do treino.', b: [
       'Visão no escuro, resistências, deslocamentos extras, truques natos.'] },
     talentos: { t: 'Talentos', l: 'Melhorias que você escolhe.', b: [
-      'O talento de origem vem do antecedente, de graça, no nível 1.',
+      'O [[cnc_talento_origem|talento de origem]] vem do antecedente, de graça, no nível 1.',
       'Os outros entram no lugar de um aumento de atributo, nos níveis 4, 8, 12, 16 e 19 — algumas classes ganham mais.'] },
     treino: { t: 'Treinamento e Proficiência', l: 'Com o que você sabe lidar sem atrapalhar.', b: [
       'Usar armadura em que você não é treinado atrapalha ataques e perícias de Força e Destreza, e impede conjurar.',
@@ -1935,6 +1941,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       var acima = r.top - b.height - 10;
       y = acima >= 12 ? acima : Math.max(12, innerHeight - b.height - 12);   // senão em cima, senão encosta
     }
+    // rolando a ficha, o bloco pode sair da tela: o balão fica preso na borda
+    y = Math.min(Math.max(12, y), Math.max(12, innerHeight - b.height - 12));
     balao.style.left = x + 'px'; balao.style.top = y + 'px';
   }
   // O balão é fixo na tela: sem isso ele ficava parado enquanto a ficha
@@ -1942,9 +1950,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   // e se o bloco sai da tela, o balão fecha junto.
   function segue() {
     if (balao.hidden || !ancora) return;
-    var r = ancora.getBoundingClientRect();
-    if (r.bottom < 0 || r.top > innerHeight) { fechaBalao(); return; }
-    posiciona();
+    posiciona();   // o bloco saiu da tela? o balão estaciona na borda, aberto
   }
   window.addEventListener('scroll', segue, { passive: true });
   function mostraBalao(el) { ancora = el; pilha = []; abre(el.dataset.ajuda); }
