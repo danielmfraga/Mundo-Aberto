@@ -1373,13 +1373,46 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Uma vez por turno.'] },
     mst_raspar: { t: 'Maestria: Raspar', l: 'Errar deixa de ser errar à toa.', b: [
       'Errou o ataque? O alvo leva dano igual ao modificador do atributo que você usou.'] },
+    // ── os 10 estilos de luta, cada um com o seu ──────────────────────
+    est_arquearia: { t: 'Arquearia', l: '+2 nos ataques com armas à distância.', b: [
+      'Soma direto no ataque, não no dano — é o estilo que mais acerta.',
+      'Vale para arco, besta e funda; não vale para arma arremessada.'] },
+    est_defesa: { t: 'Defesa', l: '+1 na CA enquanto você estiver de armadura.', b: [
+      'Simples e sempre ligado, desde que a armadura esteja vestida.',
+      'Empilha com escudo.'] },
+    est_duelo: { t: 'Duelo', l: '+2 no dano com uma arma de uma mão só.', b: [
+      'Precisa estar com uma arma corpo a corpo numa mão e nenhuma outra arma na outra.',
+      'Escudo pode: escudo não é arma. É o estilo do sujeito de espada e escudo.'] },
+    est_arma_grande: { t: 'Combate com Arma Grande', l: 'Dano ruim vira dano médio.', b: [
+      'Rolou 1 ou 2 num dado de dano, conta como 3.',
+      'Só com arma corpo a corpo de Duas mãos ou Versátil usada com as duas.'] },
+    est_duas_armas: { t: 'Combate com Duas Armas', l: 'O segundo golpe passa a somar o modificador.', b: [
+      'Sem esse estilo, o ataque da mão secundária não soma o atributo no dano.',
+      'É o que faz brigar com duas armas valer a pena de verdade.'] },
+    est_protecao: { t: 'Proteção', l: 'Você atrapalha quem ataca quem está do seu lado.', b: [
+      'Reação: alguém ataca um aliado a até 1,5 m de você e o ataque passa a ter desvantagem.',
+      'Precisa estar com escudo, e precisa enxergar quem atacou.'] },
+    est_intercepcao: { t: 'Interceptação', l: 'Você apara o golpe que ia no outro.', b: [
+      'Reação: reduz o dano em 1d10 + bônus de proficiência.',
+      'Vale para criatura a até 1,5 m, e precisa de escudo ou arma na mão.'] },
+    est_arremesso: { t: 'Arremesso de Armas', l: 'Saca e joga no mesmo movimento, batendo mais forte.', b: [
+      '+2 no dano das armas arremessadas.',
+      'Sacar a arma faz parte do ataque — não gasta nada.'] },
+    est_desarmada: { t: 'Luta Desarmada', l: 'O corpo vira arma de verdade.', b: [
+      'Ataque desarmado passa a d6 — d8 se você estiver sem arma e sem escudo.',
+      'No começo do seu turno, quem você está agarrando leva dano automático.'] },
+    est_cegas: { t: 'Combate às Cegas', l: 'Você luta sem precisar enxergar.', b: [
+      'Percepção às cegas de 3 m: sente criaturas invisíveis ou no escuro total dentro desse raio.',
+      'Resolve a vida contra invisibilidade e escuridão mágica.'] },
+
     // ── conceitos que aparecem dentro das classes ─────────────────────
     cnc_estilo_luta: { t: 'Estilo de Luta', l: 'Um jeito de brigar que te dá um bônus fixo, para sempre.', b: [
-      'Na 5.5 os estilos viraram talentos: você escolhe um da lista.',
-      'Arquearia: +2 em ataques à distância. Defesa: +1 na CA usando armadura.',
-      'Duelo: +2 no dano com uma arma só na mão. Arma Grande: rola de novo 1 e 2 no dano.',
-      'Tem ainda Proteção, Interceptação, Duas Armas, Arremesso, Luta Desarmada e Combate às Cegas.',
-      'Guerreiro escolhe no nível 1; paladino e guardião, no 2.'] },
+      'Na 5.5 os estilos viraram talentos: você escolhe UM da lista, e ele não sai mais.',
+      'Guerreiro escolhe no nível 1; paladino e guardião, no 2.',
+      'Escolha pensando na arma que você vai usar a campanha inteira.'],
+      mais: 'Ver os 10 estilos',
+      lista: ['est_arquearia', 'est_defesa', 'est_duelo', 'est_arma_grande', 'est_duas_armas',
+        'est_protecao', 'est_intercepcao', 'est_arremesso', 'est_desarmada', 'est_cegas'] },
     cnc_descanso: { t: 'Descanso curto e longo', l: 'Os dois relógios do jogo: quase todo poder recarrega num ou no outro.', b: [
       'Curto: pelo menos 1 hora. Serve para gastar [[dv|Dados de Vida]] e curar, e recarrega o que diz "por descanso curto".',
       'Longo: 8 horas. Devolve todos os PV, metade dos Dados de Vida e todos os [[slots|espaços de magia]].',
@@ -3303,7 +3336,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   }
   function destinoDe(chave) {
     if (/^per_/.test(chave)) return { r: 'Marcar proficiência' };
-    if (/^tal_/.test(chave)) return { r: 'Anotar em Talentos' };
+    if (/^tal_/.test(chave) || /^est_/.test(chave)) return { r: 'Anotar em Talentos' };
     if (/^ferr_/.test(chave)) return { r: 'Anotar em Ferramentas' };
     if (/^item_/.test(chave) && ITEM_DO_TERMO[chave]) return { r: 'Pôr no inventário' };
     if (/^ant_/.test(chave) || /^esp_/.test(chave) || /^cls_/.test(chave)) return { r: 'Aplicar na ficha' };
@@ -3320,8 +3353,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       b.title = TITULO.p;
       return 'proficiência em ' + nome;
     }
-    if (/^tal_/.test(chave)) {
-      var r = anota('talentos', nome);
+    if (/^tal_/.test(chave) || /^est_/.test(chave)) {
+      var r = anota('talentos', /^est_/.test(chave) ? 'Estilo de Luta: ' + nome : nome);
       return r === 'repetido' ? nome + ' já estava nos Talentos' : nome + ' nos Talentos';
     }
     if (/^ferr_/.test(chave)) {
