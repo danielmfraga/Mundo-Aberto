@@ -544,6 +544,133 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 .volta-local button:hover { background: rgba(224,180,87,0.1); }
 .volta-local button#voltaLocalNao { color: var(--fg-faint); border-color: var(--line-strong); }
 
+/* ───────── inventário ─────────
+   Quadros com ícone, como inventário de jogo, e um botão que vira lista pra
+   quem prefere ler. O peso é a primeira conta da ficha: capacidade é
+   Força × 7,5 kg, e o que passa disso fica vermelho. */
+.inv { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.inv-topo { display: flex; align-items: center; gap: 8px; }
+.inv-carga { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.inv-carga-n { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; color: var(--fg-dim); }
+.inv-carga-n b { color: var(--fg); font-weight: 600; }
+.inv-barra { height: 3px; border-radius: 2px; background: rgba(38,39,43,0.12); overflow: hidden; }
+.inv-barra-f { height: 100%; width: 0; background: var(--gold); transition: width 0.25s, background 0.25s; }
+.inv.excedido .inv-barra-f { background: var(--danger); }
+.inv.excedido .inv-carga-n b { color: var(--danger); }
+.inv-bts { display: flex; gap: 4px; }
+.inv-bt {
+  width: 24px; height: 24px; padding: 0; cursor: pointer; border-radius: 6px; line-height: 1;
+  background: #fff; border: 1px solid var(--dnd-line); color: var(--fg-dim); font-size: 12px; transition: all 0.15s;
+}
+.inv-bt:hover { border-color: var(--gold); color: var(--fg); }
+.inv-bt.destaque { color: var(--gold); font-size: 15px; font-weight: 600; }
+
+.inv-corpo.modo-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 5px; }
+.inv-corpo.modo-lista { display: flex; flex-direction: column; }
+.inv-vazio { font-size: 10.5px; font-style: italic; color: var(--fg-faint); padding: 6px 2px; }
+.inv-vazio[hidden] { display: none; }
+
+/* quadro */
+.modo-grade .inv-slot {
+  position: relative; aspect-ratio: 1; border-radius: 7px; cursor: pointer; padding: 0;
+  background: #fff; border: 1px solid var(--dnd-line); display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.modo-grade .inv-slot:hover { border-color: var(--gold); box-shadow: 0 2px 8px rgba(38,39,43,0.14); transform: translateY(-1px); }
+.modo-grade .inv-slot svg { width: 60%; height: 60%; fill: none; stroke: #45484f; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.modo-grade .inv-slot.equipado { border-color: var(--gold); background: rgba(176,138,46,0.09); }
+.modo-grade .inv-slot .q {
+  position: absolute; right: 2px; bottom: 1px; font-family: var(--font-mono); font-size: 8px; color: var(--fg-dim);
+}
+.modo-grade .inv-slot .eqp {
+  position: absolute; top: 3px; left: 3px; width: 5px; height: 5px; border-radius: 50%; background: var(--gold);
+}
+.modo-grade .inv-slot .nome { display: none; }
+
+/* lista */
+.modo-lista .inv-slot {
+  display: flex; align-items: center; gap: 7px; width: 100%; text-align: left; cursor: pointer;
+  padding: 5px 4px; background: none; border: 0; border-bottom: 1px solid var(--line);
+}
+.modo-lista .inv-slot:hover { background: rgba(176,138,46,0.07); }
+.modo-lista .inv-slot svg { width: 15px; height: 15px; flex: 0 0 auto; fill: none; stroke: #45484f; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.modo-lista .inv-slot .nome { flex: 1; min-width: 0; font-size: 11.5px; color: var(--fg); }
+.modo-lista .inv-slot.equipado .nome { font-weight: 600; }
+.modo-lista .inv-slot.equipado .nome::after { content: ' ⬥'; color: var(--gold); }
+.modo-lista .inv-slot .q { font-family: var(--font-mono); font-size: 9.5px; color: var(--fg-faint); }
+.modo-lista .inv-slot .eqp { display: none; }
+
+/* menu do botão direito */
+.inv-menu {
+  position: fixed; z-index: 420; min-width: 150px; padding: 5px; border-radius: 9px;
+  background: rgba(7,12,22,0.985); border: 1px solid rgba(224,180,87,0.4); box-shadow: 0 20px 44px -18px rgba(0,0,0,0.9);
+  display: flex; flex-direction: column;
+}
+.inv-menu[hidden] { display: none; }
+.inv-menu button {
+  text-align: left; cursor: pointer; padding: 6px 9px; border: 0; border-radius: 6px; background: none;
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(207,233,240,0.7);
+}
+.inv-menu button:hover { background: rgba(224,180,87,0.12); color: #e0b457; }
+.inv-menu button.some:hover { background: rgba(255,85,102,0.14); color: #ff8b96; }
+.inv-menu .sep { height: 1px; margin: 4px 2px; background: rgba(255,255,255,0.08); }
+
+/* ajuste de carga */
+.inv-carga-pop {
+  position: fixed; z-index: 420; width: 220px; padding: 12px; border-radius: 11px;
+  background: rgba(7,12,22,0.985); border: 1px solid rgba(224,180,87,0.4); box-shadow: 0 22px 46px -18px rgba(0,0,0,0.9);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.inv-carga-pop[hidden] { display: none; }
+.inv-carga-l { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; color: rgba(207,233,240,0.55); }
+.inv-carga-l.fino { font-size: 8.5px; letter-spacing: 0.06em; color: rgba(207,233,240,0.35); line-height: 1.5; }
+.inv-carga-pop input[type="number"] { width: 64px; background: rgba(255,255,255,0.05); border: 1px solid var(--line-strong); border-radius: 5px; color: var(--fg); font-family: var(--font-mono); font-size: 11px; padding: 3px 5px; }
+.inv-carga-pop input[type="checkbox"] { accent-color: #e0b457; }
+
+/* catálogo */
+.cat-ov {
+  position: fixed; inset: 0; z-index: 430; display: flex; align-items: center; justify-content: center;
+  background: rgba(2,4,8,0.72); padding: 20px;
+}
+.cat-ov[hidden] { display: none; }
+.cat {
+  width: 100%; max-width: 460px; max-height: 80vh; display: flex; flex-direction: column;
+  border-radius: 14px; background: rgba(7,12,22,0.99); border: 1px solid rgba(224,180,87,0.4);
+  box-shadow: 0 40px 80px -30px rgba(0,0,0,0.95); overflow: hidden;
+}
+.cat-cab { display: flex; align-items: center; gap: 8px; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+.cat-cab input {
+  flex: 1; min-width: 0; background: rgba(255,255,255,0.05); border: 1px solid var(--line-strong); border-radius: 8px;
+  color: var(--fg); font-family: var(--font-display); font-size: 13px; padding: 8px 10px; outline: none;
+}
+.cat-cab input:focus { border-color: rgba(224,180,87,0.6); }
+.cat-x { cursor: pointer; background: none; border: 0; color: rgba(207,233,240,0.4); font-size: 14px; padding: 4px; }
+.cat-x:hover { color: #fff; }
+.cat-filtros { display: flex; flex-wrap: wrap; gap: 5px; padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+.cat-f {
+  cursor: pointer; padding: 4px 8px; border-radius: 999px; background: transparent; border: 1px solid var(--line-strong);
+  font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(207,233,240,0.5);
+}
+.cat-f:hover { color: var(--fg); }
+.cat-f[aria-pressed="true"] { color: #e0b457; border-color: rgba(224,180,87,0.6); background: rgba(224,180,87,0.1); }
+.cat-lista { flex: 1; overflow-y: auto; padding: 6px; }
+.cat-i {
+  display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; cursor: pointer;
+  padding: 7px 8px; border: 0; border-radius: 8px; background: none;
+}
+.cat-i:hover { background: rgba(224,180,87,0.1); }
+.cat-i svg { width: 16px; height: 16px; flex: 0 0 auto; fill: none; stroke: #e0b457; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.cat-i .n { flex: 1; min-width: 0; font-size: 12.5px; color: rgba(207,233,240,0.92); }
+.cat-i .d { font-family: var(--font-mono); font-size: 9px; color: rgba(207,233,240,0.4); }
+.cat-vazio { padding: 18px 12px; text-align: center; font-size: 12px; color: rgba(207,233,240,0.35); }
+.cat-livre { display: flex; gap: 6px; padding: 10px 12px; border-top: 1px solid rgba(255,255,255,0.07); }
+.cat-livre input {
+  background: rgba(255,255,255,0.05); border: 1px solid var(--line-strong); border-radius: 7px; color: var(--fg);
+  font-family: var(--font-display); font-size: 11.5px; padding: 6px 8px; outline: none; min-width: 0;
+}
+.cat-livre input[type="text"] { flex: 1; }
+.cat-livre input[type="number"] { width: 62px; }
+
 /* ───────── modo sumário ─────────
    Liga um "o que é isso?" em cima da ficha: os blocos ficam clicáveis e
    abrem um balão explicando o campo. Os campos param de aceitar digitação
@@ -568,13 +695,6 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
 .balao-x:hover { color: #fff; }
 .balao.largo { width: 360px; }
 .balao { max-height: 78vh; overflow-y: auto; }
-.balao-voltar {
-  display: none; align-items: center; gap: 5px; margin-bottom: 7px; padding: 0; cursor: pointer;
-  background: none; border: 0; font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.18em;
-  text-transform: uppercase; color: rgba(207,233,240,0.42);
-}
-.balao-voltar:hover { color: #e0b457; }
-.balao.tem-volta .balao-voltar { display: flex; }
 /* grau 2: a lista que abre dentro do balão */
 .balao-mais {
   margin-top: 11px; width: 100%; cursor: pointer; padding: 7px 9px; border-radius: 7px;
@@ -615,7 +735,14 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
   body::after, .fundo, #backBtn, .preview-flag, .fundo-ctrl, .volta-local,
-  .dobra-bt, .tbl-add, .tbl-del, #fileInput, #fundoFile, .balao { display: none !important; }
+  .dobra-bt, .tbl-add, .tbl-del, #fileInput, #fundoFile, .balao,
+  .inv-bts, .inv-menu, .inv-carga-pop, .cat-ov { display: none !important; }
+  /* no papel o inventário sai em lista, que é o que se lê */
+  .inv-corpo.modo-grade { display: flex !important; flex-direction: column !important; }
+  .modo-grade .inv-slot { aspect-ratio: auto !important; border: 0 !important; border-bottom: 1px solid #ddd !important; border-radius: 0 !important; justify-content: flex-start !important; gap: 7px; padding: 4px 2px !important; }
+  .modo-grade .inv-slot .nome { display: block !important; font-size: 11px; }
+  .modo-grade .inv-slot svg { width: 13px !important; height: 13px !important; }
+  .modo-grade .inv-slot .eqp { display: none !important; }
   /* campo vazio no papel é linha vazia, não texto cinza de dica */
   [contenteditable]:empty::before { content: none !important; }
   [contenteditable]:hover, [contenteditable]:focus { background: none !important; box-shadow: none !important; }
@@ -729,10 +856,38 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   </div>
 </div>
 
+<!-- catálogo de itens: busca e escolha -->
+<div class="cat-ov" id="catOv" hidden>
+  <div class="cat">
+    <div class="cat-cab">
+      <input type="search" id="catBusca" placeholder="Buscar item… (espada, couro, corda)" autocomplete="off" spellcheck="false">
+      <button type="button" class="cat-x" id="catX" aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="cat-filtros" id="catFiltros"></div>
+    <div class="cat-lista" id="catLista"></div>
+    <div class="cat-livre">
+      <input type="text" id="catLivreNome" placeholder="Item que não está na lista" spellcheck="false">
+      <input type="number" id="catLivrePeso" placeholder="kg" step="0.1" min="0">
+      <button type="button" class="inv-bt destaque" id="catLivreAdd">+</button>
+    </div>
+  </div>
+</div>
+
+<!-- menu do botão direito no item -->
+<div class="inv-menu" id="invMenu" hidden></div>
+
+<!-- ajuste da capacidade de carga -->
+<div class="inv-carga-pop" id="invCargaPop" hidden>
+  <div class="fundo-t">Capacidade de carga</div>
+  <div class="inv-carga-l">Força × 7,5 kg</div>
+  <label class="fundo-lin">Bônus (kg)<input type="number" id="invBonus" step="0.5" value="0"></label>
+  <label class="fundo-lin">Dobrar<input type="checkbox" id="invDobra"></label>
+  <div class="inv-carga-l fino">Dobra vale para Constituição Robusta e para quem é Grande.</div>
+</div>
+
 <!-- balão do modo sumário -->
 <div class="balao" id="balao" hidden role="dialog" aria-live="polite">
   <button type="button" class="balao-x" id="balaoX" aria-label="Fechar">&#10005;</button>
-  <button type="button" class="balao-voltar" id="balaoVoltar">&#8592; voltar</button>
   <div class="balao-t" id="balaoT"></div>
   <div class="balao-l" id="balaoL"></div>
   <ul id="balaoB"></ul>
@@ -951,8 +1106,22 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       </div>
 
       <div class="bx equip">
-        <div class="bx-t">Equipamento</div>
-        <div class="box-text" contenteditable="true" spellcheck="false" data-field="equipamento" style="margin-top:6px;"></div>
+        <div class="bx-t">Inventário</div>
+        <div class="inv" id="inv">
+          <div class="inv-topo">
+            <div class="inv-carga" id="invCarga" title="Carga atual e capacidade">
+              <div class="inv-carga-n"><b id="invPeso">0</b> / <span id="invCap">—</span> kg</div>
+              <div class="inv-barra"><div class="inv-barra-f" id="invBarra"></div></div>
+            </div>
+            <div class="inv-bts">
+              <button type="button" class="inv-bt" id="invModo" title="Alternar entre quadros e lista">&#9638;</button>
+              <button type="button" class="inv-bt" id="invCarregar" title="Bônus de capacidade de carga">&#9878;</button>
+              <button type="button" class="inv-bt destaque" id="invAdd" title="Adicionar item">+</button>
+            </div>
+          </div>
+          <div class="inv-corpo modo-grade" id="invCorpo"></div>
+          <div class="inv-vazio" id="invVazio">Nada carregado. Use o + para adicionar.</div>
+        </div>
         <div class="sint">
           <div class="sub-t">Itens Mágicos Sintonizados</div>
           <div class="sint-l"><button class="pip" type="button" data-tg="sint_1" aria-pressed="false"></button><div class="cell" contenteditable="true" spellcheck="false" data-field="sintonizado_1"></div></div>
@@ -1497,7 +1666,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
 
   var balao = document.getElementById('balao'), sumBt = document.getElementById('sumBt'), sumario = false;
   var balaoT = document.getElementById('balaoT'), balaoL = document.getElementById('balaoL');
-  var balaoB = document.getElementById('balaoB'), balaoVoltar = document.getElementById('balaoVoltar');
+  var balaoB = document.getElementById('balaoB'), balaoX = document.getElementById('balaoX');
   var ancora = null, pilha = [];
 
   // [[chave|rótulo]] vira um termo clicável (grau 3)
@@ -1521,7 +1690,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       ul.appendChild(li);
     });
   }
-  function fechaBalao() { balao.hidden = true; pilha = []; balao.classList.remove('tem-volta'); }
+  function fechaBalao() { balao.hidden = true; pilha = []; }
 
   function abre(chave, estado) {
     var d = AJUDA[chave];
@@ -1584,11 +1753,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       });
     }
 
-    balao.classList.toggle('tem-volta', pilha.length > 0);
-    if (pilha.length) {
-      var anterior = AJUDA[pilha[pilha.length - 1].chave];
-      balaoVoltar.textContent = '\u2190 voltar' + (anterior ? ' para ' + anterior.t : '');
-    }
+    balaoX.setAttribute('aria-label', pilha.length ? 'Voltar' : 'Fechar');
     balao.hidden = false;
     posiciona();
     balao.scrollTop = (estado && estado.scroll) || 0;
@@ -1613,17 +1778,16 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   }
   function mostraBalao(el) { ancora = el; pilha = []; abre(el.dataset.ajuda); }
 
-  balaoVoltar.addEventListener('click', function() {
-    var anterior = pilha.pop();
-    if (anterior) abre(anterior.chave, anterior); else fechaBalao();
-  });
   balao.addEventListener('click', function(e) {
     var t = e.target.closest('.tag');
     if (!t) return;
     pilha.push(estadoAtual());
     abre(t.dataset.ir);
   });
-  document.getElementById('balaoX').addEventListener('click', fechaBalao);
+  balaoX.addEventListener('click', function() {
+    var anterior = pilha.pop();
+    if (anterior) abre(anterior.chave, anterior); else fechaBalao();
+  });
   sumBt.addEventListener('click', function() {
     sumario = !sumario;
     document.body.classList.toggle('sumario', sumario);
@@ -1806,6 +1970,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     d.synesis = synDots.querySelectorAll('.dot.filled').length;
     d.fundo = { cor: fundo.cor, img: fundo.img, zoom: fundo.zoom, x: fundo.x, y: fundo.y };
     d.papel = comPapel;
+    d.inventario = inv;
     d.armas = linhasDe('armas');
     d.magias = linhasDe('magias');
     return d;
@@ -1838,6 +2003,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     poeSynesis(d.synesis);
     poeFundo(d.fundo);
     poePapel(d.papel !== false);   // rascunho antigo não tem o campo: entra com papel
+    poeInv(d.inventario);
     var morte = d.morte || {};
     document.querySelectorAll('.pips[data-grupo]').forEach(function(g) {
       var n = Math.max(0, Math.min(3, +morte[g.dataset.grupo] || 0));
@@ -2127,6 +2293,324 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
         return zoomQueCobre(url).then(function(z) { poeFundo({ cor: fundo.cor, img: url, zoom: z, x: 50, y: 50 }, true); });
       })
       .catch(function(e) { status('erro', 'Fundo não subiu'); alert('Não consegui salvar o fundo: ' + e.message); });
+  });
+
+  // ══════════════════════════════════════════════════════════════════
+  //  INVENTÁRIO
+  //  Quadros com ícone (como inventário de jogo) ou lista, à escolha.
+  //  É o primeiro lugar da ficha com CONTA: peso carregado contra
+  //  capacidade = Força × 7,5 kg, mais bônus. Arma, escudo e armadura
+  //  podem ser equipados pelo botão direito.
+  //  Pesos em kg, seguindo a tradução brasileira. O catálogo é esta
+  //  tabela só — corrigir ou ampliar é mexer aqui e mais nada.
+  // ══════════════════════════════════════════════════════════════════
+  var ICONES = {
+    arma:     '<path d="M17 3l4 4-9 9-4 1 1-4 9-9z"/><path d="M6.5 17.5L3 21"/><path d="M5 15l4 4"/>',
+    dist:     '<path d="M18 3a13 13 0 0 1 0 18"/><path d="M18 3v18"/><path d="M6 12h10"/>',
+    escudo:   '<path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z"/>',
+    armadura: '<path d="M8 4l4 2 4-2 3 3-2 4v7l-5 3-5-3v-7L5 7z"/>',
+    ferr:     '<path d="M3 21l8-8"/><path d="M9 11l4-4 3 3-4 4z"/><path d="M13 4l4 4 3-3-4-4z"/>',
+    cons:     '<path d="M10 3h4"/><path d="M11 3v5l-4 8a3 3 0 0 0 3 4h4a3 3 0 0 0 3-4l-4-8V3"/>',
+    geral:    '<path d="M7 8h10l2 12H5z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+    // desenhos próprios: sem eles metade da grade vira o mesmo ícone
+    chama:    '<path d="M12 3c3 4 5 6 5 9a5 5 0 0 1-10 0c0-2 1-3 2-5 1 2 2 2 3 1 0-2 0-3 0-5z"/>',
+    pao:      '<path d="M4 11a4 4 0 0 1 4-4h8a4 4 0 0 1 0 8H8a4 4 0 0 1-4-4z"/><path d="M9 7v8M13 7v8"/>',
+    rolo:     '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 4v3M12 17v3"/>',
+    flecha:   '<path d="M4 20L20 4"/><path d="M14 4h6v6"/><path d="M4 20l1-4 3 3z"/>',
+    cruz:     '<rect x="4" y="6" width="16" height="13" rx="2"/><path d="M12 9v7M8.5 12.5h7"/>',
+    amuleto:  '<path d="M12 3v6"/><circle cx="12" cy="14" r="5"/><path d="M9.5 14h5M12 11.5v5"/>',
+    lanterna: '<path d="M9 3h6"/><path d="M8 7h8l1 12H7z"/><path d="M12 10v6"/>',
+    barra:    '<path d="M5 19L17 7"/><path d="M15 5l4 4-2 2-4-4z"/>',
+    garrafa:  '<path d="M10 3h4v3h-4z"/><path d="M7 9a5 5 0 0 1 10 0v7a5 5 0 0 1-10 0z"/>'
+  };
+  var CATEGORIAS = [
+    { k: 'arma', r: 'Armas' }, { k: 'dist', r: 'À distância' }, { k: 'armadura', r: 'Armaduras' },
+    { k: 'escudo', r: 'Escudos' }, { k: 'ferr', r: 'Ferramentas' }, { k: 'cons', r: 'Consumíveis' },
+    { k: 'geral', r: 'Geral' }
+  ];
+  // n=nome · c=categoria · p=peso em kg · d=o número que importa · o=observações · e=dá pra equipar
+  var ITENS = {
+    // ── armas simples, corpo a corpo ──
+    adaga:        { n: 'Adaga', c: 'arma', p: 0.5, d: '1d4 perfurante', o: 'Acuidade, Leve, Arremesso 6/18 · Maestria: Nick', e: 1 },
+    bordao:       { n: 'Bordão', c: 'arma', p: 2, d: '1d6 concussão', o: 'Versátil (1d8) · Maestria: Derrubar', e: 1 },
+    clava:        { n: 'Clava', c: 'arma', p: 1, d: '1d4 concussão', o: 'Leve · Maestria: Lentidão', e: 1 },
+    clava_grande: { n: 'Clava Grande', c: 'arma', p: 5, d: '1d8 concussão', o: 'Duas mãos · Maestria: Empurrar', e: 1 },
+    foice_curta:  { n: 'Foice Curta', c: 'arma', p: 1, d: '1d4 cortante', o: 'Leve · Maestria: Nick', e: 1 },
+    lanca:        { n: 'Lança', c: 'arma', p: 1.5, d: '1d6 perfurante', o: 'Arremesso 6/18, Versátil (1d8) · Maestria: Debilitar', e: 1 },
+    machadinha:   { n: 'Machadinha', c: 'arma', p: 1, d: '1d6 cortante', o: 'Leve, Arremesso 6/18 · Maestria: Atormentar', e: 1 },
+    maca:         { n: 'Maça', c: 'arma', p: 2, d: '1d6 concussão', o: 'Maestria: Debilitar', e: 1 },
+    martelo_leve: { n: 'Martelo Leve', c: 'arma', p: 1, d: '1d4 concussão', o: 'Leve, Arremesso 6/18 · Maestria: Nick', e: 1 },
+    azagaia:      { n: 'Azagaia', c: 'arma', p: 1, d: '1d6 perfurante', o: 'Arremesso 9/36 · Maestria: Lentidão', e: 1 },
+    // ── armas simples, à distância ──
+    arco_curto:   { n: 'Arco Curto', c: 'dist', p: 1, d: '1d6 perfurante', o: 'Munição 24/96, Duas mãos · Maestria: Atormentar', e: 1 },
+    besta_leve:   { n: 'Besta Leve', c: 'dist', p: 2.5, d: '1d8 perfurante', o: 'Munição 24/96, Recarga, Duas mãos · Maestria: Lentidão', e: 1 },
+    dardo:        { n: 'Dardo', c: 'dist', p: 0.15, d: '1d4 perfurante', o: 'Acuidade, Arremesso 6/18 · Maestria: Atormentar', e: 1 },
+    funda:        { n: 'Funda', c: 'dist', p: 0, d: '1d4 concussão', o: 'Munição 9/36 · Maestria: Lentidão', e: 1 },
+    // ── armas marciais, corpo a corpo ──
+    espada_longa: { n: 'Espada Longa', c: 'arma', p: 1.5, d: '1d8 cortante', o: 'Versátil (1d10) · Maestria: Debilitar', e: 1 },
+    espada_curta: { n: 'Espada Curta', c: 'arma', p: 1, d: '1d6 perfurante', o: 'Acuidade, Leve · Maestria: Atormentar', e: 1 },
+    espada_grande:{ n: 'Espada Grande', c: 'arma', p: 3, d: '2d6 cortante', o: 'Pesada, Duas mãos · Maestria: Raspar', e: 1 },
+    florete:      { n: 'Florete', c: 'arma', p: 1, d: '1d8 perfurante', o: 'Acuidade · Maestria: Atormentar', e: 1 },
+    cimitarra:    { n: 'Cimitarra', c: 'arma', p: 1.5, d: '1d6 cortante', o: 'Acuidade, Leve · Maestria: Nick', e: 1 },
+    machado_bat:  { n: 'Machado de Batalha', c: 'arma', p: 2, d: '1d8 cortante', o: 'Versátil (1d10) · Maestria: Derrubar', e: 1 },
+    machado_gr:   { n: 'Machado Grande', c: 'arma', p: 3.5, d: '1d12 cortante', o: 'Pesada, Duas mãos · Maestria: Fender', e: 1 },
+    martelo_guerra:{ n: 'Martelo de Guerra', c: 'arma', p: 2, d: '1d8 concussão', o: 'Versátil (1d10) · Maestria: Empurrar', e: 1 },
+    maca_estrela: { n: 'Maça Estrela', c: 'arma', p: 2, d: '1d8 perfurante', o: 'Maestria: Debilitar', e: 1 },
+    malho:        { n: 'Malho', c: 'arma', p: 5, d: '2d6 concussão', o: 'Pesada, Duas mãos · Maestria: Derrubar', e: 1 },
+    alabarda:     { n: 'Alabarda', c: 'arma', p: 3, d: '1d10 cortante', o: 'Pesada, Alcance, Duas mãos · Maestria: Fender', e: 1 },
+    glaive:       { n: 'Glaive', c: 'arma', p: 3, d: '1d10 cortante', o: 'Pesada, Alcance, Duas mãos · Maestria: Raspar', e: 1 },
+    pique:        { n: 'Pique', c: 'arma', p: 9, d: '1d10 perfurante', o: 'Pesada, Alcance, Duas mãos · Maestria: Empurrar', e: 1 },
+    tridente:     { n: 'Tridente', c: 'arma', p: 2, d: '1d8 perfurante', o: 'Arremesso 6/18, Versátil (1d10) · Maestria: Derrubar', e: 1 },
+    chicote:      { n: 'Chicote', c: 'arma', p: 1.5, d: '1d4 cortante', o: 'Acuidade, Alcance · Maestria: Lentidão', e: 1 },
+    lanca_montada:{ n: 'Lança Montada', c: 'arma', p: 3, d: '1d10 perfurante', o: 'Alcance, Duas mãos se não estiver montado · Maestria: Derrubar', e: 1 },
+    // ── armas marciais, à distância ──
+    arco_longo:   { n: 'Arco Longo', c: 'dist', p: 1, d: '1d8 perfurante', o: 'Munição 45/180, Pesada, Duas mãos · Maestria: Lentidão', e: 1 },
+    besta_mao:    { n: 'Besta de Mão', c: 'dist', p: 1.5, d: '1d6 perfurante', o: 'Munição 9/36, Leve, Recarga · Maestria: Atormentar', e: 1 },
+    besta_pesada: { n: 'Besta Pesada', c: 'dist', p: 9, d: '1d10 perfurante', o: 'Munição 30/120, Pesada, Recarga, Duas mãos · Maestria: Empurrar', e: 1 },
+    flechas:      { n: 'Flechas (20)', c: 'dist', p: 0.5, d: 'munição', o: 'Para arcos', i: 'flecha' },
+    virotes:      { n: 'Virotes (20)', c: 'dist', p: 0.75, d: 'munição', o: 'Para bestas', i: 'flecha' },
+    // ── armaduras ──
+    acolchoada:   { n: 'Armadura Acolchoada', c: 'armadura', p: 4, d: 'CA 11 + DES', o: 'Leve · desvantagem em Furtividade', e: 1 },
+    couro:        { n: 'Armadura de Couro', c: 'armadura', p: 5, d: 'CA 11 + DES', o: 'Leve', e: 1 },
+    couro_batido: { n: 'Couro Batido', c: 'armadura', p: 6.5, d: 'CA 12 + DES', o: 'Leve', e: 1 },
+    peles:        { n: 'Armadura de Peles', c: 'armadura', p: 6, d: 'CA 12 + DES (máx 2)', o: 'Média', e: 1 },
+    camisao_malha:{ n: 'Camisão de Malha', c: 'armadura', p: 10, d: 'CA 13 + DES (máx 2)', o: 'Média', e: 1 },
+    brunea:       { n: 'Brunea', c: 'armadura', p: 22.5, d: 'CA 14 + DES (máx 2)', o: 'Média · desvantagem em Furtividade', e: 1 },
+    peitoral:     { n: 'Peitoral', c: 'armadura', p: 10, d: 'CA 14 + DES (máx 2)', o: 'Média', e: 1 },
+    meia_armadura:{ n: 'Meia-Armadura', c: 'armadura', p: 20, d: 'CA 15 + DES (máx 2)', o: 'Média · desvantagem em Furtividade', e: 1 },
+    cota_aneis:   { n: 'Cota de Anéis', c: 'armadura', p: 20, d: 'CA 14', o: 'Pesada · desvantagem em Furtividade', e: 1 },
+    cota_malha:   { n: 'Cota de Malha', c: 'armadura', p: 27.5, d: 'CA 16', o: 'Pesada · exige Força 13 · desvantagem em Furtividade', e: 1 },
+    talas:        { n: 'Armadura de Talas', c: 'armadura', p: 30, d: 'CA 17', o: 'Pesada · exige Força 15 · desvantagem em Furtividade', e: 1 },
+    placas:       { n: 'Armadura de Placas', c: 'armadura', p: 32.5, d: 'CA 18', o: 'Pesada · exige Força 15 · desvantagem em Furtividade', e: 1 },
+    escudo:       { n: 'Escudo', c: 'escudo', p: 3, d: '+2 na CA', o: 'Ocupa uma mão', e: 1 },
+    // ── ferramentas ──
+    ferr_ladrao:  { n: 'Ferramentas de Ladrão', c: 'ferr', p: 0.5, d: 'abrir e desarmar', o: 'Fechaduras e armadilhas' },
+    ferr_navegador:{ n: 'Ferramentas de Navegador', c: 'ferr', p: 1, d: 'rota e posição', o: 'Cartas, compasso, sextante' },
+    ferr_cartografo:{ n: 'Ferramentas de Cartógrafo', c: 'ferr', p: 3, d: 'mapas', o: '' },
+    ferr_carpinteiro:{ n: 'Ferramentas de Carpinteiro', c: 'ferr', p: 3, d: 'madeira', o: '' },
+    ferr_caligrafia:{ n: 'Suprimentos de Caligrafia', c: 'ferr', p: 2.5, d: 'escrita', o: '' },
+    ferr_falsificacao:{ n: 'Kit de Falsificação', c: 'ferr', p: 2.5, d: 'documentos falsos', o: '' },
+    ferr_herbalismo:{ n: 'Kit de Herbalismo', c: 'ferr', p: 1.5, d: 'ervas e remédios', o: '' },
+    ferr_jogos:   { n: 'Conjunto de Jogos', c: 'ferr', p: 0.1, d: 'dados ou cartas', o: '' },
+    ferr_instrumento:{ n: 'Instrumento Musical', c: 'ferr', p: 1, d: 'tocar', o: 'Alaúde, flauta, tambor…' },
+    kit_medicina: { n: 'Kit de Medicina', c: 'ferr', p: 1.5, d: '10 usos', o: 'Estabiliza sem rolar', i: 'cruz' },
+    kit_escalada: { n: 'Kit de Escalada', c: 'ferr', p: 6, d: 'ancoragem', o: 'Prende você onde parou' },
+    // ── consumíveis ──
+    pocao_cura:   { n: 'Poção de Cura', c: 'cons', p: 0.25, d: 'cura 2d4 + 2', o: 'Ação Bônus para beber' },
+    racao:        { n: 'Ração (1 dia)', c: 'cons', p: 1, d: 'comida', o: '', i: 'pao' },
+    oleo:         { n: 'Frasco de Óleo', c: 'cons', p: 0.5, d: 'arremesso', o: '5 de fogo se incendiado' },
+    tocha:        { n: 'Tocha', c: 'cons', p: 0.5, d: 'luz 6/12 m', o: 'Queima 1 hora', i: 'chama' },
+    // ── geral ──
+    mochila:      { n: 'Mochila', c: 'geral', p: 2.5, d: 'carrega o resto', o: '' },
+    corda:        { n: 'Corda (15 m)', c: 'geral', p: 5, d: 'cânhamo', o: 'Aguenta 3 pessoas', i: 'rolo' },
+    saco_dormir:  { n: 'Saco de Dormir', c: 'geral', p: 3.5, d: 'descanso', o: '' },
+    cantil:       { n: 'Cantil', c: 'geral', p: 2.5, d: 'água por 1 dia', o: 'Peso com ele cheio', i: 'garrafa' },
+    pe_de_cabra:  { n: 'Pé de Cabra', c: 'geral', p: 2.5, d: 'vantagem pra forçar', o: '', i: 'barra' },
+    lampiao:      { n: 'Lampião', c: 'geral', p: 1, d: 'luz 9/18 m', o: 'Gasta óleo', i: 'lanterna' },
+    algemas:      { n: 'Algemas', c: 'geral', p: 3, d: 'prender', o: 'CD 20 para escapar' },
+    corrente:     { n: 'Corrente (3 m)', c: 'geral', p: 5, d: 'amarrar', o: '', i: 'rolo' },
+    espelho:      { n: 'Espelho de Aço', c: 'geral', p: 0.25, d: 'olhar a esquina', o: '' },
+    pederneira:   { n: 'Pederneira', c: 'geral', p: 0.5, d: 'fogo', o: '' },
+    simbolo:      { n: 'Símbolo Sagrado', c: 'geral', p: 0.5, d: 'foco divino', o: 'Clérigo e paladino conjuram por ele', i: 'amuleto' },
+    saco:         { n: 'Saco', c: 'geral', p: 0.25, d: 'guardar', o: '' },
+    roupas_viagem:{ n: 'Roupas de Viagem', c: 'geral', p: 2, d: 'estrada', o: '' },
+    estaca:       { n: 'Estaca de Ferro', c: 'geral', p: 0.25, d: 'fixar', o: '', i: 'barra' },
+    vara:         { n: 'Vara (3 m)', c: 'geral', p: 3.5, d: 'cutucar de longe', o: 'Salva de armadilha', i: 'barra' }
+  };
+
+  var inv = { itens: [], bonus: 0, dobra: false, modo: 'grade' };
+  var invCorpo = document.getElementById('invCorpo'), invVazio = document.getElementById('invVazio');
+  var invMenu = document.getElementById('invMenu'), invCargaPop = document.getElementById('invCargaPop');
+  var catOv = document.getElementById('catOv'), catLista = document.getElementById('catLista');
+  var catBusca = document.getElementById('catBusca'), catFiltro = '';
+
+  function svgDe(cat) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + (ICONES[cat] || ICONES.geral) + '</svg>'; }
+  function iconeDe(d) { return d.i || d.c; }
+  function dadosDe(it) { return it.livre ? { n: it.nome, c: 'geral', p: +it.peso || 0, d: 'item avulso', o: '' } : (ITENS[it.id] || { n: it.id, c: 'geral', p: 0, d: '', o: '' }); }
+  function num(v) { return (Math.round(v * 100) / 100).toString().replace('.', ','); }
+
+  function capacidade() {
+    var f = parseInt((document.querySelector('[data-field="for_valor"]') || {}).textContent, 10);
+    if (!f) return null;
+    return f * 7.5 * (inv.dobra ? 2 : 1) + (+inv.bonus || 0);
+  }
+  function pesoTotal() {
+    var t = 0;
+    inv.itens.forEach(function(it) { t += dadosDe(it).p * (it.q || 1); });
+    return t;
+  }
+  function invPinta() {
+    invCorpo.className = 'inv-corpo modo-' + inv.modo;
+    invCorpo.innerHTML = '';
+    inv.itens.forEach(function(it, i) {
+      var d = dadosDe(it);
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'inv-slot' + (it.eq ? ' equipado' : '');
+      b.dataset.i = i;
+      b.title = d.n + (d.p ? ' · ' + num(d.p) + ' kg' : '');
+      b.innerHTML = svgDe(iconeDe(d)) + '<span class="nome">' + d.n + '</span>' +
+        ((it.q || 1) > 1 ? '<span class="q">×' + it.q + '</span>' : '<span class="q"></span>') +
+        (it.eq ? '<span class="eqp"></span>' : '');
+      invCorpo.appendChild(b);
+    });
+    invVazio.hidden = inv.itens.length > 0;
+
+    var peso = pesoTotal(), cap = capacidade();
+    document.getElementById('invPeso').textContent = num(peso);
+    document.getElementById('invCap').textContent = cap == null ? '—' : num(cap);
+    var barra = document.getElementById('invBarra');
+    barra.style.width = cap ? Math.min(100, (peso / cap) * 100) + '%' : '0%';
+    document.getElementById('inv').classList.toggle('excedido', !!cap && peso > cap);
+  }
+  function poeInv(d) {
+    d = d || {};
+    inv = {
+      itens: Array.isArray(d.itens) ? d.itens : [],
+      bonus: +d.bonus || 0,
+      dobra: !!d.dobra,
+      modo: d.modo === 'lista' ? 'lista' : 'grade'
+    };
+    document.getElementById('invBonus').value = inv.bonus;
+    document.getElementById('invDobra').checked = inv.dobra;
+    invPinta();
+  }
+  function mexeu() { invPinta(); marca(); }
+
+  // ── ficha do item, no mesmo balão do sumário ────────────────────────
+  function mostraItem(i, elo) {
+    var it = inv.itens[i], d = dadosDe(it);
+    var b = [];
+    if (d.d) b.push(d.d);
+    if (d.o) b.push(d.o);
+    b.push('Peso: ' + num(d.p) + ' kg' + ((it.q || 1) > 1 ? '  (×' + it.q + ' = ' + num(d.p * it.q) + ' kg)' : ''));
+    if (ITENS[it.id] && ITENS[it.id].e) b.push(it.eq ? 'Equipado agora. Botão direito para tirar.' : 'Dá para equipar: botão direito no item.');
+    ancora = elo; pilha = [];
+    AJUDA.__item = { t: d.n, l: it.eq ? 'Equipado.' : 'No inventário.', b: b };
+    abre('__item');
+  }
+
+  // ── menu do botão direito ───────────────────────────────────────────
+  function fechaMenu() { invMenu.hidden = true; }
+  function abreMenu(i, x, y) {
+    var it = inv.itens[i], d = dadosDe(it), pode = !!(ITENS[it.id] && ITENS[it.id].e);
+    invMenu.innerHTML = '';
+    function bt(txt, classe, fn) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.textContent = txt; if (classe) b.className = classe;
+      b.addEventListener('click', function() { fn(); fechaMenu(); mexeu(); });
+      invMenu.appendChild(b);
+    }
+    if (pode) bt(it.eq ? 'Desequipar' : 'Equipar', '', function() { it.eq = !it.eq; });
+    bt('Mais um', '', function() { it.q = (it.q || 1) + 1; });
+    bt('Menos um', '', function() { it.q = (it.q || 1) - 1; if (it.q <= 0) inv.itens.splice(i, 1); });
+    var sep = document.createElement('div'); sep.className = 'sep'; invMenu.appendChild(sep);
+    bt('Tirar do inventário', 'some', function() { inv.itens.splice(i, 1); });
+    invMenu.hidden = false;
+    var r = invMenu.getBoundingClientRect();
+    invMenu.style.left = Math.min(x, innerWidth - r.width - 10) + 'px';
+    invMenu.style.top = Math.min(y, innerHeight - r.height - 10) + 'px';
+  }
+
+  invCorpo.addEventListener('click', function(e) {
+    var s = e.target.closest('.inv-slot');
+    if (s) mostraItem(+s.dataset.i, s);
+  });
+  invCorpo.addEventListener('contextmenu', function(e) {
+    var s = e.target.closest('.inv-slot');
+    if (!s || somenteLeitura) return;
+    e.preventDefault();
+    abreMenu(+s.dataset.i, e.clientX, e.clientY);
+  });
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.inv-menu')) fechaMenu();
+    if (!e.target.closest('.inv-carga-pop, #invCarregar')) invCargaPop.hidden = true;
+  });
+
+  document.getElementById('invModo').addEventListener('click', function() {
+    inv.modo = inv.modo === 'grade' ? 'lista' : 'grade';
+    this.innerHTML = inv.modo === 'grade' ? '&#9638;' : '&#9776;';
+    mexeu();
+  });
+  document.getElementById('invCarregar').addEventListener('click', function(e) {
+    e.stopPropagation();
+    invCargaPop.hidden = !invCargaPop.hidden;
+    if (!invCargaPop.hidden) {
+      var r = this.getBoundingClientRect(), b = invCargaPop.getBoundingClientRect();
+      invCargaPop.style.left = Math.min(Math.max(10, r.left - b.width + r.width), innerWidth - b.width - 10) + 'px';
+      invCargaPop.style.top = Math.min(r.bottom + 8, innerHeight - b.height - 10) + 'px';
+    }
+  });
+  document.getElementById('invBonus').addEventListener('input', function() { inv.bonus = +this.value || 0; mexeu(); });
+  document.getElementById('invDobra').addEventListener('change', function() { inv.dobra = this.checked; mexeu(); });
+  // a capacidade depende da Força: mudou o valor, refaz a conta
+  document.addEventListener('input', function(e) {
+    if (e.target.dataset && e.target.dataset.field === 'for_valor') invPinta();
+  });
+
+  // ── catálogo ────────────────────────────────────────────────────────
+  (function montaFiltros() {
+    var cx = document.getElementById('catFiltros');
+    var todos = document.createElement('button');
+    todos.type = 'button'; todos.className = 'cat-f'; todos.textContent = 'Tudo';
+    todos.dataset.k = ''; todos.setAttribute('aria-pressed', 'true');
+    cx.appendChild(todos);
+    CATEGORIAS.forEach(function(c) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'cat-f'; b.textContent = c.r; b.dataset.k = c.k;
+      b.setAttribute('aria-pressed', 'false');
+      cx.appendChild(b);
+    });
+    cx.addEventListener('click', function(e) {
+      var b = e.target.closest('.cat-f');
+      if (!b) return;
+      catFiltro = b.dataset.k;
+      cx.querySelectorAll('.cat-f').forEach(function(o) { o.setAttribute('aria-pressed', o === b ? 'true' : 'false'); });
+      pintaCatalogo();
+    });
+  })();
+  function semAcento(t) { return t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
+  function pintaCatalogo() {
+    var q = semAcento(catBusca.value.trim()), achou = 0;
+    catLista.innerHTML = '';
+    Object.keys(ITENS).forEach(function(id) {
+      var d = ITENS[id];
+      if (catFiltro && d.c !== catFiltro) return;
+      if (q && semAcento(d.n).indexOf(q) < 0 && semAcento(d.o || '').indexOf(q) < 0) return;
+      achou++;
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'cat-i'; b.dataset.id = id;
+      b.innerHTML = svgDe(iconeDe(d)) + '<span class="n">' + d.n + '</span><span class="d">' + num(d.p) + ' kg</span>';
+      catLista.appendChild(b);
+    });
+    if (!achou) catLista.innerHTML = '<div class="cat-vazio">Nada com esse nome. Use o campo de baixo pra criar um item avulso.</div>';
+  }
+  function poeItem(id) {
+    var jaTem = null;
+    inv.itens.forEach(function(it) { if (it.id === id && !it.eq) jaTem = it; });
+    if (jaTem) jaTem.q = (jaTem.q || 1) + 1; else inv.itens.push({ id: id, q: 1, eq: false });
+    mexeu();
+  }
+  catLista.addEventListener('click', function(e) {
+    var b = e.target.closest('.cat-i');
+    if (b) poeItem(b.dataset.id);
+  });
+  catBusca.addEventListener('input', pintaCatalogo);
+  document.getElementById('invAdd').addEventListener('click', function() {
+    if (somenteLeitura) return;
+    catOv.hidden = false; catBusca.value = ''; pintaCatalogo(); catBusca.focus();
+  });
+  document.getElementById('catX').addEventListener('click', function() { catOv.hidden = true; });
+  catOv.addEventListener('click', function(e) { if (e.target === catOv) catOv.hidden = true; });
+  document.getElementById('catLivreAdd').addEventListener('click', function() {
+    var n = document.getElementById('catLivreNome'), k = document.getElementById('catLivrePeso');
+    if (!n.value.trim()) return;
+    inv.itens.push({ livre: 1, nome: n.value.trim(), peso: +k.value || 0, q: 1 });
+    n.value = ''; k.value = '';
+    mexeu();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { catOv.hidden = true; fechaMenu(); invCargaPop.hidden = true; }
   });
 
   // ── Carregamento ────────────────────────────────────────────────────
