@@ -1990,7 +1990,19 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     });
     return POR_NOME;
   }
-  function linhaNoPonto(el, x, y) {
+  function dentro(faixa, x, y) {
+    var rs = faixa.getClientRects();
+    for (var i = 0; i < rs.length; i++) {
+      var q = rs[i];
+      if (x >= q.left - 3 && x <= q.right + 3 && y >= q.top - 2 && y <= q.bottom + 2) return true;
+    }
+    return false;
+  }
+  // O que está exatamente sob o cursor. Primeiro acha a linha; depois procura,
+  // DENTRO dela, o termo conhecido mais específico que o cursor esteja tocando.
+  // Sem isso, "Habilidoso: proficiência em uma perícia" não casava com nada —
+  // a linha inteira não é o nome de nada — e o clique caía no quadro.
+  function alvoNoPonto(el, x, y) {
     var achou = null, faixa = document.createRange();
     (function anda(no) {
       if (achou) return;
@@ -2001,17 +2013,32 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
           pos = fim + 1;
           if (!t.trim()) continue;
           faixa.setStart(no, ini); faixa.setEnd(no, fim);
-          var rs = faixa.getClientRects();
-          for (var i = 0; i < rs.length; i++) {
-            var q = rs[i];
-            if (x >= q.left - 3 && x <= q.right + 3 && y >= q.top - 2 && y <= q.bottom + 2) { achou = t.trim(); break; }
-          }
+          if (dentro(faixa, x, y)) achou = { no: no, ini: ini, texto: t };
         }
       } else if (no.nodeType === 1 && no.className !== 'balao') {
         for (var i = 0; i < no.childNodes.length; i++) anda(no.childNodes[i]);
       }
     })(el);
-    return achou;
+    if (!achou) return null;
+
+    var idx = indice(), plano = semAcento(achou.texto), melhor = null;
+    // 1) o termo que o cursor está tocando; ganha o mais longo
+    Object.keys(idx).forEach(function(nome) {
+      if (nome.length < 4) return;
+      var at = plano.indexOf(nome);
+      while (at >= 0) {
+        faixa.setStart(achou.no, achou.ini + at);
+        faixa.setEnd(achou.no, achou.ini + at + nome.length);
+        if (dentro(faixa, x, y) && (!melhor || nome.length > melhor.n)) melhor = { n: nome.length, d: idx[nome] };
+        at = plano.indexOf(nome, at + 1);
+      }
+    });
+    if (melhor) return melhor.d;
+    // 2) a linha inteira ("Atacante Selvagem")
+    if (idx[plano.trim()]) return idx[plano.trim()];
+    // 3) o que vem antes dos dois-pontos ("Habilidoso: …")
+    var ante = plano.split(':')[0].trim();
+    return idx[ante] || null;
   }
   // As observações do item são escritas no catálogo como texto corrido.
   // Aqui cada propriedade e cada maestria vira termo clicável, sem precisar
@@ -2062,8 +2089,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (!el) { fechaBalao(); return; }
     e.preventDefault(); e.stopPropagation();
     // a linha exata clicada tem prioridade sobre o quadro que a contém
-    var linha = linhaNoPonto(el, e.clientX, e.clientY);
-    var achado = linha && indice()[semAcento(linha)];
+    var achado = alvoNoPonto(el, e.clientX, e.clientY);
     if (achado && achado.tipo === 'ajuda') { ancora = el; pilha = []; abre(achado.k); return; }
     if (achado) { mostraCatalogo(achado.k, el); return; }
     mostraBalao(el);
