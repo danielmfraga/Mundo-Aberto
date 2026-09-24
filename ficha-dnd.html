@@ -1371,6 +1371,68 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Uma vez por turno.'] },
     mst_raspar: { t: 'Maestria: Raspar', l: 'Errar deixa de ser errar à toa.', b: [
       'Errou o ataque? O alvo leva dano igual ao modificador do atributo que você usou.'] },
+    // ── Grau 2: as 10 espécies ────────────────────────────────────────
+    // Convenção: o primeiro item é SEMPRE "Tamanho: … · Deslocamento: …",
+    // e todo o resto é traço. É daí que o botão direito lê o que aplicar —
+    // sem tabela paralela pra sair de sincronia com o texto.
+    esp_aasimar: { t: 'Aasimar', l: 'Sangue celestial: gente comum com uma faísca de outro plano.', b: [
+      'Tamanho: Médio ou Pequeno · Deslocamento: 9 m',
+      'Visão no Escuro 18 m',
+      'Resistência a dano necrótico e radiante',
+      'Mãos Curandeiras: uma vez por descanso longo, cura d4 por nível de personagem',
+      'Portador de Luz: conhece o truque Luz',
+      'Revelação Celestial (nível 3): asas, garras ou aura radiante, à sua escolha'] },
+    esp_anao: { t: 'Anão', l: 'Feito de pedra e teimosia. Enxerga no escuro e aguenta veneno.', b: [
+      'Tamanho: Médio · Deslocamento: 9 m',
+      'Visão no Escuro 36 m',
+      'Resiliência Anã: resistência a veneno e vantagem para resistir a ele',
+      'Sentido de Pedra: encostando na pedra, sente o que se move em 18 m',
+      'Fortitude Anã: seus PV máximos sobem 1 por nível'] },
+    esp_draconato: { t: 'Draconato', l: 'Descende de dragões — e ainda cospe o sopro deles.', b: [
+      'Tamanho: Médio · Deslocamento: 9 m',
+      'Visão no Escuro 18 m',
+      'Ancestralidade Dracônica: escolha o dragão, que define o tipo de dano',
+      'Sopro: ataque em cone ou linha, gasto pelo bônus de proficiência por descanso longo',
+      'Resistência ao tipo de dano da sua ancestralidade',
+      'Voo Dracônico (nível 5): asas por 10 minutos, uma vez por descanso longo'] },
+    esp_elfo: { t: 'Elfo', l: 'Sentidos afiados e sangue mágico. Não dorme: entra em transe.', b: [
+      'Tamanho: Médio · Deslocamento: 9 m',
+      'Visão no Escuro 18 m',
+      'Sentidos Aguçados: proficiência em [[per_intuicao|Intuição]], [[per_percepcao|Percepção]] ou [[per_sobrevivencia|Sobrevivência]]',
+      'Transe: descansa em 4 horas em vez de 8',
+      'Ancestralidade Élfica: Drow, Alto Elfo ou Elfo da Floresta — cada uma dá truque e magias próprias'] },
+    esp_gnomo: { t: 'Gnomo', l: 'Pequeno, curioso e teimosamente difícil de enfeitiçar.', b: [
+      'Tamanho: Pequeno · Deslocamento: 9 m',
+      'Visão no Escuro 18 m',
+      'Astúcia Gnômica: vantagem em salvaguardas de Inteligência, Sabedoria e Carisma',
+      'Linhagem: Gnomo da Floresta (fala com bichos pequenos) ou das Rochas (faz engenhocas)'] },
+    esp_goliath: { t: 'Goliath', l: 'Sangue de gigante: anda mais, carrega mais, bate mais.', b: [
+      'Tamanho: Médio · Deslocamento: 10,5 m',
+      'Ancestralidade Gigante: escolha um traço de gigante (pedra, fogo, gelo, nuvem, tempestade ou colina)',
+      'Constituição Robusta: conta como uma categoria maior para carga e para agarrar',
+      'Deslocamento Grande: 10,5 m em vez dos 9 de quase todo mundo'] },
+    esp_halfling: { t: 'Halfling', l: 'Pequeno, sortudo e difícil de assustar.', b: [
+      'Tamanho: Pequeno · Deslocamento: 7,5 m',
+      'Sorte: quando tira 1 num d20, rola de novo e fica com o segundo',
+      'Bravura: vantagem para resistir à condição Amedrontado',
+      'Agilidade Halfling: passa pelo espaço de criaturas maiores',
+      'Furtividade Natural: pode se esconder atrás de uma criatura maior'] },
+    esp_humano: { t: 'Humano', l: 'Sem dom nenhum de nascença — e por isso aprende qualquer coisa.', b: [
+      'Tamanho: Médio ou Pequeno · Deslocamento: 9 m',
+      'Habilidoso: proficiência em uma perícia à sua escolha',
+      'Versátil: um talento de origem além do que o antecedente já deu',
+      'Engenhoso: ganha [[inspiracao|Inspiração Heroica]] ao terminar um descanso longo'] },
+    esp_orc: { t: 'Orc', l: 'Fôlego de sobra e o costume de não cair na primeira.', b: [
+      'Tamanho: Médio · Deslocamento: 9 m',
+      'Visão no Escuro 36 m',
+      'Resistência Implacável: ao cair a zero PV, volta com 1 — bônus de proficiência vezes por descanso longo',
+      'Investida Adrenalina: Disparada como ação bônus, bônus de proficiência vezes por descanso'] },
+    esp_tiefling: { t: 'Tiefling', l: 'Marca de outro plano no sangue: chifres, cauda e magia herdada.', b: [
+      'Tamanho: Médio ou Pequeno · Deslocamento: 9 m',
+      'Visão no Escuro 18 m',
+      'Presença de Outro Mundo: conhece o truque Taumaturgia',
+      'Legado Fiendish: Abissal, Ctônico ou Infernal — cada um dá resistência, truque e magias próprias'] },
+
     // ── Grau 2: os 16 antecedentes ────────────────────────────────────
     // Atributos, talento, perícias e ferramenta conferidos contra o bloco do
     // Marinheiro que o Daniel passou do livro. O EQUIPAMENTO só está aqui no
@@ -1611,7 +1673,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Não substitui a classe: soma em cima dela.'] },
     especie: { t: 'Espécie', l: 'O corpo com que o personagem nasceu.', b: [
       'Dá deslocamento, tamanho, tipo de criatura e traços próprios (visão no escuro, resistências e por aí).',
-      'Na 5.5 a espécie NÃO dá mais aumento de atributo — isso passou para o antecedente.'] },
+      'Na 5.5 a espécie NÃO dá mais aumento de atributo — isso passou para o antecedente.',
+      'Botão direito no nome de uma espécie aplica tamanho, deslocamento e traços de uma vez.'],
+      mais: 'Ver as 10 espécies',
+      lista: ['esp_aasimar', 'esp_anao', 'esp_draconato', 'esp_elfo', 'esp_gnomo', 'esp_goliath',
+        'esp_halfling', 'esp_humano', 'esp_orc', 'esp_tiefling'] },
     nivel: { t: 'Nível e XP', l: 'O quanto o personagem já andou.', b: [
       'Cada nível novo traz características de classe e pode subir o bônus de proficiência.',
       'A subida vem por XP ou por decisão do Mestre — os dois jeitos são oficiais.'] },
@@ -2996,7 +3062,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (/^tal_/.test(chave)) return { r: 'Anotar em Talentos' };
     if (/^ferr_/.test(chave)) return { r: 'Anotar em Ferramentas' };
     if (/^item_/.test(chave) && ITEM_DO_TERMO[chave]) return { r: 'Pôr no inventário' };
-    if (/^ant_/.test(chave)) return { r: 'Aplicar na ficha' };
+    if (/^ant_/.test(chave) || /^esp_/.test(chave)) return { r: 'Aplicar na ficha' };
     return null;
   }
   function poeNaFicha(chave) {
@@ -3023,6 +3089,22 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       if (!id) return null;
       poeItem(id);
       return (ITENS[id] ? ITENS[id].n : nome) + ' no inventário';
+    }
+    if (/^esp_/.test(chave)) {
+      var campoEsp = campo('especie');
+      if (campoEsp) campoEsp.textContent = nome;
+      var linhas = (d.b || []).slice();
+      // o primeiro item traz tamanho e deslocamento; o resto é traço
+      var cab = linhas.shift() || '';
+      var tam = /Tamanho:\s*([^·]+)/.exec(cab), des = /Deslocamento:\s*([^·]+)/.exec(cab);
+      if (tam) { var ct = campo('tamanho'); if (ct) ct.textContent = tam[1].trim(); }
+      if (des) { var cd = campo('deslocamento'); if (cd) cd.textContent = des[1].trim(); }
+      var postos = 0;
+      linhas.forEach(function(t) {
+        var limpo = t.replace(/\[\[[a-z0-9_]+\|([^\]]+)\]\]/g, '$1');
+        if (anota('tracos_especie', limpo) === true) postos++;
+      });
+      return 'espécie ' + nome + ' aplicada (' + postos + ' traços)';
     }
     if (/^ant_/.test(chave)) {
       var campoAnt = campo('antecedente');
