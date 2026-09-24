@@ -1722,9 +1722,9 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     balaoL.innerHTML = ''; balaoL.appendChild(comTags(d.l));
     bullets(balaoB, d.b);
 
-    // limpa o grau 2 anterior
-    var antigo = balao.querySelector('.balao-mais, .balao-lista');
-    while (antigo) { antigo.remove(); antigo = balao.querySelector('.balao-mais, .balao-lista'); }
+    // limpa o grau 2 anterior e as ações de item de inventário
+    var antigo = balao.querySelector('.balao-mais, .balao-lista, .balao-acoes');
+    while (antigo) { antigo.remove(); antigo = balao.querySelector('.balao-mais, .balao-lista, .balao-acoes'); }
 
     if (d.lista && d.lista.length) {
       var bt = document.createElement('button');
@@ -2501,15 +2501,48 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
 
   // ── ficha do item, no mesmo balão do sumário ────────────────────────
   function mostraItem(i, elo) {
-    var it = inv.itens[i], d = dadosDe(it);
+    var it = inv.itens[i], d = dadosDe(it), pode = !!(ITENS[it.id] && ITENS[it.id].e);
     var b = [];
     if (d.d) b.push(d.d);
     if (d.o) b.push(d.o);
     b.push('Peso: ' + num(d.p) + ' kg' + ((it.q || 1) > 1 ? '  (×' + it.q + ' = ' + num(d.p * it.q) + ' kg)' : ''));
-    if (ITENS[it.id] && ITENS[it.id].e) b.push(it.eq ? 'Equipado agora. Botão direito para tirar.' : 'Dá para equipar: botão direito no item.');
     ancora = elo; pilha = [];
     AJUDA.__item = { t: d.n, l: it.eq ? 'Equipado.' : 'No inventário.', b: b };
     abre('__item');
+    if (somenteLeitura) return;
+
+    var acoes = document.createElement('div');
+    acoes.className = 'balao-acoes';
+
+    if (pode) {
+      var eq = document.createElement('button');
+      eq.type = 'button'; eq.textContent = it.eq ? 'Desequipar' : 'Equipar';
+      eq.addEventListener('click', function() { it.eq = !it.eq; mexeu(); mostraItem(i, elo); });
+      acoes.appendChild(eq);
+    }
+
+    var qtd = document.createElement('div');
+    qtd.className = 'qtd';
+    var menos = document.createElement('button');
+    menos.type = 'button'; menos.textContent = '−'; menos.setAttribute('aria-label', 'Diminuir a quantidade');
+    menos.addEventListener('click', function() {
+      it.q = (it.q || 1) - 1;
+      if (it.q <= 0) { inv.itens.splice(i, 1); mexeu(); fechaBalao(); }
+      else { mexeu(); mostraItem(i, elo); }
+    });
+    var n = document.createElement('span'); n.textContent = it.q || 1;
+    var mais = document.createElement('button');
+    mais.type = 'button'; mais.textContent = '+'; mais.setAttribute('aria-label', 'Aumentar a quantidade');
+    mais.addEventListener('click', function() { it.q = (it.q || 1) + 1; mexeu(); mostraItem(i, elo); });
+    qtd.appendChild(menos); qtd.appendChild(n); qtd.appendChild(mais);
+    acoes.appendChild(qtd);
+
+    var tirar = document.createElement('button');
+    tirar.type = 'button'; tirar.className = 'some'; tirar.textContent = 'Tirar do inventário';
+    tirar.addEventListener('click', function() { inv.itens.splice(i, 1); mexeu(); fechaBalao(); });
+    acoes.appendChild(tirar);
+
+    balao.appendChild(acoes);
   }
 
   // ── menu do botão direito ───────────────────────────────────────────
