@@ -1371,6 +1371,119 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Uma vez por turno.'] },
     mst_raspar: { t: 'Maestria: Raspar', l: 'Errar deixa de ser errar à toa.', b: [
       'Errou o ataque? O alvo leva dano igual ao modificador do atributo que você usou.'] },
+    // ── Grau 2: as 12 classes, camada mecânica + nível 1 ──────────────
+    // Convenção fixa, que é de onde o botão direito lê o que aplicar:
+    //   [0] Dado de Vida: … · Atributo principal: …
+    //   [1] Salvaguardas: …
+    //   [2] Armaduras: …
+    //   [3] Armas: …
+    //   [4] Perícias: … (informativo — a escolha é do jogador)
+    //   [5+] Nível 1: …
+    cls_barbaro: { t: 'Bárbaro', l: 'Fúria como recurso: quanto mais apanha, mais assusta.', b: [
+      'Dado de Vida: d12 · Atributo principal: Força',
+      'Salvaguardas: Força e Constituição',
+      'Armaduras: leves, médias e escudos',
+      'Armas: simples e marciais',
+      'Perícias: 2 entre Atletismo, Intimidação, Lidar com Animais, Natureza, Percepção e Sobrevivência',
+      'Nível 1: Fúria — dano extra, resistência a cortante, perfurante e concussão, e vantagem em Força',
+      'Nível 1: Defesa sem Armadura — CA 10 + Destreza + Constituição quando está sem armadura',
+      'Nível 1: Maestria em Armas — escolhe 2 armas e usa a maestria delas'] },
+    cls_bardo: { t: 'Bardo', l: 'Magia pela palavra e pela música. Ajuda o grupo inteiro a acertar mais.', b: [
+      'Dado de Vida: d8 · Atributo principal: Carisma',
+      'Salvaguardas: Destreza e Carisma',
+      'Armaduras: leves',
+      'Armas: simples',
+      'Perícias: 3 quaisquer, à sua escolha',
+      'Nível 1: Conjuração — magias de bardo, por Carisma',
+      'Nível 1: Inspiração de Bardo — dá um dado de bônus a um aliado, gasto por descanso'] },
+    cls_bruxo: { t: 'Bruxo', l: 'Fez um pacto com algo poderoso — e cobra o juro em magia.', b: [
+      'Dado de Vida: d8 · Atributo principal: Carisma',
+      'Salvaguardas: Sabedoria e Carisma',
+      'Armaduras: leves',
+      'Armas: simples',
+      'Perícias: 2 entre Arcanismo, Enganação, História, Intimidação, Investigação, Natureza e Religião',
+      'Nível 1: Magia de Pacto — poucos espaços, mas sempre do círculo mais alto, e voltam no descanso CURTO',
+      'Nível 1: Invocações Místicas — poderes fixos que você escolhe e troca ao subir de nível'] },
+    cls_clerigo: { t: 'Clérigo', l: 'Canal do divino: cura, protege e bate quando precisa.', b: [
+      'Dado de Vida: d8 · Atributo principal: Sabedoria',
+      'Salvaguardas: Sabedoria e Carisma',
+      'Armaduras: leves, médias e escudos',
+      'Armas: simples',
+      'Perícias: 2 entre História, Intuição, Medicina, Persuasão e Religião',
+      'Nível 1: Conjuração — magias de clérigo, por Sabedoria; prepara a lista a cada descanso longo',
+      'Nível 1: Ordem Divina — Protetor (armas marciais e armadura pesada) ou Taumaturgo (truque extra e Religião melhor)'] },
+    cls_druida: { t: 'Druida', l: 'A natureza como fonte de magia — e como forma de corpo.', b: [
+      'Dado de Vida: d8 · Atributo principal: Sabedoria',
+      'Salvaguardas: Inteligência e Sabedoria',
+      'Armaduras: leves, médias e escudos',
+      'Armas: simples',
+      'Perícias: 2 entre Arcanismo, Intuição, Lidar com Animais, Medicina, Natureza, Percepção, Religião e Sobrevivência',
+      'Nível 1: Conjuração — magias de druida, por Sabedoria',
+      'Nível 1: Druídico — a língua secreta dos druidas, e o truque Sentido Mágico',
+      'Nível 1: Ordem Primitiva — Mágico (truque extra e Arcanismo melhor) ou Guardião (armas marciais e armadura média)'] },
+    cls_feiticeiro: { t: 'Feiticeiro', l: 'A magia não foi estudada nem concedida: já nasceu com ele.', b: [
+      'Dado de Vida: d6 · Atributo principal: Carisma',
+      'Salvaguardas: Constituição e Carisma',
+      'Armaduras: nenhuma',
+      'Armas: simples',
+      'Perícias: 2 entre Arcanismo, Enganação, Intimidação, Intuição, Persuasão e Religião',
+      'Nível 1: Conjuração — magias de feiticeiro, por Carisma',
+      'Nível 1: Feitiçaria Inata — por 1 minuto, vantagem nos ataques mágicos e CD +1'] },
+    cls_guardiao: { t: 'Guardião', l: 'Caçador de fronteira: rastreia, embosca e conhece o inimigo.', b: [
+      'Dado de Vida: d10 · Atributo principal: Destreza e Sabedoria',
+      'Salvaguardas: Força e Destreza',
+      'Armaduras: leves, médias e escudos',
+      'Armas: simples e marciais',
+      'Perícias: 3 entre Atletismo, Furtividade, Intuição, Investigação, Lidar com Animais, Natureza, Percepção e Sobrevivência',
+      'Nível 1: Conjuração — magias de guardião, por Sabedoria',
+      'Nível 1: Inimigo Favorito — Marca do Caçador sem gastar espaço, algumas vezes por descanso longo',
+      'Nível 1: Maestria em Armas — escolhe 2 armas e usa a maestria delas'] },
+    cls_guerreiro: { t: 'Guerreiro', l: 'O ofício da luta, puro e simples. Aguenta e devolve.', b: [
+      'Dado de Vida: d10 · Atributo principal: Força ou Destreza',
+      'Salvaguardas: Força e Constituição',
+      'Armaduras: todas, e escudos',
+      'Armas: simples e marciais',
+      'Perícias: 2 entre Acrobacia, Atletismo, História, Intimidação, Intuição, Lidar com Animais, Percepção e Sobrevivência',
+      'Nível 1: Estilo de Luta — um jeito de brigar que te dá bônus fixo (arquearia, defesa, duelo…)',
+      'Nível 1: Retomar o Fôlego — cura a si mesmo como ação bônus, algumas vezes por descanso',
+      'Nível 1: Maestria em Armas — escolhe 3 armas e usa a maestria delas'] },
+    cls_ladino: { t: 'Ladino', l: 'Precisão em vez de força: acerta onde dói e sai antes da resposta.', b: [
+      'Dado de Vida: d8 · Atributo principal: Destreza',
+      'Salvaguardas: Destreza e Inteligência',
+      'Armaduras: leves',
+      'Armas: simples, e marciais que tenham Acuidade ou Leve',
+      'Perícias: 4 entre Acrobacia, Atletismo, Enganação, Furtividade, Intimidação, Intuição, Investigação, Percepção, Persuasão e Prestidigitação',
+      'Nível 1: Ataque Furtivo — 1d6 extra quando tem vantagem ou um aliado ao lado do alvo',
+      'Nível 1: Especialista — dobra a proficiência em duas perícias',
+      'Nível 1: Gíria de Ladrão — o código secreto do submundo',
+      'Nível 1: Maestria em Armas — escolhe 2 armas e usa a maestria delas'] },
+    cls_mago: { t: 'Mago', l: 'Magia estudada, anotada e preparada. O livro é o personagem.', b: [
+      'Dado de Vida: d6 · Atributo principal: Inteligência',
+      'Salvaguardas: Inteligência e Sabedoria',
+      'Armaduras: nenhuma',
+      'Armas: simples',
+      'Perícias: 2 entre Arcanismo, História, Intuição, Investigação, Medicina e Religião',
+      'Nível 1: Conjuração — magias do grimório, por Inteligência',
+      'Nível 1: Adepto de Rituais — conjura qualquer ritual do livro sem gastar espaço',
+      'Nível 1: Recuperação Arcana — recupera espaços de magia num descanso curto, uma vez por dia'] },
+    cls_monge: { t: 'Monge', l: 'O corpo é a arma. Rápido, difícil de acertar e sempre no lugar certo.', b: [
+      'Dado de Vida: d8 · Atributo principal: Destreza e Sabedoria',
+      'Salvaguardas: Força e Destreza',
+      'Armaduras: nenhuma',
+      'Armas: simples, e marciais que tenham a propriedade Leve',
+      'Perícias: 2 entre Acrobacia, Atletismo, Furtividade, História, Intuição e Religião',
+      'Nível 1: Artes Marciais — ataque desarmado vira d6, ataque extra como ação bônus e Destreza no lugar da Força',
+      'Nível 1: Defesa sem Armadura — CA 10 + Destreza + Sabedoria quando está sem armadura e sem escudo'] },
+    cls_paladino: { t: 'Paladino', l: 'Juramento com peso de magia: cura pelo toque e castiga pelo golpe.', b: [
+      'Dado de Vida: d10 · Atributo principal: Força e Carisma',
+      'Salvaguardas: Sabedoria e Carisma',
+      'Armaduras: todas, e escudos',
+      'Armas: simples e marciais',
+      'Perícias: 2 entre Atletismo, Intimidação, Intuição, Medicina, Persuasão e Religião',
+      'Nível 1: Imposição das Mãos — uma reserva de cura igual a 5 × seu nível, gasta pelo toque',
+      'Nível 1: Conjuração — magias de paladino, por Carisma',
+      'Nível 1: Maestria em Armas — escolhe 2 armas e usa a maestria delas'] },
+
     // ── Grau 2: as 10 espécies ────────────────────────────────────────
     // Convenção: o primeiro item é SEMPRE "Tamanho: … · Deslocamento: …",
     // e todo o resto é traço. É daí que o botão direito lê o que aplicar —
@@ -1673,7 +1786,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
         'ant_mercador', 'ant_nobre', 'ant_sabio', 'ant_soldado'] },
     classe: { t: 'Classe', l: 'O que você faz numa aventura. É de onde vem a maior parte dos seus poderes.', b: [
       'Define o dado de vida, em quais duas salvaguardas você é proficiente e quais perícias pode escolher.',
-      'A cada nível ela entrega características novas.'] },
+      'A cada nível ela entrega características novas.',
+      'Botão direito no nome de uma classe aplica dado de vida, salvaguardas, treinamento e o nível 1.'],
+      mais: 'Ver as 12 classes',
+      lista: ['cls_barbaro', 'cls_bardo', 'cls_bruxo', 'cls_clerigo', 'cls_druida', 'cls_feiticeiro',
+        'cls_guardiao', 'cls_guerreiro', 'cls_ladino', 'cls_mago', 'cls_monge', 'cls_paladino'] },
     subclasse: { t: 'Subclasse', l: 'A especialização dentro da classe.', b: [
       'Na 5.5 todas chegam no nível 3.',
       'Não substitui a classe: soma em cima dela.'] },
@@ -3094,7 +3211,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (/^tal_/.test(chave)) return { r: 'Anotar em Talentos' };
     if (/^ferr_/.test(chave)) return { r: 'Anotar em Ferramentas' };
     if (/^item_/.test(chave) && ITEM_DO_TERMO[chave]) return { r: 'Pôr no inventário' };
-    if (/^ant_/.test(chave) || /^esp_/.test(chave)) return { r: 'Aplicar na ficha' };
+    if (/^ant_/.test(chave) || /^esp_/.test(chave) || /^cls_/.test(chave)) return { r: 'Aplicar na ficha' };
     return null;
   }
   function poeNaFicha(chave) {
@@ -3121,6 +3238,44 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       if (!id) return null;
       poeItem(id);
       return (ITENS[id] ? ITENS[id].n : nome) + ' no inventário';
+    }
+    if (/^cls_/.test(chave)) {
+      var campoCls = campo('classe');
+      if (campoCls) campoCls.textContent = nome;
+      var feitos = 0, ls = (d.b || []).slice();
+      var cab = ls.shift() || '';
+      // dado de vida: no nível 1 você tem um só
+      var dv = /Dado de Vida:\s*(d\d+)/.exec(cab);
+      if (dv) { var cdv = campo('dv_max'); if (cdv) { cdv.textContent = '1' + dv[1]; feitos++; } }
+      ls.forEach(function(linha) {
+        var limpo = linha.replace(/\[\[[a-z0-9_]+\|([^\]]+)\]\]/g, '$1');
+        var m;
+        if ((m = /^Salvaguardas:\s*(.+)$/.exec(limpo))) {
+          ATRIBUTOS.forEach(function(a) {
+            if (m[1].indexOf(a.nome) < 0) return;
+            var b = document.querySelector('.prof[data-prof="' + a.id + '_salv"]');
+            if (b && !b.dataset.estado) { b.dataset.estado = 'p'; b.setAttribute('aria-pressed', 'true'); b.title = TITULO.p; feitos++; }
+          });
+        } else if ((m = /^Armaduras:\s*(.+)$/.exec(limpo))) {
+          var t = m[1].toLowerCase(), quais = [];
+          if (t.indexOf('todas') >= 0) quais = ['arm_leve', 'arm_media', 'arm_pesada'];
+          else {
+            if (t.indexOf('leve') >= 0) quais.push('arm_leve');
+            if (t.indexOf('média') >= 0 || t.indexOf('media') >= 0) quais.push('arm_media');
+            if (t.indexOf('pesada') >= 0) quais.push('arm_pesada');
+          }
+          if (t.indexOf('escudo') >= 0) quais.push('arm_escudo');
+          quais.forEach(function(tg) {
+            var b = document.querySelector('[data-tg="' + tg + '"]');
+            if (b && !b.classList.contains('on')) { b.classList.add('on'); b.setAttribute('aria-pressed', 'true'); feitos++; }
+          });
+        } else if ((m = /^Armas:\s*(.+)$/.exec(limpo))) {
+          if (anota('prof_armas', m[1]) === true) feitos++;
+        } else if (/^Nível 1:/.test(limpo)) {
+          if (anota('caracteristicas_classe', limpo.replace(/^Nível 1:\s*/, '')) === true) feitos++;
+        }
+      });
+      return 'classe ' + nome + ' aplicada (' + feitos + ' itens)';
     }
     if (/^esp_/.test(chave)) {
       var campoEsp = campo('especie');
