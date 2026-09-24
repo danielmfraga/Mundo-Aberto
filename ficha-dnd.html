@@ -693,8 +693,10 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
    Liga um "o que é isso?" em cima da ficha: os blocos ficam clicáveis e
    abrem um balão explicando o campo. Os campos param de aceitar digitação
    enquanto está ligado — é modo de leitura, não de preenchimento. */
-body.sumario [contenteditable] { pointer-events: none; }
+/* o modo sumário NÃO trava mais a ficha: dá pra escrever e marcar bolinha
+   com ele ligado. O balão é um acompanhante, não um bloqueio. */
 body.sumario [data-ajuda] { cursor: help; }
+body.sumario [contenteditable] { cursor: text; }
 body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); outline-offset: 2px; }
 .balao {
   position: fixed; z-index: 400; width: 290px; max-width: calc(100vw - 24px); padding: 12px 13px 13px;
@@ -865,7 +867,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
 
 <!-- fundo da ficha: cor ou imagem, por personagem -->
 <div class="fundo-ctrl">
-  <button type="button" class="fundo-bt" id="sumBt" aria-pressed="false" title="Modo de leitura: clique em qualquer bloco pra saber o que ele é">Sumário</button>
+  <button type="button" class="fundo-bt" id="sumBt" aria-pressed="false" title="Explica o que é cada bloco ao clicar — sem travar a ficha: dá pra escrever e marcar normalmente">Sumário</button>
   <button type="button" class="fundo-bt" id="pdfBt" title="Imprimir a ficha ou salvar em PDF">PDF</button>
   <button type="button" class="fundo-bt" id="papelBt" aria-pressed="true" title="Com a folha creme por baixo, ou os quadros direto no fundo">Papel</button>
   <button type="button" class="fundo-bt" id="fundoBt" aria-expanded="false" aria-controls="fundoPop">Fundo</button>
@@ -2201,10 +2203,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
 
   // captura: em modo sumário o clique explica o campo em vez de entrar nele
   document.addEventListener('click', function(e) {
-    if (!sumario || e.target.closest('.balao, .fundo-ctrl')) return;
+    if (!sumario || e.target.closest('.balao, .fundo-ctrl, .inv-menu, .cat-ov')) return;
     var el = e.target.closest('[data-ajuda]');
     if (!el) { fechaBalao(); return; }
-    e.preventDefault(); e.stopPropagation();
+    // sem preventDefault: o clique segue o caminho normal dele — põe o cursor
+    // no campo, marca a bolinha, aperta o botão — e o balão só acompanha.
     // a linha exata clicada tem prioridade sobre o quadro que a contém
     var achado = alvoNoPonto(el, e.clientX, e.clientY);
     if (achado && achado.tipo === 'ajuda') { ancora = el; pilha = []; abre(achado.k); return; }
