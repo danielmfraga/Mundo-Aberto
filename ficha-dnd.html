@@ -1373,6 +1373,42 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Uma vez por turno.'] },
     mst_raspar: { t: 'Maestria: Raspar', l: 'Errar deixa de ser errar à toa.', b: [
       'Errou o ataque? O alvo leva dano igual ao modificador do atributo que você usou.'] },
+    // ── conceitos que aparecem dentro das classes ─────────────────────
+    cnc_estilo_luta: { t: 'Estilo de Luta', l: 'Um jeito de brigar que te dá um bônus fixo, para sempre.', b: [
+      'Na 5.5 os estilos viraram talentos: você escolhe um da lista.',
+      'Arquearia: +2 em ataques à distância. Defesa: +1 na CA usando armadura.',
+      'Duelo: +2 no dano com uma arma só na mão. Arma Grande: rola de novo 1 e 2 no dano.',
+      'Tem ainda Proteção, Interceptação, Duas Armas, Arremesso, Luta Desarmada e Combate às Cegas.',
+      'Guerreiro escolhe no nível 1; paladino e guardião, no 2.'] },
+    cnc_descanso: { t: 'Descanso curto e longo', l: 'Os dois relógios do jogo: quase todo poder recarrega num ou no outro.', b: [
+      'Curto: pelo menos 1 hora. Serve para gastar [[dv|Dados de Vida]] e curar, e recarrega o que diz "por descanso curto".',
+      'Longo: 8 horas. Devolve todos os PV, metade dos Dados de Vida e todos os [[slots|espaços de magia]].',
+      'Na 5.5 o descanso longo pode ser interrompido: 1 hora de esforço pesado zera tudo.'] },
+    cnc_acao_bonus: { t: 'Ação bônus', l: 'Uma ação pequena e extra — mas só quando alguma coisa te dá uma.', b: [
+      'No máximo UMA por turno. Duas coisas que pedem ação bônus não cabem no mesmo turno.',
+      'Não existe trocar a sua ação normal por uma ação bônus.',
+      'Beber uma poção, o segundo golpe de duas armas e a Retomada de Fôlego são ação bônus.'] },
+    cnc_truque: { t: 'Truque', l: 'Magia de nível zero: sai à vontade, o dia inteiro.', b: [
+      'Não gasta [[slots|espaço de magia]] nenhum.',
+      'Fica sempre conhecido — não precisa preparar.',
+      'O dano de vários truques sobe sozinho nos níveis 5, 11 e 17.'] },
+    cnc_defesa_sem_armadura: { t: 'Defesa sem Armadura', l: 'A CA de quem luta sem armadura — e é diferente em cada classe.', b: [
+      'Bárbaro: 10 + Destreza + Constituição. Pode usar escudo junto.',
+      'Monge: 10 + Destreza + Sabedoria. Não pode usar escudo.',
+      'Vale só enquanto você não estiver vestindo armadura nenhuma.'] },
+    cnc_ataque_furtivo: { t: 'Ataque Furtivo', l: 'O golpe que faz o ladino valer a pena.', b: [
+      '1d6 extra no nível 1, subindo a cada dois níveis.',
+      'Precisa de vantagem no ataque, OU de um aliado a até 1,5 m do alvo sem você estar com desvantagem.',
+      'Uma vez por turno, e a arma precisa ter [[prop_acuidade|Acuidade]] ou ser à distância.'] },
+    cnc_especialista: { t: 'Especialista', l: 'Proficiência dobrada numa perícia.', b: [
+      'Em vez de somar o bônus de proficiência uma vez, soma duas.',
+      'Na ficha é o losango dourado, no lugar da bolinha preta.',
+      'O ladino ganha duas já no nível 1.'] },
+    dv: { t: 'Dados de Vida', l: 'O que te cura num descanso curto, sem depender de ninguém.', b: [
+      'Você tem um por nível, do tamanho do dado da sua classe.',
+      'No descanso curto você gasta quantos quiser: rola e soma o modificador de Constituição.',
+      'O descanso longo devolve metade do total, no mínimo um.'] },
+
     // ── Grau 2: as 12 classes, camada mecânica + nível 1 ──────────────
     // Convenção fixa, que é de onde o botão direito lê o que aplicar:
     //   [0] Dado de Vida: … · Atributo principal: …
@@ -2197,6 +2233,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
 
   function mostraCatalogo(id, elo) {
     var d = ITENS[id], b = [];
+    var tp = tipoDaArma(d);
+    if (tp) b.push(tp);
     if (d.d) b.push(d.d);
     if (d.o) b.push(comTermos(d.o));
     b.push('Peso: ' + num(d.p) + ' kg');
@@ -2742,52 +2780,60 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     barra:    '<path d="M5 19L17 7"/><path d="M15 5l4 4-2 2-4-4z"/>',
     garrafa:  '<path d="M10 3h4v3h-4z"/><path d="M7 9a5 5 0 0 1 10 0v7a5 5 0 0 1-10 0z"/>'
   };
+  // O que separa arma de arma, na hora de escolher, é SIMPLES ou MARCIAL —
+  // é disso que depende a proficiência. Corpo a corpo ou à distância continua
+  // aparecendo no desenho do ícone e na ficha do item.
   var CATEGORIAS = [
-    { k: 'arma', r: 'Armas' }, { k: 'dist', r: 'À distância' }, { k: 'armadura', r: 'Armaduras' },
-    { k: 'escudo', r: 'Escudos' }, { k: 'ferr', r: 'Ferramentas' }, { k: 'cons', r: 'Consumíveis' },
-    { k: 'geral', r: 'Geral' }
+    { k: 'arma_s', r: 'Armas simples' }, { k: 'arma_m', r: 'Armas marciais' },
+    { k: 'armadura', r: 'Armaduras' }, { k: 'escudo', r: 'Escudos' },
+    { k: 'ferr', r: 'Ferramentas' }, { k: 'cons', r: 'Consumíveis' }, { k: 'geral', r: 'Geral' }
   ];
+  function filtroDe(d) { return d.cl ? ('arma_' + d.cl) : d.c; }
+  function tipoDaArma(d) {
+    if (!d.cl) return null;
+    return 'Arma ' + (d.cl === 's' ? 'simples' : 'marcial') + ', ' + (d.c === 'dist' ? 'à distância' : 'corpo a corpo');
+  }
   // n=nome · c=categoria · p=peso em kg · d=o número que importa · o=observações · e=dá pra equipar
   var ITENS = {
     // ── armas simples, corpo a corpo ──
-    adaga:        { n: 'Adaga', c: 'arma', p: 0.5, d: '1d4 perfurante', o: 'Acuidade, Leve, Arremesso 6/18 m · Maestria: Nick', e: 1, dd: '1d4', dt: 'perfurante', fin: 1 },
-    bordao:       { n: 'Bordão', c: 'arma', p: 2, d: '1d6 concussão', o: 'Versátil (1d8) · Maestria: Derrubar', e: 1, dd: '1d6', dt: 'concussão', ver: '1d8' },
-    clava:        { n: 'Clava', c: 'arma', p: 1, d: '1d4 concussão', o: 'Leve · Maestria: Lentidão', e: 1, dd: '1d4', dt: 'concussão' },
-    clava_grande: { n: 'Clava Grande', c: 'arma', p: 5, d: '1d8 concussão', o: 'Duas mãos · Maestria: Empurrar', e: 1, dd: '1d8', dt: 'concussão' },
-    foice_curta:  { n: 'Foice Curta', c: 'arma', p: 1, d: '1d4 cortante', o: 'Leve · Maestria: Nick', e: 1, dd: '1d4', dt: 'cortante' },
-    lanca:        { n: 'Lança', c: 'arma', p: 1.5, d: '1d6 perfurante', o: 'Arremesso 6/18 m, Versátil (1d8) · Maestria: Debilitar', e: 1, dd: '1d6', dt: 'perfurante', ver: '1d8' },
-    machadinha:   { n: 'Machadinha', c: 'arma', p: 1, d: '1d6 cortante', o: 'Leve, Arremesso 6/18 m · Maestria: Atormentar', e: 1, dd: '1d6', dt: 'cortante' },
-    maca:         { n: 'Maça', c: 'arma', p: 2, d: '1d6 concussão', o: 'Maestria: Debilitar', e: 1, dd: '1d6', dt: 'concussão' },
-    martelo_leve: { n: 'Martelo Leve', c: 'arma', p: 1, d: '1d4 concussão', o: 'Leve, Arremesso 6/18 m · Maestria: Nick', e: 1, dd: '1d4', dt: 'concussão' },
-    azagaia:      { n: 'Azagaia', c: 'arma', p: 1, d: '1d6 perfurante', o: 'Arremesso 9/36 m · Maestria: Lentidão', e: 1, dd: '1d6', dt: 'perfurante' },
+    adaga:        { n: 'Adaga', c: 'arma', p: 0.5, d: '1d4 perfurante', o: 'Acuidade, Leve, Arremesso 6/18 m · Maestria: Nick', e: 1, dd: '1d4', dt: 'perfurante', fin: 1, cl: 's' },
+    bordao:       { n: 'Bordão', c: 'arma', p: 2, d: '1d6 concussão', o: 'Versátil (1d8) · Maestria: Derrubar', e: 1, dd: '1d6', dt: 'concussão', ver: '1d8', cl: 's' },
+    clava:        { n: 'Clava', c: 'arma', p: 1, d: '1d4 concussão', o: 'Leve · Maestria: Lentidão', e: 1, dd: '1d4', dt: 'concussão', cl: 's' },
+    clava_grande: { n: 'Clava Grande', c: 'arma', p: 5, d: '1d8 concussão', o: 'Duas mãos · Maestria: Empurrar', e: 1, dd: '1d8', dt: 'concussão', cl: 's' },
+    foice_curta:  { n: 'Foice Curta', c: 'arma', p: 1, d: '1d4 cortante', o: 'Leve · Maestria: Nick', e: 1, dd: '1d4', dt: 'cortante', cl: 's' },
+    lanca:        { n: 'Lança', c: 'arma', p: 1.5, d: '1d6 perfurante', o: 'Arremesso 6/18 m, Versátil (1d8) · Maestria: Debilitar', e: 1, dd: '1d6', dt: 'perfurante', ver: '1d8', cl: 's' },
+    machadinha:   { n: 'Machadinha', c: 'arma', p: 1, d: '1d6 cortante', o: 'Leve, Arremesso 6/18 m · Maestria: Atormentar', e: 1, dd: '1d6', dt: 'cortante', cl: 's' },
+    maca:         { n: 'Maça', c: 'arma', p: 2, d: '1d6 concussão', o: 'Maestria: Debilitar', e: 1, dd: '1d6', dt: 'concussão', cl: 's' },
+    martelo_leve: { n: 'Martelo Leve', c: 'arma', p: 1, d: '1d4 concussão', o: 'Leve, Arremesso 6/18 m · Maestria: Nick', e: 1, dd: '1d4', dt: 'concussão', cl: 's' },
+    azagaia:      { n: 'Azagaia', c: 'arma', p: 1, d: '1d6 perfurante', o: 'Arremesso 9/36 m · Maestria: Lentidão', e: 1, dd: '1d6', dt: 'perfurante', cl: 's' },
     // ── armas simples, à distância ──
-    arco_curto:   { n: 'Arco Curto', c: 'dist', p: 1, d: '1d6 perfurante', o: 'Munição 24/96 m, Duas mãos · Maestria: Atormentar', e: 1, dd: '1d6', dt: 'perfurante', rng: 1 },
-    besta_leve:   { n: 'Besta Leve', c: 'dist', p: 2.5, d: '1d8 perfurante', o: 'Munição 24/96 m, Recarga, Duas mãos · Maestria: Lentidão', e: 1, dd: '1d8', dt: 'perfurante', rng: 1 },
-    dardo:        { n: 'Dardo', c: 'dist', p: 0.15, d: '1d4 perfurante', o: 'Acuidade, Arremesso 6/18 m · Maestria: Atormentar', e: 1, dd: '1d4', dt: 'perfurante', fin: 1 },
-    funda:        { n: 'Funda', c: 'dist', p: 0, d: '1d4 concussão', o: 'Munição 9/36 m · Maestria: Lentidão', e: 1, dd: '1d4', dt: 'concussão', rng: 1 },
+    arco_curto:   { n: 'Arco Curto', c: 'dist', p: 1, d: '1d6 perfurante', o: 'Munição 24/96 m, Duas mãos · Maestria: Atormentar', e: 1, dd: '1d6', dt: 'perfurante', rng: 1, cl: 's' },
+    besta_leve:   { n: 'Besta Leve', c: 'dist', p: 2.5, d: '1d8 perfurante', o: 'Munição 24/96 m, Recarga, Duas mãos · Maestria: Lentidão', e: 1, dd: '1d8', dt: 'perfurante', rng: 1, cl: 's' },
+    dardo:        { n: 'Dardo', c: 'dist', p: 0.15, d: '1d4 perfurante', o: 'Acuidade, Arremesso 6/18 m · Maestria: Atormentar', e: 1, dd: '1d4', dt: 'perfurante', fin: 1, cl: 's' },
+    funda:        { n: 'Funda', c: 'dist', p: 0, d: '1d4 concussão', o: 'Munição 9/36 m · Maestria: Lentidão', e: 1, dd: '1d4', dt: 'concussão', rng: 1, cl: 's' },
     // ── armas marciais, corpo a corpo ──
-    espada_longa: { n: 'Espada Longa', c: 'arma', p: 1.5, d: '1d8 cortante', o: 'Versátil (1d10) · Maestria: Debilitar', e: 1, dd: '1d8', dt: 'cortante', ver: '1d10' },
-    espada_curta: { n: 'Espada Curta', c: 'arma', p: 1, d: '1d6 perfurante', o: 'Acuidade, Leve · Maestria: Atormentar', e: 1, dd: '1d6', dt: 'perfurante', fin: 1 },
-    espada_grande:{ n: 'Espada Grande', c: 'arma', p: 3, d: '2d6 cortante', o: 'Pesada, Duas mãos · Maestria: Raspar', e: 1, dd: '2d6', dt: 'cortante' },
-    florete:      { n: 'Florete', c: 'arma', p: 1, d: '1d8 perfurante', o: 'Acuidade · Maestria: Atormentar', e: 1, dd: '1d8', dt: 'perfurante', fin: 1 },
-    cimitarra:    { n: 'Cimitarra', c: 'arma', p: 1.5, d: '1d6 cortante', o: 'Acuidade, Leve · Maestria: Nick', e: 1, dd: '1d6', dt: 'cortante', fin: 1 },
-    machado_bat:  { n: 'Machado de Batalha', c: 'arma', p: 2, d: '1d8 cortante', o: 'Versátil (1d10) · Maestria: Derrubar', e: 1, dd: '1d8', dt: 'cortante', ver: '1d10' },
-    machado_gr:   { n: 'Machado Grande', c: 'arma', p: 3.5, d: '1d12 cortante', o: 'Pesada, Duas mãos · Maestria: Fender', e: 1, dd: '1d12', dt: 'cortante' },
-    martelo_guerra:{ n: 'Martelo de Guerra', c: 'arma', p: 2, d: '1d8 concussão', o: 'Versátil (1d10) · Maestria: Empurrar', e: 1, dd: '1d8', dt: 'concussão', ver: '1d10' },
-    maca_estrela: { n: 'Maça Estrela', c: 'arma', p: 2, d: '1d8 perfurante', o: 'Maestria: Debilitar', e: 1, dd: '1d8', dt: 'perfurante' },
-    malho:        { n: 'Malho', c: 'arma', p: 5, d: '2d6 concussão', o: 'Pesada, Duas mãos · Maestria: Derrubar', e: 1, dd: '2d6', dt: 'concussão' },
-    alabarda:     { n: 'Alabarda', c: 'arma', p: 3, d: '1d10 cortante', o: 'Pesada, Alcance, Duas mãos · Maestria: Fender', e: 1, dd: '1d10', dt: 'cortante' },
-    glaive:       { n: 'Glaive', c: 'arma', p: 3, d: '1d10 cortante', o: 'Pesada, Alcance, Duas mãos · Maestria: Raspar', e: 1, dd: '1d10', dt: 'cortante' },
-    pique:        { n: 'Pique', c: 'arma', p: 9, d: '1d10 perfurante', o: 'Pesada, Alcance, Duas mãos · Maestria: Empurrar', e: 1, dd: '1d10', dt: 'perfurante' },
-    tridente:     { n: 'Tridente', c: 'arma', p: 2, d: '1d8 perfurante', o: 'Arremesso 6/18 m, Versátil (1d10) · Maestria: Derrubar', e: 1, dd: '1d8', dt: 'perfurante', ver: '1d10' },
-    chicote:      { n: 'Chicote', c: 'arma', p: 1.5, d: '1d4 cortante', o: 'Acuidade, Alcance · Maestria: Lentidão', e: 1, dd: '1d4', dt: 'cortante', fin: 1 },
-    lanca_montada:{ n: 'Lança Montada', c: 'arma', p: 3, d: '1d10 perfurante', o: 'Alcance, Duas mãos se não estiver montado · Maestria: Derrubar', e: 1, dd: '1d10', dt: 'perfurante' },
+    espada_longa: { n: 'Espada Longa', c: 'arma', p: 1.5, d: '1d8 cortante', o: 'Versátil (1d10) · Maestria: Debilitar', e: 1, dd: '1d8', dt: 'cortante', ver: '1d10', cl: 'm' },
+    espada_curta: { n: 'Espada Curta', c: 'arma', p: 1, d: '1d6 perfurante', o: 'Acuidade, Leve · Maestria: Atormentar', e: 1, dd: '1d6', dt: 'perfurante', fin: 1, cl: 'm' },
+    espada_grande:{ n: 'Espada Grande', c: 'arma', p: 3, d: '2d6 cortante', o: 'Pesada, Duas mãos · Maestria: Raspar', e: 1, dd: '2d6', dt: 'cortante', cl: 'm' },
+    florete:      { n: 'Florete', c: 'arma', p: 1, d: '1d8 perfurante', o: 'Acuidade · Maestria: Atormentar', e: 1, dd: '1d8', dt: 'perfurante', fin: 1, cl: 'm' },
+    cimitarra:    { n: 'Cimitarra', c: 'arma', p: 1.5, d: '1d6 cortante', o: 'Acuidade, Leve · Maestria: Nick', e: 1, dd: '1d6', dt: 'cortante', fin: 1, cl: 'm' },
+    machado_bat:  { n: 'Machado de Batalha', c: 'arma', p: 2, d: '1d8 cortante', o: 'Versátil (1d10) · Maestria: Derrubar', e: 1, dd: '1d8', dt: 'cortante', ver: '1d10', cl: 'm' },
+    machado_gr:   { n: 'Machado Grande', c: 'arma', p: 3.5, d: '1d12 cortante', o: 'Pesada, Duas mãos · Maestria: Fender', e: 1, dd: '1d12', dt: 'cortante', cl: 'm' },
+    martelo_guerra:{ n: 'Martelo de Guerra', c: 'arma', p: 2, d: '1d8 concussão', o: 'Versátil (1d10) · Maestria: Empurrar', e: 1, dd: '1d8', dt: 'concussão', ver: '1d10', cl: 'm' },
+    maca_estrela: { n: 'Maça Estrela', c: 'arma', p: 2, d: '1d8 perfurante', o: 'Maestria: Debilitar', e: 1, dd: '1d8', dt: 'perfurante', cl: 'm' },
+    malho:        { n: 'Malho', c: 'arma', p: 5, d: '2d6 concussão', o: 'Pesada, Duas mãos · Maestria: Derrubar', e: 1, dd: '2d6', dt: 'concussão', cl: 'm' },
+    alabarda:     { n: 'Alabarda', c: 'arma', p: 3, d: '1d10 cortante', o: 'Pesada, Alcance, Duas mãos · Maestria: Fender', e: 1, dd: '1d10', dt: 'cortante', cl: 'm' },
+    glaive:       { n: 'Glaive', c: 'arma', p: 3, d: '1d10 cortante', o: 'Pesada, Alcance, Duas mãos · Maestria: Raspar', e: 1, dd: '1d10', dt: 'cortante', cl: 'm' },
+    pique:        { n: 'Pique', c: 'arma', p: 9, d: '1d10 perfurante', o: 'Pesada, Alcance, Duas mãos · Maestria: Empurrar', e: 1, dd: '1d10', dt: 'perfurante', cl: 'm' },
+    tridente:     { n: 'Tridente', c: 'arma', p: 2, d: '1d8 perfurante', o: 'Arremesso 6/18 m, Versátil (1d10) · Maestria: Derrubar', e: 1, dd: '1d8', dt: 'perfurante', ver: '1d10', cl: 'm' },
+    chicote:      { n: 'Chicote', c: 'arma', p: 1.5, d: '1d4 cortante', o: 'Acuidade, Alcance · Maestria: Lentidão', e: 1, dd: '1d4', dt: 'cortante', fin: 1, cl: 'm' },
+    lanca_montada:{ n: 'Lança Montada', c: 'arma', p: 3, d: '1d10 perfurante', o: 'Alcance, Duas mãos se não estiver montado · Maestria: Derrubar', e: 1, dd: '1d10', dt: 'perfurante', cl: 'm' },
     // ── armas marciais, à distância ──
-    arco_longo:   { n: 'Arco Longo', c: 'dist', p: 1, d: '1d8 perfurante', o: 'Munição 45/180 m, Pesada, Duas mãos · Maestria: Lentidão', e: 1, dd: '1d8', dt: 'perfurante', rng: 1 },
-    besta_mao:    { n: 'Besta de Mão', c: 'dist', p: 1.5, d: '1d6 perfurante', o: 'Munição 9/36 m, Leve, Recarga · Maestria: Atormentar', e: 1, dd: '1d6', dt: 'perfurante', rng: 1 },
-    besta_pesada: { n: 'Besta Pesada', c: 'dist', p: 9, d: '1d10 perfurante', o: 'Munição 30/120 m, Pesada, Recarga, Duas mãos · Maestria: Empurrar', e: 1, dd: '1d10', dt: 'perfurante', rng: 1 },
-    flechas:      { n: 'Flechas (20)', c: 'dist', p: 0.5, d: 'munição', o: 'Para arcos', i: 'flecha' },
-    virotes:      { n: 'Virotes (20)', c: 'dist', p: 0.75, d: 'munição', o: 'Para bestas', i: 'flecha' },
+    arco_longo:   { n: 'Arco Longo', c: 'dist', p: 1, d: '1d8 perfurante', o: 'Munição 45/180 m, Pesada, Duas mãos · Maestria: Lentidão', e: 1, dd: '1d8', dt: 'perfurante', rng: 1, cl: 'm' },
+    besta_mao:    { n: 'Besta de Mão', c: 'dist', p: 1.5, d: '1d6 perfurante', o: 'Munição 9/36 m, Leve, Recarga · Maestria: Atormentar', e: 1, dd: '1d6', dt: 'perfurante', rng: 1, cl: 'm' },
+    besta_pesada: { n: 'Besta Pesada', c: 'dist', p: 9, d: '1d10 perfurante', o: 'Munição 30/120 m, Pesada, Recarga, Duas mãos · Maestria: Empurrar', e: 1, dd: '1d10', dt: 'perfurante', rng: 1, cl: 'm' },
+    flechas:      { n: 'Flechas (20)', c: 'geral', p: 0.5, d: 'munição', o: 'Para arcos', i: 'flecha' },
+    virotes:      { n: 'Virotes (20)', c: 'geral', p: 0.75, d: 'munição', o: 'Para bestas', i: 'flecha' },
     // ── armaduras ──
     acolchoada:   { n: 'Armadura Acolchoada', c: 'armadura', p: 4, d: 'CA 11 + DES', o: 'Leve · desvantagem em Furtividade', e: 1, ca: 11, dm: 99, furt: 1 },
     couro:        { n: 'Armadura de Couro', c: 'armadura', p: 5, d: 'CA 11 + DES', o: 'Leve', e: 1, ca: 11, dm: 99 },
@@ -2900,6 +2946,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   function mostraItem(i, elo) {
     var it = inv.itens[i], d = dadosDe(it), pode = !!(ITENS[it.id] && ITENS[it.id].e);
     var b = [];
+    var tp = tipoDaArma(d);
+    if (tp) b.push(tp);
     if (d.d) b.push(d.d);
     if (d.o) b.push(comTermos(d.o));
     b.push('Peso: ' + num(d.p) + ' kg' + ((it.q || 1) > 1 ? '  (×' + it.q + ' = ' + num(d.p * it.q) + ' kg)' : ''));
@@ -3027,7 +3075,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     catLista.innerHTML = '';
     Object.keys(ITENS).forEach(function(id) {
       var d = ITENS[id];
-      if (catFiltro && d.c !== catFiltro) return;
+      if (catFiltro && filtroDe(d) !== catFiltro) return;
       if (q && semAcento(d.n).indexOf(q) < 0 && semAcento(d.o || '').indexOf(q) < 0) return;
       achou++;
       var b = document.createElement('button');
@@ -3194,6 +3242,45 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   //  item entra no inventário. No nome de um antecedente, aplica o pacote
   //  inteiro — e aí a fonte é o próprio verbete, não uma segunda tabela.
   // ══════════════════════════════════════════════════════════════════
+  // Os verbetes de classe e de espécie são escritos como texto corrido. Em
+  // vez de marcar termo por termo em 22 verbetes, o que se conhece vira tag
+  // aqui, uma vez, ao abrir a ficha. Bullet que já tem marcação fica intacto.
+  var TERMOS_AUTO = [
+    ['Maestria em Armas', 'mst_maestria'],
+    ['Defesa sem Armadura', 'cnc_defesa_sem_armadura'],
+    ['Inspiração Heroica', 'inspiracao'],
+    ['espaços de magia', 'slots'],
+    ['Estilo de Luta', 'cnc_estilo_luta'],
+    ['Ataque Furtivo', 'cnc_ataque_furtivo'],
+    ['Dados de Vida', 'dv'],
+    ['Dado de Vida', 'dv'],
+    ['descanso curto', 'cnc_descanso'],
+    ['descanso longo', 'cnc_descanso'],
+    ['Especialista', 'cnc_especialista'],
+    ['Conjuração', 'conjuracao'],
+    ['ação bônus', 'cnc_acao_bonus'],
+    ['truque', 'cnc_truque'],
+    ['Acuidade', 'prop_acuidade']
+  ];
+  (function autoTag() {
+    Object.keys(AJUDA).forEach(function(k) {
+      if (!/^(cls_|esp_)/.test(k)) return;
+      var d = AJUDA[k];
+      d.b = (d.b || []).map(function(linha) {
+        if (linha.indexOf('[[') >= 0) return linha;   // já marcado à mão
+        var marcado = false;
+        TERMOS_AUTO.forEach(function(par) {
+          if (marcado && par[0].length < 6) return;
+          var at = linha.indexOf(par[0]);
+          if (at < 0) return;
+          linha = linha.slice(0, at) + '[[' + par[1] + '|' + par[0] + ']]' + linha.slice(at + par[0].length);
+          marcado = true;
+        });
+        return linha;
+      });
+    });
+  })();
+
   var ITEM_DO_TERMO = { item_adaga: 'adaga', item_corda: 'corda', item_roupas: 'roupas_viagem' };
   var avisoEl = document.getElementById('aviso'), tAviso = null;
   function avisa(txt) {
@@ -3251,7 +3338,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       var campoCls = campo('classe');
       if (campoCls) campoCls.textContent = nome;
       var feitos = 0, ls = (d.b || []).slice();
-      var cab = ls.shift() || '';
+      var cab = (ls.shift() || '').replace(/\[\[[a-z0-9_]+\|([^\]]+)\]\]/g, '$1');
       // dado de vida: no nível 1 você tem um só
       var dv = /Dado de Vida:\s*(d\d+)/.exec(cab);
       if (dv) { var cdv = campo('dv_max'); if (cdv) { cdv.textContent = '1' + dv[1]; feitos++; } }
