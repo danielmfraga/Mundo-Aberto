@@ -1716,10 +1716,6 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Em vez de somar o bônus de proficiência uma vez, soma duas.',
       'Na ficha é o losango dourado, no lugar da bolinha preta.',
       'O ladino ganha duas já no nível 1.'] },
-    dv: { t: 'Dados de Vida', l: 'O que te cura num descanso curto, sem depender de ninguém.', b: [
-      'Você tem um por nível, do tamanho do dado da sua classe.',
-      'No descanso curto você gasta quantos quiser: rola e soma o modificador de Constituição.',
-      'O descanso longo devolve metade do total, no mínimo um.'] },
 
     // ── Grau 2: as 12 classes, camada mecânica + nível 1 ──────────────
     // Convenção fixa, que é de onde o botão direito lê o que aplicar:
@@ -3539,7 +3535,10 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
         var marcada = inv.maestrias.indexOf(idDoItem(d)) >= 0;
         obs = obs.replace('Maestria: ' + nm, 'Maestria: ' + nm + (marcada ? ' \u2713' : ' (sem maestria)'));
       }
-      if (d.ver) obs = 'Duas mãos: ' + d.ver + (m ? sinal(m) : '') + (obs ? ' · ' + obs : '');
+      if (d.ver) {
+        obs = obs.replace(/\s*·?\s*Versátil \(\d+d\d+\)/, '').replace(/^\s*·\s*/, '');
+        obs = 'Duas mãos: ' + d.ver + (m ? sinal(m) : '') + (obs ? ' · ' + obs : '');
+      }
 
       var row = document.createElement('div');
       row.className = 'tbl-row auto w-grid';
@@ -3570,9 +3569,20 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     var des = mods.des == null ? 0 : mods.des;
     var base = armadura ? armadura.ca : 10;
     var limite = armadura ? armadura.dm : 99;
-    var total = base + Math.min(des, limite == null ? 99 : limite) + escudo;
+    if (limite == null) limite = 99;
+    // armadura pesada IGNORA a Destreza — não é "no máximo zero", é zero.
+    // Com Destreza negativa, min(-1, 0) tirava 1 da CA sem motivo.
+    var porDes = limite === 0 ? 0 : Math.min(des, limite);
+    var total = base + porDes + escudo;
     var dica = (armadura ? armadura.n : 'Sem armadura (10 + DES)') + (escudo ? ' + escudo' : '');
-    calculado(el, String(total), dica + ' — vem do inventário');
+    // o que a armadura cobra de você, e que a CA sozinha não conta
+    var avisos = [];
+    if (armadura && armadura.exf) {
+      var forca = parseInt(texto('for_valor'), 10);
+      if (forca && forca < armadura.exf) avisos.push('exige Força ' + armadura.exf + ' — com menos, você anda 3 m a menos');
+    }
+    if (armadura && armadura.furt) avisos.push('desvantagem em Furtividade');
+    calculado(el, String(total), dica + ' — vem do inventário' + (avisos.length ? ' · ' + avisos.join(' · ') : ''));
   }
 
   function calcula() {
