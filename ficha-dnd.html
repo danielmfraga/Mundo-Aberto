@@ -1384,6 +1384,304 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Uma vez por turno.'] },
     mst_raspar: { t: 'Maestria: Raspar', l: 'Errar deixa de ser errar à toa.', b: [
       'Errou o ataque? O alvo leva dano igual ao modificador do atributo que você usou.'] },
+    // ── 1º círculo: mago, feiticeiro e druida ─────────────────────────
+    mag_misseis_magicos: { t: 'Mísseis Mágicos', l: 'Três dardos que NUNCA erram.', b: [
+      '1º círculo · mago · feiticeiro',
+      'Ação · alcance 36 m · duração Instantânea',
+      '1d4+1 de energia cada, e você divide entre os alvos que quiser.',
+      'Não tem rolagem de ataque nem salvaguarda: acerta e pronto.'] },
+    mag_escudo_arcano: { t: 'Escudo Arcano', l: '+5 na CA na hora em que o ataque vem.', b: [
+      '1º círculo · mago · feiticeiro',
+      'Reação · alcance Pessoal · duração 1 rodada',
+      'Usa a reação quando você é acertado — e pode fazer o acerto virar erro.',
+      'Também anula Mísseis Mágicos contra você.'] },
+    mag_maos_flamejantes: { t: 'Mãos Flamejantes', l: 'Leque de fogo saindo das suas mãos.', b: [
+      '1º círculo · mago · feiticeiro',
+      'Ação · alcance Cone de 4,5 m · duração Instantânea',
+      '3d6 de fogo, salvaguarda de Destreza pra metade.',
+      'Acende o que estiver solto na área.'] },
+    mag_enfeiticar_pessoa: { t: 'Enfeitiçar Pessoa', l: 'O alvo passa a te ver como amigo.', b: [
+      '1º círculo · mago · feiticeiro · druida',
+      'Ação · alcance 9 m · duração 1 hora',
+      'Salvaguarda de Sabedoria; com vantagem se você ou seus aliados estiverem brigando com ele.',
+      'Acabou, ele sabe que foi enfeitiçado.'] },
+    mag_sono: { t: 'Sono', l: 'Derruba os mais fracos no sono, sem rolagem de ataque.', b: [
+      '1º círculo · mago · feiticeiro',
+      'Ação · alcance 18 m · duração 1 minuto',
+      'Precisa de concentração e de material (um punhado de areia fina).',
+      'Na 5.5 virou salvaguarda de Sabedoria por turno, em vez da soma de PV.',
+      'Não funciona em morto-vivo nem em quem não dorme.'] },
+    mag_onda_trovejante: { t: 'Onda Trovejante', l: 'Um empurrão sonoro que tira todo mundo de cima de você.', b: [
+      '1º círculo · mago · feiticeiro · druida',
+      'Ação · alcance Cubo de 4,5 m · duração Instantânea',
+      '2d8 de trovejante e empurra 3 m, salvaguarda de Constituição.',
+      'O estrondo é ouvido a 90 m.'] },
+    mag_armadura_arcana: { t: 'Armadura Arcana', l: 'CA 13 + Destreza pra quem não usa armadura.', b: [
+      '1º círculo · mago · feiticeiro',
+      'Ação · alcance Toque · duração 8 horas',
+      'Precisa de material (um pedaço de couro curtido).',
+      'É o que mantém mago e feiticeiro vivos no começo.',
+      'Acaba se o alvo vestir armadura.'] },
+    mag_orbe_cromatica: { t: 'Orbe Cromática', l: 'Uma esfera do elemento que você escolher.', b: [
+      '1º círculo · mago · feiticeiro',
+      'Ação · alcance 27 m · duração Instantânea',
+      'Precisa de material (um diamante de 50 po).',
+      '3d8 do tipo escolhido: ácido, frio, fogo, elétrico, veneno ou trovejante.',
+      'Ataque de magia à distância.'] },
+    mag_raio_doentio: { t: 'Raio Adoentado', l: 'Um facho verde que envenena.', b: [
+      '1º círculo · mago · feiticeiro',
+      'Ação · alcance 18 m · duração Instantânea',
+      '2d8 de veneno; falhou na salvaguarda de Constituição, fica Envenenado até o fim do seu próximo turno.'] },
+    mag_nevoa: { t: 'Névoa', l: 'Uma esfera de neblina que cega todo mundo dentro dela.', b: [
+      '1º círculo · mago · feiticeiro · druida',
+      'Ação · alcance 36 m · duração 1 hora',
+      'Precisa de concentração.',
+      'Esfera de 6 m de raio; a área fica totalmente encoberta.',
+      'Vento forte espalha em 1 minuto.'] },
+    mag_gordura: { t: 'Gordura', l: 'O chão vira patinação.', b: [
+      '1º círculo · mago',
+      'Ação · alcance 18 m · duração 1 minuto',
+      'Precisa de concentração e de material (um pouco de toucinho ou manteiga).',
+      'Quadrado de 3 m; quem entra faz salvaguarda de Destreza ou cai Caído.',
+      'Também pega fogo bem.'] },
+    mag_faca_gelo: { t: 'Faca de Gelo', l: 'Um estilhaço que acerta um e explode nos outros.', b: [
+      '1º círculo · mago · feiticeiro · druida',
+      'Ação · alcance 18 m · duração Instantânea',
+      'Precisa de material (uma gota de água ou um pedaço de gelo).',
+      '1d10 perfurante no alvo do ataque, e 2d6 de frio em todo mundo a 1,5 m dele.',
+      'A explosão acontece mesmo se o ataque errar.'] },
+    mag_escudo_fe: { t: 'Detectar Magia', l: 'Enxerga aura mágica em volta — e dá pra conjurar como ritual.', b: [
+      '1º círculo · mago · feiticeiro · druida',
+      'Ação · alcance Pessoal (9 m) · duração 10 minutos',
+      'Precisa de concentração e de ritual.',
+      'Mostra onde há magia e de qual escola.',
+      'Atravessa a maioria das barreiras finas, mas não chumbo nem pedra grossa.'] },
+    mag_compreender_idiomas: { t: 'Compreender Idiomas', l: 'Você entende qualquer língua falada, e lê tocando o texto.', b: [
+      '1º círculo · mago · feiticeiro',
+      'Ação · alcance Pessoal · duração 1 hora',
+      'Precisa de ritual e de material (uma pitada de fuligem e sal).',
+      'Não decifra código nem símbolo mágico.'] },
+    mag_identificar: { t: 'Identificar', l: 'Descobre o que um item mágico faz.', b: [
+      '1º círculo · mago',
+      '1 minuto · alcance Toque · duração Instantânea',
+      'Precisa de ritual e de material (uma pérola de 100 po).',
+      'Diz as propriedades, se precisa de sintonia e quantas cargas tem.',
+      'Ritual: dá pra fazer sem gastar espaço, no acampamento.'] },
+    mag_disfarcar_se: { t: 'Disfarçar-se', l: 'Muda a sua aparência, inclusive a roupa.', b: [
+      '1º círculo · mago · feiticeiro',
+      'Ação · alcance Pessoal · duração 1 hora',
+      'Ilusão: quem encosta percebe.',
+      'Dá pra mudar altura em até 30 cm, mas não a forma do corpo.'] },
+    mag_imagem_silenciosa: { t: 'Imagem Silenciosa', l: 'Uma imagem do tamanho de um cubo de 4,5 m — sem som nenhum.', b: [
+      '1º círculo · mago · feiticeiro',
+      'Ação · alcance 18 m · duração 10 minutos',
+      'Precisa de concentração e de material (um pouco de lã).',
+      'Você pode movê-la com uma ação.',
+      'Quem investiga e passa, atravessa com os olhos.'] },
+    mag_queda_suave: { t: 'Queda Suave', l: 'Até cinco criaturas caem como pena.', b: [
+      '1º círculo · mago · feiticeiro',
+      'Reação · alcance 18 m · duração 1 minuto',
+      'Precisa de material (uma pena pequena).',
+      'Reação quando alguém cai: descem 18 m por rodada e não tomam dano.'] },
+    mag_retirada_expedita: { t: 'Retirada Expedita', l: 'Disparada como ação bônus, todo turno.', b: [
+      '1º círculo · mago · feiticeiro',
+      'Ação bônus · alcance Pessoal · duração 10 minutos',
+      'Precisa de concentração.',
+      'Dobra o seu movimento em cada turno enquanto durar.'] },
+    mag_vida_falsa: { t: 'Vida Falsa', l: 'PV temporários de graça.', b: [
+      '1º círculo · mago · feiticeiro',
+      'Ação · alcance Pessoal · duração 1 hora',
+      'Precisa de material (um gole de álcool).',
+      '2d4 + 4 PV temporários; sobe com espaço maior.'] },
+    mag_pular: { t: 'Pular', l: 'Seus pulos triplicam de distância.', b: [
+      '1º círculo · mago · feiticeiro · druida',
+      'Ação bônus · alcance Toque · duração 1 minuto',
+      'Precisa de material (uma perna de grilo).',
+      'Não muda a altura do teto: você ainda bate a cabeça.'] },
+    mag_passos_longos: { t: 'Passos Longos', l: '+3 m de deslocamento por uma hora.', b: [
+      '1º círculo · mago · feiticeiro · druida',
+      'Ação bônus · alcance Toque · duração 1 hora',
+      'Precisa de material (uma pitada de terra).',
+      'Simples, barata e boa pra viagem e pra fuga.'] },
+    mag_protecao_bem_mal: { t: 'Proteção contra o Bem e o Mal', l: 'Blindagem contra seis tipos de criatura.', b: [
+      '1º círculo · mago · druida',
+      'Ação · alcance Toque · duração 10 minutos',
+      'Precisa de concentração e de material (água benta ou pó de prata).',
+      'Aberração, celestial, elemental, fada, imundo e morto-vivo atacam o alvo com desvantagem.',
+      'E não conseguem enfeitiçar, amedrontar nem possuir.'] },
+    mag_servo_invisivel: { t: 'Servo Invisível', l: 'Um criado invisível que faz tarefa simples.', b: [
+      '1º círculo · mago',
+      'Ação · alcance 18 m · duração 1 hora',
+      'Precisa de ritual e de material (um pedaço de barbante e um pouco de madeira).',
+      'Limpa, carrega, acende fogo, serve a mesa. Não ataca.',
+      'Ritual: dá pra conjurar de graça.'] },
+    mag_disco_flutuante: { t: 'Disco Flutuante', l: 'Uma plataforma que carrega a carga do grupo.', b: [
+      '1º círculo · mago',
+      'Ação · alcance 9 m · duração 1 hora',
+      'Precisa de ritual e de material (uma gota de mercúrio).',
+      'Aguenta 250 kg e te segue sozinha.',
+      'Ritual, e resolve a vida de quem está no limite de carga.'] },
+    mag_alarme: { t: 'Alarme', l: 'Um aviso mental quando alguém entra na área.', b: [
+      '1º círculo · mago',
+      '1 minuto · alcance 9 m · duração 8 horas',
+      'Precisa de ritual e de material (um sino pequeno e um fio de prata).',
+      'Cubo de 6 m; você escolhe quem não dispara.',
+      'Ritual: o acampamento inteiro fica vigiado de graça.'] },
+    mag_encontrar_familiar: { t: 'Encontrar Familiar', l: 'Um bichinho espiritual que vira seus olhos e ouvidos.', b: [
+      '1º círculo · mago',
+      '1 hora · alcance 3 m · duração Até dispersar',
+      'Precisa de ritual e de material (10 po em carvão, incenso e ervas).',
+      'Você enxerga pelos olhos dele e pode conjurar toque através dele.',
+      'Ritual, mas o material é caro e queima na conjuração.'] },
+    mag_riso_horrivel: { t: 'Riso Histérico', l: 'O alvo cai no chão rindo e não consegue levantar.', b: [
+      '1º círculo · mago',
+      'Ação · alcance 9 m · duração 1 minuto',
+      'Precisa de concentração e de material (uma tortinha e uma pena).',
+      'Salvaguarda de Sabedoria; falhou, fica Caído e Incapacitado.',
+      'Repete a salvaguarda a cada turno, e com vantagem se levar dano.'] },
+    mag_raio_bruxo: { t: 'Raio Bruxo', l: 'Um arco elétrico que continua sozinho todo turno.', b: [
+      '1º círculo · mago · feiticeiro · druida',
+      'Ação · alcance 9 m · duração 1 minuto',
+      'Precisa de concentração e de material (um galho de árvore atingida por raio).',
+      '2d12 no primeiro turno, e 1d12 por turno depois, sem gastar ação.',
+      'Perde o alvo se ele sair do alcance ou se você perder a concentração.'] },
+    mag_spray_cores: { t: 'Borrifo de Cores', l: 'Um jorro de luz que cega quem estiver na frente.', b: [
+      '1º círculo · mago · feiticeiro',
+      'Ação · alcance Cone de 4,5 m · duração 1 rodada',
+      'Precisa de material (pó colorido).',
+      'Salvaguarda de Constituição ou fica Cego até o fim do seu próximo turno.'] },
+    mag_curar_ferimentos: { t: 'Curar Ferimentos', l: 'A cura padrão: toque e PV de volta.', b: [
+      '1º círculo · druida',
+      'Ação · alcance Toque · duração Instantânea',
+      '2d8 + o seu atributo de conjuração.',
+      'Não funciona em morto-vivo nem em constructo.'] },
+    mag_palavra_curativa: { t: 'Palavra Curativa', l: 'Cura de longe e como ação bônus — levanta quem caiu.', b: [
+      '1º círculo · druida',
+      'Ação bônus · alcance 18 m · duração Instantânea',
+      '2d4 + o seu atributo de conjuração.',
+      'Cura menos que Curar Ferimentos, mas deixa você agir no mesmo turno.'] },
+    mag_enredar: { t: 'Enredar', l: 'O chão vira mato e prende quem estiver nele.', b: [
+      '1º círculo · druida',
+      'Ação · alcance 27 m · duração 1 minuto',
+      'Precisa de concentração.',
+      'Quadrado de 6 m; salvaguarda de Força ou fica Impedido.',
+      'Quem está preso pode tentar de novo a cada turno.'] },
+    mag_fogo_das_fadas: { t: 'Fogo das Fadas', l: 'Pinta os alvos de luz: ninguém mais se esconde.', b: [
+      '1º círculo · druida',
+      'Ação · alcance 18 m · duração 1 minuto',
+      'Precisa de concentração.',
+      'Cubo de 6 m, salvaguarda de Destreza.',
+      'Quem foi marcado é atacado com vantagem e não fica invisível.'] },
+    mag_amizade_animal: { t: 'Amizade Animal', l: 'Convence um bicho de que você não é ameaça.', b: [
+      '1º círculo · druida',
+      'Ação · alcance 9 m · duração 24 horas',
+      'Precisa de material (um pedaço de comida).',
+      'Salvaguarda de Sabedoria; só funciona em animal com Inteligência 3 ou menos.'] },
+    mag_falar_com_animais: { t: 'Falar com Animais', l: 'Conversa de verdade com bicho.', b: [
+      '1º círculo · druida',
+      'Ação · alcance Pessoal · duração 10 minutos',
+      'Precisa de ritual.',
+      'O que ele sabe é limitado à cabeça dele, mas ele viu coisas.',
+      'Ritual: sai de graça.'] },
+    mag_baga_boa: { t: 'Bagas Nutritivas', l: 'Dez frutinhas que curam 1 PV e alimentam por um dia.', b: [
+      '1º círculo · druida',
+      'Ação · alcance Toque · duração 24 horas',
+      'Precisa de material (um ramo de visco).',
+      'Cada baga cura 1 PV e sustenta uma criatura por um dia.',
+      'É a magia que segura um grupo sem suprimento.'] },
+    mag_purificar_comida: { t: 'Purificar Comida e Bebida', l: 'Tira veneno e doença de comida e água.', b: [
+      '1º círculo · druida',
+      'Ação · alcance 3 m · duração Instantânea',
+      'Precisa de ritual.',
+      'Esfera de 1,5 m de raio de comida e bebida não mágicas.',
+      'Ritual.'] },
+    mag_criar_destruir_agua: { t: 'Criar ou Destruir Água', l: 'Faz 40 litros de água aparecer, ou some com eles.', b: [
+      '1º círculo · druida',
+      'Ação · alcance 9 m · duração Instantânea',
+      'Precisa de material (uma gota de água ou um punhado de areia).',
+      'Também apaga fogo numa área pequena.'] },
+    mag_detectar_veneno: { t: 'Detectar Veneno e Doença', l: 'Sente veneno e doença em volta.', b: [
+      '1º círculo · druida',
+      'Ação · alcance Pessoal (9 m) · duração 10 minutos',
+      'Precisa de concentração e de ritual e de material (uma folha de teixo).',
+      'Diz qual é, não só que existe.',
+      'Ritual.'] },
+
+    c1_mago: { t: '1º Círculo de Mago', l: 'As 30 magias de 1º círculo que o mago pode preparar.', b: [
+      '[[mag_misseis_magicos|Mísseis Mágicos]] — Três dardos que NUNCA erram.',
+      '[[mag_escudo_arcano|Escudo Arcano]] — +5 na CA na hora em que o ataque vem.',
+      '[[mag_maos_flamejantes|Mãos Flamejantes]] — Leque de fogo saindo das suas mãos.',
+      '[[mag_enfeiticar_pessoa|Enfeitiçar Pessoa]] — O alvo passa a te ver como amigo.',
+      '[[mag_sono|Sono]] — Derruba os mais fracos no sono, sem rolagem de ataque.',
+      '[[mag_onda_trovejante|Onda Trovejante]] — Um empurrão sonoro que tira todo mundo de cima de você.',
+      '[[mag_armadura_arcana|Armadura Arcana]] — CA 13 + Destreza pra quem não usa armadura.',
+      '[[mag_orbe_cromatica|Orbe Cromática]] — Uma esfera do elemento que você escolher.',
+      '[[mag_raio_doentio|Raio Adoentado]] — Um facho verde que envenena.',
+      '[[mag_nevoa|Névoa]] — Uma esfera de neblina que cega todo mundo dentro dela.',
+      '[[mag_gordura|Gordura]] — O chão vira patinação.',
+      '[[mag_faca_gelo|Faca de Gelo]] — Um estilhaço que acerta um e explode nos outros.',
+      '[[mag_escudo_fe|Detectar Magia]] — Enxerga aura mágica em volta — e dá pra conjurar como ritual.',
+      '[[mag_compreender_idiomas|Compreender Idiomas]] — Você entende qualquer língua falada, e lê tocando o texto.',
+      '[[mag_identificar|Identificar]] — Descobre o que um item mágico faz.',
+      '[[mag_disfarcar_se|Disfarçar-se]] — Muda a sua aparência, inclusive a roupa.',
+      '[[mag_imagem_silenciosa|Imagem Silenciosa]] — Uma imagem do tamanho de um cubo de 4,5 m — sem som nenhum.',
+      '[[mag_queda_suave|Queda Suave]] — Até cinco criaturas caem como pena.',
+      '[[mag_retirada_expedita|Retirada Expedita]] — Disparada como ação bônus, todo turno.',
+      '[[mag_vida_falsa|Vida Falsa]] — PV temporários de graça.',
+      '[[mag_pular|Pular]] — Seus pulos triplicam de distância.',
+      '[[mag_passos_longos|Passos Longos]] — +3 m de deslocamento por uma hora.',
+      '[[mag_protecao_bem_mal|Proteção contra o Bem e o Mal]] — Blindagem contra seis tipos de criatura.',
+      '[[mag_servo_invisivel|Servo Invisível]] — Um criado invisível que faz tarefa simples.',
+      '[[mag_disco_flutuante|Disco Flutuante]] — Uma plataforma que carrega a carga do grupo.',
+      '[[mag_alarme|Alarme]] — Um aviso mental quando alguém entra na área.',
+      '[[mag_encontrar_familiar|Encontrar Familiar]] — Um bichinho espiritual que vira seus olhos e ouvidos.',
+      '[[mag_riso_horrivel|Riso Histérico]] — O alvo cai no chão rindo e não consegue levantar.',
+      '[[mag_raio_bruxo|Raio Bruxo]] — Um arco elétrico que continua sozinho todo turno.',
+      '[[mag_spray_cores|Borrifo de Cores]] — Um jorro de luz que cega quem estiver na frente.'] },
+    c1_feiticeiro: { t: '1º Círculo de Feiticeiro', l: 'As 22 magias de 1º círculo que o feiticeiro pode preparar.', b: [
+      '[[mag_misseis_magicos|Mísseis Mágicos]] — Três dardos que NUNCA erram.',
+      '[[mag_escudo_arcano|Escudo Arcano]] — +5 na CA na hora em que o ataque vem.',
+      '[[mag_maos_flamejantes|Mãos Flamejantes]] — Leque de fogo saindo das suas mãos.',
+      '[[mag_enfeiticar_pessoa|Enfeitiçar Pessoa]] — O alvo passa a te ver como amigo.',
+      '[[mag_sono|Sono]] — Derruba os mais fracos no sono, sem rolagem de ataque.',
+      '[[mag_onda_trovejante|Onda Trovejante]] — Um empurrão sonoro que tira todo mundo de cima de você.',
+      '[[mag_armadura_arcana|Armadura Arcana]] — CA 13 + Destreza pra quem não usa armadura.',
+      '[[mag_orbe_cromatica|Orbe Cromática]] — Uma esfera do elemento que você escolher.',
+      '[[mag_raio_doentio|Raio Adoentado]] — Um facho verde que envenena.',
+      '[[mag_nevoa|Névoa]] — Uma esfera de neblina que cega todo mundo dentro dela.',
+      '[[mag_faca_gelo|Faca de Gelo]] — Um estilhaço que acerta um e explode nos outros.',
+      '[[mag_escudo_fe|Detectar Magia]] — Enxerga aura mágica em volta — e dá pra conjurar como ritual.',
+      '[[mag_compreender_idiomas|Compreender Idiomas]] — Você entende qualquer língua falada, e lê tocando o texto.',
+      '[[mag_disfarcar_se|Disfarçar-se]] — Muda a sua aparência, inclusive a roupa.',
+      '[[mag_imagem_silenciosa|Imagem Silenciosa]] — Uma imagem do tamanho de um cubo de 4,5 m — sem som nenhum.',
+      '[[mag_queda_suave|Queda Suave]] — Até cinco criaturas caem como pena.',
+      '[[mag_retirada_expedita|Retirada Expedita]] — Disparada como ação bônus, todo turno.',
+      '[[mag_vida_falsa|Vida Falsa]] — PV temporários de graça.',
+      '[[mag_pular|Pular]] — Seus pulos triplicam de distância.',
+      '[[mag_passos_longos|Passos Longos]] — +3 m de deslocamento por uma hora.',
+      '[[mag_raio_bruxo|Raio Bruxo]] — Um arco elétrico que continua sozinho todo turno.',
+      '[[mag_spray_cores|Borrifo de Cores]] — Um jorro de luz que cega quem estiver na frente.'] },
+    c1_druida: { t: '1º Círculo de Druida', l: 'As 19 magias de 1º círculo que o druida pode preparar.', b: [
+      '[[mag_enfeiticar_pessoa|Enfeitiçar Pessoa]] — O alvo passa a te ver como amigo.',
+      '[[mag_onda_trovejante|Onda Trovejante]] — Um empurrão sonoro que tira todo mundo de cima de você.',
+      '[[mag_nevoa|Névoa]] — Uma esfera de neblina que cega todo mundo dentro dela.',
+      '[[mag_faca_gelo|Faca de Gelo]] — Um estilhaço que acerta um e explode nos outros.',
+      '[[mag_escudo_fe|Detectar Magia]] — Enxerga aura mágica em volta — e dá pra conjurar como ritual.',
+      '[[mag_pular|Pular]] — Seus pulos triplicam de distância.',
+      '[[mag_passos_longos|Passos Longos]] — +3 m de deslocamento por uma hora.',
+      '[[mag_protecao_bem_mal|Proteção contra o Bem e o Mal]] — Blindagem contra seis tipos de criatura.',
+      '[[mag_raio_bruxo|Raio Bruxo]] — Um arco elétrico que continua sozinho todo turno.',
+      '[[mag_curar_ferimentos|Curar Ferimentos]] — A cura padrão: toque e PV de volta.',
+      '[[mag_palavra_curativa|Palavra Curativa]] — Cura de longe e como ação bônus — levanta quem caiu.',
+      '[[mag_enredar|Enredar]] — O chão vira mato e prende quem estiver nele.',
+      '[[mag_fogo_das_fadas|Fogo das Fadas]] — Pinta os alvos de luz: ninguém mais se esconde.',
+      '[[mag_amizade_animal|Amizade Animal]] — Convence um bicho de que você não é ameaça.',
+      '[[mag_falar_com_animais|Falar com Animais]] — Conversa de verdade com bicho.',
+      '[[mag_baga_boa|Bagas Nutritivas]] — Dez frutinhas que curam 1 PV e alimentam por um dia.',
+      '[[mag_purificar_comida|Purificar Comida e Bebida]] — Tira veneno e doença de comida e água.',
+      '[[mag_criar_destruir_agua|Criar ou Destruir Água]] — Faz 40 litros de água aparecer, ou some com eles.',
+      '[[mag_detectar_veneno|Detectar Veneno e Doença]] — Sente veneno e doença em volta.'] },
+
     // ── Truques agrupados por classe ──────────────────────────────────
     // A lista de cada classe sai da linha 'Truque (nível 0) · …' do
     // próprio verbete, então não há uma segunda tabela pra desencontrar.
@@ -1467,7 +1765,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     mag_luzes_dancantes: { t: 'Luzes Dançantes', l: 'Quatro luzinhas que você manda pra onde quiser.', b: [
       'Truque (nível 0) · mago · feiticeiro · druida',
       'Ação bônus · alcance 36 m · duração 1 minuto',
-      'Precisa de concentração.',
+      'Precisa de concentração e de material (um pouco de fósforo ou madeira-bruxa).',
       'Dá pra juntar as quatro numa forma vagamente humana.',
       'Você move todas com a mesma ação bônus.'] },
     mag_elementalismo: { t: 'Elementalismo', l: 'Truque novo da 5.5: um efeito pequeno de ar, terra, fogo ou água.', b: [
@@ -1481,11 +1779,12 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     mag_amizade: { t: 'Amizade', l: 'Vantagem em Carisma contra alguém — e ele descobre depois.', b: [
       'Truque (nível 0) · mago · feiticeiro',
       'Ação · alcance 9 m · duração 1 minuto',
-      'Precisa de concentração.',
+      'Precisa de concentração e de material (um pouco de maquiagem).',
       'Acabou a magia, o alvo sabe que foi enfeitiçado e fica bravo.'] },
     mag_luz: { t: 'Luz', l: 'Acende um objeto como se fosse tocha.', b: [
       'Truque (nível 0) · mago · feiticeiro · druida',
       'Ação · alcance Toque · duração 1 hora',
+      'Precisa de material (um vaga-lume ou musgo fosforescente).',
       'Luz forte em 6 m e fraca por mais 6.',
       'Num alvo relutante, ele faz salvaguarda de Destreza.'] },
     mag_mao_magica: { t: 'Mão Mágica', l: 'Uma mão flutuante que pega, carrega e mexe.', b: [
@@ -1496,11 +1795,13 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     mag_consertar: { t: 'Consertar', l: 'Conserta um estrago pequeno como se nunca tivesse existido.', b: [
       'Truque (nível 0) · mago · feiticeiro · druida',
       '1 minuto · alcance Toque · duração Instantânea',
+      'Precisa de material (duas pedras-ímã).',
       'Corrente partida, chave quebrada, odre furado.',
       'Não repõe o que foi destruído nem recarrega item mágico.'] },
     mag_mensagem: { t: 'Mensagem', l: 'Sussurro que só o alvo ouve, e ele pode responder.', b: [
       'Truque (nível 0) · mago · feiticeiro · druida',
       'Ação · alcance 36 m · duração 1 rodada',
+      'Precisa de material (um fio de cobre).',
       'Atravessa obstáculo sólido se você conhecer o alvo e o caminho.'] },
     mag_lasca_mental: { t: 'Lasca Mental', l: 'Agulha psíquica que também atrapalha a próxima defesa.', b: [
       'Truque (nível 0) · mago · feiticeiro',
@@ -1510,6 +1811,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     mag_ilusao_menor: { t: 'Ilusão Menor', l: 'Um som OU uma imagem — e na 5.5 dá pra fazer os dois.', b: [
       'Truque (nível 0) · mago · feiticeiro',
       'Ação · alcance 9 m · duração 1 minuto',
+      'Precisa de material (um tufo de lã).',
       'Objeto do tamanho de um cubo de 1,5 m, ou um barulho qualquer.',
       'Quem investiga e passa, percebe que é falso.'] },
     mag_borrifo_venenoso: { t: 'Borrifo Venenoso', l: 'Sopro de gás venenoso na cara do alvo.', b: [
@@ -1572,6 +1874,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     mag_shillelagh: { t: 'Shillelagh', l: 'Transforma seu bordão ou clava em arma mágica de verdade.', b: [
       'Truque (nível 0) · druida',
       'Ação bônus · alcance Toque · duração 1 minuto',
+      'Precisa de material (visco, uma folha de trevo e o próprio bordão).',
       'Passa a usar Sabedoria no ataque e no dano, e o dado vira d8.',
       'Na 5.5 o dano vira de força ou radiante, à sua escolha.'] },
     mag_estabilizar: { t: 'Estabilizar', l: 'Segura quem está em zero PV antes que morra.', b: [
@@ -1587,6 +1890,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     mag_chicote_espinhos: { t: 'Chicote de Espinhos', l: 'Um chicote de videira que puxa o inimigo pra perto.', b: [
       'Truque (nível 0) · druida',
       'Ação · alcance 9 m · duração Instantânea',
+      'Precisa de material (o caule de uma planta com espinhos).',
       '1d6 de perfurante e puxa o alvo 3 m na sua direção.',
       'Só funciona em criatura Grande ou menor.'] },
 
@@ -2465,8 +2769,9 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'C = concentração: só uma dessas por vez, e levar dano pede salvaguarda de Constituição para não perder.',
       'R = ritual: dá para conjurar sem gastar espaço, levando 10 minutos a mais.',
       'M = precisa do componente material na mão.'],
-      mais: 'Ver os truques, por classe',
-      lista: ['trq_mago', 'trq_feiticeiro', 'trq_druida'] },
+      mais: 'Ver truques e magias, por classe',
+      lista: ['trq_mago', 'trq_feiticeiro', 'trq_druida',
+        'c1_mago', 'c1_feiticeiro', 'c1_druida'] },
     aparencia: { t: 'Aparência', l: 'A cara do personagem, e a foto.', b: [
       'Clique no quadro para subir uma imagem.'] },
     historia: { t: 'História e Personalidade', l: 'Quem ele é fora da ficha.', b: [
@@ -4043,7 +4348,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       // os dados saem do próprio verbete: a primeira linha diz o círculo e a
       // segunda o tempo e o alcance. Uma fonte só, como no resto da ficha.
       var bs = (d.b || []).map(function(t) { return t.replace(/\[\[[a-z0-9_]+\|([^\]]+)\]\]/g, '$1'); });
-      var circ = /nível (\d+)/.exec(bs[0] || '');
+      // truque diz "nível 0"; as outras dizem "1º círculo" — os dois valem
+      var circ = /nível (\d+)/.exec(bs[0] || '') || /(\d+)º círculo/.exec(bs[0] || '');
       var lin = bs[1] || '';
       var tempo = (lin.split(' · ')[0] || '').trim();
       var alc = ((/alcance ([^·]+)/.exec(lin) || [])[1] || '').trim();
