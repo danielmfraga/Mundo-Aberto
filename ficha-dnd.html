@@ -2166,7 +2166,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Sem armadura: 10 + modificador de Destreza.',
       'Com armadura: a conta vem da armadura (a pesada ignora a Destreza).',
       'Escudo soma +2 — é a bolinha do lado.',
-      'Com armadura ou escudo equipado no inventário, a ficha calcula a CA sozinha.'] },
+      'Na ficha ela parte sempre de 10 + Destreza e as peças equipadas vão somando.',
+      'Digitou um número por cima? A ficha respeita e para de mexer. Apague o campo pra ela voltar a calcular.'] },
     pv: { t: 'Pontos de Vida', l: 'Quanto castigo você aguenta antes de cair.', b: [
       'No nível 1: o máximo do dado de vida + modificador de Constituição.',
       'PV temporários não somam com outros: fica sempre o maior dos dois.',
@@ -2757,6 +2758,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     d.fundo = { cor: fundo.cor, img: fundo.img, zoom: fundo.zoom, x: fundo.x, y: fundo.y };
     d.papel = comPapel;
     d.inventario = inv;
+    d.ca_manual = caManual;
     d.armas = linhasDe('armas');
     d.magias = linhasDe('magias');
     return d;
@@ -2789,6 +2791,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     poeSynesis(d.synesis);
     poeFundo(d.fundo);
     poePapel(d.papel !== false);   // rascunho antigo não tem o campo: entra com papel
+    caManual = !!d.ca_manual;
     poeInv(d.inventario);
     var morte = d.morte || {};
     document.querySelectorAll('.pips[data-grupo]').forEach(function(g) {
@@ -3603,37 +3606,53 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     return out;
   }
 
+  // A CA parte SEMPRE de 10 e as peças vão somando sozinhas. Mas ela
+  // continua editável: digitou um número, a ficha para de mexer e respeita
+  // o seu. Apagou o campo, ela volta a calcular. É o único campo assim —
+  // nos outros o calculado é sempre verdade; na CA, não: magia, item e
+  // característica de classe mexem nela de um jeito que a ficha não sabe.
+  var caManual = false;
+
   function classeDeArmadura(mods) {
     var el = campo('ca'), bloco = el && el.closest('.ca');
     if (!el) return;
     if (bloco) bloco.classList.remove('sugere', 'alerta');
+
+    if (caManual) {
+      el.title = 'Valor digitado por você — a ficha não mexe. Apague o campo pra ela voltar a calcular.';
+      return;
+    }
+
     var armadura = null, escudo = 0;
     equipados().forEach(function(d) {
       if (d.ca != null && !armadura) armadura = d;
       if (d.esc) escudo += d.esc;
     });
-    if (!armadura && !escudo) {
-      // nada vestido: se tem peça guardada, avisa que dá pra equipar
-      var g = guardados();
-      if (g.length) {
-        if (bloco) bloco.classList.add('sugere');
-        manual(el, 'Você tem ' + g.map(function(d) { return d.n; }).join(' e ') +
-          ' no inventário, sem equipar. Botão direito no item → Equipar, e a CA se calcula sozinha.');
-      } else {
-        manual(el, '');
-      }
-      return;
-    }
     var des = mods.des == null ? 0 : mods.des;
-    var base = armadura ? armadura.ca : 10;
-    var limite = armadura ? armadura.dm : 99;
-    if (limite == null) limite = 99;
-    // armadura pesada IGNORA a Destreza — não é "no máximo zero", é zero.
-    // Com Destreza negativa, min(-1, 0) tirava 1 da CA sem motivo.
-    var porDes = limite === 0 ? 0 : Math.min(des, limite);
-    var total = base + porDes + escudo;
-    var dica = (armadura ? armadura.n : 'Sem armadura (10 + DES)') + (escudo ? ' + escudo' : '');
-    // o que a armadura cobra de você, e que a CA sozinha não conta
+    var base = 10, porDes = des, extra = 0, dica;
+
+    if (armadura) {
+      base = armadura.ca;
+      var limite = armadura.dm;
+      if (limite == null) limite = 99;
+      // armadura pesada IGNORA a Destreza — não é "no máximo zero", é zero
+      porDes = limite === 0 ? 0 : Math.min(des, limite);
+      dica = armadura.n;
+    } else {
+      // sem armadura: as duas classes que trocam a fórmula inteira
+      var cl = semAcento(texto('classe'));
+      if (cl.indexOf('barbaro') >= 0 && mods.con != null) {
+        extra = mods.con;
+        dica = 'Defesa sem Armadura do bárbaro: 10 + Destreza + Constituição';
+      } else if (cl.indexOf('monge') >= 0 && !escudo && mods.sab != null) {
+        extra = mods.sab;
+        dica = 'Defesa sem Armadura do monge: 10 + Destreza + Sabedoria';
+      } else {
+        dica = 'Sem armadura: 10 + Destreza';
+      }
+    }
+    if (escudo) dica += ' + escudo';
+
     var avisos = [];
     if (armadura && armadura.exf) {
       var forca = parseInt(texto('for_valor'), 10);
@@ -3650,7 +3669,17 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
         ': desvantagem em ataques e em testes de Força e Destreza, e não dá pra conjurar');
       if (bloco) bloco.classList.add('alerta');
     }
-    calculado(el, String(total), dica + ' — vem do inventário' + (avisos.length ? ' · ' + avisos.join(' · ') : ''));
+    // peça no inventário que continua guardada
+    if (!armadura || !escudo) {
+      var g = guardados().filter(function(d) { return armadura ? d.esc : true; });
+      if (g.length) {
+        if (bloco && !semTreino.length) bloco.classList.add('sugere');
+        avisos.push(g.map(function(d) { return d.n; }).join(' e ') + ' está no inventário sem equipar');
+      }
+    }
+
+    el.textContent = String(base + porDes + extra + escudo);
+    el.title = dica + (avisos.length ? ' · ' + avisos.join(' · ') : '') + ' · dá pra digitar por cima';
   }
 
   function calcula() {
@@ -3669,11 +3698,21 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     // 3. o que está equipado aparece onde deve
     armasAutomaticas(pb, mods);
     classeDeArmadura(mods);
+    // a CA é o único calculado que continua aceitando digitação
+    var elCa = campo('ca');
+    if (elCa) { elCa.setAttribute('contenteditable', 'true'); elCa.classList.remove('calc'); }
   }
   // o que muda as contas: nível e valores de atributo
   document.addEventListener('input', function(e) {
     var f = e.target.dataset && e.target.dataset.field;
-    if (f === 'nivel' || /_valor$/.test(f || '')) calcula();
+    if (f === 'ca') {
+      // campo vazio = devolve o volante pra ficha
+      caManual = e.target.textContent.trim() !== '';
+      if (caManual) e.target.title = 'Valor digitado por você — a ficha não mexe. Apague o campo pra ela voltar a calcular.';
+      else calcula();
+      return;
+    }
+    if (f === 'nivel' || f === 'classe' || /_valor$/.test(f || '')) calcula();
   });
 
   // ══════════════════════════════════════════════════════════════════
