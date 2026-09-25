@@ -1384,6 +1384,149 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Uma vez por turno.'] },
     mst_raspar: { t: 'Maestria: Raspar', l: 'Errar deixa de ser errar à toa.', b: [
       'Errou o ataque? O alvo leva dano igual ao modificador do atributo que você usou.'] },
+    // ── Truques de mago, feiticeiro e druida ──────────────────────────
+    // Cada um traz classe, tempo, alcance, duração e o que faz. Botão
+    // direito põe na tabela de magias da página 2.
+    mag_borrifada_acida: { t: 'Borrifada Ácida', l: 'Bolha de ácido que estoura e pega dois alvos juntos.', b: [
+      'Truque (nível 0) · mago · feiticeiro',
+      'Ação · alcance 18 m · duração Instantânea',
+      '1d6 de ácido, salvaguarda de Destreza pra evitar.',
+      'Os dois alvos precisam estar a até 1,5 m um do outro.'] },
+    mag_protecao_laminas: { t: 'Proteção contra Lâminas', l: 'Você fica mais duro contra pancada comum.', b: [
+      'Truque (nível 0) · mago · feiticeiro',
+      'Ação bônus · alcance Pessoal · duração 1 minuto',
+      'Precisa de concentração.',
+      'Resistência a cortante, perfurante e concussão de ataques de arma.'] },
+    mag_toque_gelido: { t: 'Toque Gélido', l: 'Mão espectral que gela e impede cura.', b: [
+      'Truque (nível 0) · mago · feiticeiro',
+      'Ação · alcance 36 m · duração 1 rodada',
+      '1d10 de necrótico, e o alvo não recupera PV até o seu próximo turno.'] },
+    mag_luzes_dancantes: { t: 'Luzes Dançantes', l: 'Quatro luzinhas que você manda pra onde quiser.', b: [
+      'Truque (nível 0) · mago · feiticeiro · druida',
+      'Ação bônus · alcance 36 m · duração 1 minuto',
+      'Precisa de concentração.',
+      'Dá pra juntar as quatro numa forma vagamente humana.',
+      'Você move todas com a mesma ação bônus.'] },
+    mag_elementalismo: { t: 'Elementalismo', l: 'Truque novo da 5.5: um efeito pequeno de ar, terra, fogo ou água.', b: [
+      'Truque (nível 0) · mago · feiticeiro · druida',
+      'Ação · alcance 9 m · duração Instantânea',
+      'Apaga chama, molha, levanta poeira, esculpe gelo — efeito de cena, não de dano.'] },
+    mag_raio_fogo: { t: 'Raio de Fogo', l: 'O tiro padrão do mago. Ataque à distância, dano que sobe de nível.', b: [
+      'Truque (nível 0) · mago · feiticeiro',
+      'Ação · alcance 36 m · duração Instantânea',
+      '1d10 de fogo, e acende o que não estiver vestido nem carregado.'] },
+    mag_amizade: { t: 'Amizade', l: 'Vantagem em Carisma contra alguém — e ele descobre depois.', b: [
+      'Truque (nível 0) · mago · feiticeiro',
+      'Ação · alcance 9 m · duração 1 minuto',
+      'Precisa de concentração.',
+      'Acabou a magia, o alvo sabe que foi enfeitiçado e fica bravo.'] },
+    mag_luz: { t: 'Luz', l: 'Acende um objeto como se fosse tocha.', b: [
+      'Truque (nível 0) · mago · feiticeiro · druida',
+      'Ação · alcance Toque · duração 1 hora',
+      'Luz forte em 6 m e fraca por mais 6.',
+      'Num alvo relutante, ele faz salvaguarda de Destreza.'] },
+    mag_mao_magica: { t: 'Mão Mágica', l: 'Uma mão flutuante que pega, carrega e mexe.', b: [
+      'Truque (nível 0) · mago · feiticeiro',
+      'Ação · alcance 9 m · duração 1 minuto',
+      'Carrega até 5 kg, abre porta e frasco, entrega item.',
+      'Não ataca, não ativa item mágico e não vale como sua mão.'] },
+    mag_consertar: { t: 'Consertar', l: 'Conserta um estrago pequeno como se nunca tivesse existido.', b: [
+      'Truque (nível 0) · mago · feiticeiro · druida',
+      '1 minuto · alcance Toque · duração Instantânea',
+      'Corrente partida, chave quebrada, odre furado.',
+      'Não repõe o que foi destruído nem recarrega item mágico.'] },
+    mag_mensagem: { t: 'Mensagem', l: 'Sussurro que só o alvo ouve, e ele pode responder.', b: [
+      'Truque (nível 0) · mago · feiticeiro · druida',
+      'Ação · alcance 36 m · duração 1 rodada',
+      'Atravessa obstáculo sólido se você conhecer o alvo e o caminho.'] },
+    mag_lasca_mental: { t: 'Lasca Mental', l: 'Agulha psíquica que também atrapalha a próxima defesa.', b: [
+      'Truque (nível 0) · mago · feiticeiro',
+      'Ação · alcance 18 m · duração Instantânea',
+      '1d6 psíquico, salvaguarda de Inteligência.',
+      'Falhou: subtrai 1d4 da próxima salvaguarda dele.'] },
+    mag_ilusao_menor: { t: 'Ilusão Menor', l: 'Um som OU uma imagem — e na 5.5 dá pra fazer os dois.', b: [
+      'Truque (nível 0) · mago · feiticeiro',
+      'Ação · alcance 9 m · duração 1 minuto',
+      'Objeto do tamanho de um cubo de 1,5 m, ou um barulho qualquer.',
+      'Quem investiga e passa, percebe que é falso.'] },
+    mag_borrifo_venenoso: { t: 'Borrifo Venenoso', l: 'Sopro de gás venenoso na cara do alvo.', b: [
+      'Truque (nível 0) · mago · feiticeiro · druida',
+      'Ação · alcance 9 m · duração Instantânea',
+      '1d12 de veneno, salvaguarda de Constituição.'] },
+    mag_prestidigitacao_truque: { t: 'Prestidigitação (truque)', l: 'O canivete suíço da magia: truquezinhos sem efeito mecânico.', b: [
+      'Truque (nível 0) · mago · feiticeiro',
+      'Ação · alcance 3 m · duração Até 1 hora',
+      'Acende e apaga vela, limpa ou suja, esfria ou esquenta, faz um cheiro ou um som.',
+      'Não confunda com a perícia [[per_prestidigitacao|Prestidigitação]], que é mão leve.'] },
+    mag_raio_gelo: { t: 'Raio de Gelo', l: 'Feixe gelado que fere e atrasa.', b: [
+      'Truque (nível 0) · mago · feiticeiro',
+      'Ação · alcance 18 m · duração Instantânea',
+      '1d8 de frio, e o deslocamento do alvo cai 3 m até o seu próximo turno.'] },
+    mag_toque_chocante: { t: 'Toque Chocante', l: 'Choque que ainda tira a reação do alvo.', b: [
+      'Truque (nível 0) · mago · feiticeiro',
+      'Ação · alcance Toque · duração Instantânea',
+      '1d8 de elétrico, e ele não usa reação até o próximo turno dele.',
+      'Vantagem no ataque se o alvo estiver de armadura de metal.'] },
+    mag_rajada_feiticeira: { t: 'Rajada Feiticeira', l: 'Exclusivo do feiticeiro: dano do tipo que você escolher, e que se repete.', b: [
+      'Truque (nível 0) · feiticeiro',
+      'Ação · alcance 36 m · duração Instantânea',
+      '1d8 do tipo escolhido na hora.',
+      'Tirou o máximo no dado? Rola outro e soma — e repete enquanto sair o máximo.'] },
+    mag_estrondo: { t: 'Estrondo', l: 'Um estouro em volta de você, sem componente sonoro nenhum.', b: [
+      'Truque (nível 0) · mago · feiticeiro · druida',
+      'Ação · alcance Pessoal (1,5 m) · duração Instantânea',
+      '1d6 de trovejante em todo mundo a até 1,5 m, salvaguarda de Constituição.',
+      'O barulho é ouvido a 30 m.'] },
+    mag_dobre_mortos: { t: 'Dobre dos Mortos', l: 'Um sino fúnebre que dói mais em quem já está ferido.', b: [
+      'Truque (nível 0) · mago',
+      'Ação · alcance 18 m · duração Instantânea',
+      '1d8 de necrótico — 1d12 se o alvo já tiver perdido PV.',
+      'Salvaguarda de Sabedoria.'] },
+    mag_golpe_certeiro: { t: 'Golpe Certeiro', l: 'Reescrito na 5.5: agora é um ataque de arma guiado pela magia.', b: [
+      'Truque (nível 0) · mago · feiticeiro · druida',
+      'Ação · alcance Pessoal · duração Instantânea',
+      'Ataca com a arma na mão usando o atributo de conjuração no lugar do normal.',
+      'A partir do nível 5 soma dano radiante.'] },
+    mag_truque_druidico: { t: 'Truque Druídico', l: 'A assinatura do druida: efeitos pequenos da natureza.', b: [
+      'Truque (nível 0) · druida',
+      'Ação · alcance 9 m · duração Instantânea',
+      'Prevê o tempo das próximas 24 h, faz uma flor abrir, acende ou apaga fogueira pequena.'] },
+    mag_orientacao: { t: 'Orientação', l: 'Um d4 de brinde num teste de perícia do aliado.', b: [
+      'Truque (nível 0) · druida',
+      'Ação · alcance Toque · duração 1 minuto',
+      'Precisa de concentração.',
+      'Ele escolhe quando usar, antes de saber o resultado.'] },
+    mag_produzir_chama: { t: 'Produzir Chama', l: 'Uma chama na mão que serve de lanterna ou de arma.', b: [
+      'Truque (nível 0) · druida',
+      'Ação · alcance Pessoal · duração 10 minutos',
+      'Luz em 6 m; dá pra arremessar num ataque à distância por 1d8 de fogo.',
+      'Arremessou, acabou a magia.'] },
+    mag_resistencia: { t: 'Resistência', l: 'Um d4 de brinde numa salvaguarda do aliado.', b: [
+      'Truque (nível 0) · druida',
+      'Ação · alcance Toque · duração 1 minuto',
+      'Precisa de concentração.',
+      'É a irmã da Orientação, mas pra resistir em vez de tentar.'] },
+    mag_shillelagh: { t: 'Shillelagh', l: 'Transforma seu bordão ou clava em arma mágica de verdade.', b: [
+      'Truque (nível 0) · druida',
+      'Ação bônus · alcance Toque · duração 1 minuto',
+      'Passa a usar Sabedoria no ataque e no dano, e o dado vira d8.',
+      'Na 5.5 o dano vira de força ou radiante, à sua escolha.'] },
+    mag_estabilizar: { t: 'Estabilizar', l: 'Segura quem está em zero PV antes que morra.', b: [
+      'Truque (nível 0) · druida',
+      'Ação · alcance Toque · duração Instantânea',
+      'O alvo para de rolar salvaguarda contra morte, mas continua inconsciente.',
+      'Na 5.5 alcance de toque, e funciona em quem está caído há pouco.'] },
+    mag_fagulha_estelar: { t: 'Fagulha Estelar', l: 'Luz estelar que fere e denuncia.', b: [
+      'Truque (nível 0) · druida',
+      'Ação · alcance 18 m · duração Instantânea',
+      '1d8 de radiante, salvaguarda de Sabedoria.',
+      'Falhou: o alvo fica brilhando até o seu próximo turno, e não se esconde.'] },
+    mag_chicote_espinhos: { t: 'Chicote de Espinhos', l: 'Um chicote de videira que puxa o inimigo pra perto.', b: [
+      'Truque (nível 0) · druida',
+      'Ação · alcance 9 m · duração Instantânea',
+      '1d6 de perfurante e puxa o alvo 3 m na sua direção.',
+      'Só funciona em criatura Grande ou menor.'] },
+
     // ── Grau 2: as subclasses, por classe ─────────────────────────────
     // Na 5.5 TODAS chegam no nível 3, então aqui não há o que aplicar
     // antes disso: a lista serve pra escolher com antecedência.
@@ -2258,7 +2401,9 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     magias: { t: 'Truques e Magias Preparadas', l: 'A lista do que você consegue conjurar hoje.', b: [
       'C = concentração: só uma dessas por vez, e levar dano pede salvaguarda de Constituição para não perder.',
       'R = ritual: dá para conjurar sem gastar espaço, levando 10 minutos a mais.',
-      'M = precisa do componente material na mão.'] },
+      'M = precisa do componente material na mão.'],
+      mais: 'Ver os truques (mago, feiticeiro e druida)',
+      lista: ['mag_borrifada_acida', 'mag_protecao_laminas', 'mag_toque_gelido', 'mag_luzes_dancantes', 'mag_elementalismo', 'mag_raio_fogo', 'mag_amizade', 'mag_luz', 'mag_mao_magica', 'mag_consertar', 'mag_mensagem', 'mag_lasca_mental', 'mag_ilusao_menor', 'mag_borrifo_venenoso', 'mag_prestidigitacao_truque', 'mag_raio_gelo', 'mag_toque_chocante', 'mag_rajada_feiticeira', 'mag_estrondo', 'mag_dobre_mortos', 'mag_golpe_certeiro', 'mag_truque_druidico', 'mag_orientacao', 'mag_produzir_chama', 'mag_resistencia', 'mag_shillelagh', 'mag_estabilizar', 'mag_fagulha_estelar', 'mag_chicote_espinhos'] },
     aparencia: { t: 'Aparência', l: 'A cara do personagem, e a foto.', b: [
       'Clique no quadro para subir uma imagem.'] },
     historia: { t: 'História e Personalidade', l: 'Quem ele é fora da ficha.', b: [
@@ -3802,6 +3947,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (/^ferr_/.test(chave)) return { r: 'Anotar em Ferramentas' };
     if (/^item_/.test(chave) && ITEM_DO_TERMO[chave]) return { r: 'Pôr no inventário' };
     if (/^sbc_/.test(chave)) return { r: 'Pôr em Subclasse' };
+    if (/^mag_/.test(chave)) return { r: 'Pôr na lista de magias' };
     if (/^ant_/.test(chave) || /^esp_/.test(chave) || /^cls_/.test(chave)) return { r: 'Aplicar na ficha' };
     return null;
   }
@@ -3829,6 +3975,44 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       if (!id) return null;
       poeItem(id);
       return (ITENS[id] ? ITENS[id].n : nome) + ' no inventário';
+    }
+    if (/^mag_/.test(chave)) {
+      // os dados saem do próprio verbete: a primeira linha diz o círculo e a
+      // segunda o tempo e o alcance. Uma fonte só, como no resto da ficha.
+      var bs = (d.b || []).map(function(t) { return t.replace(/\[\[[a-z0-9_]+\|([^\]]+)\]\]/g, '$1'); });
+      var circ = /nível (\d+)/.exec(bs[0] || '');
+      var lin = bs[1] || '';
+      var tempo = (lin.split(' · ')[0] || '').trim();
+      var alc = ((/alcance ([^·]+)/.exec(lin) || [])[1] || '').trim();
+      var precisa = bs.filter(function(t) { return /^Precisa de/.test(t); }).join(' ');
+
+      var jaTem = false;
+      tabela.magias.querySelectorAll('.tbl-row:not(.tbl-head) [data-col="nome"]').forEach(function(c) {
+        if (c.textContent.trim().toLowerCase() === nome.toLowerCase()) jaTem = true;
+      });
+      if (jaTem) return nome + ' já estava na lista';
+
+      // usa a primeira linha pautada que estiver vazia, em vez de empilhar no fim
+      var linha = null;
+      tabela.magias.querySelectorAll('.tbl-row:not(.tbl-head)').forEach(function(r) {
+        if (linha) return;
+        var n = r.querySelector('[data-col="nome"]');
+        if (n && !n.textContent.trim()) linha = r;
+      });
+      if (!linha) { linha = novaLinha('magias'); tabela.magias.appendChild(linha); }
+
+      function poeCel(col, txt) { var c = linha.querySelector('[data-col="' + col + '"]'); if (c) c.textContent = txt; }
+      poeCel('circ', circ ? circ[1] : '');
+      poeCel('nome', nome);
+      poeCel('tempo', tempo);
+      poeCel('alcance', alc);
+      linha.querySelectorAll('.flag').forEach(function(f) {
+        var liga = (f.textContent === 'C' && /concentração/i.test(precisa)) ||
+                   (f.textContent === 'R' && /ritual/i.test(precisa)) ||
+                   (f.textContent === 'M' && /material/i.test(precisa));
+        f.classList.toggle('on', !!liga);
+      });
+      return nome + ' na lista de magias';
     }
     if (/^sbc_/.test(chave)) {
       var cs = campo('subclasse');
