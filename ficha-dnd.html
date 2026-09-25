@@ -342,6 +342,13 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
    geométrico jogaria tudo pra baixo. O respiro maior embaixo faz isso. */
 .ca { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 4px 32px; min-height: 108px; }
 .ca svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+/* tem armadura no inventário e ela não está equipada: a ficha avisa em vez
+   de deixar a pessoa somar na mão sem saber que dava sozinho */
+.ca.sugere::after {
+  content: ''; position: absolute; top: 6px; right: 10px; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--gold); box-shadow: 0 0 0 2px #fff, 0 0 7px rgba(176,138,46,0.8);
+}
+.ca.alerta::after { background: var(--danger); box-shadow: 0 0 0 2px #fff, 0 0 7px rgba(181,55,44,0.8); }
 .ca .rot { position: relative; font-size: 8.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dnd); text-align: center; line-height: 1.15; }
 .ca .num { position: relative; font-size: 30px; color: var(--fg); line-height: 1.1; margin-top: 3px; min-width: 40px; }
 .ca .escudo { position: relative; display: flex; align-items: center; gap: 4px; margin-top: 2px; }
@@ -2914,7 +2921,10 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   // o que altera a ficha: digitação, e cliques nos controles (setTimeout 0: o save vê o DOM já alterado)
   document.addEventListener('input', function(e) { if (e.target.closest && e.target.closest('.wrap')) marca(); });
   document.addEventListener('click', function(e) {
-    if (e.target.closest('.prof, [data-tg], .pips[data-grupo] .pip, .flag, .tbl-del, [data-add], .dot')) setTimeout(marca, 0);
+    // marcar treinamento com armadura muda o aviso da CA, então recalcula junto
+    if (e.target.closest('.prof, [data-tg], .pips[data-grupo] .pip, .flag, .tbl-del, [data-add], .dot')) {
+      setTimeout(function() { marca(); calcula(); }, 0);
+    }
   }, true);
 
   // ── Retrato: sobe pro Storage junto do rascunho ─────────────────────
@@ -3207,6 +3217,19 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
 
   var inv = { itens: [], bonus: 0, dobra: false, modo: 'grade', maestrias: [] };
   // o verbete de maestria mostra quais armas ESTE personagem marcou
+  AJUDA.ca.extra = function() {
+    var vestida = [], guardada = [];
+    inv.itens.forEach(function(it) {
+      if (it.livre) return;
+      var d = ITENS[it.id];
+      if (!d || (d.ca == null && !d.esc)) return;
+      (it.eq ? vestida : guardada).push(d.n);
+    });
+    if (!vestida.length && !guardada.length) return 'Neste personagem: nada de armadura no inventário ainda.';
+    if (!vestida.length) return 'Neste personagem: ' + guardada.join(', ') + ' no inventário, mas sem equipar — por isso a CA ainda é digitada à mão.';
+    return 'Neste personagem: ' + vestida.join(' e ') + ' equipado, e a CA acima vem daí.' +
+      (guardada.length ? ' Guardado sem usar: ' + guardada.join(', ') + '.' : '');
+  };
   AJUDA.mst_maestria.extra = function() {
     if (!inv.maestrias.length) return 'Neste personagem: nenhuma arma marcada ainda. Marque pelo botão direito no inventário.';
     return 'Neste personagem: ' + inv.maestrias.map(function(id) {
@@ -3557,15 +3580,50 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   }
 
   // ── CA: só assume a conta quando há armadura ou escudo equipado ────
+  // "Leve", "Média" ou "Pesada" — está escrito nas observações da armadura
+  function categoriaArmadura(d) {
+    var o = (d.o || '').toLowerCase();
+    if (o.indexOf('pesada') >= 0) return { k: 'arm_pesada', r: 'pesada' };
+    if (o.indexOf('média') >= 0) return { k: 'arm_media', r: 'média' };
+    if (o.indexOf('leve') >= 0) return { k: 'arm_leve', r: 'leve' };
+    return null;
+  }
+  function treinado(tg) {
+    var b = document.querySelector('[data-tg="' + tg + '"]');
+    return !!(b && b.classList.contains('on'));
+  }
+  // o que está no inventário mas continua guardado
+  function guardados() {
+    var out = [];
+    inv.itens.forEach(function(it) {
+      if (it.eq || it.livre) return;
+      var d = ITENS[it.id];
+      if (d && (d.ca != null || d.esc)) out.push(d);
+    });
+    return out;
+  }
+
   function classeDeArmadura(mods) {
-    var el = campo('ca');
+    var el = campo('ca'), bloco = el && el.closest('.ca');
     if (!el) return;
+    if (bloco) bloco.classList.remove('sugere', 'alerta');
     var armadura = null, escudo = 0;
     equipados().forEach(function(d) {
       if (d.ca != null && !armadura) armadura = d;
       if (d.esc) escudo += d.esc;
     });
-    if (!armadura && !escudo) { manual(el, ''); return; }
+    if (!armadura && !escudo) {
+      // nada vestido: se tem peça guardada, avisa que dá pra equipar
+      var g = guardados();
+      if (g.length) {
+        if (bloco) bloco.classList.add('sugere');
+        manual(el, 'Você tem ' + g.map(function(d) { return d.n; }).join(' e ') +
+          ' no inventário, sem equipar. Botão direito no item → Equipar, e a CA se calcula sozinha.');
+      } else {
+        manual(el, '');
+      }
+      return;
+    }
     var des = mods.des == null ? 0 : mods.des;
     var base = armadura ? armadura.ca : 10;
     var limite = armadura ? armadura.dm : 99;
@@ -3582,6 +3640,16 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       if (forca && forca < armadura.exf) avisos.push('exige Força ' + armadura.exf + ' — com menos, você anda 3 m a menos');
     }
     if (armadura && armadura.furt) avisos.push('desvantagem em Furtividade');
+    // vestir armadura sem treinamento é a regra que mais passa batida
+    var semTreino = [];
+    var cat = armadura && categoriaArmadura(armadura);
+    if (cat && !treinado(cat.k)) semTreino.push('armadura ' + cat.r);
+    if (escudo && !treinado('arm_escudo')) semTreino.push('escudo');
+    if (semTreino.length) {
+      avisos.push('SEM TREINAMENTO em ' + semTreino.join(' e ') +
+        ': desvantagem em ataques e em testes de Força e Destreza, e não dá pra conjurar');
+      if (bloco) bloco.classList.add('alerta');
+    }
     calculado(el, String(total), dica + ' — vem do inventário' + (avisos.length ? ' · ' + avisos.join(' · ') : ''));
   }
 
