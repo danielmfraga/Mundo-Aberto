@@ -3683,18 +3683,47 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     });
   }
 
-  // ── Gravação ────────────────────────────────────────────────────────
-  function grava(nome, dados, keepalive) {
-    var corpo = JSON.stringify(dados);
+  // ── Gravação: agora na tabela `personagens`, como as outras fichas ──
+  // O personagem deixa de ser rascunho em arquivo e passa a existir de
+  // verdade: aparece na lista, na mesa e nas menções do diário, e apagar
+  // vira marcação (deleted_at), não sumiço.
+  var TAB = SB_URL + '/rest/v1/personagens';
+  var existeNaTabela = false;
+
+  function rest(url, metodo, corpo, keepalive) {
+    var texto = corpo ? JSON.stringify(corpo) : null;
     // keepalive (o que sobrevive ao fechar a aba) recusa corpo acima de 64 KB
-    if (keepalive && corpo.length > 60000) keepalive = false;
-    return fetch(urlObj(nome), {
-      method: 'POST', keepalive: !!keepalive,
-      headers: Object.assign({ 'Content-Type': 'application/json', 'x-upsert': 'true', 'cache-control': 'no-cache' }, cab),
-      body: corpo
+    if (keepalive && texto && texto.length > 60000) keepalive = false;
+    return fetch(url, {
+      method: metodo, keepalive: !!keepalive,
+      headers: Object.assign({
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal',
+        'cache-control': 'no-cache'
+      }, cab),
+      body: texto || undefined
     }).then(function(r) {
       if (!r.ok) return r.text().then(function(t) { throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 120)); });
+      return r.status === 204 ? null : r.json().catch(function() { return null; });
     });
+  }
+  // o que vai pras colunas, além do sheet_data
+  function nomeDoPersonagem() { return (texto('name') || '').trim() || 'Sem nome'; }
+  function linhaDoPersonagem(dados) {
+    return {
+      char_id: RID,
+      name: nomeDoPersonagem(),
+      img_url: retratoUrl || null,
+      sheet_data: dados,
+      space_id: ESP_PARAM || null
+    };
+  }
+  function grava(dados, keepalive) {
+    var linha = linhaDoPersonagem(dados);
+    if (existeNaTabela) {
+      return rest(TAB + '?char_id=eq.' + encodeURIComponent(RID), 'PATCH', linha, keepalive);
+    }
+    return rest(TAB, 'POST', linha, keepalive).then(function() { existeNaTabela = true; });
   }
   var carregado = false, sujo = false, salvando = false, denovo = false, tSalvar = null, tErro = null;
   var ultimoSnapshot = null, mudouDesdeSnapshot = false;
@@ -3716,7 +3745,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (!carregado || somenteLeitura) return;
     sujo = true; mudouDesdeSnapshot = true;
     guardaLocal();
-    status('salvando', 'Rascunho · editando…');
+    status('salvando', 'Editando…');
     clearTimeout(tSalvar); tSalvar = setTimeout(salva, 800);
     // sem isso, quem digita sem parar nunca dispara o salvamento: cada tecla
     // adia os 800ms de novo. Este teto garante gravação a cada 10s.
@@ -3727,12 +3756,12 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (salvando) { denovo = true; return Promise.resolve(); }
     salvando = true; clearTimeout(tErro);
     var dados = captura(); dados.atualizado = new Date().toISOString();
-    status('salvando', 'Rascunho · salvando…');
-    return grava(RID + '.json', dados, keepalive).then(function() {
+    status('salvando', 'Salvando…');
+    return grava(dados, keepalive).then(function() {
       sujo = false; ultimaFalhou = false;
       clearTimeout(tMax); tMax = null;
       limpaLocal();                       // já está no servidor: a cópia de bolso não serve mais
-      status('salvo', 'Rascunho · salvo ' + hhmm());
+      status('salvo', 'Salvo ' + hhmm());
     }).catch(function(e) {
       // não perde a edição: continua "sujo" e tenta de novo sozinho
       ultimaFalhou = true;
@@ -3746,12 +3775,16 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   }
   // snapshot a cada 5 min: v2 ← o snapshot anterior, v1 ← agora. O primeiro
   // snapshot da sessão guarda como v2 o estado que existia ANTES de você mexer.
+  // De 5 em 5 minutos as colunas de historico giram: v2 recebe o snapshot
+  // anterior e v1 recebe o de agora. Nao e a cada gravacao de proposito —
+  // com auto-save de 10s, v1 e v2 ficariam iguais ao atual e nao serviriam
+  // de nada. Assim da pra voltar ate uns 10 minutos atras.
   setInterval(function() {
-    if (!carregado || somenteLeitura || !mudouDesdeSnapshot) return;
+    if (!carregado || somenteLeitura || !mudouDesdeSnapshot || !existeNaTabela) return;
     var agora = captura(); agora.atualizado = new Date().toISOString();
-    var anterior = ultimoSnapshot;
-    (anterior ? grava(RID + '.v2.json', anterior) : Promise.resolve())
-      .then(function() { return grava(RID + '.v1.json', agora); })
+    var corpo = { sheet_data_v1: agora };
+    if (ultimoSnapshot) corpo.sheet_data_v2 = ultimoSnapshot;
+    rest(TAB + '?char_id=eq.' + encodeURIComponent(RID), 'PATCH', corpo)
       .then(function() { ultimoSnapshot = agora; mudouDesdeSnapshot = false; })
       .catch(function(e) { if (window.console) console.warn('[ficha-dnd] snapshot falhou:', e.message); });
   }, 5 * 60 * 1000);
@@ -3785,7 +3818,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (f.size > 8 * 1024 * 1024) { alert('Imagem muito grande (máx 8MB).'); return; }
     var ext = ((f.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg')).replace(/[^a-z0-9]/g, '');
     var nome = RID + '-retrato.' + ext;
-    status('salvando', 'Rascunho · enviando retrato…');
+    status('salvando', 'Enviando retrato…');
     fetch(urlObj(nome), { method: 'POST', headers: Object.assign({ 'Content-Type': f.type, 'x-upsert': 'true' }, cab), body: f })
       .then(function(r) {
         if (!r.ok) return r.text().then(function(t) { throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 120)); });
@@ -3921,7 +3954,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (f.size > 8 * 1024 * 1024) { alert('Imagem muito grande (máx 8MB).'); return; }
     var ext = ((f.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg')).replace(/[^a-z0-9]/g, '');
     var nome = RID + '-fundo.' + ext;
-    status('salvando', 'Rascunho · enviando fundo…');
+    status('salvando', 'Enviando fundo…');
     fetch(urlObj(nome), { method: 'POST', headers: Object.assign({ 'Content-Type': f.type, 'x-upsert': 'true' }, cab), body: f })
       .then(function(r) {
         if (!r.ok) return r.text().then(function(t) { throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 120)); });
@@ -4815,15 +4848,27 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   // (NoSuchKey). Qualquer outra falha — rede caída, servidor fora — trava
   // a ficha em somente leitura: abrir vazia e deixar o auto-save gravar
   // esse vazio por cima do personagem seria o pior erro possível aqui.
+  // Procura na tabela; se nao achar, procura o rascunho antigo no Storage.
+  // Achou rascunho, ele abre normalmente e a primeira gravacao ja nasce na
+  // tabela — a migracao acontece sozinha, sem ninguem perder nada.
   function carrega() {
-    return fetch(urlObj(RID + '.json') + '?t=' + Date.now(), { headers: cab, cache: 'no-store' }).then(function(r) {
-      return r.text().then(function(t) {
-        if (r.ok) return { existe: true, dados: JSON.parse(t) };
-        var j = null; try { j = JSON.parse(t); } catch (e) {}
-        if (j && (j.error === 'not_found' || j.code === 'NoSuchKey')) return { existe: false };
-        throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 120));
+    return rest(TAB + '?char_id=eq.' + encodeURIComponent(RID) + '&select=sheet_data,sheet_data_v1&deleted_at=is.null', 'GET')
+      .then(function(linhas) {
+        if (linhas && linhas.length) {
+          existeNaTabela = true;
+          return { existe: true, dados: linhas[0].sheet_data || {}, de: 'tabela' };
+        }
+        // nao esta na tabela: pode ser rascunho de antes
+        return fetch(urlObj(RID + '.json') + '?t=' + Date.now(), { headers: cab, cache: 'no-store' })
+          .then(function(r) {
+            return r.text().then(function(t) {
+              if (r.ok) return { existe: true, dados: JSON.parse(t), de: 'rascunho' };
+              var j = null; try { j = JSON.parse(t); } catch (e) {}
+              if (j && (j.error === 'not_found' || j.code === 'NoSuchKey')) return { existe: false };
+              throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 120));
+            });
+          });
       });
-    });
   }
   // Sobrou edição só neste navegador (rede caiu, aba fechou no meio)? Oferece.
   function checaCopiaLocal(doServidor) {
@@ -4849,7 +4894,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       if (res.existe) { restaura(res.dados); ultimoSnapshot = res.dados; }
       calcula();
       carregado = true;
-      status('salvo', res.existe ? 'Rascunho · carregado' : 'Rascunho novo · salva sozinho');
+      if (!res.existe) status('salvo', 'Personagem novo · salva sozinho');
+      else if (res.de === 'rascunho') status('salvo', 'Rascunho antigo · vira personagem ao salvar');
+      else status('salvo', 'Personagem · carregado');
+      // veio do rascunho? grava ja, pra migrar sem depender de o Daniel digitar
+      if (res.existe && res.de === 'rascunho') marca();
       checaCopiaLocal(res.existe ? res.dados : null);
     });
   }).catch(function(e) {
