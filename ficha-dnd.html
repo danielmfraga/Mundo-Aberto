@@ -3517,14 +3517,16 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eXFxZnN5eWJsdWF2d2xyaHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTM4MzEsImV4cCI6MjA5MzY2OTgzMX0.b0Ij7UGzbMLpqZjLYxoPEu2kGwEW52U_2NSDtpMGUPM';
   var PASTA = 'rascunho-dnd/';
   var LINHAS_PADRAO = { armas: 6, magias: 30 };   // o que a folha de papel traz pautado
-  // Personagem novo nasce com esse fundo (a arte do Livro do Jogador 2024) e
-  // sem a folha de papel — os quadros direto sobre a imagem, como no D&D
-  // Beyond. Zoom/posição são os mesmos que qualquer fundo recém-enviado
-  // ganha por padrão (100% de largura, centralizado); dá pra reenquadrar ou
+  // Personagem novo nasce com esse fundo (a arte completa do Livro do
+  // Jogador 2024) e sem a folha de papel — os quadros direto sobre a
+  // imagem, como no D&D Beyond. Zoom 100% de largura, como qualquer fundo
+  // recém-enviado; y=15 pra enquadrar o dragão branco e a guerreira à
+  // esquerda em vez do meio da imagem (ruínas). Dá pra reenquadrar ou
   // trocar depois, é só o ponto de partida.
+  // _padrao-fundo-1.jpg é a versão antiga (ficou no Storage, sem uso).
   var FUNDO_PADRAO = {
-    img: SB_URL + '/storage/v1/object/public/personagens/' + PASTA + '_padrao-fundo-1.jpg',
-    cor: '', zoom: 100, x: 50, y: 50
+    img: SB_URL + '/storage/v1/object/public/personagens/' + PASTA + '_padrao-fundo-2.jpg',
+    cor: '', zoom: 100, x: 50, y: 15
   };
 
   function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
