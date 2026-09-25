@@ -3739,7 +3739,15 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       try { var d = captura(); d.atualizado = new Date().toISOString(); localStorage.setItem(CHAVE_LOCAL, JSON.stringify(d)); } catch (e) {}
     }, 1000);
   }
-  function limpaLocal() { try { localStorage.removeItem(CHAVE_LOCAL); } catch (e) {} }
+  function limpaLocal() {
+    // cancela também a escrita da cópia de bolso que porventura esteja
+    // agendada (guardaLocal dispara em 1s; o salvamento real, em 800ms —
+    // sem isto, o timer da cópia de bolso resolvia escrever DEPOIS do
+    // salvamento já ter limpo tudo, e a barra de recuperação voltava com
+    // um relógio artificialmente "mais novo", mesmo com o mesmo conteúdo)
+    if (tLocal) { clearTimeout(tLocal); tLocal = null; }
+    try { localStorage.removeItem(CHAVE_LOCAL); } catch (e) {}
+  }
 
   function marca() {
     if (!carregado || somenteLeitura) return;
@@ -4870,6 +4878,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
           });
       });
   }
+  function mesmoConteudo(a, b) {
+    var ca = JSON.parse(JSON.stringify(a)), cb = JSON.parse(JSON.stringify(b));
+    delete ca.atualizado; delete cb.atualizado;
+    return JSON.stringify(ca) === JSON.stringify(cb);
+  }
   // Sobrou edição só neste navegador (rede caiu, aba fechou no meio)? Oferece.
   function checaCopiaLocal(doServidor) {
     var bruto = null, local = null;
@@ -4878,6 +4891,10 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     try { local = JSON.parse(bruto); } catch (e) {}
     if (!local || !local.atualizado) { limpaLocal(); return; }
     if (doServidor && doServidor.atualizado && new Date(local.atualizado) <= new Date(doServidor.atualizado)) { limpaLocal(); return; }
+    // relógio da cópia local parece mais novo, mas o conteúdo é igual ao que
+    // já está salvo? não é uma edição perdida — só sobra de uma corrida entre
+    // timers (ver limpaLocal). Não incomoda à toa.
+    if (doServidor && mesmoConteudo(local, doServidor)) { limpaLocal(); return; }
     var barra = document.getElementById('voltaLocal'), q = new Date(local.atualizado);
     document.getElementById('voltaLocalTxt').textContent =
       'Ficaram edições de ' + ('0' + q.getHours()).slice(-2) + ':' + ('0' + q.getMinutes()).slice(-2) + ' que não chegaram ao servidor.';
