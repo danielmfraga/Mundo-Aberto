@@ -670,6 +670,147 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   body.wb-top #wbCanvas { max-height:calc(100vh - 300px); }   /* a barra de ferramentas quebra em 2-3 linhas no estreito */
 }
 
+/* ── Mapa (mesa de D20): imagem › grade › tokens ──
+   Abre no lugar do vídeo, que vira uma faixa de caras em cima. O rail (dados,
+   chat, personagens) continua do lado: em combate se rola dado olhando o mapa.
+   O #jitsi continua sem ser reparentado — só a posição na grade muda. */
+.mapa-btn { color:#ff8a7a; background:rgba(255,110,90,0.08); border-color:rgba(255,110,90,0.45); }
+.mapa-btn:hover { background:rgba(255,110,90,0.16); box-shadow:0 0 14px rgba(255,110,90,0.28); }
+.mapa-btn.open { background:rgba(255,110,90,0.2); border-color:#ff8a7a; box-shadow:0 0 12px rgba(255,110,90,0.3); }
+.mapa-panel { display:none; overflow:hidden; }
+body.mapa-on .mesa-grid { grid-template-rows:150px minmax(0,1fr); }
+body.mapa-on .video-panel { grid-column:1; grid-row:1; }
+body.mapa-on .video-panel .panel-head { display:none; }
+body.mapa-on .video-panel #jitsi { min-height:0; border-radius:6px; }
+body.mapa-on .rail { grid-column:2; grid-row:1 / span 2; }
+body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
+@media (max-width:920px) {
+  body.mapa-on .mesa-grid { grid-template-rows:none; }
+  body.mapa-on .video-panel, body.mapa-on .rail, body.mapa-on .mapa-panel { grid-column:auto; grid-row:auto; }
+  body.mapa-on .video-panel #jitsi { height:24vh; }
+  body.mapa-on .mapa-panel { height:72vh; }
+}
+.mapa-bar { display:flex; align-items:center; gap:8px; padding:7px 10px; border-bottom:1px solid var(--line); flex:0 0 auto; min-width:0; }
+.mapa-bar .led { width:6px; height:6px; border-radius:50%; background:#ff8a7a; box-shadow:0 0 7px #ff8a7a; flex:0 0 auto; }
+.mapa-add { display:flex; align-items:center; gap:6px; min-width:0; overflow-x:auto; flex:0 1 auto; padding:2px 1px; margin-left:4px; }
+.mapa-pc {
+  width:28px; height:28px; flex:0 0 auto; padding:0; border-radius:50%; overflow:hidden; cursor:pointer;
+  border:1px solid var(--holo-soft); background:rgba(78,211,232,0.08); color:var(--holo);
+  font-family:var(--font-mono); font-size:10px; font-weight:700; transition:box-shadow .15s, opacity .15s;
+}
+.mapa-pc img { width:100%; height:100%; object-fit:cover; display:block; }
+.mapa-pc:hover { box-shadow:0 0 10px rgba(78,211,232,0.5); }
+.mapa-pc.no-mapa { opacity:0.38; }   /* já está no mapa: o clique leva até o token */
+.mapa-npc-btn {
+  flex:0 0 auto; cursor:pointer; padding:6px 10px; border-radius:5px;
+  font-family:var(--font-mono); font-size:9.5px; letter-spacing:0.12em; text-transform:uppercase;
+  color:#ff8a7a; background:rgba(255,110,90,0.08); border:1px solid rgba(255,110,90,0.4); transition:all .15s;
+}
+.mapa-npc-btn:hover, .mapa-npc-btn.on { background:rgba(255,110,90,0.18); border-color:#ff8a7a; }
+.mapa-sp { flex:1 1 auto; }
+.mapa-ico {
+  width:28px; height:28px; flex:0 0 auto; padding:0; border-radius:5px; cursor:pointer;
+  border:1px solid var(--line); background:rgba(255,255,255,0.04); color:var(--fg-dim);
+  font-family:var(--font-mono); font-size:13px; line-height:1; display:flex; align-items:center; justify-content:center; transition:all .15s;
+}
+.mapa-ico:hover { color:var(--fg); border-color:var(--holo-soft); }
+.mapa-ico.on { color:var(--holo); border-color:var(--holo); box-shadow:0 0 8px rgba(78,211,232,0.3); }
+.mapa-x:hover { color:#fff; background:var(--danger); border-color:var(--danger); }
+.mapa-panel.sem-mapa .mapa-add, .mapa-panel.sem-mapa .mapa-npc-btn,
+.mapa-panel.sem-mapa #mapaTrocar, .mapa-panel.sem-mapa #mapaGradeBtn, .mapa-panel.sem-mapa #mapaFit { display:none; }
+.mapa-view {
+  position:relative; flex:1 1 auto; min-height:0; overflow:hidden; cursor:grab; touch-action:none;
+  background:#05080e; border-radius:0 0 6px 6px;
+}
+.mapa-view.panning { cursor:grabbing; }
+.mapa-view.soltando { box-shadow:inset 0 0 0 2px #ff8a7a; }
+.mapa-mundo { position:absolute; left:0; top:0; transform-origin:0 0; }
+.mapa-mundo.branco { background:#e9e1cc; }
+.mapa-img { display:block; user-select:none; pointer-events:none; }
+.mapa-grade { position:absolute; inset:0; pointer-events:none; }
+.mapa-tokens { position:absolute; inset:0; }
+.mapa-tok { position:absolute; cursor:grab; touch-action:none; }
+.mapa-tok.drag { cursor:grabbing; z-index:60 !important; }
+.mapa-tok .rosto {
+  position:absolute; inset:0; border-radius:50%; overflow:hidden; border-style:solid; border-color:#4ed3e8;
+  background:#15314a; color:#fff; font-family:var(--font-display); font-weight:700; line-height:1;
+  display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.65);
+}
+.mapa-tok.npc .rosto { border-color:#ff6b5b; background:#4a1c1c; }
+.mapa-tok .rosto img { width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; }
+.mapa-tok.drag .rosto { box-shadow:0 0 0 2px rgba(255,255,255,0.8), 0 8px 18px rgba(0,0,0,0.7); }
+.mapa-tok.acha .rosto { animation:mapaAcha .9s ease-out 2; }
+@keyframes mapaAcha { 0% { box-shadow:0 0 0 0 rgba(255,255,255,0.95); } 100% { box-shadow:0 0 0 18px rgba(255,255,255,0); } }
+/* token com imagem e número no nome ("Lobo 3"): o número fica num selo, senão os lobos são iguais */
+.mapa-tok .num {
+  position:absolute; right:-6%; bottom:-6%; min-width:42%; height:42%; padding:0 6%; border-radius:999px;
+  display:none; align-items:center; justify-content:center; pointer-events:none;
+  background:#ff6b5b; color:#fff; border:2px solid #0b1320; font-family:var(--font-mono); font-weight:700; line-height:1;
+}
+.mapa-tok .num.tem { display:flex; }
+/* nome só no mouse por cima e no arrasto: sempre à mostra, um token encobre o nome do vizinho.
+   Fica do mesmo tamanho na tela em qualquer zoom (--inv = 1/escala). */
+.mapa-tok .nm {
+  position:absolute; left:50%; top:100%; transform:translate(-50%, 3px) scale(var(--inv, 1)); transform-origin:top center;
+  max-width:170px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; pointer-events:none; display:none;
+  font-family:var(--font-display); font-size:12px; font-weight:600; color:#fff;
+  background:rgba(4,8,16,0.88); padding:1px 7px; border-radius:9px;
+}
+.mapa-tok:hover { z-index:55 !important; }
+.mapa-tok:hover .nm, .mapa-tok.drag .nm { display:block; }
+.mapa-vazio {
+  position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+  padding:20px; text-align:center; cursor:default; font-family:var(--font-mono); font-size:11px; letter-spacing:0.1em; color:var(--fg-dim);
+}
+.mapa-vazio[hidden] { display:none; }
+.mapa-vazio .acoes { display:flex; flex-wrap:wrap; gap:9px; justify-content:center; }
+.mapa-acao { background:rgba(255,110,90,0.1); border-color:rgba(255,110,90,0.45); color:#ff8a7a; }
+.mapa-acao:hover { background:rgba(255,110,90,0.2); border-color:#ff8a7a; box-shadow:0 0 12px rgba(255,110,90,0.3); }
+.mapa-acao:disabled { opacity:0.5; cursor:default; box-shadow:none; }
+.mapa-status {
+  position:absolute; left:10px; bottom:9px; pointer-events:none;
+  font-family:var(--font-mono); font-size:9.5px; letter-spacing:0.1em; color:var(--fg);
+  background:rgba(4,8,16,0.85); border:1px solid var(--line-strong); border-radius:999px; padding:4px 11px;
+}
+.mapa-status:empty { display:none; }
+/* distância do movimento enquanto arrasta (D&D 2024: diagonal conta 1 quadrado) */
+.mapa-dist {
+  position:absolute; z-index:40; pointer-events:none; white-space:nowrap; transform:translate(14px, -130%);
+  font-family:var(--font-mono); font-size:11px; font-weight:700; color:#fff;
+  background:rgba(226,86,66,0.94); border-radius:999px; padding:3px 10px; box-shadow:0 3px 10px rgba(0,0,0,0.5);
+}
+.mapa-dist[hidden] { display:none; }
+.mapa-pop {
+  position:absolute; z-index:30; display:none; flex-direction:column; gap:8px; width:250px; padding:11px 12px;
+  background:#0b1320; border:1px solid var(--line-strong); border-radius:8px; box-shadow:0 12px 30px rgba(0,0,0,0.6);
+  font-family:var(--font-mono); font-size:10px; color:var(--fg-dim);
+}
+.mapa-pop.show { display:flex; }
+.mapa-pop h4 { font-size:9.5px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:#ff8a7a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mapa-lin { display:flex; align-items:center; gap:8px; }
+.mapa-lin > label, .mapa-lin > .rot { flex:0 0 64px; letter-spacing:0.06em; }
+.mapa-lin input[type=range] { flex:1 1 auto; min-width:0; accent-color:#ff8a7a; cursor:pointer; }
+.mapa-pop input[type=text], .mapa-pop input[type=number], .mapa-pop select {
+  background:rgba(0,0,0,0.3); border:1px solid var(--line); border-radius:5px; color:var(--fg);
+  font-family:var(--font-mono); font-size:11px; padding:6px 8px; outline:none; min-width:0;
+}
+.mapa-pop input[type=text] { width:100%; }
+.mapa-pop input[type=number] { width:64px; flex:0 0 auto; }
+.mapa-pop select { flex:1 1 auto; }
+.mapa-pop input:focus, .mapa-pop select:focus { border-color:rgba(255,110,90,0.6); }
+.mapa-op {
+  display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; text-align:left; cursor:pointer;
+  padding:7px 9px; border-radius:5px; border:1px solid var(--line); background:rgba(255,255,255,0.03);
+  color:var(--fg); font-family:var(--font-mono); font-size:10.5px; transition:all .12s;
+}
+.mapa-op:hover { border-color:rgba(255,110,90,0.5); }
+.mapa-op.on { border-color:#ff8a7a; color:#ff8a7a; background:rgba(255,110,90,0.08); }
+.mapa-op .q { color:var(--fg-faint); font-size:9.5px; }
+.mapa-op.perigo:hover { background:var(--danger); border-color:var(--danger); color:#fff; }
+.mapa-seg { display:flex; gap:5px; flex:1 1 auto; }
+.mapa-seg .mapa-op { justify-content:center; padding:6px 4px; font-size:9.5px; }
+.mapa-dica { font-size:9px; line-height:1.6; letter-spacing:0.03em; color:var(--fg-faint); }
+
 /* ── Personagens ── */
 .chars-panel { flex:0 0 auto; }
 .chars-body { display:flex; flex-wrap:wrap; gap:9px; padding:10px 12px; }
@@ -894,6 +1035,71 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     <div id="jitsi"></div>
   </div>
 
+  <!-- Mapa (mesa de D20): imagem › grade › tokens. Vem antes do rail pra, no
+       celular (uma coluna só), ficar logo abaixo das caras. -->
+  <div class="panel mapa-panel sem-mapa" id="mapaPanel">
+    <div class="mapa-bar">
+      <span class="led"></span><span class="panel-title">Mapa</span>
+      <div class="mapa-add" id="mapaAdd"></div>
+      <button class="mapa-npc-btn" id="mapaNpcBtn" type="button" title="Colocar NPC ou monstro no mapa">+ NPC</button>
+      <span class="mapa-sp"></span>
+      <button class="mapa-ico" id="mapaTrocar" type="button" title="Trocar o mapa (começa uma cena nova)">&#128444;</button>
+      <button class="mapa-ico" id="mapaGradeBtn" type="button" title="Ajustar a grade">#</button>
+      <button class="mapa-ico" id="mapaFit" type="button" title="Ver o mapa inteiro (ou duplo clique no mapa)">&#9974;</button>
+      <button class="mapa-ico mapa-x" id="mapaFechar" type="button" title="Fechar o mapa (fecha pra mesa toda)">&#10005;</button>
+    </div>
+    <div class="mapa-view" id="mapaView">
+      <div class="mapa-mundo" id="mapaMundo">
+        <img class="mapa-img" id="mapaImg" alt="" draggable="false">
+        <div class="mapa-grade" id="mapaGrade"></div>
+        <div class="mapa-tokens" id="mapaTokens"></div>
+      </div>
+      <div class="mapa-vazio" id="mapaVazio">
+        <div>Arraste a imagem do mapa pra cá</div>
+        <div class="acoes">
+          <button class="btn mapa-acao" id="mapaEscolher" type="button">Escolher imagem</button>
+          <button class="btn mapa-acao" id="mapaBranco" type="button">Grade em branco</button>
+        </div>
+      </div>
+      <div class="mapa-dist" id="mapaDist" hidden></div>
+      <div class="mapa-status" id="mapaStatus"></div>
+    </div>
+
+    <div class="mapa-pop" id="mapaGradePop">
+      <h4>Grade · 1 quadrado = 1,5 m</h4>
+      <div class="mapa-lin">
+        <label for="mapaGTam">Quadrado</label>
+        <input type="range" id="mapaGTamR" min="10" max="400" step="0.5">
+        <input type="number" id="mapaGTam" min="10" max="400" step="0.1" title="Tamanho do quadrado, em pixels da imagem">
+      </div>
+      <div class="mapa-lin"><label for="mapaGDx">Mover &#8596;</label><input type="range" id="mapaGDx" min="0" max="70" step="0.5"></div>
+      <div class="mapa-lin"><label for="mapaGDy">Mover &#8597;</label><input type="range" id="mapaGDy" min="0" max="70" step="0.5"></div>
+      <div class="mapa-lin">
+        <span class="rot">Linhas</span>
+        <div class="mapa-seg" id="mapaGCor">
+          <button class="mapa-op" type="button" data-cor="escura">escuras</button>
+          <button class="mapa-op" type="button" data-cor="clara">claras</button>
+          <button class="mapa-op" type="button" data-cor="nenhuma">esconder</button>
+        </div>
+      </div>
+      <div class="mapa-dica">Se o mapa já vem com grade desenhada, ajuste o quadrado e mova até as linhas baterem — ou esconda a nossa.</div>
+    </div>
+
+    <div class="mapa-pop" id="mapaNpcPop">
+      <h4>Novo NPC</h4>
+      <input type="text" id="mapaNpcNome" maxlength="40" placeholder="Nome (ex.: Goblin)" autocomplete="off">
+      <div class="mapa-lin"><label for="mapaNpcTam">Tamanho</label><select id="mapaNpcTam"></select></div>
+      <div class="mapa-lin"><label for="mapaNpcQtd">Quantos</label><input type="number" id="mapaNpcQtd" min="1" max="20" value="1"></div>
+      <div class="mapa-lin"><span class="rot">Imagem</span><button class="mapa-op" id="mapaNpcImgBtn" type="button">escolher (opcional)</button></div>
+      <button class="btn mapa-acao" id="mapaNpcOk" type="button">Colocar no mapa</button>
+    </div>
+
+    <div class="mapa-pop" id="mapaTokPop"></div>
+
+    <input type="file" id="mapaFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+    <input type="file" id="mapaNpcFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+  </div>
+
   <!-- Rail: trama + personagens + dados + chat -->
   <div class="rail">
     <div class="panel" id="tramaPanel">
@@ -926,6 +1132,8 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     </div>
 
     <button class="wb-btn" id="wbBtn" title="Abrir quadro branco">&#9998; Quadro Branco</button>
+
+    <button class="wb-btn mapa-btn" id="mapaBtn" type="button" title="Abrir o mapa (mesa de D20) pra mesa toda">&#128506; Mapa</button>
 
     <button class="wb-btn diario-btn" id="diarioBtn" title="Abrir o diário da mesa">&#128214; Diário da Mesa</button>
 
@@ -1759,7 +1967,11 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     if (p && p.tipo === 'dnd') return 'ficha-dnd.html';
     return 'ficha.html';
   }
-  function openSheet(charId, ficha) { window.open((ficha || 'ficha.html') + '?id=' + encodeURIComponent(charId), '_blank'); }
+  var FICHAS = ['ficha.html', 'ficha-vampiro.html', 'ficha-dnd.html'];
+  function openSheet(charId, ficha) {
+    if (FICHAS.indexOf(ficha) < 0) ficha = 'ficha.html';   // o nome vem de broadcast/banco: só abre página conhecida
+    window.open(ficha + '?id=' + encodeURIComponent(charId), '_blank');
+  }
 
   function renderChars() {
     charsBody.innerHTML = '';
@@ -1782,6 +1994,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     add.innerHTML = '<div class="char-add" title="Adicionar personagem">+</div>';
     add.querySelector('.char-add').addEventListener('click', openCharPicker);
     charsBody.appendChild(add);
+    mapaRenderRoster();   // a barra do mapa mostra os mesmos personagens
   }
   function applyChars(list) { if (Array.isArray(list)) { mesaChars = list; renderChars(); } }
 
@@ -2389,11 +2602,774 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     wbCommitText(false);              // descarta texto que ficou sendo digitado
     wbOverlay.classList.remove('show');
     document.body.classList.remove('wb-on','wb-top','wb-split','wb-right');
-    jitsiTile(false);  // volta o vídeo ao normal
+    jitsiTile(mapaAberto());  // volta o vídeo ao normal (com o mapa aberto, a faixa de caras continua em grade)
   }
   document.querySelectorAll('.wb-layout-btn').forEach(function(b){
     b.addEventListener('click', function(){ applyWbLayout(b.dataset.layout); });
   });
+
+  // ── Mapa (mesa de D20) ────────────────────────────────────────────
+  // Três camadas: a imagem do mapa, a grade por cima e os tokens por cima de
+  // tudo. Medidas do D&D 2024: 1 quadrado = 1,5 m, diagonal conta 1 quadrado,
+  // e a criatura ocupa ½ (Miúdo), 1 (Pequeno/Médio), 2×2, 3×3 ou 4×4.
+  // Abrir e fechar vale pra mesa toda (igual o quadro); zoom e arrasto da vista
+  // são de cada um. Qualquer um mexe em tudo, como numa mesa de verdade.
+  // A cena mora num JSON no Storage, um por sala — sem tabela nem setup.
+  var MAPA_ME = Math.random().toString(36).slice(2);   // o canal é self:true — ignora o próprio eco
+  var MAPA_TAMS = [
+    { v:0.5, rot:'Miúdo',            q:'½ quadrado' },
+    { v:1,   rot:'Pequeno ou Médio', q:'1 quadrado' },
+    { v:2,   rot:'Grande',           q:'2×2' },
+    { v:3,   rot:'Enorme',           q:'3×3' },
+    { v:4,   rot:'Imenso',           q:'4×4' }
+  ];
+  var MAPA_TAM_OK = [0.5, 1, 2, 3, 4];
+  var MAPA_GCOR = { escura:'rgba(0,0,0,0.55)', clara:'rgba(255,255,255,0.6)', nenhuma:null };
+  var MAPA_SALA = SALA.replace(/[^a-zA-Z0-9_-]/g, '_');
+  var MAPA_ARQ = SB_URL + '/storage/v1/object/personagens/mesa/d20/' + MAPA_SALA + '.json';
+  var MAPA_HDR = { 'apikey':SB_KEY, 'Authorization':'Bearer ' + SB_KEY };
+  var MAPA_MAX_MB = 25;
+
+  var mapaPanel    = document.getElementById('mapaPanel');
+  var mapaView     = document.getElementById('mapaView');
+  var mapaMundo    = document.getElementById('mapaMundo');
+  var mapaImg      = document.getElementById('mapaImg');
+  var mapaGrade    = document.getElementById('mapaGrade');
+  var mapaTokens   = document.getElementById('mapaTokens');
+  var mapaVazio    = document.getElementById('mapaVazio');
+  var mapaDistEl   = document.getElementById('mapaDist');
+  var mapaStatusEl = document.getElementById('mapaStatus');
+  var mapaAddEl    = document.getElementById('mapaAdd');
+  var mapaBtn      = document.getElementById('mapaBtn');
+  var mapaGradePop = document.getElementById('mapaGradePop');
+  var mapaNpcPop   = document.getElementById('mapaNpcPop');
+  var mapaTokPop   = document.getElementById('mapaTokPop');
+  var mapaFile     = document.getElementById('mapaFile');
+
+  var mapaCena = mapaCenaVazia();
+  // Só grava depois de saber o que já estava salvo: gravar a cena vazia do
+  // começo por cima apagaria o mapa da sala.
+  var mapaPronto = false, mapaCarregando = null;
+  var mapaVs = { s:1, tx:0, ty:0 };   // vista local: escala e deslocamento
+  var mapaTokEls = {};                // id do token → elemento
+  var mapaDrag = null, mapaPan = null, mapaPinch = null, mapaToques = {};
+  var _mapaSalvarT = null, _mapaGradeT = null, _mapaFila = Promise.resolve();
+  var _mapaNpcImg = null, _mapaNpcSubindo = false, _mapaSoltando = 0;
+
+  function mapaClamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function mapaCenaVazia() { return { v:1, img:null, branco:false, w:0, h:0, grade:{ tam:70, dx:0, dy:0, cor:'escura' }, tokens:[] }; }
+  function mapaTemMapa() { return !!(mapaCena.img || mapaCena.branco); }
+  function mapaUrlOk(u) { return (typeof u === 'string' && /^https?:\/\//i.test(u)) ? u : null; }
+  function mapaStatus(t) { mapaStatusEl.textContent = t || ''; }
+  function mapaAchaTok(id) {
+    for (var i = 0; i < mapaCena.tokens.length; i++) if (mapaCena.tokens[i].id === id) return mapaCena.tokens[i];
+    return null;
+  }
+  // "Goblin 12" → G12 · "Capitão Gancho" → CG · "Akira (cão)" → AC
+  function mapaIniciais(n) {
+    var p = String(n || '?').trim().split(/\s+/), ult = p.length > 1 ? p[p.length - 1].replace(/[^\p{L}\p{N}]/gu, '') : '';
+    return ((p[0] || '?').charAt(0) + (/^\d+$/.test(ult) ? ult : ult.charAt(0))).toUpperCase();
+  }
+
+  // O que chega do Storage ou de outro jogador passa por aqui antes de valer.
+  function mapaTokNorm(t) {
+    t = t || {};
+    var tam = +t.tam;
+    return {
+      id: String(t.id || ('npc_' + Math.random().toString(36).slice(2, 9))).slice(0, 80),
+      nome: String(t.nome == null ? '' : t.nome).slice(0, 40),
+      img: mapaUrlOk(t.img),
+      tam: MAPA_TAM_OK.indexOf(tam) >= 0 ? tam : 1,
+      col: Math.round(+t.col || 0),
+      row: Math.round(+t.row || 0),
+      pc: !!t.pc,
+      char_id: t.char_id ? String(t.char_id) : null,
+      ficha: typeof t.ficha === 'string' ? t.ficha : null
+    };
+  }
+  function mapaGradeNorm(g, base) {
+    g = g || {};
+    base = base || { tam:70, dx:0, dy:0, cor:'escura' };
+    var tam = mapaClamp(+g.tam || base.tam, 10, 400);
+    function dentro(v) { v = +v || 0; return ((v % tam) + tam) % tam; }
+    return {
+      tam: tam,
+      dx: dentro(g.dx != null ? g.dx : base.dx),
+      dy: dentro(g.dy != null ? g.dy : base.dy),
+      cor: Object.prototype.hasOwnProperty.call(MAPA_GCOR, g.cor) ? g.cor : base.cor
+    };
+  }
+  function mapaNormaliza(c) {
+    var n = mapaCenaVazia();
+    if (!c || typeof c !== 'object') return n;
+    n.img = mapaUrlOk(c.img);
+    n.branco = !n.img && !!c.branco;
+    n.w = +c.w > 0 ? +c.w : 0;
+    n.h = +c.h > 0 ? +c.h : 0;
+    n.grade = mapaGradeNorm(c.grade);
+    var vistos = {};
+    n.tokens = (Array.isArray(c.tokens) ? c.tokens : []).map(mapaTokNorm).filter(function(t) {
+      if (vistos[t.id]) return false;
+      vistos[t.id] = 1;
+      return true;
+    }).slice(0, 200);
+    return n;
+  }
+
+  // ── vista (de cada um) ──
+  function mapaAplicaVista() {
+    mapaMundo.style.transform = 'translate(' + mapaVs.tx + 'px,' + mapaVs.ty + 'px) scale(' + mapaVs.s + ')';
+    mapaMundo.style.setProperty('--inv', String(1 / mapaVs.s));
+  }
+  function mapaFit() {
+    if (!mapaTemMapa() || !mapaCena.w || !mapaCena.h) return;
+    var r = mapaView.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    mapaVs.s = Math.min(r.width / mapaCena.w, r.height / mapaCena.h) * 0.96;
+    mapaVs.tx = (r.width - mapaCena.w * mapaVs.s) / 2;
+    mapaVs.ty = (r.height - mapaCena.h * mapaVs.s) / 2;
+    mapaAplicaVista();
+  }
+  function mapaZoom(fator, mx, my) {
+    var s = mapaClamp(mapaVs.s * fator, 0.03, 8), k = s / mapaVs.s;
+    mapaVs.tx = mx - (mx - mapaVs.tx) * k;
+    mapaVs.ty = my - (my - mapaVs.ty) * k;
+    mapaVs.s = s;
+    mapaAplicaVista();
+  }
+  function mapaPontoView(e) { var r = mapaView.getBoundingClientRect(); return { x:e.clientX - r.left, y:e.clientY - r.top }; }
+  function mapaTelaParaMundo(cx, cy) {
+    var r = mapaView.getBoundingClientRect();
+    return { x:(cx - r.left - mapaVs.tx) / mapaVs.s, y:(cy - r.top - mapaVs.ty) / mapaVs.s };
+  }
+  function mapaTokGeo(t) {
+    var g = mapaCena.grade, lado = t.tam * g.tam;
+    var x = g.dx + t.col * g.tam, y = g.dy + t.row * g.tam;
+    if (t.tam < 1) { x += (g.tam - lado) / 2; y += (g.tam - lado) / 2; }   // miúdo fica no meio do quadrado
+    return { x:x, y:y, lado:lado };
+  }
+
+  // ── desenho ──
+  function mapaRender() {
+    var tem = mapaTemMapa();
+    mapaPanel.classList.toggle('sem-mapa', !tem);
+    mapaVazio.hidden = tem;
+    mapaMundo.style.display = tem ? '' : 'none';
+    if (tem) {
+      mapaMundo.style.width = mapaCena.w + 'px';
+      mapaMundo.style.height = mapaCena.h + 'px';
+      mapaMundo.classList.toggle('branco', !!mapaCena.branco);
+      if (mapaCena.img) {
+        if (mapaImg.getAttribute('src') !== mapaCena.img) mapaImg.src = mapaCena.img;
+        mapaImg.style.display = '';
+        mapaImg.style.width = mapaCena.w ? mapaCena.w + 'px' : '';
+        mapaImg.style.height = mapaCena.h ? mapaCena.h + 'px' : '';
+      } else {
+        mapaImg.removeAttribute('src');
+        mapaImg.style.display = 'none';
+      }
+    }
+    mapaRenderGrade();
+    mapaRenderTokens();
+    mapaRenderRoster();
+    mapaSyncGradeUI();
+  }
+  // cena sem medida (não devia acontecer, mas não custa): mede pela imagem
+  mapaImg.addEventListener('load', function() {
+    if (mapaCena.img && (!mapaCena.w || !mapaCena.h) && mapaImg.naturalWidth) {
+      mapaCena.w = mapaImg.naturalWidth;
+      mapaCena.h = mapaImg.naturalHeight;
+      mapaRender(); mapaFit();
+    }
+  });
+  function mapaRenderGrade() {
+    var g = mapaCena.grade, cor = MAPA_GCOR[g.cor];
+    if (!cor) { mapaGrade.style.backgroundImage = 'none'; return; }
+    // 1px na tela em qualquer zoom (--inv = 1/escala), com teto pra não virar
+    // uma mancha quando o mapa está bem pequeno
+    var linha = cor + ' min(calc(1px * var(--inv, 1)), ' + (g.tam * 0.2).toFixed(2) + 'px), transparent 0';
+    mapaGrade.style.backgroundImage = 'linear-gradient(to right, ' + linha + '), linear-gradient(to bottom, ' + linha + ')';
+    mapaGrade.style.backgroundSize = g.tam + 'px ' + g.tam + 'px';
+    mapaGrade.style.backgroundPosition = g.dx + 'px ' + g.dy + 'px';
+  }
+  function mapaRenderTokens() {
+    var vivos = {};
+    mapaCena.tokens.forEach(function(t) {
+      vivos[t.id] = 1;
+      var el = mapaTokEls[t.id];
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'mapa-tok';
+        el.dataset.id = t.id;
+        el.innerHTML = '<div class="rosto"></div><div class="num"></div><div class="nm"></div>';
+        mapaTokEls[t.id] = el;
+        mapaTokens.appendChild(el);
+      }
+      mapaPintaTok(el, t);
+    });
+    Object.keys(mapaTokEls).forEach(function(id) {
+      if (!vivos[id]) { mapaTokEls[id].remove(); delete mapaTokEls[id]; }
+    });
+  }
+  function mapaPintaTok(el, t) {
+    var geo = mapaTokGeo(t), rosto = el.firstChild;
+    el.classList.toggle('npc', !t.pc);
+    el.style.left = geo.x + 'px';
+    el.style.top = geo.y + 'px';
+    el.style.width = el.style.height = geo.lado + 'px';
+    el.style.zIndex = String(20 - Math.round(t.tam * 2));   // maior embaixo: o goblin do lado do dragão continua clicável
+    rosto.style.borderWidth = Math.max(2, geo.lado * 0.05) + 'px';
+    var chave = (t.img || '') + '|' + t.nome;
+    if (el._chave !== chave) {
+      el._chave = chave;
+      rosto.innerHTML = '';
+      if (t.img) {
+        var im = document.createElement('img');
+        im.src = t.img; im.alt = ''; im.draggable = false;
+        rosto.appendChild(im);
+      } else {
+        rosto.textContent = mapaIniciais(t.nome);
+      }
+    }
+    if (!t.img) rosto.style.fontSize = Math.max(8, geo.lado * (rosto.textContent.length > 2 ? 0.28 : 0.36)) + 'px';
+    var num = el.querySelector('.num'), n = t.img ? /\s(\d+)$/.exec(t.nome) : null;
+    num.classList.toggle('tem', !!n);
+    num.textContent = n ? n[1] : '';
+    num.style.fontSize = Math.max(7, geo.lado * 0.24) + 'px';
+    el.querySelector('.nm').textContent = t.nome || '';
+    el.dataset.nome = t.nome || '';
+  }
+  // os personagens da mesa ficam na barra do mapa: um clique e o token entra
+  function mapaRenderRoster() {
+    if (!mapaAddEl) return;
+    mapaAddEl.innerHTML = '';
+    mesaChars.forEach(function(c) {
+      var b = document.createElement('button');
+      var noMapa = !!mapaAchaTok('pc_' + c.char_id);
+      b.type = 'button';
+      b.className = 'mapa-pc' + (noMapa ? ' no-mapa' : '');
+      b.title = noMapa ? ((c.name || 'Personagem') + ' já está no mapa — clique pra achar') : ('Colocar ' + (c.name || 'personagem') + ' no mapa');
+      if (c.img_url) {
+        var im = document.createElement('img');
+        im.src = c.img_url; im.alt = '';
+        b.appendChild(im);
+      } else {
+        b.textContent = mapaIniciais(c.name);
+      }
+      b.addEventListener('click', function(){ mapaPoePc(c); });
+      mapaAddEl.appendChild(b);
+    });
+  }
+
+  // ── tokens ──
+  // Ocupação por quadrado, pra token novo nascer num lugar livre perto do
+  // centro da vista em vez de empilhar em cima de outro.
+  function mapaLugarLivre(tam, extra) {
+    var g = mapaCena.grade, n = Math.max(1, Math.ceil(tam));
+    var r = mapaView.getBoundingClientRect();
+    var c = mapaTelaParaMundo(r.left + r.width / 2, r.top + r.height / 2);
+    var cols = Math.max(n, Math.floor((mapaCena.w - g.dx) / g.tam));
+    var rows = Math.max(n, Math.floor((mapaCena.h - g.dy) / g.tam));
+    var base = {
+      col: mapaClamp(Math.floor((c.x - g.dx) / g.tam) - Math.floor((n - 1) / 2), 0, cols - n),
+      row: mapaClamp(Math.floor((c.y - g.dy) / g.tam) - Math.floor((n - 1) / 2), 0, rows - n)
+    };
+    var occ = {};
+    mapaCena.tokens.concat(extra || []).forEach(function(t) {
+      var k = Math.max(1, Math.ceil(t.tam));
+      for (var i = 0; i < k; i++) for (var j = 0; j < k; j++) occ[(t.col + i) + ',' + (t.row + j)] = 1;
+    });
+    function livre(cc, rr) {
+      if (cc < 0 || rr < 0 || cc + n > cols || rr + n > rows) return false;
+      for (var i = 0; i < n; i++) for (var j = 0; j < n; j++) if (occ[(cc + i) + ',' + (rr + j)]) return false;
+      return true;
+    }
+    for (var raio = 0; raio <= 25; raio++) {
+      for (var dc = -raio; dc <= raio; dc++) {
+        for (var dr = -raio; dr <= raio; dr++) {
+          if (Math.max(Math.abs(dc), Math.abs(dr)) !== raio) continue;
+          if (livre(base.col + dc, base.row + dr)) return { col:base.col + dc, row:base.row + dr };
+        }
+      }
+    }
+    return base;
+  }
+  function mapaAplicaTok(op) {
+    if (!op) return;
+    var t;
+    if (op.op === 'add' && Array.isArray(op.toks)) {
+      op.toks.forEach(function(raw) {
+        var novo = mapaTokNorm(raw);
+        if (!mapaAchaTok(novo.id)) mapaCena.tokens.push(novo);
+      });
+    } else if (op.op === 'mov') {
+      t = mapaAchaTok(op.id);
+      if (t) { t.col = Math.round(+op.col || 0); t.row = Math.round(+op.row || 0); }
+    } else if (op.op === 'tam') {
+      t = mapaAchaTok(op.id);
+      if (t && MAPA_TAM_OK.indexOf(+op.tam) >= 0) t.tam = +op.tam;
+    } else if (op.op === 'del') {
+      mapaCena.tokens = mapaCena.tokens.filter(function(x){ return x.id !== op.id; });
+      if (mapaTokPop.dataset.id === op.id) mapaFechaPops();
+    }
+    mapaRenderTokens();
+    if (op.op === 'add' || op.op === 'del') mapaRenderRoster();
+  }
+  function mapaTok(op) {            // mudança feita aqui: aplica, conta pra mesa e grava
+    mapaAplicaTok(op);
+    op.by = MAPA_ME;
+    send('mapa-tok', op);
+    mapaAgendaSalvar();
+  }
+  function mapaRecebeTok(op) {
+    if (!op || op.by === MAPA_ME) return;
+    if (op.op === 'mov' && mapaDrag && mapaDrag.id === op.id) return;   // quem está arrastando aqui manda nesse token
+    mapaAplicaTok(op);
+  }
+  function mapaPoePc(c) {
+    if (!mapaTemMapa() || !c || !c.char_id) return;
+    var id = 'pc_' + c.char_id;
+    if (mapaAchaTok(id)) { mapaMostraTok(id); return; }
+    var lugar = mapaLugarLivre(1);
+    mapaTok({ op:'add', toks:[{ id:id, nome:c.name || 'Personagem', img:c.img_url || null, tam:1, col:lugar.col, row:lugar.row, pc:true, char_id:c.char_id, ficha:c.ficha || null }] });
+  }
+  function mapaMostraTok(id) {      // centraliza a vista no token e faz ele piscar
+    var t = mapaAchaTok(id), el = mapaTokEls[id];
+    if (!t || !el) return;
+    var geo = mapaTokGeo(t), r = mapaView.getBoundingClientRect();
+    mapaVs.tx = r.width / 2 - (geo.x + geo.lado / 2) * mapaVs.s;
+    mapaVs.ty = r.height / 2 - (geo.y + geo.lado / 2) * mapaVs.s;
+    mapaAplicaVista();
+    el.classList.remove('acha'); void el.offsetWidth; el.classList.add('acha');
+    setTimeout(function(){ el.classList.remove('acha'); }, 1900);
+  }
+
+  // ── cena e grade ──
+  function mapaNovaCena(c) {
+    mapaCena = mapaNormaliza(c);
+    mapaPronto = true;              // trocar de cena é decisão de quem trocou: grava por cima
+    mapaFechaPops();
+    mapaRender(); mapaFit();
+    send('mapa-cena', { cena:mapaCena, by:MAPA_ME });
+    mapaAgendaSalvar();
+  }
+  function mapaRecebeCena(p) {
+    if (!p || p.by === MAPA_ME) return;
+    mapaCena = mapaNormaliza(p.cena);
+    mapaPronto = true;
+    mapaFimArraste(); mapaFechaPops();
+    mapaRender(); mapaFit();
+  }
+  function mapaMudaGrade(parcial) {
+    mapaCena.grade = mapaGradeNorm(Object.assign({}, mapaCena.grade, parcial), mapaCena.grade);
+    mapaRenderGrade(); mapaRenderTokens(); mapaSyncGradeUI();
+    clearTimeout(_mapaGradeT);
+    _mapaGradeT = setTimeout(function(){ send('mapa-grade', { grade:mapaCena.grade, by:MAPA_ME }); }, 60);
+    mapaAgendaSalvar();
+  }
+  function mapaRecebeGrade(p) {
+    if (!p || p.by === MAPA_ME) return;
+    mapaCena.grade = mapaGradeNorm(p.grade, mapaCena.grade);
+    mapaRenderGrade(); mapaRenderTokens(); mapaSyncGradeUI();
+  }
+
+  // ── Storage ──
+  function mapaCarrega() {
+    mapaCarregando = fetch(MAPA_ARQ + '?t=' + Date.now(), { headers:MAPA_HDR, cache:'no-store' })
+      .then(function(r) {
+        return r.text().then(function(txt) {
+          if (r.ok) return JSON.parse(txt);
+          var j = null; try { j = JSON.parse(txt); } catch (_) {}
+          if (j && (j.error === 'not_found' || j.code === 'NoSuchKey')) return null;   // sala ainda sem mapa
+          throw new Error('HTTP ' + r.status);
+        });
+      })
+      .then(function(c) {
+        if (!mapaPronto) { mapaCena = mapaNormaliza(c); mapaPronto = true; }   // se uma cena nova chegou antes, ela vale
+        mapaRender();
+        if (mapaAberto()) mapaFit();
+      })
+      .catch(function(err) {
+        console.warn('[mesa] mapa não carregou:', err);
+        if (mapaAberto()) mapaStatus('o mapa não carregou — feche e abra de novo');
+      })
+      .then(function(){ mapaCarregando = null; });
+    return mapaCarregando;
+  }
+  function mapaAgendaSalvar() {
+    if (!mapaPronto) return;
+    clearTimeout(_mapaSalvarT);
+    _mapaSalvarT = setTimeout(function(){ mapaSalva(false); }, 700);
+  }
+  function mapaSalva(saindo) {
+    clearTimeout(_mapaSalvarT); _mapaSalvarT = null;
+    var req = { method:'POST', headers:Object.assign({ 'Content-Type':'application/json', 'x-upsert':'true' }, MAPA_HDR), body:JSON.stringify(mapaCena) };
+    if (saindo) { req.keepalive = true; fetch(MAPA_ARQ, req).catch(function(){}); return; }
+    // em fila: duas gravações ao mesmo tempo podiam chegar fora de ordem
+    _mapaFila = _mapaFila.then(function() {
+      return fetch(MAPA_ARQ, req).then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        if (/não salvou/.test(mapaStatusEl.textContent)) mapaStatus('');
+      }).catch(function(err) {
+        console.warn('[mesa] mapa não salvou:', err);
+        mapaStatus('o mapa não salvou — a próxima mexida tenta de novo');
+      });
+    });
+  }
+  window.addEventListener('pagehide', function(){ if (_mapaSalvarT) mapaSalva(true); });
+
+  function mapaSobe(file, prefixo, rotulo) {
+    return new Promise(function(ok, falha) {
+      var ext = (file.name.match(/\.[a-z0-9]{1,5}$/i) || [''])[0].toLowerCase();
+      if (!ext) ext = '.' + ((file.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg'));
+      var path = 'mesa/d20/' + MAPA_SALA + '/' + prefixo + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7) + ext;
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', SB_URL + '/storage/v1/object/personagens/' + path);
+      xhr.setRequestHeader('apikey', SB_KEY);
+      xhr.setRequestHeader('Authorization', 'Bearer ' + SB_KEY);
+      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+      xhr.setRequestHeader('x-upsert', 'true');
+      mapaStatus(rotulo);
+      xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) mapaStatus(rotulo + ' ' + Math.round(e.loaded / e.total * 100) + '%');
+      });
+      xhr.addEventListener('load', function() {
+        mapaStatus('');
+        if (xhr.status >= 200 && xhr.status < 300) ok(SB_URL + '/storage/v1/object/public/personagens/' + path);
+        else falha(new Error(xhr.status === 413 ? 'arquivo grande demais pro servidor' : 'HTTP ' + xhr.status));
+      });
+      xhr.addEventListener('error', function(){ mapaStatus(''); falha(new Error('erro de rede')); });
+      xhr.send(file);
+    });
+  }
+  function mapaMede(file) {
+    return new Promise(function(ok, falha) {
+      var u = URL.createObjectURL(file), im = new Image();
+      im.onload = function(){ URL.revokeObjectURL(u); ok({ w:im.naturalWidth, h:im.naturalHeight }); };
+      im.onerror = function(){ URL.revokeObjectURL(u); falha(new Error('o navegador não conseguiu abrir essa imagem')); };
+      im.src = u;
+    });
+  }
+  // Mapa pronto costuma dizer no nome quantos quadrados tem ("taverna_22x30.jpg").
+  // Sem isso, chuta uns 30 quadrados no lado maior — o ajuste da grade acerta o resto.
+  function mapaTamPadrao(w, h, nomeArq) {
+    var m = String(nomeArq || '').match(/(\d{1,3})\s*[x×]\s*(\d{1,3})/i);
+    if (m && +m[1] && +m[2]) {
+      var a = +m[1], b = +m[2];
+      if (Math.abs(w / a - h / b) <= Math.max(2, (w / a) * 0.03)) return mapaClamp(w / a, 10, 400);
+      if (Math.abs(w / b - h / a) <= Math.max(2, (w / b) * 0.03)) return mapaClamp(w / b, 10, 400);
+    }
+    return mapaClamp(Math.round(Math.max(w, h) / 30), 20, 300);
+  }
+  function mapaNovoArquivo(file) {
+    if (!file) return;
+    if (!/^image\//.test(file.type)) { alert('Isso não é uma imagem.'); return; }
+    if (file.size > MAPA_MAX_MB * 1024 * 1024) { alert('Imagem muito grande (' + fmtBytes(file.size) + '). O limite do mapa é ' + MAPA_MAX_MB + ' MB.'); return; }
+    if (mapaCena.tokens.length && !confirm('Trocar o mapa começa uma cena nova: os tokens saem do mapa. Continuar?')) return;
+    mapaMede(file).then(function(dim) {
+      return mapaSobe(file, 'mapa', 'enviando mapa…').then(function(url) {
+        var c = mapaCenaVazia();
+        c.img = url; c.w = dim.w; c.h = dim.h;
+        c.grade.tam = mapaTamPadrao(dim.w, dim.h, file.name);
+        mapaNovaCena(c);
+      });
+    }).catch(function(err){ mapaStatus(''); alert('Não deu pra usar esse mapa: ' + err.message); });
+  }
+  function mapaNovoBranco() {
+    if (mapaCena.tokens.length && !confirm('A grade em branco começa uma cena nova: os tokens saem do mapa. Continuar?')) return;
+    var c = mapaCenaVazia();
+    c.branco = true; c.w = 70 * 30; c.h = 70 * 20;   // 30×20 quadrados = 45 × 30 m
+    mapaNovaCena(c);
+  }
+
+  // ── popovers ──
+  var mapaGradeBtn = document.getElementById('mapaGradeBtn');
+  var mapaNpcBtn   = document.getElementById('mapaNpcBtn');
+  function mapaFechaPops() {
+    [mapaGradePop, mapaNpcPop, mapaTokPop].forEach(function(p){ p.classList.remove('show'); });
+    mapaTokPop.dataset.id = '';
+    mapaGradeBtn.classList.remove('on');
+    mapaNpcBtn.classList.remove('on');
+  }
+  function mapaAbrePopEm(pop, botao, lado) {   // abre embaixo do botão da barra (ou fecha, se já estava aberto)
+    var abrir = !pop.classList.contains('show');
+    mapaFechaPops();
+    if (!abrir) return false;
+    pop.classList.add('show');
+    botao.classList.add('on');
+    var rp = mapaPanel.getBoundingClientRect(), rb = botao.getBoundingClientRect();
+    var x = lado === 'dir' ? rb.right - rp.left - pop.offsetWidth : rb.left - rp.left;
+    pop.style.left = mapaClamp(x, 8, Math.max(8, rp.width - pop.offsetWidth - 8)) + 'px';
+    pop.style.top = (rb.bottom - rp.top + 6) + 'px';
+    return true;
+  }
+  function mapaAbreTokPop(id) {
+    var t = mapaAchaTok(id), el = mapaTokEls[id];
+    if (!t || !el) return;
+    mapaFechaPops();
+    var h = '<h4>' + esc(t.nome || 'Token') + '</h4>';
+    MAPA_TAMS.forEach(function(o) {
+      h += '<button type="button" class="mapa-op' + (o.v === t.tam ? ' on' : '') + '" data-tam="' + o.v + '"><span>' + o.rot + '</span><span class="q">' + o.q + '</span></button>';
+    });
+    if (t.char_id) h += '<button type="button" class="mapa-op" data-acao="ficha"><span>Abrir ficha</span><span class="q">&#8599;</span></button>';
+    h += '<button type="button" class="mapa-op perigo" data-acao="tirar"><span>Tirar do mapa</span></button>';
+    mapaTokPop.innerHTML = h;
+    mapaTokPop.dataset.id = id;
+    mapaTokPop.classList.add('show');
+    var rp = mapaPanel.getBoundingClientRect(), rt = el.getBoundingClientRect();
+    var pw = mapaTokPop.offsetWidth, ph = mapaTokPop.offsetHeight;
+    var x = rt.right - rp.left + 10;
+    if (x + pw > rp.width - 8) x = rt.left - rp.left - pw - 10;
+    mapaTokPop.style.left = mapaClamp(x, 8, Math.max(8, rp.width - pw - 8)) + 'px';
+    mapaTokPop.style.top = mapaClamp(rt.top - rp.top, 8, Math.max(8, rp.height - ph - 8)) + 'px';
+  }
+  mapaTokPop.addEventListener('click', function(e) {
+    var b = e.target.closest('button'), id = mapaTokPop.dataset.id, t = mapaAchaTok(id);
+    if (!b || !t) return;
+    if (b.dataset.tam) { mapaTok({ op:'tam', id:id, tam:+b.dataset.tam }); mapaAbreTokPop(id); }
+    else if (b.dataset.acao === 'ficha') openSheet(t.char_id, t.ficha);
+    else if (b.dataset.acao === 'tirar') { mapaFechaPops(); mapaTok({ op:'del', id:id }); }
+  });
+  // clique fora fecha; o clique no token abre o menu dele (no pointerup), não fecha aqui
+  document.addEventListener('pointerdown', function(e) {
+    if (e.target.closest && e.target.closest('.mapa-pop, #mapaGradeBtn, #mapaNpcBtn, .mapa-tok')) return;
+    mapaFechaPops();
+  }, true);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') mapaFechaPops(); });
+
+  // grade
+  var mapaGTamR = document.getElementById('mapaGTamR'), mapaGTam = document.getElementById('mapaGTam');
+  var mapaGDx = document.getElementById('mapaGDx'), mapaGDy = document.getElementById('mapaGDy');
+  function mapaSyncGradeUI() {
+    var g = mapaCena.grade;
+    if (document.activeElement !== mapaGTam) mapaGTam.value = Math.round(g.tam * 10) / 10;
+    mapaGTamR.value = g.tam;
+    mapaGDx.max = g.tam; mapaGDy.max = g.tam;   // max antes do value: senão o value é cortado no max antigo
+    mapaGDx.value = g.dx; mapaGDy.value = g.dy;
+    document.querySelectorAll('#mapaGCor .mapa-op').forEach(function(b){ b.classList.toggle('on', b.dataset.cor === g.cor); });
+  }
+  mapaGTamR.addEventListener('input', function(){ mapaMudaGrade({ tam:+mapaGTamR.value }); });
+  mapaGTam.addEventListener('input', function() {
+    var v = parseFloat(String(mapaGTam.value).replace(',', '.'));
+    if (v >= 10 && v <= 400) mapaMudaGrade({ tam:v });
+  });
+  mapaGDx.addEventListener('input', function(){ mapaMudaGrade({ dx:+mapaGDx.value }); });
+  mapaGDy.addEventListener('input', function(){ mapaMudaGrade({ dy:+mapaGDy.value }); });
+  document.querySelectorAll('#mapaGCor .mapa-op').forEach(function(b) {
+    b.addEventListener('click', function(){ mapaMudaGrade({ cor:b.dataset.cor }); });
+  });
+  mapaGradeBtn.addEventListener('click', function(){ mapaAbrePopEm(mapaGradePop, mapaGradeBtn, 'dir'); });
+
+  // NPC
+  var mapaNpcNome = document.getElementById('mapaNpcNome'), mapaNpcTam = document.getElementById('mapaNpcTam');
+  var mapaNpcQtd = document.getElementById('mapaNpcQtd'), mapaNpcImgBtn = document.getElementById('mapaNpcImgBtn');
+  var mapaNpcOk = document.getElementById('mapaNpcOk'), mapaNpcFile = document.getElementById('mapaNpcFile');
+  MAPA_TAMS.forEach(function(o) {
+    var op = document.createElement('option');
+    op.value = o.v; op.textContent = o.rot + ' · ' + o.q;
+    if (o.v === 1) op.selected = true;
+    mapaNpcTam.appendChild(op);
+  });
+  function mapaNpcLimpaImg() { _mapaNpcImg = null; mapaNpcImgBtn.textContent = 'escolher (opcional)'; mapaNpcImgBtn.classList.remove('on'); }
+  mapaNpcBtn.addEventListener('click', function() {
+    if (mapaAbrePopEm(mapaNpcPop, mapaNpcBtn, 'esq')) mapaNpcNome.focus();
+  });
+  mapaNpcImgBtn.addEventListener('click', function(){ if (!_mapaNpcSubindo) mapaNpcFile.click(); });
+  mapaNpcFile.addEventListener('change', function() {
+    var f = mapaNpcFile.files && mapaNpcFile.files[0];
+    mapaNpcFile.value = '';
+    if (!f) return;
+    if (!/^image\//.test(f.type)) { alert('Isso não é uma imagem.'); return; }
+    if (f.size > 8 * 1024 * 1024) { alert('Imagem muito grande (' + fmtBytes(f.size) + '). O limite pro NPC é 8 MB.'); return; }
+    _mapaNpcSubindo = true; mapaNpcOk.disabled = true; mapaNpcImgBtn.textContent = 'enviando…';
+    mapaSobe(f, 'npc', 'enviando imagem…').then(function(url) {
+      _mapaNpcImg = url;
+      mapaNpcImgBtn.textContent = '✓ imagem pronta';
+      mapaNpcImgBtn.classList.add('on');
+    }).catch(function(err) {
+      mapaNpcLimpaImg();
+      alert('A imagem não subiu: ' + err.message);
+    }).then(function(){ _mapaNpcSubindo = false; mapaNpcOk.disabled = false; });
+  });
+  function mapaColocaNpc() {
+    if (_mapaNpcSubindo || !mapaTemMapa()) return;
+    var base = mapaNpcNome.value.trim().slice(0, 36) || 'NPC';
+    var qtd = mapaClamp(parseInt(mapaNpcQtd.value, 10) || 1, 1, 20);
+    var tam = +mapaNpcTam.value || 1;
+    // numeração continua de onde parou: já tem "Goblin 3" no mapa, os novos são 4, 5…
+    var n0 = 0, re = new RegExp('^' + base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?: (\\d+))?$');
+    mapaCena.tokens.forEach(function(t) { var m = re.exec(t.nome); if (m) n0 = Math.max(n0, m[1] ? +m[1] : 1); });
+    var toks = [];
+    for (var i = 0; i < qtd; i++) {
+      var lugar = mapaLugarLivre(tam, toks);
+      toks.push({
+        id: 'npc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) + i,
+        nome: (qtd === 1 && n0 === 0) ? base : base + ' ' + (n0 + i + 1),
+        img: _mapaNpcImg, tam: tam, col: lugar.col, row: lugar.row, pc: false
+      });
+    }
+    mapaTok({ op:'add', toks:toks });
+    mapaNpcNome.value = ''; mapaNpcQtd.value = 1; mapaNpcLimpaImg();
+    mapaFechaPops();
+  }
+  mapaNpcOk.addEventListener('click', mapaColocaNpc);
+  mapaNpcNome.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); mapaColocaNpc(); } });
+
+  // ── mapa novo: arquivo, arrastar-e-soltar ou grade em branco ──
+  mapaFile.addEventListener('change', function() {
+    var f = mapaFile.files && mapaFile.files[0];
+    mapaFile.value = '';
+    mapaNovoArquivo(f);
+  });
+  document.getElementById('mapaEscolher').addEventListener('click', function(){ mapaFile.click(); });
+  document.getElementById('mapaTrocar').addEventListener('click', function(){ mapaFechaPops(); mapaFile.click(); });
+  document.getElementById('mapaBranco').addEventListener('click', mapaNovoBranco);
+  document.getElementById('mapaFit').addEventListener('click', mapaFit);
+  mapaView.addEventListener('dragenter', function(e) {
+    if (!temArquivo(e)) return;
+    _mapaSoltando++; mapaView.classList.add('soltando');
+  });
+  mapaView.addEventListener('dragleave', function(e) {
+    if (!temArquivo(e)) return;
+    if (--_mapaSoltando <= 0) { _mapaSoltando = 0; mapaView.classList.remove('soltando'); }
+  });
+  mapaView.addEventListener('dragover', function(e) {
+    if (!temArquivo(e)) return;
+    e.preventDefault();
+    try { e.dataTransfer.dropEffect = 'copy'; } catch (_) {}
+  });
+  mapaView.addEventListener('drop', function(e) {
+    if (!temArquivo(e)) return;
+    e.preventDefault(); e.stopPropagation();
+    _mapaSoltando = 0; mapaView.classList.remove('soltando');
+    mapaNovoArquivo(e.dataTransfer.files[0]);
+  });
+
+  // ── ponteiro: arrastar token, arrastar a vista, pinça no celular ──
+  function mapaIniciaArraste(e, el) {
+    var t = mapaAchaTok(el.dataset.id);
+    if (!t) return;
+    e.preventDefault();
+    var w = mapaTelaParaMundo(e.clientX, e.clientY), geo = mapaTokGeo(t);
+    mapaDrag = { id:t.id, el:el, pid:e.pointerId, x0:e.clientX, y0:e.clientY, offX:w.x - geo.x, offY:w.y - geo.y, col0:t.col, row0:t.row, moveu:false };
+    try { el.setPointerCapture(e.pointerId); } catch (_) {}
+  }
+  function mapaMoveArraste(e) {
+    var d = mapaDrag, t = mapaAchaTok(d.id);
+    if (!t) { mapaFimArraste(); return; }
+    if (!d.moveu) {
+      if (Math.abs(e.clientX - d.x0) + Math.abs(e.clientY - d.y0) < 5) return;   // tremida do clique não é arrasto
+      d.moveu = true;
+      d.el.classList.add('drag');
+      mapaFechaPops();
+    }
+    var g = mapaCena.grade, lado = t.tam * g.tam, w = mapaTelaParaMundo(e.clientX, e.clientY);
+    var x = w.x - d.offX, y = w.y - d.offY;
+    if (t.tam < 1) { x -= (g.tam - lado) / 2; y -= (g.tam - lado) / 2; }
+    var col = Math.round((x - g.dx) / g.tam), row = Math.round((y - g.dy) / g.tam);
+    if (col !== t.col || row !== t.row) mapaTok({ op:'mov', id:t.id, col:col, row:row });   // anda de quadrado em quadrado, ao vivo pra mesa
+    var n = Math.max(Math.abs(col - d.col0), Math.abs(row - d.row0));   // D&D 2024: diagonal conta 1 quadrado
+    var p = mapaPontoView(e);
+    mapaDistEl.hidden = !n;
+    mapaDistEl.textContent = n + (n === 1 ? ' quadrado' : ' quadrados') + ' · ' + String(n * 1.5).replace('.', ',') + ' m';
+    mapaDistEl.style.left = p.x + 'px';
+    mapaDistEl.style.top = p.y + 'px';
+  }
+  function mapaFimArraste() {
+    if (!mapaDrag) return;
+    mapaDrag.el.classList.remove('drag');
+    mapaDrag = null;
+    mapaDistEl.hidden = true;
+  }
+  mapaView.addEventListener('pointerdown', function(e) {
+    if (!mapaTemMapa()) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (e.pointerType === 'touch') mapaToques[e.pointerId] = mapaPontoView(e);
+    var ks = Object.keys(mapaToques);
+    if (ks.length === 2) {   // segundo dedo: vira pinça (zoom)
+      var a = mapaToques[ks[0]], b = mapaToques[ks[1]];
+      mapaFimArraste();
+      mapaPan = null; mapaView.classList.remove('panning');
+      mapaPinch = { d:Math.hypot(a.x - b.x, a.y - b.y) || 1, mx:(a.x + b.x) / 2, my:(a.y + b.y) / 2, s:mapaVs.s, tx:mapaVs.tx, ty:mapaVs.ty };
+      return;
+    }
+    var tokEl = e.target.closest('.mapa-tok');
+    if (tokEl) { mapaIniciaArraste(e, tokEl); return; }
+    mapaPan = { id:e.pointerId, x:e.clientX, y:e.clientY, tx:mapaVs.tx, ty:mapaVs.ty };
+    try { mapaView.setPointerCapture(e.pointerId); } catch (_) {}
+    mapaView.classList.add('panning');
+  });
+  mapaView.addEventListener('pointermove', function(e) {
+    if (mapaToques[e.pointerId]) mapaToques[e.pointerId] = mapaPontoView(e);
+    if (mapaPinch) {
+      var ks = Object.keys(mapaToques);
+      if (ks.length < 2) return;
+      var a = mapaToques[ks[0]], b = mapaToques[ks[1]];
+      var d = Math.hypot(a.x - b.x, a.y - b.y) || 1, mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      var s = mapaClamp(mapaPinch.s * d / mapaPinch.d, 0.03, 8), k = s / mapaPinch.s;
+      mapaVs.s = s;
+      mapaVs.tx = mx - (mapaPinch.mx - mapaPinch.tx) * k;
+      mapaVs.ty = my - (mapaPinch.my - mapaPinch.ty) * k;
+      mapaAplicaVista();
+      return;
+    }
+    if (mapaDrag && e.pointerId === mapaDrag.pid) { mapaMoveArraste(e); return; }
+    if (mapaPan && e.pointerId === mapaPan.id) {
+      mapaVs.tx = mapaPan.tx + (e.clientX - mapaPan.x);
+      mapaVs.ty = mapaPan.ty + (e.clientY - mapaPan.y);
+      mapaAplicaVista();
+    }
+  });
+  function mapaSoltaPonteiro(e) {
+    if (mapaToques[e.pointerId]) {
+      delete mapaToques[e.pointerId];
+      if (Object.keys(mapaToques).length < 2) mapaPinch = null;
+    }
+    if (mapaDrag && e.pointerId === mapaDrag.pid) {
+      var id = mapaDrag.id, moveu = mapaDrag.moveu;
+      mapaFimArraste();
+      if (!moveu && e.type === 'pointerup') mapaAbreTokPop(id);   // clique sem arrastar = menu do token
+      return;
+    }
+    if (mapaPan && e.pointerId === mapaPan.id) { mapaPan = null; mapaView.classList.remove('panning'); }
+  }
+  mapaView.addEventListener('pointerup', mapaSoltaPonteiro);
+  mapaView.addEventListener('pointercancel', mapaSoltaPonteiro);
+  mapaView.addEventListener('wheel', function(e) {
+    if (!mapaTemMapa()) return;
+    e.preventDefault();
+    var p = mapaPontoView(e), passo = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+    mapaZoom(Math.exp(-mapaClamp(passo, -300, 300) * 0.0015), p.x, p.y);
+  }, { passive:false });
+  mapaView.addEventListener('dblclick', function(e){ if (!e.target.closest('.mapa-tok')) mapaFit(); });
+
+  // ── abrir / fechar (pra mesa toda) ──
+  function mapaAberto() { return document.body.classList.contains('mapa-on'); }
+  function openMapa() {
+    if (mapaAberto()) return;
+    document.body.classList.add('mapa-on');
+    mapaBtn.classList.add('open');
+    jitsiTile(true);   // a faixa de cima mostra todas as caras
+    if (!mapaPronto && !mapaCarregando) mapaCarrega();
+    mapaRender();
+    requestAnimationFrame(mapaFit);   // mede depois que a página mudou de forma
+  }
+  function closeMapa() {
+    if (!mapaAberto()) return;
+    mapaFechaPops(); mapaFimArraste();
+    mapaPan = null; mapaPinch = null; mapaToques = {};
+    mapaView.classList.remove('panning');
+    document.body.classList.remove('mapa-on');
+    mapaBtn.classList.remove('open');
+    if (!wbIsOpen()) jitsiTile(false);
+  }
+  mapaBtn.addEventListener('click', function() {
+    if (mapaAberto()) { closeMapa(); send('mapa-close', {}); }
+    else { openMapa(); send('mapa-open', {}); }
+  });
+  document.getElementById('mapaFechar').addEventListener('click', function(){ closeMapa(); send('mapa-close', {}); });
+
+  mapaCarrega();
 
   // ── Diário da Mesa (moleskine compartilhado, persistido no Supabase) ─
   // Um caderno por sala (tabela diario_mesa: sala PK, abas jsonb). Cada aba tem
@@ -3216,6 +4192,12 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     else if (event === 'som-state-req') { var snap = somStateSnapshot(); if (snap.length) send('som-state', { playing:snap }); }
     else if (event === 'som-lib') { if (somLoaded) somLoad(function(){ somRefreshUI(); }); }
     else if (event === 'som-gain') { if (payload && payload.id != null) { somGain[String(payload.id)] = payload.gain; somPersistGain(); somApplyVol(payload.id); somRenderPads(); } }
+    else if (event === 'mapa-open') openMapa();
+    else if (event === 'mapa-close') closeMapa();
+    else if (event === 'mapa-req') { if (mapaAberto()) send('mapa-open', {}); }
+    else if (event === 'mapa-cena') mapaRecebeCena(payload);
+    else if (event === 'mapa-grade') mapaRecebeGrade(payload);
+    else if (event === 'mapa-tok') mapaRecebeTok(payload);
   }
   function initRealtime() {
     if (!window.supabase || !window.supabase.createClient) return;
@@ -3236,9 +4218,12 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     ['som-play','som-stop','som-state','som-state-req','som-lib','som-gain'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
+    ['mapa-open','mapa-close','mapa-req','mapa-cena','mapa-grade','mapa-tok'].forEach(function(ev){
+      channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
+    });
     channel.subscribe(function(status){
       document.getElementById('connDot').classList.toggle('on', status === 'SUBSCRIBED');
-      if (status === 'SUBSCRIBED') { send('chars-req', {}); send('mesa-ctx-req', {}); send('som-state-req', {}); send('timer-req', {}); }
+      if (status === 'SUBSCRIBED') { send('chars-req', {}); send('mesa-ctx-req', {}); send('som-state-req', {}); send('timer-req', {}); send('mapa-req', {}); }
     });
   }
 
