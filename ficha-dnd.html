@@ -2229,22 +2229,24 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     // Na 5.5 TODAS chegam no nível 3, então aqui não há o que aplicar
     // antes disso: a lista serve pra escolher com antecedência.
     sub_barbaro: { t: 'Bárbaro', l: 'Caminhos do bárbaro, escolhidos no nível 3.', b: [
-      '[[sbc_berserker|Caminho do Berserker]] — Fúria bruta, sem filtro: ataque extra e violência crescente.',
+      '[[sbc_berserker|Caminho do Berserker]] — Fúria bruta, sem filtro: quem ataca de peito aberto bate muito mais.',
       '[[sbc_coracao_selvagem|Caminho do Coração Selvagem]] — Chama o espírito de bichos e empresta o que eles têm de melhor.',
       '[[sbc_arvore_mundo|Caminho da Árvore do Mundo]] — Puxa vida e espaço da árvore que liga os planos.',
-      '[[sbc_zelote|Caminho do Zelote]] — Fúria divina: bate com dano sagrado e custa a morrer de vez.'] },
-    sbc_berserker: { t: 'Caminho do Berserker', l: 'Fúria bruta, sem filtro: ataque extra e violência crescente.', b: [
+      '[[sbc_zelote|Caminho do Zelote]] — Fúria divina: bate com dano sagrado e se cura no meio da briga.'] },
+    sbc_berserker: { t: 'Caminho do Berserker', l: 'Fúria bruta, sem filtro: quem ataca de peito aberto bate muito mais.', b: [
       'É a escolha mais direta: pouca regra nova, muito dano.',
-      'Nível 3 — Frenesi: durante a fúria, seus golpes carregam dados extras de dano.'] },
+      'Nível 3 — Frenesi: em [[cls_furia|fúria]] e usando [[cls_ataque_imprudente|Ataque Imprudente]], o primeiro alvo que você acerta no turno leva d6 extras — tantos quanto o seu bônus de dano da fúria.'] },
     sbc_coracao_selvagem: { t: 'Caminho do Coração Selvagem', l: 'Chama o espírito de bichos e empresta o que eles têm de melhor.', b: [
       'Muda o que a fúria faz conforme o animal que você invoca.',
-      'Nível 3 — fala com bichos, e ao entrar em fúria escolhe um espírito: Urso (resistência a quase tudo), Águia (corre e se esquiva) ou Lobo (aliados atacam com vantagem).'] },
+      'Nível 3 — Voz dos Animais: [[mag_sentidos_animais|Sentidos Animais]] e [[mag_falar_com_animais|Falar com Animais]], só como ritual.',
+      'Nível 3 — Fúria da Natureza: ao entrar em [[cls_furia|fúria]], escolhe um espírito. Urso: resistência a todo dano menos energia, necrótico, psíquico e radiante. Águia: Disparada e Desengajar juntos, com [[cnc_acao_bonus|ação bônus]]. Lobo: aliados têm vantagem contra inimigos que estejam do seu lado.'] },
     sbc_arvore_mundo: { t: 'Caminho da Árvore do Mundo', l: 'Puxa vida e espaço da árvore que liga os planos.', b: [
-      'Novidade da 5.5: cura, PV temporários e teleporte curto no meio da briga.',
-      'Nível 3 — Vitalidade da Árvore: PV temporários ao entrar em fúria, e dá pra passar parte deles a um aliado.'] },
-    sbc_zelote: { t: 'Caminho do Zelote', l: 'Fúria divina: bate com dano sagrado e custa a morrer de vez.', b: [
-      'Volta da morte mais fácil que qualquer outro bárbaro.',
-      'Nível 3 — Fúria Divina: uma vez por turno, dano radiante ou necrótico extra. E te trazer de volta dos mortos fica mais barato.'] },
+      'Novidade da 5.5: PV temporários pra você e pro grupo; mais adiante puxa inimigo pra perto e teleporta.',
+      'Nível 3 — Vitalidade da Árvore: ao entrar em [[cls_furia|fúria]], PV temporários iguais ao seu nível de bárbaro. E no começo de cada turno em fúria, um aliado a até 3 m ganha PV temporários — d6 igual ao seu bônus de dano da fúria.'] },
+    sbc_zelote: { t: 'Caminho do Zelote', l: 'Fúria divina: bate com dano sagrado e se cura no meio da briga.', b: [
+      'O bárbaro que mais aguenta sozinho.',
+      'Nível 3 — Fúria Divina: em [[cls_furia|fúria]], o primeiro alvo que você acerta no turno leva 1d6 + metade do seu nível de bárbaro, radiante ou necrótico, à sua escolha.',
+      'Nível 3 — Guerreiro dos Deuses: uma reserva de quatro d12 pra se curar com [[cnc_acao_bonus|ação bônus]]; volta cheia no [[cnc_descanso|descanso longo]].'] },
     sub_bardo: { t: 'Bardo', l: 'Colégios do bardo, escolhidos no nível 3.', b: [
       '[[sbc_conhecimento|Colégio do Conhecimento]] — O bardo que sabe de tudo e rouba magia das outras classes.',
       '[[sbc_bravura|Colégio da Bravura]] — O bardo que entra na linha de frente.',
@@ -2297,39 +2299,46 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Fica na frente com o guerreiro.',
       'Nível 3 — Sacerdote de Guerra: ataque extra como [[cnc_acao_bonus|ação bônus]]; e Golpe Guiado, +10 num ataque que errou.'] },
     sub_druida: { t: 'Druida', l: 'Círculos do druida, escolhidos no nível 3.', b: [
-      '[[sbc_terra|Círculo da Terra]] — Magia ligada ao tipo de terreno em que você aprendeu.',
+      '[[sbc_terra|Círculo da Terra]] — Magia do terreno, que dá pra trocar a cada descanso longo.',
       '[[sbc_lua|Círculo da Lua]] — Vira bicho de verdade e briga nessa forma.',
       '[[sbc_mar|Círculo do Mar]] — Tempestade e maré como arma.',
       '[[sbc_astros|Círculo dos Astros]] — Lê constelações e assume a forma delas.'] },
-    sbc_terra: { t: 'Círculo da Terra', l: 'Magia ligada ao tipo de terreno em que você aprendeu.', b: [
-      'Ganha magias extras conforme a terra escolhida.',
-      'Nível 3 — magias extras conforme o terreno escolhido, e Auxílio da Terra: dano numa área e cura em alguém, junto.'] },
+    sbc_terra: { t: 'Círculo da Terra', l: 'Magia do terreno, que dá pra trocar a cada descanso longo.', b: [
+      'A cada [[cnc_descanso|descanso longo]] você escolhe a terra — árida, polar, temperada ou tropical — e ela define magias extras sempre preparadas.',
+      'Nível 3 — Auxílio da Terra: gasta um uso de [[cls_forma_selvagem|Forma Selvagem]]; quem você escolher numa esfera de 3 m faz salvaguarda de Constituição ou leva 2d6 necrótico, e uma criatura ali dentro cura 2d6.'] },
     sbc_lua: { t: 'Círculo da Lua', l: 'Vira bicho de verdade e briga nessa forma.', b: [
       'A forma selvagem vira a principal arma.',
-      'Nível 3 — Formas do Círculo: a forma selvagem passa a ter CA e PV de verdade pra brigar.'] },
+      'Nível 3 — Formas do Círculo: a [[cls_forma_selvagem|Forma Selvagem]] vai até feras de ND igual a um terço do seu nível, com CA de pelo menos 13 + Sabedoria e PV temporários iguais a três vezes o seu nível de druida.',
+      'Nível 3 — sempre preparadas, e conjuráveis mesmo em forma de fera: [[mag_curar_ferimentos|Curar Ferimentos]], [[mag_raio_lunar|Raio Lunar]] e [[mag_fagulha_estelar|Fagulha Estelar]].'] },
     sbc_mar: { t: 'Círculo do Mar', l: 'Tempestade e maré como arma.', b: [
-      'Novidade da 5.5: aura de vento e água em volta de você.',
-      'Nível 3 — Ira do Mar: uma aura de água e vento que fere quem chega perto e empurra.'] },
+      'Novidade da 5.5: uma aura de maresia em volta de você.',
+      'Nível 3 — Ira do Mar: gasta um uso de [[cls_forma_selvagem|Forma Selvagem]] e fica 10 minutos numa aura de 1,5 m. Com [[cnc_acao_bonus|ação bônus]], escolhe alguém dentro dela: salvaguarda de Constituição, ou leva frio (d6 igual à sua Sabedoria) e é empurrado 4,5 m.',
+      'Nível 3 — sempre preparadas: [[mag_raio_gelo|Raio de Gelo]], [[mag_nevoa|Névoa]], [[mag_onda_trovejante|Onda Trovejante]], [[mag_rajada_vento|Rajada de Vento]] e [[mag_estilhacar|Estilhaçar]].'] },
     sbc_astros: { t: 'Círculo dos Astros', l: 'Lê constelações e assume a forma delas.', b: [
-      'Troca de forma conforme o que o grupo precisa: dano, cura ou controle.',
-      'Nível 3 — Mapa Estelar e Forma Estrelada: Arqueiro (dano à distância), Cálice (cura) ou Dragão (concentração garantida).'] },
-    sub_feiticeiro: { t: 'Feiticeiro', l: 'Origens do feiticeiro, escolhidos no nível 3.', b: [
-      '[[sbc_draconica|Linhagem Dracônica]] — Sangue de dragão: mais vida, mais CA e dano do seu elemento.',
-      '[[sbc_selvagem|Magia Selvagem]] — A magia escapa do controle e acontece o que tiver que acontecer.',
+      'Troca de forma conforme o que o grupo precisa: dano, cura ou foco.',
+      'Nível 3 — Mapa Estelar: [[mag_orientacao|Orientação]] e Raio Guia sempre preparados, e Raio Guia de graça algumas vezes por dia.',
+      'Nível 3 — Forma Estrelada: gasta um uso de [[cls_forma_selvagem|Forma Selvagem]] e vira constelação. Arqueiro: ataque radiante com [[cnc_acao_bonus|ação bônus]]. Cálice: cura extra sempre que você cura com magia. Dragão: nos testes de concentração, Inteligência e Sabedoria, o d20 vale no mínimo 10.'] },
+    sub_feiticeiro: { t: 'Feiticeiro', l: 'Origens do feiticeiro, escolhidas no nível 3.', b: [
+      '[[sbc_draconica|Feitiçaria Dracônica]] — Sangue de dragão: mais vida, mais CA e dano do seu elemento.',
+      '[[sbc_selvagem|Feitiçaria Selvagem]] — A magia escapa do controle e acontece o que tiver que acontecer.',
       '[[sbc_aberrante|Feitiçaria Aberrante]] — Poder psiônico vindo de algo que não devia ter te tocado.',
       '[[sbc_mecanismo|Feitiçaria de Mecanismo]] — Ordem pura: a magia da engrenagem que rege o universo.'] },
-    sbc_draconica: { t: 'Linhagem Dracônica', l: 'Sangue de dragão: mais vida, mais CA e dano do seu elemento.', b: [
+    sbc_draconica: { t: 'Feitiçaria Dracônica', l: 'Sangue de dragão: mais vida, mais CA e dano do seu elemento.', b: [
       'A origem mais resistente — e a que mais dá cara ao personagem.',
-      'Nível 3 — Resiliência Dracônica: +1 PV por nível e CA 10 + Destreza + Carisma sem armadura.'] },
-    sbc_selvagem: { t: 'Magia Selvagem', l: 'A magia escapa do controle e acontece o que tiver que acontecer.', b: [
+      'Nível 3 — Resiliência Dracônica: +3 PV máximos, e +1 a cada nível de feiticeiro depois; sem armadura, CA 10 + Destreza + Carisma (a ficha já calcula).',
+      'Nível 3 — sempre preparadas: [[mag_alterar_se|Alterar-se]], [[mag_orbe_cromatica|Orbe Cromática]], Comando e [[mag_sopro_dragao|Sopro de Dragão]].'] },
+    sbc_selvagem: { t: 'Feitiçaria Selvagem', l: 'A magia escapa do controle e acontece o que tiver que acontecer.', b: [
       'Tabela de efeitos aleatórios; diversão garantida, previsibilidade nenhuma.',
-      'Nível 3 — Surto de Magia Selvagem na tabela de efeitos, e Marés do Caos: uma vantagem de graça por descanso.'] },
+      'Nível 3 — Surto de Magia Selvagem: uma vez por turno, ao conjurar magia de feiticeiro gastando espaço, rola um d20; no 20, rola na tabela de efeitos.',
+      'Nível 3 — Marés do Caos: vantagem num teste de d20 à sua escolha. Volta no [[cnc_descanso|descanso longo]] — ou antes, quando você conjura com espaço, e aí a tabela rola sozinha.'] },
     sbc_aberrante: { t: 'Feitiçaria Aberrante', l: 'Poder psiônico vindo de algo que não devia ter te tocado.', b: [
       'Telepatia e magia da mente.',
-      'Nível 3 — magias psiônicas na lista e fala telepática a distância.'] },
+      'Nível 3 — sempre preparadas: [[mag_lasca_mental|Lasca Mental]], [[mag_espelho_mental|Detectar Pensamentos]], Braços de Hadar, Acalmar Emoções e Sussurros Dissonantes.',
+      'Nível 3 — Fala Telepática: com [[cnc_acao_bonus|ação bônus]], liga sua mente à de uma criatura a até 9 m — e depois dá pra conversar a quilômetros.'] },
     sbc_mecanismo: { t: 'Feitiçaria de Mecanismo', l: 'Ordem pura: a magia da engrenagem que rege o universo.', b: [
       'Anula aleatoriedade — sua e dos outros.',
-      'Nível 3 — Restaurar o Equilíbrio: anula a vantagem ou a desvantagem de qualquer criatura que você veja.'] },
+      'Nível 3 — Restaurar o Equilíbrio: reação pra tirar a vantagem ou a desvantagem de uma rolagem de alguém a até 18 m. Usos iguais ao seu Carisma.',
+      'Nível 3 — sempre preparadas: [[mag_alarme|Alarme]], [[mag_protecao_bem_mal|Proteção contra o Bem e o Mal]], Auxílio e [[mag_restauracao_menor|Restauração Menor]].'] },
     sub_guardiao: { t: 'Guardião', l: 'Arquétipos do guardião, escolhidos no nível 3.', b: [
       '[[sbc_cacador|Caçador]] — O guardião direto: escolhe como bater melhor em cada situação.',
       '[[sbc_mestre_feras|Mestre das Feras]] — Luta junto com um companheiro animal.',
@@ -2368,27 +2377,27 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Recursos pequenos e frequentes, sem parecer conjurador.',
       'Nível 3 — Poder Psiônico: dados de energia pra reduzir o dano de um aliado, somar dano à distância ou mover coisas com a mente.'] },
     sub_ladino: { t: 'Ladino', l: 'Arquétipos do ladino, escolhidos no nível 3.', b: [
-      '[[sbc_ladrao|Ladrão]] — O clássico: rápido com as mãos, escalada, itens mágicos.',
+      '[[sbc_ladrao|Ladrão]] — O clássico: mãos rápidas, escalada, itens mágicos.',
       '[[sbc_assassino|Assassino]] — Mata quem não te viu chegar.',
       '[[sbc_trapaceiro_arcano|Trapaceiro Arcano]] — Ladino com magia de mago, focada em ilusão e encantamento.',
       '[[sbc_lamina_alma|Lâmina da Alma]] — Cria lâminas psiônicas do nada e ataca com a mente.'] },
-    sbc_ladrao: { t: 'Ladrão', l: 'O clássico: rápido com as mãos, escalada, itens mágicos.', b: [
-      'Age duas vezes com a ação bônus.',
-      'Nível 3 — Mãos Rápidas: usar um objeto ou as ferramentas de ladrão como [[cnc_acao_bonus|ação bônus]].',
-      'Nível 3 — Trabalho de Segundo Andar: escalar sem gastar o dobro, e pula mais longe.'] },
+    sbc_ladrao: { t: 'Ladrão', l: 'O clássico: mãos rápidas, escalada, itens mágicos.', b: [
+      'Faz com a ação bônus o que os outros gastam a ação inteira.',
+      'Nível 3 — Mãos Rápidas: com a [[cnc_acao_bonus|ação bônus]], faz um teste de Prestidigitação, usa [[ferr_ladrao|Ferramentas de Ladrão]] pra abrir fechadura ou desarmar armadilha, ou usa um objeto.',
+      'Nível 3 — Trabalho de Segundo Andar: deslocamento de escalada igual ao normal, e o pulo usa Destreza em vez de Força.'] },
     sbc_assassino: { t: 'Assassino', l: 'Mata quem não te viu chegar.', b: [
-      'Dano brutal no primeiro turno contra alvo surpreso.',
-      'Nível 3 — Assassinar: vantagem contra quem ainda não agiu no combate, e dano extra em quem está surpreso.',
-      'Nível 3 — Ferramentas do Assassino: kit de disfarce e de veneno.'] },
+      'Dano brutal no primeiro round da briga.',
+      'Nível 3 — Assassinar: vantagem na iniciativa. No primeiro round, vantagem contra quem ainda não agiu, e se o [[cnc_ataque_furtivo|Ataque Furtivo]] acertar, soma dano igual ao seu nível de ladino.',
+      'Nível 3 — Ferramentas do Assassino: kit de disfarce e kit de venenos, com proficiência.'] },
     sbc_trapaceiro_arcano: { t: 'Trapaceiro Arcano', l: 'Ladino com magia de mago, focada em ilusão e encantamento.', b: [
       'Mão mágica invisível pra roubar de longe.',
-      'Nível 3 — Conjuração de mago, focada em ilusão e encantamento.',
-      'Nível 3 — Mão Mágica Ilusionista: a mão fica invisível e rouba, planta e abre fechadura por você.'] },
+      'Nível 3 — Conjuração de mago, por Inteligência, focada em ilusão e encantamento.',
+      'Nível 3 — Mão Mágica Ilusionista: [[mag_mao_magica|Mão Mágica]] sai como [[cnc_acao_bonus|ação bônus]], invisível, e dá pra fazer Prestidigitação através dela.'] },
     sbc_lamina_alma: { t: 'Lâmina da Alma', l: 'Cria lâminas psiônicas do nada e ataca com a mente.', b: [
       'Não precisa carregar arma, e fala por telepatia.',
       'Nível 3 — Lâminas Psíquicas: armas de energia que você cria do nada, uma em cada mão, e que também voam.',
       'Nível 3 — Poder Psiônico: dados pra melhorar um teste que errou por pouco.'] },
-    sub_mago: { t: 'Mago', l: 'Escolas do mago, escolhidos no nível 3.', b: [
+    sub_mago: { t: 'Mago', l: 'Escolas do mago, escolhidas no nível 3.', b: [
       '[[sbc_abjurador|Abjurador]] — Escudo arcano ambulante: proteção e anular magia.',
       '[[sbc_evocador|Evocador]] — Dano de área — sem acertar os aliados.',
       '[[sbc_ilusionista|Ilusionista]] — Ilusões que quase viram verdade.',
@@ -2444,10 +2453,10 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
 
     // ── o que cada classe entrega no nível 1 ──────────────────────────
     cls_furia: { t: 'Fúria', l: 'O bárbaro liga o motor: mais dano, menos dano recebido.', b: [
-      'Entra em fúria com uma [[cnc_acao_bonus|ação bônus]] e dura 10 minutos.',
-      'Ganha dano extra no corpo a corpo, resistência a cortante, perfurante e concussão, e vantagem em Força.',
-      'Enquanto está em fúria não dá pra conjurar nem manter concentração.',
-      'Acaba antes se você passar um turno sem atacar, sem forçar salvaguarda e sem levar dano.'] },
+      'Entra em fúria com uma [[cnc_acao_bonus|ação bônus]], sem armadura pesada. Dois usos no nível 1: volta um no [[cnc_descanso|descanso curto]] e todos no longo.',
+      '+2 de dano nos ataques que usam Força (com arma ou desarmado), resistência a dano cortante, perfurante e de concussão, e vantagem em testes e salvaguardas de Força.',
+      'Enquanto dura, não dá pra conjurar nem manter concentração.',
+      'Dura até o fim do seu próximo turno e se renova se você atacar um inimigo, forçar um inimigo a fazer salvaguarda ou gastar uma ação bônus pra mantê-la — até 10 minutos. Acaba se você vestir armadura pesada ou ficar Incapacitado.'] },
     cls_inspiracao_bardo: { t: 'Inspiração de Bardo', l: 'Um dado que você entrega pra outra pessoa usar.', b: [
       '[[cnc_acao_bonus|Ação bônus]]: dá um d6 a um aliado que consiga te ouvir.',
       'Ele soma esse dado num teste, ataque ou salvaguarda depois de rolar.',
@@ -2464,26 +2473,26 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Protetor: proficiência com armas marciais e armadura pesada.',
       'Taumaturgo: um [[cnc_truque|truque]] a mais e Sabedoria somando nos testes de conhecimento sagrado.',
       'Escolha no nível 1, e não muda depois.'] },
-    cls_druidico: { t: 'Druídico', l: 'A língua secreta dos druidas.', b: [
-      'Só outro druida entende — dá pra deixar recado escondido em pedra, folha ou marca.',
-      'Quem não conhece percebe que há uma mensagem, mas não lê.'] },
+    cls_druidico: { t: 'Druídico', l: 'A língua secreta dos druidas — e a conversa com os bichos.', b: [
+      'Dá pra deixar recado escondido em pedra, folha ou marca. Quem fala Druídico vê na hora; os outros precisam de Investigação CD 15 só pra perceber que tem recado, e mesmo assim não leem sem magia.',
+      'Aprender a língua abriu a conversa com os animais: você tem [[mag_falar_com_animais|Falar com Animais]] sempre preparada.'] },
     cls_ordem_primitiva: { t: 'Ordem Primitiva', l: 'O druida escolhe entre magia e mato.', b: [
-      'Mágico: um [[cnc_truque|truque]] a mais e Sabedoria somando em Arcanismo e Natureza.',
-      'Guardião: proficiência com armas marciais e armadura média.'] },
+      'Mágico: um [[cnc_truque|truque]] de druida a mais, e soma a Sabedoria (no mínimo +1) nos testes de Arcanismo e Natureza.',
+      'Guardião: proficiência com armas marciais e treino com armadura média.',
+      'Escolha no nível 1, e não muda depois.'] },
     cls_feiticaria_inata: { t: 'Feitiçaria Inata', l: 'O feiticeiro abre a torneira por um minuto.', b: [
-      '[[cnc_acao_bonus|Ação bônus]]: por 1 minuto, vantagem nos ataques de magia e +1 na CD das suas magias.',
-      'Bônus de proficiência vezes por [[cnc_descanso|descanso longo]].'] },
+      '[[cnc_acao_bonus|Ação bônus]]: por 1 minuto, suas magias de feiticeiro ganham +1 na CD e vantagem nas jogadas de ataque.',
+      'Dois usos, que voltam no [[cnc_descanso|descanso longo]].'] },
     cls_inimigo_favorito: { t: 'Inimigo Favorito', l: 'Marca do Caçador de graça.', b: [
       'Você tem Marca do Caçador sempre preparada.',
       'Conjura sem gastar [[slots|espaço]], bônus de proficiência vezes por [[cnc_descanso|descanso longo]].'] },
     cls_retomar_folego: { t: 'Retomar o Fôlego', l: 'O guerreiro se cura sozinho, no meio da briga.', b: [
       '[[cnc_acao_bonus|Ação bônus]]: cura 1d10 + seu nível de guerreiro.',
       'Começa com dois usos, e eles voltam no [[cnc_descanso|descanso curto]].'] },
-    cls_giria_ladrao: { t: 'Gíria de Ladrão', l: 'O código do submundo: dá pra conversar na frente de todo mundo.', b: [
-      'Mistura de gíria, sinal de mão e símbolo riscado em porta e parede.',
-      'Leva umas quatro vezes mais tempo pra dizer a mesma coisa — serve pra recado, não pra conversa.',
-      'Quem não conhece só ouve papo furado; nem desconfia que teve mensagem.',
-      'O ladino ainda aprende um idioma comum além dessa.'] },
+    cls_giria_ladrao: { t: 'Gíria de Ladrão', l: 'O idioma secreto do submundo.', b: [
+      'Jargão, sinais e marcas que as guildas de ladrões usam pra se entender.',
+      'Na 5.5 ela conta como um idioma — dos raros, como Druídico e Infernal. Quem não fala, não entende.',
+      'Junto com ela o ladino aprende mais um idioma à sua escolha.'] },
     cls_adepto_rituais: { t: 'Adepto de Rituais', l: 'Rituais saem de graça, direto do grimório.', b: [
       'Qualquer magia do livro marcada como ritual, sem gastar [[slots|espaço]].',
       'Nem precisa estar preparada — basta estar escrita.',
@@ -2499,6 +2508,16 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'A reserva é 5 × seu nível de paladino, gasta do jeito que você quiser.',
       '[[cnc_acao_bonus|Ação bônus]] e um toque; volta cheia no [[cnc_descanso|descanso longo]].',
       'Gastando 5 pontos, cura uma doença ou um veneno em vez de PV.'] },
+    // nível 2, mas as subclasses do nível 3 giram em torno deles
+    cls_forma_selvagem: { t: 'Forma Selvagem', l: 'Nível 2 do druida: vira um animal que você já conhece.', b: [
+      '[[cnc_acao_bonus|Ação bônus]]. Dois usos: volta um no [[cnc_descanso|descanso curto]] e todos no longo.',
+      'Dura um número de horas igual à metade do seu nível de druida, e você ganha PV temporários iguais ao seu nível de druida.',
+      'A cabeça continua sua: Inteligência, Sabedoria, Carisma e proficiências não mudam. Não dá pra conjurar na forma, mas a concentração que já estava rolando continua.',
+      'No nível 2 você conhece 4 formas de fera de ND até 1/4 e sem voo. Os círculos da Lua, do Mar, da Terra e dos Astros gastam usos dela nos poderes deles.'] },
+    cls_ataque_imprudente: { t: 'Ataque Imprudente', l: 'Nível 2 do bárbaro: acerta mais — e apanha mais.', b: [
+      'No primeiro ataque do seu turno você decide atacar de peito aberto.',
+      'Até o começo do seu próximo turno, vantagem nos seus ataques com Força — e os ataques contra você também têm vantagem.',
+      'O Caminho do Berserker vive disso: o Frenesi só dispara com ele.'] },
 
     // ── os 10 estilos de luta, cada um com o seu ──────────────────────
     est_arquearia: { t: 'Arquearia', l: '+2 nos ataques com armas à distância.', b: [
@@ -2555,15 +2574,26 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     cnc_defesa_sem_armadura: { t: 'Defesa sem Armadura', l: 'A CA de quem luta sem armadura — e é diferente em cada classe.', b: [
       'Bárbaro: 10 + Destreza + Constituição. Pode usar escudo junto.',
       'Monge: 10 + Destreza + Sabedoria. Não pode usar escudo.',
-      'Vale só enquanto você não estiver vestindo armadura nenhuma.'] },
+      'Vale só enquanto você não estiver vestindo armadura nenhuma.',
+      'Parecida, mas de subclasse: o feiticeiro de [[sbc_draconica|Feitiçaria Dracônica]] fica com 10 + Destreza + Carisma, e escudo pode. A ficha calcula as três.'] },
     cnc_ataque_furtivo: { t: 'Ataque Furtivo', l: 'O golpe que faz o ladino valer a pena.', b: [
       '1d6 extra no nível 1, subindo a cada dois níveis.',
-      'Precisa de vantagem no ataque, OU de um aliado a até 1,5 m do alvo sem você estar com desvantagem.',
+      'Precisa de vantagem no ataque, OU de um aliado a até 1,5 m do alvo (que não esteja Incapacitado) sem você estar com desvantagem.',
       'Uma vez por turno, e a arma precisa ter [[prop_acuidade|Acuidade]] ou ser à distância.'] },
     cnc_especialista: { t: 'Especialista', l: 'Proficiência dobrada numa perícia.', b: [
       'Em vez de somar o bônus de proficiência uma vez, soma duas.',
       'Na ficha é o losango dourado, no lugar da bolinha preta.',
       'O ladino ganha duas já no nível 1.'] },
+    // Traço de espécie com nome de magia: escrito em Traços de Espécie, é o
+    // traço que tem que abrir — a magia fica a um clique de distância.
+    cnc_visao_escuro: { t: 'Visão no Escuro', l: 'Enxerga no escuro — em tons de cinza, até a distância indicada.', b: [
+      'Na penumbra você enxerga como se fosse luz plena; no escuro total, como se fosse penumbra.',
+      'Por isso no escuro ainda vale desvantagem em Percepção pela vista, e cor não se distingue.',
+      'É traço de espécie. Quem não tem pode pegar emprestado com a magia [[mag_visao_escuro|Visão no Escuro]].'] },
+    cnc_resistencia: { t: 'Resistência', l: 'Metade do dano, daquele tipo.', b: [
+      'Todo dano do tipo indicado cai pela metade, arredondado pra baixo.',
+      'Duas fontes de resistência ao mesmo tipo não somam: metade é metade.',
+      'Não confundir com o truque [[mag_resistencia|Resistência]], nem com a Resistência Implacável do orc — aquela é voltar com 1 PV.'] },
 
     // ── Grau 2: as 12 classes, camada mecânica + nível 1 ──────────────
     // Convenção fixa, que é de onde o botão direito lê o que aplicar:
@@ -2571,7 +2601,9 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     //   [1] Salvaguardas: …
     //   [2] Armaduras: …
     //   [3] Armas: …
+    //   Ferramentas: … (só quem tem: druida e ladino — vai pro quadro de Ferramentas)
     //   [4] Perícias: … (informativo — a escolha é do jogador)
+    //   Tirando o [0], a leitura é pelo começo da linha, não pela posição.
     //   [5+] Nível 1: …
     cls_barbaro: { t: 'Bárbaro', l: 'Fúria como recurso: quanto mais apanha, mais assusta.', b: [
       'Dado de Vida: d12 · Atributo principal: Força',
@@ -2579,7 +2611,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Armaduras: leves, médias e escudos',
       'Armas: simples e marciais',
       'Perícias: 2 entre Atletismo, Intimidação, Lidar com Animais, Natureza, Percepção e Sobrevivência',
-      'Nível 1: Fúria — dano extra, resistência a cortante, perfurante e concussão, e vantagem em Força',
+      'Nível 1: Fúria — 2 usos; +2 de dano com Força, resistência a cortante, perfurante e concussão, e vantagem em Força',
       'Nível 1: Defesa sem Armadura — CA 10 + Destreza + Constituição quando está sem armadura',
       'Nível 1: Maestria em Armas — escolhe 2 armas e usa a maestria delas'] },
     cls_bardo: { t: 'Bardo', l: 'Magia pela palavra e pela música. Ajuda o grupo inteiro a acertar mais.', b: [
@@ -2609,12 +2641,15 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     cls_druida: { t: 'Druida', l: 'A natureza como fonte de magia — e como forma de corpo.', b: [
       'Dado de Vida: d8 · Atributo principal: Sabedoria',
       'Salvaguardas: Inteligência e Sabedoria',
-      'Armaduras: leves, médias e escudos',
+      'Armaduras: leves e escudos',
       'Armas: simples',
+      'Ferramentas: [[ferr_herbalismo|Kit de Herbalismo]]',
       'Perícias: 2 entre Arcanismo, Intuição, Lidar com Animais, Medicina, Natureza, Percepção, Religião e Sobrevivência',
       'Nível 1: Conjuração — magias de druida, por Sabedoria',
-      'Nível 1: Druídico — a língua secreta dos druidas, e o truque Sentido Mágico',
-      'Nível 1: Ordem Primitiva — Mágico (truque extra e Arcanismo melhor) ou Guardião (armas marciais e armadura média)'] },
+      'Nível 1: [[cls_druidico|Druídico]] — a língua secreta dos druidas, e [[mag_falar_com_animais|Falar com Animais]] sempre preparada',
+      'Nível 1: Ordem Primitiva — Mágico (truque extra e Sabedoria em Arcanismo e Natureza) ou Guardião (armas marciais e armadura média)'],
+      mais: 'Ver as magias do druida',
+      lista: ['trq_druida', 'c1_druida', 'c2_druida'] },
     cls_feiticeiro: { t: 'Feiticeiro', l: 'A magia não foi estudada nem concedida: já nasceu com ele.', b: [
       'Dado de Vida: d6 · Atributo principal: Carisma',
       'Salvaguardas: Constituição e Carisma',
@@ -2622,7 +2657,9 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Armas: simples',
       'Perícias: 2 entre Arcanismo, Enganação, Intimidação, Intuição, Persuasão e Religião',
       'Nível 1: Conjuração — magias de feiticeiro, por Carisma',
-      'Nível 1: Feitiçaria Inata — por 1 minuto, vantagem nos ataques mágicos e CD +1'] },
+      'Nível 1: Feitiçaria Inata — por 1 minuto, vantagem nos ataques das suas magias e CD +1; 2 usos por descanso longo'],
+      mais: 'Ver as magias do feiticeiro',
+      lista: ['trq_feiticeiro', 'c1_feiticeiro', 'c2_feiticeiro'] },
     cls_guardiao: { t: 'Guardião', l: 'Caçador de fronteira: rastreia, embosca e conhece o inimigo.', b: [
       'Dado de Vida: d10 · Atributo principal: Destreza e Sabedoria',
       'Salvaguardas: Força e Destreza',
@@ -2646,10 +2683,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Salvaguardas: Destreza e Inteligência',
       'Armaduras: leves',
       'Armas: simples, e marciais que tenham Acuidade ou Leve',
+      'Ferramentas: [[ferr_ladrao|Ferramentas de Ladrão]]',
       'Perícias: 4 entre Acrobacia, Atletismo, Enganação, Furtividade, Intimidação, Intuição, Investigação, Percepção, Persuasão e Prestidigitação',
       'Nível 1: Ataque Furtivo — 1d6 extra quando tem vantagem ou um aliado ao lado do alvo',
       'Nível 1: Especialista — dobra a proficiência em duas perícias',
-      'Nível 1: Gíria de Ladrão — o código secreto do submundo',
+      'Nível 1: Gíria de Ladrão — o idioma secreto do submundo, e mais um idioma à escolha',
       'Nível 1: Maestria em Armas — escolhe 2 armas e usa a maestria delas'] },
     cls_mago: { t: 'Mago', l: 'Magia estudada, anotada e preparada. O livro é o personagem.', b: [
       'Dado de Vida: d6 · Atributo principal: Inteligência',
@@ -2659,7 +2697,9 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Perícias: 2 entre Arcanismo, História, Intuição, Investigação, Medicina e Religião',
       'Nível 1: Conjuração — magias do grimório, por Inteligência',
       'Nível 1: Adepto de Rituais — conjura qualquer ritual do livro sem gastar espaço',
-      'Nível 1: Recuperação Arcana — recupera espaços de magia num descanso curto, uma vez por dia'] },
+      'Nível 1: Recuperação Arcana — recupera espaços de magia num descanso curto, uma vez por dia'],
+      mais: 'Ver as magias do mago',
+      lista: ['trq_mago', 'c1_mago', 'c2_mago'] },
     cls_monge: { t: 'Monge', l: 'O corpo é a arma. Rápido, difícil de acertar e sempre no lugar certo.', b: [
       'Dado de Vida: d8 · Atributo principal: Destreza e Sabedoria',
       'Salvaguardas: Força e Destreza',
@@ -2684,61 +2724,151 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     // sem tabela paralela pra sair de sincronia com o texto.
     esp_aasimar: { t: 'Aasimar', l: 'Sangue celestial: gente comum com uma faísca de outro plano.', b: [
       'Tamanho: Médio ou Pequeno · Deslocamento: 9 m',
-      'Visão no Escuro 18 m',
-      'Resistência a dano necrótico e radiante',
-      'Mãos Curandeiras: uma vez por descanso longo, cura d4 por nível de personagem',
-      'Portador de Luz: conhece o truque Luz',
-      'Revelação Celestial (nível 3): asas, garras ou aura radiante, à sua escolha'] },
+      '[[cnc_visao_escuro|Visão no Escuro]] 18 m',
+      '[[cnc_resistencia|Resistência]] a dano necrótico e radiante',
+      'Mãos Curandeiras: toca alguém e cura d4 igual ao seu bônus de proficiência — uma vez por [[cnc_descanso|descanso longo]]',
+      'Portador de Luz: conhece o [[cnc_truque|truque]] [[mag_luz|Luz]], por Carisma',
+      '[[lin_revelacao|Revelação Celestial]] (nível 3): por 1 minuto, asas, radiância ou mortalha necrótica — uma vez por descanso longo'],
+      mais: 'Ver as 3 revelações',
+      lista: ['lin_asas', 'lin_radiancia', 'lin_mortalha'] },
     esp_anao: { t: 'Anão', l: 'Feito de pedra e teimosia. Enxerga no escuro e aguenta veneno.', b: [
       'Tamanho: Médio · Deslocamento: 9 m',
-      'Visão no Escuro 36 m',
-      'Resiliência Anã: resistência a veneno e vantagem para resistir a ele',
-      'Sentido de Pedra: encostando na pedra, sente o que se move em 18 m',
-      'Fortitude Anã: seus PV máximos sobem 1 por nível'] },
+      '[[cnc_visao_escuro|Visão no Escuro]] 36 m',
+      'Resiliência Anã: [[cnc_resistencia|resistência]] a dano de veneno, e vantagem pra evitar ou encerrar a condição Envenenado',
+      'Fortitude Anã: +1 PV máximo por nível',
+      'Sentido de Pedra: com [[cnc_acao_bonus|ação bônus]], sente o que se move a até 18 m por 10 minutos, pisando ou encostando em pedra — bônus de proficiência vezes por descanso longo'] },
     esp_draconato: { t: 'Draconato', l: 'Descende de dragões — e ainda cospe o sopro deles.', b: [
       'Tamanho: Médio · Deslocamento: 9 m',
-      'Visão no Escuro 18 m',
-      'Ancestralidade Dracônica: escolha o dragão, que define o tipo de dano',
-      'Sopro: ataque em cone ou linha, gasto pelo bônus de proficiência por descanso longo',
-      'Resistência ao tipo de dano da sua ancestralidade',
-      'Voo Dracônico (nível 5): asas por 10 minutos, uma vez por descanso longo'] },
+      '[[cnc_visao_escuro|Visão no Escuro]] 18 m',
+      '[[cnc_dracos|Ancestralidade Dracônica]]: o dragão escolhido define o dano do sopro e da resistência',
+      'Sopro: troca um ataque da ação Atacar por um cone de 4,5 m ou uma linha de 9 m; salvaguarda de Destreza, 1d10 (sobe nos níveis 5, 11 e 17) — bônus de proficiência vezes por [[cnc_descanso|descanso longo]]',
+      '[[cnc_resistencia|Resistência]] ao tipo de dano da sua ancestralidade',
+      'Voo Dracônico (nível 5): com [[cnc_acao_bonus|ação bônus]], asas por 10 minutos — uma vez por descanso longo'] },
     esp_elfo: { t: 'Elfo', l: 'Sentidos afiados e sangue mágico. Não dorme: entra em transe.', b: [
       'Tamanho: Médio · Deslocamento: 9 m',
-      'Visão no Escuro 18 m',
+      '[[cnc_visao_escuro|Visão no Escuro]] 18 m',
+      'Ancestralidade Feérica: vantagem pra evitar ou encerrar a condição Enfeitiçado',
       'Sentidos Aguçados: proficiência em [[per_intuicao|Intuição]], [[per_percepcao|Percepção]] ou [[per_sobrevivencia|Sobrevivência]]',
-      'Transe: descansa em 4 horas em vez de 8',
-      'Ancestralidade Élfica: Drow, Alto Elfo ou Elfo da Floresta — cada uma dá truque e magias próprias'] },
+      'Transe: não precisa dormir, magia não te põe pra dormir, e o [[cnc_descanso|descanso longo]] leva 4 horas',
+      '[[lin_elfica|Linhagem Élfica]]: Drow, Alto Elfo ou Elfo da Floresta — cada uma dá um [[cnc_truque|truque]] e mais duas magias, nos níveis 3 e 5'],
+      mais: 'Ver as 3 linhagens',
+      lista: ['lin_drow', 'lin_alto_elfo', 'lin_elfo_floresta'] },
     esp_gnomo: { t: 'Gnomo', l: 'Pequeno, curioso e teimosamente difícil de enfeitiçar.', b: [
       'Tamanho: Pequeno · Deslocamento: 9 m',
-      'Visão no Escuro 18 m',
+      '[[cnc_visao_escuro|Visão no Escuro]] 18 m',
       'Astúcia Gnômica: vantagem em salvaguardas de Inteligência, Sabedoria e Carisma',
-      'Linhagem: Gnomo da Floresta (fala com bichos pequenos) ou das Rochas (faz engenhocas)'] },
+      '[[lin_gnomica|Linhagem Gnômica]]: Gnomo da Floresta (ilusão e conversa com bichos) ou das Rochas (conserto e engenhocas)'],
+      mais: 'Ver as 2 linhagens',
+      lista: ['lin_gnomo_floresta', 'lin_gnomo_rochas'] },
     esp_goliath: { t: 'Goliath', l: 'Sangue de gigante: anda mais, carrega mais, bate mais.', b: [
       'Tamanho: Médio · Deslocamento: 10,5 m',
-      'Ancestralidade Gigante: escolha um traço de gigante (pedra, fogo, gelo, nuvem, tempestade ou colina)',
-      'Constituição Robusta: conta como uma categoria maior para carga e para agarrar',
-      'Deslocamento Grande: 10,5 m em vez dos 9 de quase todo mundo'] },
+      '[[lin_gigante|Ancestralidade Gigante]]: um poder de gigante — nuvem, fogo, gelo, colina, pedra ou tempestade — bônus de proficiência vezes por [[cnc_descanso|descanso longo]]',
+      'Constituição Robusta: vantagem pra se soltar da condição Agarrado, e carrega como se fosse Grande',
+      'Forma Grande (nível 5): com [[cnc_acao_bonus|ação bônus]], fica Grande por 10 minutos — vantagem em Força e +3 m de deslocamento; uma vez por descanso longo'],
+      mais: 'Ver as 6 ancestralidades',
+      lista: ['lin_gig_nuvem', 'lin_gig_fogo', 'lin_gig_gelo', 'lin_gig_colina', 'lin_gig_pedra', 'lin_gig_tempestade'] },
     esp_halfling: { t: 'Halfling', l: 'Pequeno, sortudo e difícil de assustar.', b: [
-      'Tamanho: Pequeno · Deslocamento: 7,5 m',
-      'Sorte: quando tira 1 num d20, rola de novo e fica com o segundo',
-      'Bravura: vantagem para resistir à condição Amedrontado',
-      'Agilidade Halfling: passa pelo espaço de criaturas maiores',
-      'Furtividade Natural: pode se esconder atrás de uma criatura maior'] },
+      'Tamanho: Pequeno · Deslocamento: 9 m',
+      'Sorte: tirou 1 no d20 de um teste, ataque ou salvaguarda, rola de novo e fica com o novo',
+      'Bravura: vantagem pra evitar ou encerrar a condição Amedrontado',
+      'Agilidade Halfling: passa pelo espaço de criaturas maiores que você, sem parar nele',
+      'Furtividade Natural: pode se esconder atrás de uma criatura pelo menos um tamanho maior'] },
     esp_humano: { t: 'Humano', l: 'Sem dom nenhum de nascença — e por isso aprende qualquer coisa.', b: [
       'Tamanho: Médio ou Pequeno · Deslocamento: 9 m',
-      'Habilidoso: proficiência em uma perícia à sua escolha',
+      'Habilidoso: proficiência em uma [[pericia|perícia]] à sua escolha',
       'Versátil: um [[cnc_talento_origem|talento de origem]] além do que o antecedente já deu',
-      'Engenhoso: ganha [[inspiracao|Inspiração Heroica]] ao terminar um descanso longo'] },
+      'Engenhoso: ganha [[inspiracao|Inspiração Heroica]] ao terminar um [[cnc_descanso|descanso longo]]'] },
     esp_orc: { t: 'Orc', l: 'Fôlego de sobra e o costume de não cair na primeira.', b: [
       'Tamanho: Médio · Deslocamento: 9 m',
-      'Visão no Escuro 36 m',
-      'Resistência Implacável: ao cair a zero PV, volta com 1 — bônus de proficiência vezes por descanso longo',
-      'Investida Adrenalina: Disparada como ação bônus, bônus de proficiência vezes por descanso'] },
+      '[[cnc_visao_escuro|Visão no Escuro]] 36 m',
+      'Resistência Implacável: ao cair a 0 PV sem morrer na hora, fica com 1 — uma vez por [[cnc_descanso|descanso longo]]',
+      'Investida Adrenalina: Disparada como [[cnc_acao_bonus|ação bônus]], ganhando PV temporários iguais ao bônus de proficiência — bônus de proficiência vezes por descanso curto ou longo'] },
     esp_tiefling: { t: 'Tiefling', l: 'Marca de outro plano no sangue: chifres, cauda e magia herdada.', b: [
       'Tamanho: Médio ou Pequeno · Deslocamento: 9 m',
-      'Visão no Escuro 18 m',
-      'Presença de Outro Mundo: conhece o truque Taumaturgia',
-      'Legado Fiendish: Abissal, Ctônico ou Infernal — cada um dá resistência, truque e magias próprias'] },
+      '[[cnc_visao_escuro|Visão no Escuro]] 18 m',
+      'Presença de Outro Mundo: conhece o [[cnc_truque|truque]] Taumaturgia',
+      '[[lin_infero|Legado Ínfero]]: Abissal, Ctônico ou Infernal — cada um dá uma resistência, um truque e mais duas magias, nos níveis 3 e 5'],
+      mais: 'Ver os 3 legados',
+      lista: ['lin_abissal', 'lin_ctonico', 'lin_infernal'] },
+
+    // ── as escolhas dentro de cada espécie ────────────────────────────
+    // Botão direito numa delas anota em Traços de Espécie. Magia de
+    // linhagem sai uma vez por descanso longo sem gastar espaço (e com
+    // espaço, quantas vezes quiser); o atributo — Int, Sab ou Car — é
+    // escolhido junto com a linhagem.
+    lin_elfica: { t: 'Linhagem Élfica', l: 'O ramo da família élfica — cada um com a sua magia.', b: [
+      'Escolha uma ao criar o personagem. O atributo das magias dela é Inteligência, Sabedoria ou Carisma, você decide na hora.',
+      'O truque é seu desde o nível 1; as magias dos níveis 3 e 5 saem uma vez por [[cnc_descanso|descanso longo]] sem gastar espaço.'],
+      mais: 'Ver as 3 linhagens', lista: ['lin_drow', 'lin_alto_elfo', 'lin_elfo_floresta'] },
+    lin_drow: { t: 'Drow', l: 'Elfo das profundezas: enxerga longe no escuro.', b: [
+      '[[cnc_visao_escuro|Visão no Escuro]] vai a 36 m.',
+      'Truque: [[mag_luzes_dancantes|Luzes Dançantes]].',
+      'Nível 3: [[mag_fogo_das_fadas|Fogo das Fadas]] · Nível 5: [[mag_escuridao|Escuridão]].'] },
+    lin_alto_elfo: { t: 'Alto Elfo', l: 'Elfo de tradição arcana.', b: [
+      'Truque: [[mag_prestidigitacao_truque|Prestidigitação]] — e a cada descanso longo dá pra trocar por outro truque de mago.',
+      'Nível 3: [[mag_escudo_fe|Detectar Magia]] · Nível 5: [[mag_passo_enevoado|Passo Enevoado]].'] },
+    lin_elfo_floresta: { t: 'Elfo da Floresta', l: 'Elfo do mato: mais rápido e difícil de rastrear.', b: [
+      'Deslocamento vai a 10,5 m.',
+      'Truque: [[mag_truque_druidico|Truque Druídico]].',
+      'Nível 3: [[mag_passos_longos|Passos Longos]] · Nível 5: [[mag_passos_sem_pegadas|Passos sem Pegadas]].'] },
+    lin_gnomica: { t: 'Linhagem Gnômica', l: 'O tipo de gnomo: da floresta ou das rochas.', b: [
+      'Escolha uma ao criar o personagem. O atributo das magias dela é Inteligência, Sabedoria ou Carisma.'],
+      mais: 'Ver as 2 linhagens', lista: ['lin_gnomo_floresta', 'lin_gnomo_rochas'] },
+    lin_gnomo_floresta: { t: 'Gnomo da Floresta', l: 'Ilusão e conversa com os bichos.', b: [
+      'Truque: [[mag_ilusao_menor|Ilusão Menor]].',
+      '[[mag_falar_com_animais|Falar com Animais]] sempre preparada, e de graça bônus de proficiência vezes por [[cnc_descanso|descanso longo]].'] },
+    lin_gnomo_rochas: { t: 'Gnomo das Rochas', l: 'Inventor: conserta e monta engenhocas.', b: [
+      'Truques: [[mag_consertar|Consertar]] e [[mag_prestidigitacao_truque|Prestidigitação]].',
+      'Com 10 minutos de Prestidigitação monta uma engenhoca Minúscula — brinquedo, isqueiro, caixinha de música. Até três ao mesmo tempo, cada uma dura 8 horas.'] },
+    lin_infero: { t: 'Legado Ínfero', l: 'De que plano inferior vem a marca no sangue.', b: [
+      'Escolha um ao criar o personagem. O atributo das magias é Inteligência, Sabedoria ou Carisma — o mesmo que a Taumaturgia usa.',
+      'O truque é seu desde o nível 1; as magias dos níveis 3 e 5 saem uma vez por [[cnc_descanso|descanso longo]] sem gastar espaço.'],
+      mais: 'Ver os 3 legados', lista: ['lin_abissal', 'lin_ctonico', 'lin_infernal'] },
+    lin_abissal: { t: 'Legado Abissal', l: 'Do Abismo: caos e veneno.', b: [
+      '[[cnc_resistencia|Resistência]] a dano de veneno.',
+      'Truque: [[mag_borrifo_venenoso|Borrifo Venenoso]].',
+      'Nível 3: [[mag_raio_doentio|Raio Adoentado]] · Nível 5: [[mag_imobilizar_pessoa|Imobilizar Pessoa]].'] },
+    lin_ctonico: { t: 'Legado Ctônico', l: 'Do mundo dos mortos: frio e vida roubada.', b: [
+      '[[cnc_resistencia|Resistência]] a dano necrótico.',
+      'Truque: [[mag_toque_gelido|Toque Gélido]].',
+      'Nível 3: [[mag_vida_falsa|Vida Falsa]] · Nível 5: Raio do Enfraquecimento.'] },
+    lin_infernal: { t: 'Legado Infernal', l: 'Dos Nove Infernos: fogo e contrato.', b: [
+      '[[cnc_resistencia|Resistência]] a dano de fogo.',
+      'Truque: [[mag_raio_fogo|Raio de Fogo]].',
+      'Nível 3: Repreensão Infernal · Nível 5: [[mag_escuridao|Escuridão]].'] },
+    lin_gigante: { t: 'Ancestralidade Gigante', l: 'Qual gigante corre no seu sangue — cada um dá um poder.', b: [
+      'Escolha um ao criar o personagem.',
+      'Usos: bônus de proficiência vezes por [[cnc_descanso|descanso longo]].'],
+      mais: 'Ver as 6 ancestralidades',
+      lista: ['lin_gig_nuvem', 'lin_gig_fogo', 'lin_gig_gelo', 'lin_gig_colina', 'lin_gig_pedra', 'lin_gig_tempestade'] },
+    lin_gig_nuvem: { t: 'Salto da Nuvem', l: 'Gigante das nuvens: teleporte curto.', b: [
+      '[[cnc_acao_bonus|Ação bônus]]: teleporta até 9 m, pra um lugar livre que você veja.'] },
+    lin_gig_fogo: { t: 'Queimadura do Fogo', l: 'Gigante do fogo: o golpe queima.', b: [
+      'Acertou um ataque e causou dano? Soma 1d10 de fogo.'] },
+    lin_gig_gelo: { t: 'Frio do Gelo', l: 'Gigante do gelo: o golpe congela e segura.', b: [
+      'Acertou um ataque e causou dano? Soma 1d6 de frio, e o alvo anda 3 m a menos até o começo do seu próximo turno.'] },
+    lin_gig_colina: { t: 'Tombo da Colina', l: 'Gigante da colina: derruba.', b: [
+      'Acertou um ataque e causou dano numa criatura Grande ou menor? Ela fica Caída.'] },
+    lin_gig_pedra: { t: 'Resistência da Pedra', l: 'Gigante da pedra: segura a pancada.', b: [
+      'Reação ao levar dano: rola 1d12 + Constituição e tira isso do dano.'] },
+    lin_gig_tempestade: { t: 'Trovão da Tempestade', l: 'Gigante da tempestade: devolve o golpe com trovão.', b: [
+      'Reação ao levar dano de alguém a até 18 m: ele leva 1d8 de trovão.'] },
+    lin_revelacao: { t: 'Revelação Celestial', l: 'Nível 3 do aasimar: a forma celestial, por um minuto.', b: [
+      '[[cnc_acao_bonus|Ação bônus]], dura 1 minuto, uma vez por [[cnc_descanso|descanso longo]]. A forma você escolhe na hora.',
+      'Em qualquer uma: uma vez por turno, soma dano igual ao bônus de proficiência num ataque ou magia — radiante, ou necrótico na Mortalha.'],
+      mais: 'Ver as 3 formas', lista: ['lin_asas', 'lin_radiancia', 'lin_mortalha'] },
+    lin_asas: { t: 'Asas Celestiais', l: 'Voa.', b: [
+      'Deslocamento de voo igual ao seu deslocamento normal, enquanto durar.'] },
+    lin_radiancia: { t: 'Radiância Interior', l: 'Luz que queima quem está perto.', b: [
+      'Você ilumina 3 m em volta, e no fim de cada turno seu toda criatura a até 3 m — aliado também — leva dano radiante igual ao seu bônus de proficiência.'] },
+    lin_mortalha: { t: 'Mortalha Necrótica', l: 'Assusta quem está em volta.', b: [
+      'Quem não for seu aliado a até 3 m faz salvaguarda de Carisma ou fica Amedrontado até o fim do seu próximo turno.'] },
+    cnc_dracos: { t: 'Ancestralidade Dracônica', l: 'Qual dragão é o seu — define o dano do sopro e a resistência.', b: [
+      'Ácido: Negro ou Cobre.',
+      'Elétrico: Azul ou Bronze.',
+      'Fogo: Latão, Ouro ou Vermelho.',
+      'Frio: Prata ou Branco.',
+      'Veneno: Verde.'] },
 
     // ── Grau 2: os 16 antecedentes ────────────────────────────────────
     // Atributos, talento, perícias e ferramenta conferidos contra o bloco do
@@ -3306,19 +3436,25 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   // uma arma do catálogo — abre o verbete daquilo em vez do verbete do
   // quadro. Achar a linha é por geometria, e não pelo alvo do clique,
   // porque no modo sumário os campos ficam sem pointer-events.
-  var POR_NOME = null;
-  function indice() {
-    if (POR_NOME) return POR_NOME;
-    POR_NOME = {};
-    Object.keys(AJUDA).forEach(function(k) {
-      var d = AJUDA[k];
-      if (d && d.t && k.indexOf('__') !== 0) POR_NOME[semAcento(d.t)] = { tipo: 'ajuda', k: k };
-    });
-    Object.keys(ITENS).forEach(function(id) {
-      var n = semAcento(ITENS[id].n);
-      if (!POR_NOME[n]) POR_NOME[n] = { tipo: 'item', k: id };
-    });
-    return POR_NOME;
+  // Magia entra por último e não toma o nome de ninguém: "Visão no Escuro"
+  // e "Resistência" escritos em Traços de Espécie são o traço, não a magia.
+  // Na tabela de magias é o contrário — lá todo nome é de magia.
+  var POR_NOME = null, POR_MAGIA = null;
+  function indice(naTabelaDeMagias) {
+    if (!POR_NOME) {
+      POR_NOME = {}; POR_MAGIA = {};
+      Object.keys(AJUDA).forEach(function(k) {
+        var d = AJUDA[k];
+        if (!d || !d.t || k.indexOf('__') === 0) return;
+        (/^mag_/.test(k) ? POR_MAGIA : POR_NOME)[semAcento(d.t)] = { tipo: 'ajuda', k: k };
+      });
+      Object.keys(POR_MAGIA).forEach(function(n) { if (!POR_NOME[n]) POR_NOME[n] = POR_MAGIA[n]; });
+      Object.keys(ITENS).forEach(function(id) {
+        var n = semAcento(ITENS[id].n);
+        if (!POR_NOME[n]) POR_NOME[n] = { tipo: 'item', k: id };
+      });
+    }
+    return naTabelaDeMagias ? Object.assign({}, POR_NOME, POR_MAGIA) : POR_NOME;
   }
   function dentro(faixa, x, y) {
     var rs = faixa.getClientRects();
@@ -3356,7 +3492,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     var dono = achou.no.parentElement;
     if (!dono || !dono.closest('[data-field], .cell')) return null;
 
-    var idx = indice(), plano = semAcento(achou.texto), melhor = null;
+    var idx = indice(!!(tabela.magias && tabela.magias.contains(dono))), plano = semAcento(achou.texto), melhor = null;
     // 1) o termo que o cursor está tocando; ganha o mais longo
     Object.keys(idx).forEach(function(nome) {
       if (nome.length < 4) return;
@@ -4544,6 +4680,9 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       } else if (cl.indexOf('monge') >= 0 && !escudo && mods.sab != null) {
         extra = mods.sab;
         dica = 'Defesa sem Armadura do monge: 10 + Destreza + Sabedoria';
+      } else if (cl.indexOf('feiticeiro') >= 0 && semAcento(texto('subclasse')).indexOf('dracon') >= 0 && mods.car != null) {
+        extra = mods.car;
+        dica = 'Resiliência Dracônica: 10 + Destreza + Carisma';
       } else {
         dica = 'Sem armadura: 10 + Destreza';
       }
@@ -4609,7 +4748,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       else calcula();
       return;
     }
-    if (f === 'nivel' || f === 'classe' || /_valor$/.test(f || '')) calcula();
+    if (f === 'nivel' || f === 'classe' || f === 'subclasse' || /_valor$/.test(f || '')) calcula();
   });
 
   // ══════════════════════════════════════════════════════════════════
@@ -4699,6 +4838,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (/^ferr_/.test(chave)) return { r: 'Anotar em Ferramentas' };
     if (/^item_/.test(chave) && ITEM_DO_TERMO[chave]) return { r: 'Pôr no inventário' };
     if (/^sbc_/.test(chave)) return { r: 'Pôr em Subclasse' };
+    if (/^lin_/.test(chave) && AJUDA[chave] && !AJUDA[chave].lista) return { r: 'Anotar em Traços' };
     if (/^mag_/.test(chave)) return { r: 'Pôr na lista de magias' };
     if (/^ant_/.test(chave) || /^esp_/.test(chave) || /^cls_/.test(chave)) return { r: 'Aplicar na ficha' };
     return null;
@@ -4767,6 +4907,10 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       });
       return nome + ' na lista de magias';
     }
+    if (/^lin_/.test(chave)) {
+      var r3 = anota('tracos_especie', nome + ' — ' + d.l);
+      return r3 === 'repetido' ? nome + ' já estava nos Traços' : nome + ' nos Traços de Espécie';
+    }
     if (/^sbc_/.test(chave)) {
       var cs = campo('subclasse');
       if (cs) cs.textContent = nome;
@@ -4804,6 +4948,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
           });
         } else if ((m = /^Armas:\s*(.+)$/.exec(limpo))) {
           if (anota('prof_armas', m[1]) === true) feitos++;
+        } else if ((m = /^Ferramentas:\s*(.+)$/.exec(limpo))) {
+          if (anota('prof_ferramentas', m[1]) === true) feitos++;
         } else if (/^Nível 1:/.test(limpo)) {
           if (anota('caracteristicas_classe', limpo.replace(/^Nível 1:\s*/, '')) === true) feitos++;
         }
@@ -4824,6 +4970,12 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
         var limpo = t.replace(/\[\[[a-z0-9_]+\|([^\]]+)\]\]/g, '$1');
         if (anota('tracos_especie', limpo) === true) postos++;
       });
+      // Constituição Robusta: carrega como se fosse Grande
+      if (chave === 'esp_goliath' && !inv.dobra) {
+        inv.dobra = true;
+        document.getElementById('invDobra').checked = true;
+        invPinta();
+      }
       return 'espécie ' + nome + ' aplicada (' + postos + ' traços)';
     }
     if (/^ant_/.test(chave)) {
