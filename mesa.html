@@ -717,7 +717,11 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
 .mapa-ico.on { color:var(--holo); border-color:var(--holo); box-shadow:0 0 8px rgba(78,211,232,0.3); }
 .mapa-x:hover { color:#fff; background:var(--danger); border-color:var(--danger); }
 .mapa-panel.sem-mapa .mapa-add, .mapa-panel.sem-mapa .mapa-npc-btn,
-.mapa-panel.sem-mapa #mapaTrocar, .mapa-panel.sem-mapa #mapaGradeBtn, .mapa-panel.sem-mapa #mapaFit { display:none; }
+.mapa-panel.sem-mapa #mapaTrocar, .mapa-panel.sem-mapa #mapaGradeBtn,
+.mapa-panel.sem-mapa #mapaFit, .mapa-panel.sem-mapa #mapaLimparBt { display:none; }
+.mapa-ico.mapa-limpar:hover, .mapa-ico.mapa-limpar.on { color:var(--danger); border-color:rgba(255,85,102,0.6); }
+.mapa-op[disabled] { opacity:0.4; cursor:default; }
+.mapa-op[disabled]:hover { border-color:var(--line); }
 .mapa-view {
   position:relative; flex:1 1 auto; min-height:0; overflow:hidden; cursor:grab; touch-action:none;
   background:#05080e; border-radius:0 0 6px 6px;
@@ -1066,6 +1070,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
       <button class="mapa-ico" id="mapaTrocar" type="button" title="Trocar o mapa (começa uma cena nova)">&#128444;</button>
       <button class="mapa-ico" id="mapaGradeBtn" type="button" title="Ajustar a grade">#</button>
       <button class="mapa-ico" id="mapaFit" type="button" title="Ver o mapa inteiro (ou duplo clique no mapa)">&#9974;</button>
+      <button class="mapa-ico mapa-limpar" id="mapaLimparBt" type="button" title="Limpar o mapa">&#128465;</button>
       <button class="mapa-ico mapa-x" id="mapaFechar" type="button" title="Fechar o mapa (fecha pra mesa toda)">&#10005;</button>
     </div>
     <div class="mapa-view" id="mapaView">
@@ -1115,6 +1120,15 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     </div>
 
     <div class="mapa-pop" id="mapaTokPop"></div>
+
+    <!-- limpar: some com tudo pra mesa inteira, então pergunta antes -->
+    <div class="mapa-pop" id="mapaLimparPop">
+      <h4>Limpar o mapa?</h4>
+      <div class="mapa-dica" id="mapaLimparTxt"></div>
+      <button type="button" class="mapa-op" id="mapaLimparToks"><span>Só os tokens</span><span class="q" id="mapaLimparQtd"></span></button>
+      <button type="button" class="mapa-op perigo" id="mapaLimparTudo"><span>Tudo: mapa e tokens</span></button>
+      <button type="button" class="mapa-op" id="mapaLimparNao"><span>Deixa quieto</span></button>
+    </div>
 
     <input type="file" id="mapaFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
     <input type="file" id="mapaNpcFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
@@ -2795,15 +2809,17 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
       mapaMundo.style.width = mapaCena.w + 'px';
       mapaMundo.style.height = mapaCena.h + 'px';
       mapaMundo.classList.toggle('branco', !!mapaCena.branco);
-      if (mapaCena.img) {
-        if (mapaImg.getAttribute('src') !== mapaCena.img) mapaImg.src = mapaCena.img;
-        mapaImg.style.display = '';
-        mapaImg.style.width = mapaCena.w ? mapaCena.w + 'px' : '';
-        mapaImg.style.height = mapaCena.h ? mapaCena.h + 'px' : '';
-      } else {
-        mapaImg.removeAttribute('src');
-        mapaImg.style.display = 'none';
-      }
+    }
+    // fora do if: limpar o mapa tem que soltar a imagem de verdade, não só
+    // esconder — senão ela fica pendurada no elemento depois de "limpar tudo"
+    if (mapaCena.img) {
+      if (mapaImg.getAttribute('src') !== mapaCena.img) mapaImg.src = mapaCena.img;
+      mapaImg.style.display = '';
+      mapaImg.style.width = mapaCena.w ? mapaCena.w + 'px' : '';
+      mapaImg.style.height = mapaCena.h ? mapaCena.h + 'px' : '';
+    } else {
+      mapaImg.removeAttribute('src');
+      mapaImg.style.display = 'none';
     }
     mapaRenderGrade();
     mapaRenderTokens();
@@ -3137,11 +3153,14 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   // ── popovers ──
   var mapaGradeBtn = document.getElementById('mapaGradeBtn');
   var mapaNpcBtn   = document.getElementById('mapaNpcBtn');
+  var mapaLimparBt = document.getElementById('mapaLimparBt');
+  var mapaLimparPop = document.getElementById('mapaLimparPop');
   function mapaFechaPops() {
-    [mapaGradePop, mapaNpcPop, mapaTokPop].forEach(function(p){ p.classList.remove('show'); });
+    [mapaGradePop, mapaNpcPop, mapaTokPop, mapaLimparPop].forEach(function(p){ p.classList.remove('show'); });
     mapaTokPop.dataset.id = '';
     mapaGradeBtn.classList.remove('on');
     mapaNpcBtn.classList.remove('on');
+    mapaLimparBt.classList.remove('on');
   }
   function mapaAbrePopEm(pop, botao, lado) {   // abre embaixo do botão da barra (ou fecha, se já estava aberto)
     var abrir = !pop.classList.contains('show');
@@ -3278,7 +3297,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   });
   // clique fora fecha; o clique no token abre o menu dele (no pointerup), não fecha aqui
   document.addEventListener('pointerdown', function(e) {
-    if (e.target.closest && e.target.closest('.mapa-pop, #mapaGradeBtn, #mapaNpcBtn, .mapa-tok')) return;
+    if (e.target.closest && e.target.closest('.mapa-pop, #mapaGradeBtn, #mapaNpcBtn, #mapaLimparBt, .mapa-tok')) return;
     mapaFechaPops();
   }, true);
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') mapaFechaPops(); });
@@ -3305,6 +3324,26 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     b.addEventListener('click', function(){ mapaMudaGrade({ cor:b.dataset.cor }); });
   });
   mapaGradeBtn.addEventListener('click', function(){ mapaAbrePopEm(mapaGradePop, mapaGradeBtn, 'dir'); });
+
+  // ── limpar ──
+  // Some com tudo pra mesa inteira e não tem desfazer, então pergunta antes —
+  // e a pergunta já é a escolha: tirar só os tokens (acabou a luta, o mapa
+  // continua) ou zerar mapa e tokens (acabou a cena).
+  var mapaLimparToks = document.getElementById('mapaLimparToks');
+  function mapaLimpa(tudo) {
+    mapaFechaPops();
+    mapaNovaCena(tudo ? mapaCenaVazia() : Object.assign({}, mapaCena, { tokens:[] }));
+  }
+  mapaLimparBt.addEventListener('click', function() {
+    var n = mapaCena.tokens.length;
+    document.getElementById('mapaLimparQtd').textContent = n ? (n === 1 ? '1 no mapa' : n + ' no mapa') : 'nenhum';
+    mapaLimparToks.disabled = !n;
+    document.getElementById('mapaLimparTxt').textContent = 'Vale pra mesa toda e não dá pra desfazer.';
+    mapaAbrePopEm(mapaLimparPop, mapaLimparBt, 'dir');
+  });
+  mapaLimparToks.addEventListener('click', function(){ mapaLimpa(false); });
+  document.getElementById('mapaLimparTudo').addEventListener('click', function(){ mapaLimpa(true); });
+  document.getElementById('mapaLimparNao').addEventListener('click', mapaFechaPops);
 
   // NPC
   var mapaNpcNome = document.getElementById('mapaNpcNome'), mapaNpcTam = document.getElementById('mapaNpcTam');
