@@ -1750,7 +1750,16 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     return fetch(SB_URL + path, { headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY } })
       .then(function(r){ return r.json().catch(function(){ return []; }); });
   }
-  function openSheet(charId) { window.open('ficha.html?id=' + encodeURIComponent(charId), '_blank'); }
+  // cada sistema tem sua própria ficha — mesma detecção do personagens.html.
+  // Resolvida no momento em que o personagem é escolhido/mencionado (não no
+  // clique), pra window.open continuar síncrono com o clique e não cair no
+  // bloqueador de pop-up do navegador.
+  function fichaDe(p) {
+    if (p && (p.tipo === 'vampiro' || p.vtm)) return 'ficha-vampiro.html';
+    if (p && p.tipo === 'dnd') return 'ficha-dnd.html';
+    return 'ficha.html';
+  }
+  function openSheet(charId, ficha) { window.open((ficha || 'ficha.html') + '?id=' + encodeURIComponent(charId), '_blank'); }
 
   function renderChars() {
     charsBody.innerHTML = '';
@@ -1759,8 +1768,8 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
       chip.className = 'char-chip';
       var av = c.img_url ? '<img class="av" src="' + esc(c.img_url) + '" alt="">' : '<div class="av placeholder">⬡</div>';
       chip.innerHTML = av + '<div class="nm" title="' + esc(c.name||'') + '">' + esc(c.name||'?') + '</div><div class="char-x" title="Remover">✕</div>';
-      chip.querySelector('.av').addEventListener('click', function(){ openSheet(c.char_id); });
-      chip.querySelector('.nm').addEventListener('click', function(){ openSheet(c.char_id); });
+      chip.querySelector('.av').addEventListener('click', function(){ openSheet(c.char_id, c.ficha); });
+      chip.querySelector('.nm').addEventListener('click', function(){ openSheet(c.char_id, c.ficha); });
       chip.querySelector('.char-x').addEventListener('click', function(e) {
         e.stopPropagation();
         mesaChars = mesaChars.filter(function(x){ return x.char_id !== c.char_id; });
@@ -1780,7 +1789,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     charPicker.classList.add('show');
     var list = charPicker.querySelector('.char-picker-list');
     list.innerHTML = '<div style="text-align:center;color:var(--fg-faint);font-family:var(--font-mono);font-size:11px;padding:14px;">Carregando…</div>';
-    sbGet('/rest/v1/personagens?select=char_id,name,img_url&deleted_at=is.null&order=name.asc').then(function(rows) {
+    sbGet('/rest/v1/personagens?select=char_id,name,img_url,tipo:sheet_data->>sheet_type,vtm:sheet_data->vtmFields&deleted_at=is.null&order=name.asc').then(function(rows) {
       if (!Array.isArray(rows)) rows = [];
       var chosen = {}; mesaChars.forEach(function(c){ chosen[c.char_id] = 1; });
       rows = rows.filter(function(r){ return r.char_id && r.char_id.indexOf('npc_') !== 0 && !chosen[r.char_id]; });
@@ -1792,7 +1801,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
         var av = r.img_url ? '<img src="' + esc(r.img_url) + '" alt="">' : '<div class="ph"></div>';
         it.innerHTML = av + '<div class="nm">' + esc(r.name||'Sem nome') + '</div>';
         it.addEventListener('click', function() {
-          mesaChars = mesaChars.concat([{ char_id:r.char_id, name:r.name, img_url:r.img_url }]);
+          mesaChars = mesaChars.concat([{ char_id:r.char_id, name:r.name, img_url:r.img_url, ficha:fichaDe(r) }]);
           send('chars', mesaChars); renderChars();
           charPicker.classList.remove('show');
         });
@@ -2538,7 +2547,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   function openDiario() {
     diarioOverlay.classList.add('show');
     diarioStatus.textContent = 'carregando…';
-    sbGet('/rest/v1/personagens?select=char_id,name,img_url&deleted_at=is.null&order=name.asc')
+    sbGet('/rest/v1/personagens?select=char_id,name,img_url,tipo:sheet_data->>sheet_type,vtm:sheet_data->vtmFields&deleted_at=is.null&order=name.asc')
       .then(function(rows){ diarioChars = Array.isArray(rows) ? rows.filter(function(r){ return r && r.name; }) : []; }).catch(function(){});
     sbGet('/rest/v1/diario_mesa?sala=eq.' + encodeURIComponent(SALA) + '&select=abas,paginas').then(function(rows){
       var row = (Array.isArray(rows) && rows[0]) ? rows[0] : null;
@@ -2688,7 +2697,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
     }
     var chip = document.createElement('span');
     chip.className = 'diario-ment'; chip.setAttribute('contenteditable', 'false');
-    chip.setAttribute('data-id', c.char_id); chip.title = 'Abrir ficha de ' + c.name; chip.textContent = '@' + c.name;
+    chip.setAttribute('data-id', c.char_id); chip.setAttribute('data-ficha', fichaDe(c)); chip.title = 'Abrir ficha de ' + c.name; chip.textContent = '@' + c.name;
     range.insertNode(chip);
     var space = document.createTextNode(' ');
     chip.parentNode.insertBefore(space, chip.nextSibling);
@@ -2742,7 +2751,7 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
   diarioText.addEventListener('blur', function(){ setTimeout(diarioHideMention, 150); });
   diarioText.addEventListener('click', function(e){
     var chip = (e.target && e.target.closest) ? e.target.closest('.diario-ment') : null;
-    if (chip && chip.getAttribute('data-id')) { e.preventDefault(); openSheet(chip.getAttribute('data-id')); return; }
+    if (chip && chip.getAttribute('data-id')) { e.preventDefault(); openSheet(chip.getAttribute('data-id'), chip.getAttribute('data-ficha')); return; }
     diarioHideMention();
   });
   document.getElementById('diarioPrev').addEventListener('click', function(){ if (diarioPage > 0) { diarioPage--; diarioRender(); diarioText.focus(); } });
