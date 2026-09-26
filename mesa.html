@@ -810,6 +810,22 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
 .mapa-seg { display:flex; gap:5px; flex:1 1 auto; }
 .mapa-seg .mapa-op { justify-content:center; padding:6px 4px; font-size:9.5px; }
 .mapa-dica { font-size:9px; line-height:1.6; letter-spacing:0.03em; color:var(--fg-faint); }
+.mapa-dica b { color:var(--fg-dim); font-weight:700; }
+/* pontos de vida no balão do token */
+.mapa-pv { display:flex; align-items:center; gap:6px; }
+.mapa-pv .rot { flex:0 0 auto; margin-right:2px; font-size:11px; font-weight:700; letter-spacing:0.12em; color:#ff8a7a; }
+.mapa-pv-bt {
+  width:30px; height:30px; flex:0 0 auto; padding:0; border-radius:6px; cursor:pointer;
+  border:1px solid rgba(255,110,90,0.45); background:rgba(255,110,90,0.08); color:#ff8a7a;
+  font-family:var(--font-mono); font-size:17px; line-height:1; transition:background .12s;
+}
+.mapa-pv-bt:hover { background:rgba(255,110,90,0.22); }
+.mapa-pop .mapa-pv input { width:54px; flex:0 0 auto; text-align:center; padding:6px 4px; font-size:15px; font-weight:700; }
+.mapa-pop .mapa-pv input.mapa-pv-max { width:48px; font-size:12px; font-weight:400; color:var(--fg-dim); }
+.mapa-pop .mapa-pv input.zero { color:var(--danger); }
+.mapa-pv .bar { color:var(--fg-faint); font-size:13px; }
+/* PV 0: o token fica cinza — dá pra ver de longe quem caiu */
+.mapa-tok.caido .rosto { filter:grayscale(1) brightness(0.5); }
 
 /* ── Personagens ── */
 .chars-panel { flex:0 0 auto; }
@@ -1978,10 +1994,11 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     mesaChars.forEach(function(c) {
       var chip = document.createElement('div');
       chip.className = 'char-chip';
-      var av = c.img_url ? '<img class="av" src="' + esc(c.img_url) + '" alt="">' : '<div class="av placeholder">⬡</div>';
+      var av = c.img_url ? '<img class="av" src="' + esc(c.img_url) + '" alt="" draggable="false">' : '<div class="av placeholder">⬡</div>';
       chip.innerHTML = av + '<div class="nm" title="' + esc(c.name||'') + '">' + esc(c.name||'?') + '</div><div class="char-x" title="Remover">✕</div>';
       chip.querySelector('.av').addEventListener('click', function(){ openSheet(c.char_id, c.ficha); });
       chip.querySelector('.nm').addEventListener('click', function(){ openSheet(c.char_id, c.ficha); });
+      mapaArrastaPj(chip, c);   // arrastar o chip pro mapa solta o token ali
       chip.querySelector('.char-x').addEventListener('click', function(e) {
         e.stopPropagation();
         mesaChars = mesaChars.filter(function(x){ return x.char_id !== c.char_id; });
@@ -2671,10 +2688,23 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     return ((p[0] || '?').charAt(0) + (/^\d+$/.test(ult) ? ult : ult.charAt(0))).toUpperCase();
   }
 
+  // Pontos de vida do token: null = ninguém preencheu ainda. Pelas regras,
+  // PV não fica abaixo de 0 e cura não passa do máximo.
+  function mapaPvMaxNorm(v) {
+    if (v === null || v === undefined || v === '') return null;
+    v = Math.round(+v);
+    return isFinite(v) && v > 0 ? Math.min(v, 9999) : null;
+  }
+  function mapaPvNorm(v, max) {
+    if (v === null || v === undefined || v === '') return null;
+    v = Math.round(+v);
+    if (!isFinite(v)) return null;
+    return mapaClamp(v, 0, max != null ? max : 9999);
+  }
   // O que chega do Storage ou de outro jogador passa por aqui antes de valer.
   function mapaTokNorm(t) {
     t = t || {};
-    var tam = +t.tam;
+    var tam = +t.tam, pvMax = mapaPvMaxNorm(t.pvMax);
     return {
       id: String(t.id || ('npc_' + Math.random().toString(36).slice(2, 9))).slice(0, 80),
       nome: String(t.nome == null ? '' : t.nome).slice(0, 40),
@@ -2684,7 +2714,9 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
       row: Math.round(+t.row || 0),
       pc: !!t.pc,
       char_id: t.char_id ? String(t.char_id) : null,
-      ficha: typeof t.ficha === 'string' ? t.ficha : null
+      ficha: typeof t.ficha === 'string' ? t.ficha : null,
+      pv: mapaPvNorm(t.pv, pvMax),
+      pvMax: pvMax
     };
   }
   function mapaGradeNorm(g, base) {
@@ -2836,10 +2868,19 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     num.classList.toggle('tem', !!n);
     num.textContent = n ? n[1] : '';
     num.style.fontSize = Math.max(7, geo.lado * 0.24) + 'px';
-    el.querySelector('.nm').textContent = t.nome || '';
+    el.classList.toggle('caido', t.pv != null && t.pv <= 0);   // PV 0: fica cinza, dá pra ver de longe quem caiu
+    el.querySelector('.nm').textContent = (t.nome || '') + (t.pv != null ? ' · ' + t.pv + (t.pvMax != null ? '/' + t.pvMax : '') + ' PV' : '');
     el.dataset.nome = t.nome || '';
   }
-  // os personagens da mesa ficam na barra do mapa: um clique e o token entra
+  // os personagens da mesa ficam na barra do mapa: um clique e o token entra;
+  // arrastando (daqui ou do painel Personagens) ele cai no quadrado onde soltar
+  var MAPA_TIPO_PJ = 'application/x-mesa-pj';
+  function mapaArrastaPj(el, c) {
+    el.draggable = true;
+    el.addEventListener('dragstart', function(e) {
+      try { e.dataTransfer.setData(MAPA_TIPO_PJ, c.char_id); e.dataTransfer.effectAllowed = 'copy'; } catch (_) {}
+    });
+  }
   function mapaRenderRoster() {
     if (!mapaAddEl) return;
     mapaAddEl.innerHTML = '';
@@ -2848,15 +2889,16 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
       var noMapa = !!mapaAchaTok('pc_' + c.char_id);
       b.type = 'button';
       b.className = 'mapa-pc' + (noMapa ? ' no-mapa' : '');
-      b.title = noMapa ? ((c.name || 'Personagem') + ' já está no mapa — clique pra achar') : ('Colocar ' + (c.name || 'personagem') + ' no mapa');
+      b.title = noMapa ? ((c.name || 'Personagem') + ' já está no mapa — clique pra achar, ou arraste pra mudar de lugar') : ('Colocar ' + (c.name || 'personagem') + ' no mapa (clique, ou arraste até o quadrado)');
       if (c.img_url) {
         var im = document.createElement('img');
-        im.src = c.img_url; im.alt = '';
+        im.src = c.img_url; im.alt = ''; im.draggable = false;
         b.appendChild(im);
       } else {
         b.textContent = mapaIniciais(c.name);
       }
       b.addEventListener('click', function(){ mapaPoePc(c); });
+      mapaArrastaPj(b, c);
       mapaAddEl.appendChild(b);
     });
   }
@@ -2908,6 +2950,10 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     } else if (op.op === 'tam') {
       t = mapaAchaTok(op.id);
       if (t && MAPA_TAM_OK.indexOf(+op.tam) >= 0) t.tam = +op.tam;
+    } else if (op.op === 'pv') {
+      t = mapaAchaTok(op.id);
+      if (t) { t.pvMax = mapaPvMaxNorm(op.pvMax); t.pv = mapaPvNorm(op.pv, t.pvMax); }
+      if (mapaTokPop.dataset.id === op.id) mapaPreenchePv();   // quem está com o balão aberto vê mudar
     } else if (op.op === 'del') {
       mapaCena.tokens = mapaCena.tokens.filter(function(x){ return x.id !== op.id; });
       if (mapaTokPop.dataset.id === op.id) mapaFechaPops();
@@ -2926,11 +2972,13 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     if (op.op === 'mov' && mapaDrag && mapaDrag.id === op.id) return;   // quem está arrastando aqui manda nesse token
     mapaAplicaTok(op);
   }
-  function mapaPoePc(c) {
+  // onde = quadrado em que foi solto (arrastando); sem ele, é o clique na barra
+  function mapaPoePc(c, onde) {
     if (!mapaTemMapa() || !c || !c.char_id) return;
-    var id = 'pc_' + c.char_id;
-    if (mapaAchaTok(id)) { mapaMostraTok(id); return; }
-    var lugar = mapaLugarLivre(1);
+    var id = 'pc_' + c.char_id, ja = mapaAchaTok(id);
+    if (ja && onde) { mapaTok({ op:'mov', id:id, col:onde.col, row:onde.row }); return; }
+    if (ja) { mapaMostraTok(id); return; }
+    var lugar = onde || mapaLugarLivre(1);
     mapaTok({ op:'add', toks:[{ id:id, nome:c.name || 'Personagem', img:c.img_url || null, tam:1, col:lugar.col, row:lugar.row, pc:true, char_id:c.char_id, ficha:c.ficha || null }] });
   }
   function mapaMostraTok(id) {      // centraliza a vista no token e faz ele piscar
@@ -3103,18 +3151,30 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     pop.style.top = (rb.bottom - rp.top + 6) + 'px';
     return true;
   }
+  // Balão do token: PV em cima (é o que mais mexe em combate), tamanho, ficha, tirar.
   function mapaAbreTokPop(id) {
     var t = mapaAchaTok(id), el = mapaTokEls[id];
     if (!t || !el) return;
     mapaFechaPops();
-    var h = '<h4>' + esc(t.nome || 'Token') + '</h4>';
-    MAPA_TAMS.forEach(function(o) {
-      h += '<button type="button" class="mapa-op' + (o.v === t.tam ? ' on' : '') + '" data-tam="' + o.v + '"><span>' + o.rot + '</span><span class="q">' + o.q + '</span></button>';
-    });
-    if (t.char_id) h += '<button type="button" class="mapa-op" data-acao="ficha"><span>Abrir ficha</span><span class="q">&#8599;</span></button>';
-    h += '<button type="button" class="mapa-op perigo" data-acao="tirar"><span>Tirar do mapa</span></button>';
-    mapaTokPop.innerHTML = h;
+    var ops = MAPA_TAMS.map(function(o) {
+      return '<option value="' + o.v + '"' + (o.v === t.tam ? ' selected' : '') + '>' + o.rot + ' · ' + o.q + '</option>';
+    }).join('');
+    mapaTokPop.innerHTML =
+      '<h4>' + esc(t.nome || 'Token') + '</h4>' +
+      '<div class="mapa-pv">' +
+        '<span class="rot">PV</span>' +
+        '<button type="button" class="mapa-pv-bt" data-pv="-1" title="Tirar 1 PV">&#8722;</button>' +
+        '<input type="text" class="mapa-pv-at" autocomplete="off" placeholder="—" title="PV atual: digite o valor, ou -7 pra tirar e +5 pra curar">' +
+        '<span class="bar">/</span>' +
+        '<input type="text" class="mapa-pv-max" inputmode="numeric" autocomplete="off" placeholder="máx" title="PV máximo">' +
+        '<button type="button" class="mapa-pv-bt" data-pv="1" title="Somar 1 PV">+</button>' +
+      '</div>' +
+      '<div class="mapa-dica">No PV atual: <b>-7</b> tira, <b>+5</b> cura, ou o número certo.</div>' +
+      '<div class="mapa-lin"><label>Tamanho</label><select class="mapa-tam">' + ops + '</select></div>' +
+      (t.char_id ? '<button type="button" class="mapa-op" data-acao="ficha"><span>Abrir ficha</span><span class="q">&#8599;</span></button>' : '') +
+      '<button type="button" class="mapa-op perigo" data-acao="tirar"><span>Tirar do mapa</span></button>';
     mapaTokPop.dataset.id = id;
+    mapaPreenchePv();
     mapaTokPop.classList.add('show');
     var rp = mapaPanel.getBoundingClientRect(), rt = el.getBoundingClientRect();
     var pw = mapaTokPop.offsetWidth, ph = mapaTokPop.offsetHeight;
@@ -3123,12 +3183,61 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     mapaTokPop.style.left = mapaClamp(x, 8, Math.max(8, rp.width - pw - 8)) + 'px';
     mapaTokPop.style.top = mapaClamp(rt.top - rp.top, 8, Math.max(8, rp.height - ph - 8)) + 'px';
   }
+  // forca: escreve mesmo no campo que está com o foco (depois de confirmar o que se digitou)
+  function mapaPreenchePv(forca) {
+    var t = mapaAchaTok(mapaTokPop.dataset.id);
+    var at = mapaTokPop.querySelector('.mapa-pv-at'), mx = mapaTokPop.querySelector('.mapa-pv-max');
+    if (!t || !at) return;
+    if (forca || document.activeElement !== at) at.value = t.pv != null ? t.pv : '';   // não atropela quem está digitando
+    if (forca || document.activeElement !== mx) mx.value = t.pvMax != null ? t.pvMax : '';
+    at.classList.toggle('zero', t.pv != null && t.pv <= 0);
+  }
+  function mapaMudaPv(t, pv, pvMax) {
+    pvMax = mapaPvMaxNorm(pvMax);
+    mapaTok({ op:'pv', id:t.id, pv:mapaPvNorm(pv, pvMax), pvMax:pvMax });
+    mapaPreenchePv(true);
+  }
+  // "-7" tira, "+5" cura, "12" vira 12, vazio apaga
+  function mapaLePv(txt, atual) {
+    txt = String(txt || '').trim();
+    if (!txt) return null;
+    var m = /^([+-])\s*(\d+)$/.exec(txt);
+    if (m) return (atual || 0) + (m[1] === '-' ? -1 : 1) * +m[2];
+    return /^\d+$/.test(txt) ? +txt : undefined;
+  }
+  function mapaConfirmaPv(inp) {
+    var t = mapaAchaTok(mapaTokPop.dataset.id);
+    if (!t || !inp) return;
+    if (inp.classList.contains('mapa-pv-max')) {
+      var mx = mapaLePv(inp.value, t.pvMax);
+      if (mx === undefined || mx === t.pvMax) { mapaPreenchePv(true); return; }
+      mapaMudaPv(t, t.pv == null ? mx : t.pv, mx);   // ainda sem PV atual: começa cheio
+    } else {
+      var at = mapaLePv(inp.value, t.pv != null ? t.pv : t.pvMax);
+      if (at === undefined || at === t.pv) { mapaPreenchePv(true); return; }
+      mapaMudaPv(t, at, t.pvMax);
+    }
+  }
   mapaTokPop.addEventListener('click', function(e) {
     var b = e.target.closest('button'), id = mapaTokPop.dataset.id, t = mapaAchaTok(id);
     if (!b || !t) return;
-    if (b.dataset.tam) { mapaTok({ op:'tam', id:id, tam:+b.dataset.tam }); mapaAbreTokPop(id); }
+    if (b.dataset.pv) {
+      var base = t.pv != null ? t.pv : (t.pvMax != null ? t.pvMax : 0);
+      mapaMudaPv(t, base + (+b.dataset.pv), t.pvMax);
+    }
     else if (b.dataset.acao === 'ficha') openSheet(t.char_id, t.ficha);
     else if (b.dataset.acao === 'tirar') { mapaFechaPops(); mapaTok({ op:'del', id:id }); }
+  });
+  mapaTokPop.addEventListener('change', function(e) {
+    var id = mapaTokPop.dataset.id;
+    if (!mapaAchaTok(id)) return;
+    if (e.target.classList.contains('mapa-tam')) mapaTok({ op:'tam', id:id, tam:+e.target.value });
+    else if (e.target.tagName === 'INPUT') mapaConfirmaPv(e.target);
+  });
+  mapaTokPop.addEventListener('keydown', function(e) {
+    if (e.target.tagName !== 'INPUT') return;
+    if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }   // o blur dispara o change
+    else if (e.key === 'Escape') { mapaPreenchePv(true); e.target.blur(); }   // desfaz o que digitou (e o Esc fecha o balão)
   });
   // clique fora fecha; o clique no token abre o menu dele (no pointerup), não fecha aqui
   document.addEventListener('pointerdown', function(e) {
@@ -3225,23 +3334,37 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   document.getElementById('mapaTrocar').addEventListener('click', function(){ mapaFechaPops(); mapaFile.click(); });
   document.getElementById('mapaBranco').addEventListener('click', mapaNovoBranco);
   document.getElementById('mapaFit').addEventListener('click', mapaFit);
+  // o mapa aceita duas coisas soltas em cima: arquivo de imagem (mapa novo) e
+  // personagem da mesa (token no quadrado onde soltou)
+  function temPj(e) {
+    var t = e.dataTransfer && e.dataTransfer.types;
+    return !!t && Array.prototype.indexOf.call(t, MAPA_TIPO_PJ) >= 0;
+  }
+  function mapaAceita(e) { return temArquivo(e) || (temPj(e) && mapaTemMapa()); }
   mapaView.addEventListener('dragenter', function(e) {
-    if (!temArquivo(e)) return;
+    if (!mapaAceita(e)) return;
     _mapaSoltando++; mapaView.classList.add('soltando');
   });
   mapaView.addEventListener('dragleave', function(e) {
-    if (!temArquivo(e)) return;
+    if (!mapaAceita(e)) return;
     if (--_mapaSoltando <= 0) { _mapaSoltando = 0; mapaView.classList.remove('soltando'); }
   });
   mapaView.addEventListener('dragover', function(e) {
-    if (!temArquivo(e)) return;
+    if (!mapaAceita(e)) return;
     e.preventDefault();
     try { e.dataTransfer.dropEffect = 'copy'; } catch (_) {}
   });
   mapaView.addEventListener('drop', function(e) {
-    if (!temArquivo(e)) return;
+    if (!mapaAceita(e)) return;
     e.preventDefault(); e.stopPropagation();
     _mapaSoltando = 0; mapaView.classList.remove('soltando');
+    if (temPj(e)) {
+      var cid = e.dataTransfer.getData(MAPA_TIPO_PJ), c = null;
+      mesaChars.forEach(function(x){ if (x.char_id === cid) c = x; });
+      var w = mapaTelaParaMundo(e.clientX, e.clientY), g = mapaCena.grade;
+      if (c) mapaPoePc(c, { col:Math.floor((w.x - g.dx) / g.tam), row:Math.floor((w.y - g.dy) / g.tam) });
+      return;
+    }
     mapaNovoArquivo(e.dataTransfer.files[0]);
   });
 
