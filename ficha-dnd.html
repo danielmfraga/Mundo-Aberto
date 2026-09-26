@@ -5093,5 +5093,69 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
 
 })();
 </script>
+
+<script>
+(function() {
+  var SUPA_URL = 'https://mxyqqfsyybluavwlrhsa.supabase.co';
+  var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eXFxZnN5eWJsdWF2d2xyaHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTM4MzEsImV4cCI6MjA5MzY2OTgzMX0.b0Ij7UGzbMLpqZjLYxoPEu2kGwEW52U_2NSDtpMGUPM';
+  var personagemId = new URLSearchParams(window.location.search).get('id');
+  if (!personagemId) return;
+
+  function sbGet(path) {
+    return fetch(SUPA_URL + path, { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY } }).then(function(r) { return r.json(); });
+  }
+
+  function injectPanel() {
+    if (!document.body || document.getElementById('__ma-tramas-panel')) return;
+    var style = document.createElement('style');
+    style.textContent = [
+      '#__ma-tramas-panel{position:fixed;bottom:24px;left:24px;z-index:99999;font-family:"Share Tech Mono",monospace;}',
+      '#__ma-tramas-tab{background:rgba(4,8,16,0.95);border:1px solid rgba(0,255,231,0.25);border-radius:4px;',
+      'padding:8px 14px;cursor:pointer;color:rgba(0,255,231,0.6);font-size:9px;letter-spacing:3px;',
+      'text-transform:uppercase;transition:all .2s;user-select:none;}',
+      '#__ma-tramas-tab:hover{color:#00ffe7;border-color:#00ffe7;box-shadow:0 0 12px rgba(0,255,231,0.2);}',
+      '#__ma-tramas-body{display:none;background:rgba(4,8,16,0.97);border:1px solid rgba(0,255,231,0.18);',
+      'border-radius:4px;margin-bottom:6px;min-width:220px;max-width:280px;overflow:hidden;',
+      'box-shadow:0 0 30px rgba(0,255,231,0.06);}',
+      '#__ma-tramas-body.open{display:block;}',
+      '.__ma-thead{padding:10px 14px 8px;border-bottom:1px solid rgba(0,255,231,0.08);font-size:8px;letter-spacing:4px;color:rgba(0,255,231,0.35);text-transform:uppercase;}',
+      '.__ma-item{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid rgba(0,255,231,0.05);gap:8px;text-decoration:none;cursor:pointer;transition:background .15s;}',
+      '.__ma-item:last-child{border-bottom:none;}.__ma-item:hover{background:rgba(0,255,231,0.06);}',
+      '.__ma-tname{font-size:10px;letter-spacing:1px;color:rgba(207,233,240,0.7);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s;}',
+      '.__ma-item:hover .__ma-tname{color:#cfe9f0;}',
+      '.__ma-link{font-size:10px;color:rgba(0,255,231,0.45);flex-shrink:0;transition:color .15s;}',
+      '.__ma-item:hover .__ma-link{color:#00ffe7;}',
+      '.__ma-empty{padding:14px;font-size:9px;letter-spacing:2px;color:rgba(0,255,231,0.2);text-align:center;}'
+    ].join('');
+    document.head.appendChild(style);
+    var panel = document.createElement('div'); panel.id = '__ma-tramas-panel';
+    var body = document.createElement('div'); body.id = '__ma-tramas-body';
+    body.innerHTML = '<div class="__ma-thead">Tramas</div><div class="__ma-empty">Carregando...</div>';
+    var tab = document.createElement('div'); tab.id = '__ma-tramas-tab';
+    tab.textContent = '◈ Tramas';
+    tab.addEventListener('click', function() { body.classList.toggle('open'); });
+    panel.appendChild(body); panel.appendChild(tab);
+    document.body.appendChild(panel);
+    sbGet('/rest/v1/trama_links?personagem_id=eq.' + personagemId + '&select=trama_id')
+      .then(function(links) {
+        if (!Array.isArray(links) || !links.length) { body.innerHTML = '<div class="__ma-thead">Tramas</div><div class="__ma-empty">Nenhuma trama vinculada</div>'; return; }
+        var ids = links.map(function(l) { return l.trama_id; }).join(',');
+        return sbGet('/rest/v1/tramas?trama_id=in.(' + ids + ')&select=trama_id,name&deleted_at=is.null');
+      })
+      .then(function(tramas) {
+        if (!tramas || !tramas.length) return;
+        var html = '<div class="__ma-thead">Tramas</div>';
+        tramas.forEach(function(t) { html += '<a class="__ma-item" href="trama.html?id=' + t.trama_id + '"><span class="__ma-tname">' + (t.name || 'Trama') + '</span><span class="__ma-link">→</span></a>'; });
+        body.innerHTML = html;
+      }).catch(function() {});
+  }
+  function tryInject(attempt) {
+    if (document.getElementById('__ma-tramas-panel')) return;
+    if (document.body && document.body.children.length > 0) injectPanel();
+    else if ((attempt || 0) < 15) setTimeout(function() { tryInject((attempt || 0) + 1); }, 400);
+  }
+  setTimeout(function() { tryInject(0); }, 600);
+})();
+</script>
 </body>
 </html>

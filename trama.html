@@ -1225,11 +1225,22 @@
     // ══════════════════════════════════════════════════════════
     //  VÍNCULOS TRAMA ↔ FICHA
     // ══════════════════════════════════════════════════════════
-    var tramaLinks     = {}; // node_id → { personagem_id, name, img_url }
+    var tramaLinks     = {}; // node_id → { personagem_id, name, img_url, ficha }
     var personagensList = [];
+    var PERSONA_SELECT = 'char_id,name,img_url,tipo:sheet_data->>sheet_type,vtm:sheet_data->vtmFields';
+
+    // Cada sistema tem sua própria página de ficha (ficha.html é o Caçador,
+    // o padrão de quem não tem sheet_type marcado) — mesma detecção do
+    // personagens.html, senão o vínculo manda todo mundo pra ficha errada.
+    function fichaUrlDe(p) {
+      if (!p) return 'ficha.html';
+      if (p.tipo === 'vampiro' || p.vtm) return 'ficha-vampiro.html';
+      if (p.tipo === 'dnd') return 'ficha-dnd.html';
+      return 'ficha.html';
+    }
 
     function loadPersonagens() {
-      sbFetch('/rest/v1/personagens?select=char_id,name,img_url&order=name', 'GET')
+      sbFetch('/rest/v1/personagens?select=' + PERSONA_SELECT + '&order=name', 'GET')
         .then(function(rows) { if (Array.isArray(rows)) personagensList = rows; })
         .catch(function() {});
     }
@@ -1241,14 +1252,14 @@
           if (!Array.isArray(links) || !links.length) return;
           var ids = links.map(function(l) { return l.personagem_id; })
                          .filter(function(v, i, a) { return a.indexOf(v) === i; });
-          return sbFetch('/rest/v1/personagens?char_id=in.(' + ids.join(',') + ')&select=char_id,name,img_url', 'GET')
+          return sbFetch('/rest/v1/personagens?char_id=in.(' + ids.join(',') + ')&select=' + PERSONA_SELECT, 'GET')
             .then(function(personas) {
               var map = {};
               if (Array.isArray(personas)) personas.forEach(function(p) { map[p.char_id] = p; });
               links.forEach(function(link) {
                 var p = map[link.personagem_id];
                 if (p) {
-                  tramaLinks[link.node_id] = { personagem_id: link.personagem_id, name: p.name, img_url: p.img_url };
+                  tramaLinks[link.node_id] = { personagem_id: link.personagem_id, name: p.name, img_url: p.img_url, ficha: fichaUrlDe(p) };
                   if (nodes[link.node_id]) applyLinkToNode(link.node_id, tramaLinks[link.node_id]);
                 }
               });
@@ -1274,7 +1285,7 @@
       nameEl.textContent = personagem.name || 'Personagem';
       var link = document.createElement('a');
       link.className = 'node-linked-goto';
-      link.href = 'ficha.html?id=' + personagem.personagem_id;
+      link.href = (personagem.ficha || 'ficha.html') + '?id=' + personagem.personagem_id;
       link.textContent = '→';
       link.title = 'Abrir ficha';
       link.addEventListener('click', function(e) { e.stopPropagation(); });
@@ -1302,7 +1313,7 @@
             '<div class="vinc-photo" style="' + imgStyle + '">' + (linked.img_url ? '' : '⬡') + '</div>' +
             '<div class="vinc-linked-info">' +
               '<div class="vinc-linked-name">' + (linked.name || 'Personagem') + '</div>' +
-              '<a class="vinc-goto" href="ficha.html?id=' + linked.personagem_id + '" target="_blank">Abrir ficha →</a>' +
+              '<a class="vinc-goto" href="' + (linked.ficha || 'ficha.html') + '?id=' + linked.personagem_id + '" target="_blank">Abrir ficha →</a>' +
             '</div>' +
             '<button class="vinc-unlink-btn" id="vinc-unlink">✕</button>' +
           '</div>';
@@ -1348,7 +1359,7 @@
 
     function linkPersonagem(nodeId, p) {
       if (TRAMA_ID === 'default') return;
-      var data = { personagem_id: p.char_id, name: p.name, img_url: p.img_url };
+      var data = { personagem_id: p.char_id, name: p.name, img_url: p.img_url, ficha: fichaUrlDe(p) };
       tramaLinks[nodeId] = data;
       applyLinkToNode(nodeId, data);
       markDirty();
