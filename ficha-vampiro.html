@@ -2186,7 +2186,11 @@ function applyRemoteSheet(data) {
       '.__ma-item:hover .__ma-tname{color:#cfe9f0;}',
       '.__ma-link{font-size:10px;color:rgba(0,255,231,0.45);flex-shrink:0;transition:color .15s;}',
       '.__ma-item:hover .__ma-link{color:#00ffe7;}',
-      '.__ma-empty{padding:14px;font-size:9px;letter-spacing:2px;color:rgba(0,255,231,0.2);text-align:center;}'
+      '.__ma-empty{padding:14px;font-size:9px;letter-spacing:2px;color:rgba(0,255,231,0.2);text-align:center;}',
+      '.__ma-back{padding:8px 14px;font-size:9px;letter-spacing:2px;color:rgba(0,255,231,0.4);cursor:pointer;border-bottom:1px solid rgba(0,255,231,0.08);text-transform:uppercase;}',
+      '.__ma-back:hover{color:#00ffe7;}',
+      '.__ma-add .__ma-tname{color:rgba(0,255,231,0.5);}',
+      '.__ma-add:hover .__ma-tname{color:#00ffe7;}'
     ].join('');
     document.head.appendChild(style);
     var panel = document.createElement('div'); panel.id = '__ma-tramas-panel';
@@ -2197,18 +2201,117 @@ function applyRemoteSheet(data) {
     tab.addEventListener('click', function() { body.classList.toggle('open'); });
     panel.appendChild(body); panel.appendChild(tab);
     document.body.appendChild(panel);
-    sbGet('/rest/v1/trama_links?personagem_id=eq.' + personagemId + '&select=trama_id')
-      .then(function(links) {
-        if (!Array.isArray(links) || !links.length) { body.innerHTML = '<div class="__ma-thead">Tramas</div><div class="__ma-empty">Nenhuma trama vinculada</div>'; return; }
-        var ids = links.map(function(l) { return l.trama_id; }).join(',');
-        return sbGet('/rest/v1/tramas?trama_id=in.(' + ids + ')&select=trama_id,name&deleted_at=is.null');
-      })
-      .then(function(tramas) {
-        if (!tramas || !tramas.length) return;
-        var html = '<div class="__ma-thead">Tramas</div>';
-        tramas.forEach(function(t) { html += '<a class="__ma-item" href="trama.html?id=' + t.trama_id + '"><span class="__ma-tname">' + (t.name || 'Trama') + '</span><span class="__ma-link">→</span></a>'; });
-        body.innerHTML = html;
-      }).catch(function() {});
+    // Estado do painel: as tramas já vinculadas, as que ainda dá pra vincular,
+    // o nome do personagem (vai no nó novo) e se está mostrando uma lista ou
+    // a outra.
+    var st = { linked: [], livres: [], nome: 'Personagem', modo: 'lista' };
+
+    function sbWrite(metodo, path, corpo, extra) {
+      return fetch(SUPA_URL + path, {
+        method: metodo,
+        headers: Object.assign({
+          'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY,
+          'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+        }, extra || {}),
+        body: JSON.stringify(corpo)
+      }).then(function(r) {
+        if (!r.ok) return r.text().then(function(t) { throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 150)); });
+      });
+    }
+
+    function desenha() {
+      var html = '<div class="__ma-thead">Tramas</div>';
+      if (st.modo === 'escolher') {
+        html += '<div class="__ma-back">‹ voltar</div>';
+        if (!st.livres.length) {
+          html += '<div class="__ma-empty">Nenhuma trama disponível</div>';
+        } else {
+          st.livres.forEach(function(t) {
+            html += '<div class="__ma-item __ma-pick" data-tid="' + t.trama_id + '"><span class="__ma-tname">' + (t.name || 'Trama') + '</span><span class="__ma-link">+</span></div>';
+          });
+        }
+      } else {
+        if (!st.linked.length) {
+          html += '<div class="__ma-empty">Nenhuma trama vinculada</div>';
+        } else {
+          st.linked.forEach(function(t) {
+            html += '<a class="__ma-item" href="trama.html?id=' + t.trama_id + '"><span class="__ma-tname">' + (t.name || 'Trama') + '</span><span class="__ma-link">→</span></a>';
+          });
+        }
+        html += '<div class="__ma-item __ma-add"><span class="__ma-tname">+ Vincular a uma trama</span></div>';
+      }
+      body.innerHTML = html;
+    }
+
+    // O personagem entra na trama como um nó novo (tipo 'npc', igual todo nó
+    // de personagem lá) — é o mesmo formato que trama.html grava sozinho.
+    // Posição: perto da média dos nós que já existem, com um desvio
+    // aleatório pra não empilhar em cima de outro nó recém-vinculado.
+    function vincula(tramaId) {
+      var alvo = st.livres.filter(function(t) { return t.trama_id === tramaId; })[0];
+      if (!alvo) return;
+      body.innerHTML = '<div class="__ma-thead">Tramas</div><div class="__ma-empty">Vinculando...</div>';
+      sbGet('/rest/v1/tramas?trama_id=eq.' + tramaId + '&select=data,name')
+        .then(function(linhas) {
+          var linha = linhas && linhas[0];
+          if (!linha) throw new Error('a trama sumiu');
+          var dados = linha.data || {};
+          var nos = Array.isArray(dados.nodes) ? dados.nodes : [];
+          var maior = 0;
+          nos.forEach(function(n) {
+            var m = /^n(\d+)$/.exec((n && n.id) || '');
+            if (m) maior = Math.max(maior, parseInt(m[1], 10));
+          });
+          var novoId = 'n' + (maior + 1);
+          var cx = 0, cy = 0;
+          if (nos.length) {
+            cx = nos.reduce(function(s, n) { return s + (+n.x || 0); }, 0) / nos.length;
+            cy = nos.reduce(function(s, n) { return s + (+n.y || 0); }, 0) / nos.length;
+          }
+          cx += (Math.random() - 0.5) * 240;
+          cy += (Math.random() - 0.5) * 240;
+          nos.push({ id: novoId, x: Math.round(cx), y: Math.round(cy), name: st.nome, note: '', type: 'npc' });
+          dados.nodes = nos;
+          return sbWrite('PATCH', '/rest/v1/tramas?trama_id=eq.' + tramaId, { trama_id: tramaId, name: linha.name, data: dados })
+            .then(function() {
+              return sbWrite('POST', '/rest/v1/trama_links',
+                { trama_id: tramaId, node_id: novoId, personagem_id: personagemId },
+                { 'Prefer': 'return=minimal,resolution=merge-duplicates' });
+            });
+        })
+        .then(function() {
+          st.linked.push(alvo);
+          st.livres = st.livres.filter(function(t) { return t.trama_id !== tramaId; });
+          st.modo = 'lista';
+          desenha();
+        })
+        .catch(function(erro) {
+          st.modo = 'escolher';
+          desenha();
+          alert('Não consegui vincular: ' + (erro && erro.message ? erro.message : erro));
+        });
+    }
+
+    body.addEventListener('click', function(e) {
+      if (e.target.closest('.__ma-back')) { st.modo = 'lista'; desenha(); return; }
+      if (e.target.closest('.__ma-add'))  { st.modo = 'escolher'; desenha(); return; }
+      var pick = e.target.closest('.__ma-pick');
+      if (pick) vincula(pick.dataset.tid);
+    });
+
+    Promise.all([
+      sbGet('/rest/v1/trama_links?personagem_id=eq.' + personagemId + '&select=trama_id'),
+      sbGet('/rest/v1/tramas?select=trama_id,name&deleted_at=is.null&order=name.asc'),
+      sbGet('/rest/v1/personagens?char_id=eq.' + personagemId + '&select=name')
+    ]).then(function(res) {
+      var links = res[0] || [], todas = res[1] || [], quem = (res[2] || [])[0];
+      var vinculadas = {};
+      links.forEach(function(l) { vinculadas[l.trama_id] = true; });
+      st.nome = (quem && quem.name) || 'Personagem';
+      st.linked = todas.filter(function(t) { return vinculadas[t.trama_id]; });
+      st.livres = todas.filter(function(t) { return !vinculadas[t.trama_id]; });
+      desenha();
+    }).catch(function() {});
   }
   function tryInject(attempt) {
     if (document.getElementById('__ma-tramas-panel')) return;
