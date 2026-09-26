@@ -821,9 +821,13 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
 }
 .mapa-pv-bt:hover { background:rgba(255,110,90,0.22); }
 .mapa-pop .mapa-pv input { width:54px; flex:0 0 auto; text-align:center; padding:6px 4px; font-size:15px; font-weight:700; }
-.mapa-pop .mapa-pv input.mapa-pv-max { width:48px; font-size:12px; font-weight:400; color:var(--fg-dim); }
 .mapa-pop .mapa-pv input.zero { color:var(--danger); }
-.mapa-pv .bar { color:var(--fg-faint); font-size:13px; }
+/* o máximo vem por último, menor e mais apagado, com a legenda "máx" */
+.mapa-pv-maxw { display:flex; align-items:center; gap:4px; margin-left:4px; cursor:text; }
+.mapa-pv-maxw span { font-size:8.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--fg-faint); }
+.mapa-pop .mapa-pv input.mapa-pv-max { width:44px; font-size:12px; font-weight:400; color:var(--fg-dim); }
+#mapaTokPop { width:268px; }
+#mapaTokPop h4 { text-align:center; }
 /* PV 0: o token fica cinza — dá pra ver de longe quem caiu */
 .mapa-tok.caido .rosto { filter:grayscale(1) brightness(0.5); }
 
@@ -3164,12 +3168,11 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
       '<div class="mapa-pv">' +
         '<span class="rot">PV</span>' +
         '<button type="button" class="mapa-pv-bt" data-pv="-1" title="Tirar 1 PV">&#8722;</button>' +
-        '<input type="text" class="mapa-pv-at" autocomplete="off" placeholder="—" title="PV atual: digite o valor, ou -7 pra tirar e +5 pra curar">' +
-        '<span class="bar">/</span>' +
-        '<input type="text" class="mapa-pv-max" inputmode="numeric" autocomplete="off" placeholder="máx" title="PV máximo">' +
+        '<input type="text" class="mapa-pv-at" autocomplete="off" placeholder="—" title="PV atual: -5 tira, +5 cura, ou o número novo">' +
         '<button type="button" class="mapa-pv-bt" data-pv="1" title="Somar 1 PV">+</button>' +
+        '<label class="mapa-pv-maxw" title="PV máximo"><span>máx</span><input type="text" class="mapa-pv-max" inputmode="numeric" autocomplete="off" placeholder="—"></label>' +
       '</div>' +
-      '<div class="mapa-dica">No PV atual: <b>-7</b> tira, <b>+5</b> cura, ou o número certo.</div>' +
+      '<div class="mapa-dica">Digite <b>-5</b> pra tirar, <b>+5</b> pra curar, ou o número novo.</div>' +
       '<div class="mapa-lin"><label>Tamanho</label><select class="mapa-tam">' + ops + '</select></div>' +
       (t.char_id ? '<button type="button" class="mapa-op" data-acao="ficha"><span>Abrir ficha</span><span class="q">&#8599;</span></button>' : '') +
       '<button type="button" class="mapa-op perigo" data-acao="tirar"><span>Tirar do mapa</span></button>';
@@ -3197,27 +3200,61 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     mapaTok({ op:'pv', id:t.id, pv:mapaPvNorm(pv, pvMax), pvMax:pvMax });
     mapaPreenchePv(true);
   }
-  // "-7" tira, "+5" cura, "12" vira 12, vazio apaga
-  function mapaLePv(txt, atual) {
-    txt = String(txt || '').trim();
+  // Lê o que se digitou no campo de PV:
+  //  "-5" / "+5" tira ou cura — digitado por cima, ou antes/depois do número
+  //  que já estava lá ("16-5" e "-516" viram 16 − 5); "16-5+2" faz a conta;
+  //  um número sozinho digitado por cima vira o valor novo; vazio apaga.
+  // Pra saber o que foi digitado e o que já estava, o campo guarda o texto de
+  // quando ganhou o foco (_orig) e se a primeira tecla substituiu tudo.
+  function mapaLePv(inp, atual) {
+    var txt = String(inp.value || '').replace(/[−–—]/g, '-').replace(/\s+/g, '');
     if (!txt) return null;
-    var m = /^([+-])\s*(\d+)$/.exec(txt);
+    var orig = String(inp._orig || '').replace(/\s+/g, ''), ins = null;
+    if (!inp._substituiu && orig && txt !== orig) {
+      if (txt.indexOf(orig) === 0) ins = txt.slice(orig.length);                                   // digitou depois
+      else if (txt.slice(-orig.length) === orig) ins = txt.slice(0, txt.length - orig.length);      // digitou antes
+    }
+    var m = /^([+-])(\d+)$/.exec(ins != null ? ins : txt);
     if (m) return (atual || 0) + (m[1] === '-' ? -1 : 1) * +m[2];
-    return /^\d+$/.test(txt) ? +txt : undefined;
+    if (/^\d+$/.test(txt)) return +txt;
+    if (/^[+-]?\d+(?:[+-]\d+)+$/.test(txt)) return txt.match(/[+-]?\d+/g).reduce(function(s, p){ return s + (+p); }, 0);
+    return undefined;
   }
   function mapaConfirmaPv(inp) {
     var t = mapaAchaTok(mapaTokPop.dataset.id);
     if (!t || !inp) return;
     if (inp.classList.contains('mapa-pv-max')) {
-      var mx = mapaLePv(inp.value, t.pvMax);
+      var mx = mapaLePv(inp, t.pvMax);
       if (mx === undefined || mx === t.pvMax) { mapaPreenchePv(true); return; }
       mapaMudaPv(t, t.pv == null ? mx : t.pv, mx);   // ainda sem PV atual: começa cheio
     } else {
-      var at = mapaLePv(inp.value, t.pv != null ? t.pv : t.pvMax);
+      var at = mapaLePv(inp, t.pv != null ? t.pv : t.pvMax);
       if (at === undefined || at === t.pv) { mapaPreenchePv(true); return; }
       mapaMudaPv(t, at, t.pvMax);
     }
+    inp._orig = inp.value; inp._editou = false;   // se continuar no campo, a próxima conta parte do valor novo
   }
+  // Clicou no campo: o número fica todo selecionado, então digitar "-5" ou "12"
+  // já substitui. O mouseup do próprio clique desfaria a seleção — por isso é
+  // segurado uma vez. Clicando de novo, o cursor vai pra onde clicou.
+  mapaTokPop.addEventListener('mousedown', function(e) {
+    if (e.target.tagName === 'INPUT' && document.activeElement !== e.target) e.target._segura = true;
+  });
+  mapaTokPop.addEventListener('mouseup', function(e) {
+    if (e.target.tagName === 'INPUT' && e.target._segura) { e.preventDefault(); e.target._segura = false; }
+  });
+  mapaTokPop.addEventListener('focusin', function(e) {
+    var inp = e.target;
+    if (inp.tagName !== 'INPUT') return;
+    inp._orig = inp.value; inp._editou = false; inp._substituiu = false;
+    inp.select();
+  });
+  mapaTokPop.addEventListener('beforeinput', function(e) {
+    var inp = e.target;
+    if (inp.tagName !== 'INPUT' || inp._editou) return;
+    inp._editou = true;
+    inp._substituiu = !inp.value || (inp.selectionStart === 0 && inp.selectionEnd === inp.value.length);
+  });
   mapaTokPop.addEventListener('click', function(e) {
     var b = e.target.closest('button'), id = mapaTokPop.dataset.id, t = mapaAchaTok(id);
     if (!b || !t) return;
