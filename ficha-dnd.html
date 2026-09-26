@@ -150,11 +150,51 @@ body.somente-leitura .wrap { opacity: 0.55; pointer-events: none; user-select: n
 body.sem-papel .pagina { background: none; border-color: transparent; box-shadow: none; padding: 0; }
 body.sem-papel .bx { box-shadow: 0 12px 30px -14px rgba(0,0,0,0.8); }
 body.sem-papel .nivel {
-  background: #fff; border: 1px solid var(--dnd-line); border-radius: 11px; padding: 9px 6px 10px;
+  background: var(--quadro); border: 1px solid var(--dnd-line); border-radius: 11px; padding: 9px 6px 10px;
   box-shadow: 0 12px 30px -14px rgba(0,0,0,0.8);
 }
-body.sem-papel .ca svg path { fill: #fff; }
+body.sem-papel .ca svg path { fill: var(--quadro); }
 body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
+
+/* ───────── modo noturno ─────────
+   Pedido de jogador: ler a ficha à noite sem a folha branca na cara. A folha
+   e os quadrantes escurecem, e a tinta preta vira clara — é SÓ troca das
+   variáveis do tema, nenhuma regra de layout muda. O degrau de leitura se
+   inverte: no claro o quadrante é mais claro que a folha; no escuro, mais
+   claro que o fundo continua valendo, então ele sobe um tom em vez de descer.
+   Fica em @media screen de propósito: no papel a ficha sai branca sempre. */
+@media screen {
+  body.noite .pagina {
+    --fg: #dce8ef;
+    --fg-dim: rgba(220,232,239,0.62);
+    --fg-faint: rgba(220,232,239,0.40);
+    --line: rgba(160,205,225,0.12);
+    --line-strong: rgba(160,205,225,0.26);
+    --dnd: #dce8ef;
+    --dnd-soft: rgba(220,232,239,0.42);
+    --dnd-line: rgba(160,205,225,0.20);
+    --dnd-faint: rgba(220,232,239,0.06);
+    --gold: #e0b457;
+    --ok: #3ddc84;
+    --danger: #ff5566;
+    --papel: linear-gradient(180deg, #121a25, #0c131c);
+    --quadro: #18212e;
+    --quadro-2: #131b26;
+    --sobre-dnd: #101823;
+    --icone: #9fb3c4;
+    --trilho: rgba(220,232,239,0.16);
+    --ca-fundo: rgba(220,232,239,0.05);
+    --ca-traco: rgba(220,232,239,0.42);
+
+    border-color: rgba(160,205,225,0.14);
+    box-shadow: 0 40px 80px -40px rgba(0,0,0,0.9);   /* sem o fio branco de cima: ali é papel, não vidro */
+  }
+  body.noite .bx { box-shadow: 0 1px 2px rgba(0,0,0,0.35); }
+  body.noite .atr-val .num, body.noite .nivel-circ { box-shadow: none; }
+  /* o retrato vazio e os ícones do inventário são desenho de linha: no escuro
+     precisam de um pouco mais de brilho pra não sumirem */
+  body.noite .retrato .ph b { opacity: 0.8; }
+}
 
 /* ───────── plano de fundo trocável ─────────
    Começa onde a folha começa (o cabeçalho fica no chassi da casa) e sangra
@@ -257,9 +297,20 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
   --glow-dnd: none;
   --ok: #2f7d4f;
   --danger: #b5372c;
+  /* superfícies: a folha, o quadrante em cima dela, e o que escreve DENTRO
+     de um preenchimento de --dnd (bolinha, marcador). Ficam em variável
+     porque é só o que o modo noturno troca. */
+  --papel: linear-gradient(180deg, #f6f6f2, #ecece6);
+  --quadro: #fff;
+  --quadro-2: #eceae4;
+  --sobre-dnd: #fff;
+  --icone: #45484f;
+  --trilho: rgba(38,39,43,0.12);
+  --ca-fundo: rgba(38,39,43,0.035);
+  --ca-traco: rgba(38,39,43,0.45);
 
   position: relative; padding: 20px; color: var(--fg);
-  background: linear-gradient(180deg, #f6f6f2, #ecece6);
+  background: var(--papel);
   border: 1px solid rgba(0,0,0,0.35); border-radius: 16px;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 40px 80px -40px rgba(0,0,0,0.9);
 }
@@ -283,7 +334,7 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
    O quadrante é branco sobre o papel levemente creme — é o que dá o degrau
    de leitura entre "a folha" e "o bloco de informação". */
 .bx {
-  position: relative; border: 1px solid var(--dnd-line); border-radius: 11px; background: #fff;
+  position: relative; border: 1px solid var(--dnd-line); border-radius: 11px; background: var(--quadro);
   padding: 9px 11px 11px; min-width: 0; box-shadow: 0 1px 2px rgba(38,39,43,0.06);
 }
 .bx-t {
@@ -346,9 +397,12 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
    de deixar a pessoa somar na mão sem saber que dava sozinho */
 .ca.sugere::after {
   content: ''; position: absolute; top: 6px; right: 10px; width: 7px; height: 7px; border-radius: 50%;
-  background: var(--gold); box-shadow: 0 0 0 2px #fff, 0 0 7px rgba(176,138,46,0.8);
+  background: var(--gold); box-shadow: 0 0 0 2px var(--quadro), 0 0 7px rgba(176,138,46,0.8);
 }
-.ca.alerta::after { background: var(--danger); box-shadow: 0 0 0 2px #fff, 0 0 7px rgba(181,55,44,0.8); }
+.ca.alerta::after { background: var(--danger); box-shadow: 0 0 0 2px var(--quadro), 0 0 7px rgba(181,55,44,0.8); }
+/* o escudo é desenhado em SVG com as cores no próprio atributo; aqui elas
+   viram variável, senão o escudo continuaria claro no modo noturno */
+.ca svg path { fill: var(--ca-fundo); stroke: var(--ca-traco); }
 .ca .rot { position: relative; font-size: 8.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dnd); text-align: center; line-height: 1.15; }
 .ca .num { position: relative; font-size: 30px; color: var(--fg); line-height: 1.1; margin-top: 3px; min-width: 40px; }
 .ca .escudo { position: relative; display: flex; align-items: center; gap: 4px; margin-top: 2px; }
@@ -396,7 +450,7 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
   padding: 7px 8px 34px; display: flex; flex-direction: column; align-items: center;
 }
 .mold { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.mold-corpo { fill: #fff; stroke: var(--dnd-soft); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+.mold-corpo { fill: var(--quadro); stroke: var(--dnd-soft); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
 .mold-fita { fill: none; stroke: var(--gold); stroke-width: 1; vector-effect: non-scaling-stroke; opacity: 0.8; }
 /* conteúdo posicionado: sem isso a placa (que é absoluta) cobriria o texto */
 .atr-placa .bx-t { position: relative; font-size: 9.5px; letter-spacing: 0.1em; }
@@ -405,7 +459,7 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 /* a moeda encaixa na mordida da moldura (y = 92 de 108 do desenho) */
 .atr-val { position: absolute; left: 50%; top: 85.2%; transform: translate(-50%, -50%); }
 .atr-val .num {
-  width: 32px; height: 32px; border-radius: 50%; background: #fff; border: 1px solid var(--dnd-soft);
+  width: 32px; height: 32px; border-radius: 50%; background: var(--quadro); border: 1px solid var(--dnd-soft);
   display: flex; align-items: center; justify-content: center; font-size: 13.5px;
   box-shadow: 0 1px 2px rgba(38,39,43,0.10);
 }
@@ -462,7 +516,7 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
   color: var(--fg-faint); background: transparent; border: 1px solid var(--line-strong); transition: all 0.15s;
 }
 .flag:hover { border-color: var(--dnd-soft); color: var(--fg-dim); }
-.flag.on { color: #fff; background: var(--dnd); border-color: var(--dnd); box-shadow: var(--glow-dnd); }
+.flag.on { color: var(--sobre-dnd); background: var(--dnd); border-color: var(--dnd); box-shadow: var(--glow-dnd); }
 
 /* características de classe: duas metades como no papel — mas são dois
    campos SEPARADOS, não um texto em duas colunas. Em coluna o que você
@@ -507,7 +561,7 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 .ap-corpo { display: grid; grid-template-columns: 84px 1fr; gap: 10px; align-items: start; margin-top: 6px; }
 .retrato {
   position: relative; width: 100%; aspect-ratio: 1; border-radius: 9px; overflow: hidden; cursor: pointer;
-  border: 1px solid var(--dnd-line); background: radial-gradient(ellipse at 50% 40%, #fff, #eceae4 75%);
+  border: 1px solid var(--dnd-line); background: radial-gradient(ellipse at 50% 40%, var(--quadro), var(--quadro-2) 75%);
   display: flex; align-items: center; justify-content: center; transition: border-color 0.2s, box-shadow 0.2s;
 }
 .retrato:hover { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(176,138,46,0.14); }
@@ -567,14 +621,14 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 .inv-carga { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .inv-carga-n { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; color: var(--fg-dim); }
 .inv-carga-n b { color: var(--fg); font-weight: 600; }
-.inv-barra { height: 3px; border-radius: 2px; background: rgba(38,39,43,0.12); overflow: hidden; }
+.inv-barra { height: 3px; border-radius: 2px; background: var(--trilho); overflow: hidden; }
 .inv-barra-f { height: 100%; width: 0; background: var(--gold); transition: width 0.25s, background 0.25s; }
 .inv.excedido .inv-barra-f { background: var(--danger); }
 .inv.excedido .inv-carga-n b { color: var(--danger); }
 .inv-bts { display: flex; gap: 4px; }
 .inv-bt {
   width: 24px; height: 24px; padding: 0; cursor: pointer; border-radius: 6px; line-height: 1;
-  background: #fff; border: 1px solid var(--dnd-line); color: var(--fg-dim); font-size: 12px; transition: all 0.15s;
+  background: var(--quadro); border: 1px solid var(--dnd-line); color: var(--fg-dim); font-size: 12px; transition: all 0.15s;
 }
 .inv-bt:hover { border-color: var(--gold); color: var(--fg); }
 .inv-bt.destaque { color: var(--gold); font-size: 15px; font-weight: 600; }
@@ -587,11 +641,11 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 /* quadro */
 .modo-grade .inv-slot {
   position: relative; aspect-ratio: 1; border-radius: 7px; cursor: pointer; padding: 0;
-  background: #fff; border: 1px solid var(--dnd-line); display: flex; align-items: center; justify-content: center;
+  background: var(--quadro); border: 1px solid var(--dnd-line); display: flex; align-items: center; justify-content: center;
   transition: all 0.15s;
 }
 .modo-grade .inv-slot:hover { border-color: var(--gold); box-shadow: 0 2px 8px rgba(38,39,43,0.14); transform: translateY(-1px); }
-.modo-grade .inv-slot svg { width: 60%; height: 60%; fill: none; stroke: #45484f; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.modo-grade .inv-slot svg { width: 60%; height: 60%; fill: none; stroke: var(--icone); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .modo-grade .inv-slot.mestre::after {
   content: '\2b25'; position: absolute; top: 2px; right: 3px; font-size: 7px; color: var(--gold);
 }
@@ -611,7 +665,7 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
   padding: 5px 4px; background: none; border: 0; border-bottom: 1px solid var(--line);
 }
 .modo-lista .inv-slot:hover { background: rgba(176,138,46,0.07); }
-.modo-lista .inv-slot svg { width: 15px; height: 15px; flex: 0 0 auto; fill: none; stroke: #45484f; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.modo-lista .inv-slot svg { width: 15px; height: 15px; flex: 0 0 auto; fill: none; stroke: var(--icone); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .modo-lista .inv-slot .nome { flex: 1; min-width: 0; font-size: 11.5px; color: var(--fg); }
 .modo-lista .inv-slot.equipado .nome { font-weight: 600; }
 .modo-lista .inv-slot.equipado .nome::after { content: ' ⬥'; color: var(--gold); }
@@ -881,6 +935,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   <button type="button" class="fundo-bt" id="sumBt" aria-pressed="false" title="Explica o que é cada bloco ao clicar — sem travar a ficha: dá pra escrever e marcar normalmente">Sumário</button>
   <button type="button" class="fundo-bt" id="pdfBt" title="Imprimir a ficha ou salvar em PDF">PDF</button>
   <button type="button" class="fundo-bt" id="papelBt" aria-pressed="true" title="Com a folha creme por baixo, ou os quadros direto no fundo">Papel</button>
+  <button type="button" class="fundo-bt" id="noiteBt" aria-pressed="false" title="Modo noturno: escurece a folha. Vale só pra você, neste navegador — os outros continuam vendo do jeito deles">Noite</button>
   <button type="button" class="fundo-bt" id="fundoBt" aria-expanded="false" aria-controls="fundoPop">Fundo</button>
   <div class="fundo-pop" id="fundoPop" hidden>
     <div class="fundo-t">Cor</div>
@@ -1325,6 +1380,19 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (sujar) marca();
   }
   papelBt.addEventListener('click', function() { if (!somenteLeitura) poePapel(!comPapel, true); });
+
+  // ── Noite: escurece a folha ─────────────────────────────────────────
+  // É preferência de QUEM LÊ, não do personagem: fica no navegador (como o
+  // layout do quadro na mesa) e não entra no que se grava. Por isso vale em
+  // qualquer ficha que a pessoa abrir, e funciona até em ficha só de leitura.
+  var noiteBt = document.getElementById('noiteBt');
+  function poeNoite(v) {
+    document.body.classList.toggle('noite', !!v);
+    noiteBt.setAttribute('aria-pressed', v ? 'true' : 'false');
+    ls('dndNoite', v ? '1' : '0');
+  }
+  poeNoite(ls('dndNoite') === '1');
+  noiteBt.addEventListener('click', function() { poeNoite(!document.body.classList.contains('noite')); });
 
   // ══════════════════════════════════════════════════════════════════
   //  MODO SUMÁRIO — "o que é isso?" em cima da ficha
@@ -5125,7 +5193,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       '.__ma-item:hover .__ma-tname{color:#cfe9f0;}',
       '.__ma-link{font-size:10px;color:rgba(0,255,231,0.45);flex-shrink:0;transition:color .15s;}',
       '.__ma-item:hover .__ma-link{color:#00ffe7;}',
-      '.__ma-empty{padding:14px;font-size:9px;letter-spacing:2px;color:rgba(0,255,231,0.2);text-align:center;}'
+      '.__ma-empty{padding:14px;font-size:9px;letter-spacing:2px;color:rgba(0,255,231,0.2);text-align:center;}',
+      '.__ma-back{padding:8px 14px;font-size:9px;letter-spacing:2px;color:rgba(0,255,231,0.4);cursor:pointer;border-bottom:1px solid rgba(0,255,231,0.08);text-transform:uppercase;}',
+      '.__ma-back:hover{color:#00ffe7;}',
+      '.__ma-add .__ma-tname{color:rgba(0,255,231,0.5);}',
+      '.__ma-add:hover .__ma-tname{color:#00ffe7;}'
     ].join('');
     document.head.appendChild(style);
     var panel = document.createElement('div'); panel.id = '__ma-tramas-panel';
@@ -5136,18 +5208,117 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     tab.addEventListener('click', function() { body.classList.toggle('open'); });
     panel.appendChild(body); panel.appendChild(tab);
     document.body.appendChild(panel);
-    sbGet('/rest/v1/trama_links?personagem_id=eq.' + personagemId + '&select=trama_id')
-      .then(function(links) {
-        if (!Array.isArray(links) || !links.length) { body.innerHTML = '<div class="__ma-thead">Tramas</div><div class="__ma-empty">Nenhuma trama vinculada</div>'; return; }
-        var ids = links.map(function(l) { return l.trama_id; }).join(',');
-        return sbGet('/rest/v1/tramas?trama_id=in.(' + ids + ')&select=trama_id,name&deleted_at=is.null');
-      })
-      .then(function(tramas) {
-        if (!tramas || !tramas.length) return;
-        var html = '<div class="__ma-thead">Tramas</div>';
-        tramas.forEach(function(t) { html += '<a class="__ma-item" href="trama.html?id=' + t.trama_id + '"><span class="__ma-tname">' + (t.name || 'Trama') + '</span><span class="__ma-link">→</span></a>'; });
-        body.innerHTML = html;
-      }).catch(function() {});
+    // Estado do painel: as tramas já vinculadas, as que ainda dá pra vincular,
+    // o nome do personagem (vai no nó novo) e se está mostrando uma lista ou
+    // a outra.
+    var st = { linked: [], livres: [], nome: 'Personagem', modo: 'lista' };
+
+    function sbWrite(metodo, path, corpo, extra) {
+      return fetch(SUPA_URL + path, {
+        method: metodo,
+        headers: Object.assign({
+          'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY,
+          'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+        }, extra || {}),
+        body: JSON.stringify(corpo)
+      }).then(function(r) {
+        if (!r.ok) return r.text().then(function(t) { throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 150)); });
+      });
+    }
+
+    function desenha() {
+      var html = '<div class="__ma-thead">Tramas</div>';
+      if (st.modo === 'escolher') {
+        html += '<div class="__ma-back">‹ voltar</div>';
+        if (!st.livres.length) {
+          html += '<div class="__ma-empty">Nenhuma trama disponível</div>';
+        } else {
+          st.livres.forEach(function(t) {
+            html += '<div class="__ma-item __ma-pick" data-tid="' + t.trama_id + '"><span class="__ma-tname">' + (t.name || 'Trama') + '</span><span class="__ma-link">+</span></div>';
+          });
+        }
+      } else {
+        if (!st.linked.length) {
+          html += '<div class="__ma-empty">Nenhuma trama vinculada</div>';
+        } else {
+          st.linked.forEach(function(t) {
+            html += '<a class="__ma-item" href="trama.html?id=' + t.trama_id + '"><span class="__ma-tname">' + (t.name || 'Trama') + '</span><span class="__ma-link">→</span></a>';
+          });
+        }
+        html += '<div class="__ma-item __ma-add"><span class="__ma-tname">+ Vincular a uma trama</span></div>';
+      }
+      body.innerHTML = html;
+    }
+
+    // O personagem entra na trama como um nó novo (tipo 'npc', igual todo nó
+    // de personagem lá) — é o mesmo formato que trama.html grava sozinho.
+    // Posição: perto da média dos nós que já existem, com um desvio
+    // aleatório pra não empilhar em cima de outro nó recém-vinculado.
+    function vincula(tramaId) {
+      var alvo = st.livres.filter(function(t) { return t.trama_id === tramaId; })[0];
+      if (!alvo) return;
+      body.innerHTML = '<div class="__ma-thead">Tramas</div><div class="__ma-empty">Vinculando...</div>';
+      sbGet('/rest/v1/tramas?trama_id=eq.' + tramaId + '&select=data,name')
+        .then(function(linhas) {
+          var linha = linhas && linhas[0];
+          if (!linha) throw new Error('a trama sumiu');
+          var dados = linha.data || {};
+          var nos = Array.isArray(dados.nodes) ? dados.nodes : [];
+          var maior = 0;
+          nos.forEach(function(n) {
+            var m = /^n(\d+)$/.exec((n && n.id) || '');
+            if (m) maior = Math.max(maior, parseInt(m[1], 10));
+          });
+          var novoId = 'n' + (maior + 1);
+          var cx = 0, cy = 0;
+          if (nos.length) {
+            cx = nos.reduce(function(s, n) { return s + (+n.x || 0); }, 0) / nos.length;
+            cy = nos.reduce(function(s, n) { return s + (+n.y || 0); }, 0) / nos.length;
+          }
+          cx += (Math.random() - 0.5) * 240;
+          cy += (Math.random() - 0.5) * 240;
+          nos.push({ id: novoId, x: Math.round(cx), y: Math.round(cy), name: st.nome, note: '', type: 'npc' });
+          dados.nodes = nos;
+          return sbWrite('PATCH', '/rest/v1/tramas?trama_id=eq.' + tramaId, { trama_id: tramaId, name: linha.name, data: dados })
+            .then(function() {
+              return sbWrite('POST', '/rest/v1/trama_links',
+                { trama_id: tramaId, node_id: novoId, personagem_id: personagemId },
+                { 'Prefer': 'return=minimal,resolution=merge-duplicates' });
+            });
+        })
+        .then(function() {
+          st.linked.push(alvo);
+          st.livres = st.livres.filter(function(t) { return t.trama_id !== tramaId; });
+          st.modo = 'lista';
+          desenha();
+        })
+        .catch(function(erro) {
+          st.modo = 'escolher';
+          desenha();
+          alert('Não consegui vincular: ' + (erro && erro.message ? erro.message : erro));
+        });
+    }
+
+    body.addEventListener('click', function(e) {
+      if (e.target.closest('.__ma-back')) { st.modo = 'lista'; desenha(); return; }
+      if (e.target.closest('.__ma-add'))  { st.modo = 'escolher'; desenha(); return; }
+      var pick = e.target.closest('.__ma-pick');
+      if (pick) vincula(pick.dataset.tid);
+    });
+
+    Promise.all([
+      sbGet('/rest/v1/trama_links?personagem_id=eq.' + personagemId + '&select=trama_id'),
+      sbGet('/rest/v1/tramas?select=trama_id,name&deleted_at=is.null&order=name.asc'),
+      sbGet('/rest/v1/personagens?char_id=eq.' + personagemId + '&select=name')
+    ]).then(function(res) {
+      var links = res[0] || [], todas = res[1] || [], quem = (res[2] || [])[0];
+      var vinculadas = {};
+      links.forEach(function(l) { vinculadas[l.trama_id] = true; });
+      st.nome = (quem && quem.name) || 'Personagem';
+      st.linked = todas.filter(function(t) { return vinculadas[t.trama_id]; });
+      st.livres = todas.filter(function(t) { return !vinculadas[t.trama_id]; });
+      desenha();
+    }).catch(function() {});
   }
   function tryInject(attempt) {
     if (document.getElementById('__ma-tramas-panel')) return;
