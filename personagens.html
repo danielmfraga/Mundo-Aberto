@@ -1211,6 +1211,83 @@
       box-shadow: 0 0 10px rgba(224,71,58,0.7);
     }
 
+    /* ── Card de D&D: tema ouro (a cor do D&D no seletor e na ficha) ── */
+    .char-group.dnd-card .char-panel { border-color: rgba(224,180,87,0.22); }
+    .char-group.dnd-card:hover .char-panel {
+      background: rgba(224,180,87,0.05);
+      border-color: rgba(224,180,87,0.45);
+    }
+    .char-group.dnd-card .ring1 { border-color: rgba(224,180,87,0.22); }
+    .char-group.dnd-card .ring2 { border-color: rgba(255,150,60,0.3); }
+    .char-group.dnd-card .ring3 { border-color: rgba(180,120,40,0.35); }
+    .char-group.dnd-card .char-led {
+      background: #e0b457;
+      box-shadow: 0 0 6px #e0b457;
+    }
+    .char-group.dnd-card .char-led-label { color: rgba(224,180,87,0.6); }
+    .char-group.dnd-card .char-core {
+      border-color: rgba(224,180,87,0.45);
+      box-shadow: 0 0 10px rgba(224,180,87,0.4), 0 0 30px rgba(224,180,87,0.15),
+                  inset 0 0 30px rgba(224,180,87,0.06);
+    }
+    .char-group.dnd-card:hover .char-core {
+      box-shadow: 0 0 20px rgba(224,180,87,0.7), 0 0 55px rgba(224,180,87,0.3),
+                  inset 0 0 30px rgba(224,180,87,0.14);
+      border-color: rgba(224,180,87,0.75);
+    }
+    /* a foto vira holograma dourado, no lugar do ciano */
+    .char-group.dnd-card .char-core img {
+      filter: sepia(1) saturate(1.8) hue-rotate(-12deg) brightness(0.95) contrast(1.05);
+    }
+    .char-group.dnd-card .char-beam {
+      background: linear-gradient(to top, #e0b457, transparent);
+      box-shadow: 0 0 8px #e0b457;
+    }
+    .char-group.dnd-card .char-name { color: rgba(224,180,87,0.6); }
+    .char-group.dnd-card:hover .char-name {
+      color: #e0b457;
+      text-shadow: 0 0 10px rgba(224,180,87,0.6);
+    }
+    .mestre-mode .char-group.dnd-card .char-btn::after {
+      border: 2px dashed rgba(224,180,87,0.4);
+    }
+    .mestre-mode .char-group.dnd-card:hover .char-btn::after {
+      border-color: rgba(224,180,87,0.7);
+      box-shadow: inset 0 0 16px rgba(224,180,87,0.06);
+    }
+    .mestre-mode .char-group.dnd-card.selected .char-btn::after {
+      border: 2px solid #e0b457;
+      box-shadow: inset 0 0 20px rgba(224,180,87,0.12), 0 0 15px rgba(224,180,87,0.35);
+    }
+    .mestre-mode .char-group.dnd-card .mestre-sel-badge {
+      background: #e0b457;
+      box-shadow: 0 0 10px rgba(224,180,87,0.7);
+    }
+
+    /* ── Wyvern neon: o ícone do D&D quando o personagem ainda não tem foto ──
+       Uma silhueta só, recortada em três: corpo e as duas asas externas, que
+       giram em torno do "pulso" (o ponto onde se prendem ao corpo, lá em
+       cima). As asas só abrem pra fora — fechando, atravessariam o corpo. */
+    .dnd-wyvern {
+      position: relative; z-index: 1;
+      width: 66px; height: 66px;
+      overflow: visible;
+      color: #f2c96a;
+      filter: drop-shadow(0 0 1.5px #ffd88a) drop-shadow(0 0 5px rgba(242,180,70,0.75));
+      animation: wyvVoo 3.2s ease-in-out infinite;
+    }
+    .dnd-wyvern use { fill: currentColor; }
+    .dnd-wyvern .asa-e { transform-origin: 105px 84px; animation: wyvAsaE 3.2s ease-in-out infinite; }
+    .dnd-wyvern .asa-d { transform-origin: 370px 70px; animation: wyvAsaD 3.2s ease-in-out infinite; }
+    /* bate, bate, plana */
+    @keyframes wyvAsaE { 0%,46%,100% { transform: rotate(0); } 10%,32% { transform: rotate(13deg); } 22% { transform: rotate(1deg); } }
+    @keyframes wyvAsaD { 0%,46%,100% { transform: rotate(0); } 10%,32% { transform: rotate(-13deg); } 22% { transform: rotate(-1deg); } }
+    @keyframes wyvVoo  { 0%,46%,100% { transform: translateY(0); } 10%,32% { transform: translateY(-2px); } 22% { transform: translateY(0); } }
+    .char-group.dnd-card:hover .dnd-wyvern { filter: drop-shadow(0 0 2px #fff0c8) drop-shadow(0 0 8px rgba(242,180,70,0.95)); }
+    @media (prefers-reduced-motion: reduce) {
+      .dnd-wyvern, .dnd-wyvern .asa { animation: none; }
+    }
+
     /* ── Modo espaço: oculta portais ── */
     .space-mode .portal-group,
     .space-mode .sp-portal-group { display: none !important; }
@@ -1276,6 +1353,20 @@
     </style>
 </head>
 <body>
+  <!-- Wyvern: ícone de game-icons.net (licença CC BY 3.0 — pede crédito).
+       Definida uma vez aqui; cada card de D&D só aponta pra ela. Os dois
+       polígonos seguem as faixas escuras entre asa e corpo, medidas no
+       próprio desenho; o corte atravessa o preenchimento só no "pulso". -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+    <path id="wyv-forma" d="M324.97 17.54c.03.034.057.07.087.106l-34.924 32.428 36.904-3.752-15.396 30.12 38.048-16.075c26.147 69.965.623 154.277-52.555 166.262-6.554-25.37-34.13-37.945-36.055-57.382.303.093.604.187.912.27a27.113 27.113 0 0 0 14.274-.07l25.138 22.89 20.653-16.377c-7.363 2.836-28.588-1.402-33.25-13.923a27.114 27.114 0 0 0 6.793-11.922c.485-1.813.757-3.635.86-5.445l11.524 22.777 5.22-16.94c7.625 5.575 12.474 13.605 11.49 21.136l16.673-29.4-72.14-29.56-58.057-48.03 17.1 31.25-48.206-19.753 35.14 31.237c-40.602 28.158-22.085 85.04-1.796 119.29-57.5-9.685-103.128-77.435-95.763-145.03l49.21-21.366-31.08-5.14 29.207-33.417-32.015 11.54c.037-.067.07-.135.107-.202-168.36 66.33-116.413 367-63.728 417.99-.19-1.317-.364-2.58-.54-3.855-14.922-56.244-20.375-125.624-17.5-190.53 3.02-68.237 14.834-131.16 36.794-169.522l16.22 9.283c-18.894 33.008-31.4 94.563-34.345 161.064-1.942 43.86.106 90.022 6.275 132.082 6.124 1.892 15.046 9.615 27.295 23.24-4.818-13.35-6.78-26.5-6.482-38.28 20.286 41.665 67.34 69.234 104.633 62.308 22.444-4.17 41.803-12.73 57.81-24.475l7.31 15.418c-20.068 5.036-22.807 32.635-14.737 55.112 1.748-19.882 11.36-29.794 21.73-32.303-6.598 15.867-4.698 30.623-3.117 44.158 10.15-12.147 21.47-23.793 23.628-39.354 8.738 7.332 12.317 21.49 1.194 39.057 26.32-15.473 31.565-41.994 7.978-57.685l-32.07-34.297c5.918-5.55 11.24-11.6 15.947-18.066l39.28 15.776c-3.942 13.69 5.833 31.512 19.77 43.31-8.055-17.288-4.826-30.08 2.562-37.103 1.63 17.39 10.64 29.193 18.733 40.064 2.73-15.665 6.79-31.493-.213-45.987 11.016 1.56 21.2 11.568 20.338 31.877 14.362-25.313 6.11-49.702-20.742-51.52l-71.135-9.892c12.757-22.982 18.676-49.823 17.015-77.475 14.188-34.708 50.058-11.816 54.523 49.16C394.924 262.27 434.58 304 426.324 367.13c11.808-23.38 21.835-35.013 29.862-36.247-10.772-91.925-40.458-191.57-77.637-250.748l15.823-9.942c50.328 80.106 85.112 220.65 84.88 331.547 42.403-115.912-2.347-356.61-154.282-384.2zm-29.458 476.913-.026.016-.015.05c.015-.02.027-.044.042-.067zm26.543-318.492h.01v-.007l-.01.008zm-53.348-41.716a9.127 9.127 0 0 1 2.652.313c4.774 1.28 7.467 5.945 6.187 10.72-1.28 4.776-5.943 7.47-10.72 6.19-4.775-1.28-7.468-5.943-6.188-10.72.96-3.584 3.823-5.993 7.21-6.435a8.66 8.66 0 0 1 .857-.068zM204.904 297.13c11.878-.2 22.637 6.756 26.172 22.487-.008 35.88-9.557 68.823-42.137 77.412-27.624 7.283-69.725-11.398-84.12-53.663 12.28-21.078 37.362-21.986 62.838 22.592-12.583-41.596 14.386-68.444 37.246-68.83z"/>
+    <clipPath id="wyv-clip-e"><polygon points="0,0 176,0 176,62 119,82 92,86 92,100 88,110 84,120 80.5,130 78,140 75,150 72.5,160 70.5,170 68.5,180 67,190 66,200 64.5,210 63.5,220 62.5,230 62,240 61,250 60.5,260 60.5,270 60,280 60,300 60.5,310 60.5,320 61,330 61.5,340 62.5,350 63.5,360 64.5,370 66,380 67.5,390 75,400 81,410 90,420 90,512 0,512"/></clipPath>
+    <clipPath id="wyv-clip-d"><polygon points="512,0 282,0 282,55 310,82 350,62 390,79 395,90 401,100 406,110 410,120 415,130 419,140 423,150 427,160 430,170 433.5,180 436.5,190 439.5,200 442,210 445,220 448,230 450,240 452,250 454,260 456.5,270 458,280 460,290 462,300 463,310 464.5,320 466,330 468,340 470,350 472,360 474,370 474,512 512,512"/></clipPath>
+    <mask id="wyv-corpo" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
+      <rect width="512" height="512" fill="#fff"/>
+      <polygon points="0,0 176,0 176,62 119,82 92,86 92,100 88,110 84,120 80.5,130 78,140 75,150 72.5,160 70.5,170 68.5,180 67,190 66,200 64.5,210 63.5,220 62.5,230 62,240 61,250 60.5,260 60.5,270 60,280 60,300 60.5,310 60.5,320 61,330 61.5,340 62.5,350 63.5,360 64.5,370 66,380 67.5,390 75,400 81,410 90,420 90,512 0,512" fill="#000"/>
+      <polygon points="512,0 282,0 282,55 310,82 350,62 390,79 395,90 401,100 406,110 410,120 415,130 419,140 423,150 427,160 430,170 433.5,180 436.5,190 439.5,200 442,210 445,220 448,230 450,240 452,250 454,260 456.5,270 458,280 460,290 462,300 463,310 464.5,320 466,330 468,340 470,350 472,360 474,370 474,512 512,512" fill="#000"/>
+    </mask>
+  </defs></svg>
 
   <div class="corner corner-tl"></div>
   <div class="corner corner-tr"></div>
@@ -1359,7 +1450,7 @@
       <div class="__tp-btns">
         <button class="__tp-btn __tp-vampiro" data-type="vampiro">⚰ Vampiro<span>A Máscara V5</span></button>
         <button class="__tp-btn __tp-cacador" data-type="cacador">⚔ Caçador<span>Mundo Aberto</span></button>
-        <button class="__tp-btn __tp-dnd" data-type="dnd" title="Em prova: ainda salva como rascunho, não entra na lista">🐉 D&amp;D<span>5.5 · em prova</span></button>
+        <button class="__tp-btn __tp-dnd" data-type="dnd" title="Ficha de D&amp;D 5.5 (Livro do Jogador 2024)">🐉 D&amp;D<span>5.5 · em prova</span></button>
       </div>
       <div class="__sp-btns"><button class="__sp-cx" id="typePickerCancel">Cancelar</button></div>
     </div>
@@ -1430,6 +1521,14 @@
       }).then(function(r) { return r.status === 204 ? null : r.json().catch(function() { return null; }); });
     }
 
+    // Personagem de D&D sem foto: a wyvern neon, batendo as asas
+    const WYVERN = '<svg class="dnd-wyvern" viewBox="0 0 512 512" aria-hidden="true">' +
+      '<title>Wyvern · game-icons.net · CC BY 3.0</title>' +
+      '<use href="#wyv-forma" mask="url(#wyv-corpo)"/>' +
+      '<g class="asa asa-e"><use href="#wyv-forma" clip-path="url(#wyv-clip-e)"/></g>' +
+      '<g class="asa asa-d"><use href="#wyv-forma" clip-path="url(#wyv-clip-d)"/></g>' +
+    '</svg>';
+
     // ── Holograma reutilizável ──
     function createHoloCard(charId, name, imgSrc, ledLabel, sheetData) {
       const isVampiro = sheetData && (sheetData.sheet_type === 'vampiro' || sheetData.vtmFields);
@@ -1439,6 +1538,7 @@
       const group = document.createElement('div');
       group.className = 'char-group';
       if (isVampiro) group.classList.add('vampiro-card');
+      if (isDnd) group.classList.add('dnd-card');
       group.dataset.charId = charId;
       group.dataset.charName = name || 'Personagem';
 
@@ -1459,7 +1559,7 @@
           <div class="char-core">
             ${imgSrc
               ? `<img src="${imgSrc}" alt="${name}">`
-              : `<div class="char-icon">⬡</div>`
+              : (isDnd ? WYVERN : `<div class="char-icon">⬡</div>`)
             }
           </div>
           <div class="char-beam"></div>
