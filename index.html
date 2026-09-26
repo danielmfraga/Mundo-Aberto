@@ -430,6 +430,14 @@
 
     /* ── Ferramentas — tema roxo ── */
     #ferramentasGroup { order: 4; }
+
+    /* ── OCULTOS por enquanto (2026-09-25) — Codex e Ferramentas ──
+       Não foram apagados: o HTML, o estilo e as páginas (codex.html,
+       ferramentas.html) continuam aí e abrem pelo endereço direto.
+       Pra ressuscitar, é só apagar esta regra. Com os dois fora, sobram
+       Personagens e Trama no meio, e a animação de abertura já converge
+       certo pra dois (os ±140px dos slots do meio). */
+    #codexGroup, #ferramentasGroup { display: none; }
     #ferramentasGroup .holo-btn-panel { border-color: rgba(123,47,255,0.32); background: rgba(123,47,255,0.05); }
     #ferramentasGroup .holo-btn:hover .holo-btn-panel { border-color: rgba(123,47,255,0.6); background: rgba(123,47,255,0.10); }
     #ferramentasGroup .device-led { background: #b98cff; box-shadow: 0 0 6px #b98cff; animation-name: ledBlink; }
