@@ -732,6 +732,9 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
 .mapa-mundo.branco { background:#e9e1cc; }
 .mapa-img { display:block; user-select:none; pointer-events:none; }
 .mapa-grade { position:absolute; inset:0; pointer-events:none; }
+/* o <svg> é elemento substituído: só com inset:0 ele fica no tamanho padrão
+   (300×150) em vez de cobrir o mapa — daí o width/height explícitos */
+.mapa-hex { width:100%; height:100%; display:block; }
 .mapa-tokens { position:absolute; inset:0; }
 .mapa-tok { position:absolute; cursor:grab; touch-action:none; }
 .mapa-tok.drag { cursor:grabbing; z-index:60 !important; }
@@ -1077,13 +1080,14 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
       <div class="mapa-mundo" id="mapaMundo">
         <img class="mapa-img" id="mapaImg" alt="" draggable="false">
         <div class="mapa-grade" id="mapaGrade"></div>
+        <svg class="mapa-grade mapa-hex" id="mapaHex" style="display:none" aria-hidden="true"></svg>
         <div class="mapa-tokens" id="mapaTokens"></div>
       </div>
       <div class="mapa-vazio" id="mapaVazio">
         <div>Arraste a imagem do mapa pra cá</div>
         <div class="acoes">
           <button class="btn mapa-acao" id="mapaEscolher" type="button">Escolher imagem</button>
-          <button class="btn mapa-acao" id="mapaBranco" type="button">Grade em branco</button>
+          <button class="btn mapa-acao" id="mapaBranco" type="button">Sala em branco</button>
         </div>
       </div>
       <div class="mapa-dist" id="mapaDist" hidden></div>
@@ -1091,11 +1095,18 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     </div>
 
     <div class="mapa-pop" id="mapaGradePop">
-      <h4>Grade · 1 quadrado = 1,5 m</h4>
+      <h4>Grade · 1 casa = 1,5 m</h4>
       <div class="mapa-lin">
-        <label for="mapaGTam">Quadrado</label>
+        <span class="rot">Formato</span>
+        <div class="mapa-seg" id="mapaGTipo">
+          <button class="mapa-op" type="button" data-tipo="quadrada">quadrados</button>
+          <button class="mapa-op" type="button" data-tipo="hex">hexágonos</button>
+        </div>
+      </div>
+      <div class="mapa-lin">
+        <label for="mapaGTam">Casa</label>
         <input type="range" id="mapaGTamR" min="10" max="400" step="0.5">
-        <input type="number" id="mapaGTam" min="10" max="400" step="0.1" title="Tamanho do quadrado, em pixels da imagem">
+        <input type="number" id="mapaGTam" min="10" max="400" step="0.1" title="Tamanho da casa, em pixels da imagem">
       </div>
       <div class="mapa-lin"><label for="mapaGDx">Mover &#8596;</label><input type="range" id="mapaGDx" min="0" max="70" step="0.5"></div>
       <div class="mapa-lin"><label for="mapaGDy">Mover &#8597;</label><input type="range" id="mapaGDy" min="0" max="70" step="0.5"></div>
@@ -1107,7 +1118,8 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
           <button class="mapa-op" type="button" data-cor="nenhuma">esconder</button>
         </div>
       </div>
-      <div class="mapa-dica">Se o mapa já vem com grade desenhada, ajuste o quadrado e mova até as linhas baterem — ou esconda a nossa.</div>
+      <div class="mapa-dica" id="mapaMedida"></div>
+      <div class="mapa-dica">Se o mapa já vem com grade desenhada, ajuste a casa e mova até as linhas baterem — ou esconda a nossa.</div>
     </div>
 
     <div class="mapa-pop" id="mapaNpcPop">
@@ -1120,6 +1132,28 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     </div>
 
     <div class="mapa-pop" id="mapaTokPop"></div>
+
+    <!-- sala em branco com medida exata: digita em metros, vira casas de 1,5 m -->
+    <div class="mapa-pop" id="mapaSalaPop">
+      <h4>Sala em branco</h4>
+      <div class="mapa-lin">
+        <label for="mapaSalaL">Largura</label>
+        <input type="number" id="mapaSalaL" min="1.5" max="300" step="1.5" value="18"><span class="rot">m</span>
+      </div>
+      <div class="mapa-lin">
+        <label for="mapaSalaA">Altura</label>
+        <input type="number" id="mapaSalaA" min="1.5" max="300" step="1.5" value="12"><span class="rot">m</span>
+      </div>
+      <div class="mapa-lin">
+        <span class="rot">Formato</span>
+        <div class="mapa-seg" id="mapaSalaTipo">
+          <button class="mapa-op" type="button" data-tipo="quadrada">quadrados</button>
+          <button class="mapa-op" type="button" data-tipo="hex">hexágonos</button>
+        </div>
+      </div>
+      <div class="mapa-dica" id="mapaSalaConta"></div>
+      <button class="btn mapa-acao" id="mapaSalaOk" type="button">Criar a sala</button>
+    </div>
 
     <!-- limpar: some com tudo pra mesa inteira, então pergunta antes -->
     <div class="mapa-pop" id="mapaLimparPop">
@@ -2660,6 +2694,8 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   ];
   var MAPA_TAM_OK = [0.5, 1, 2, 3, 4];
   var MAPA_GCOR = { escura:'rgba(0,0,0,0.55)', clara:'rgba(255,255,255,0.6)', nenhuma:null };
+  var MAPA_M = 1.5;                 // 1 casa = 1,5 m (D&D 2024), quadrada ou hexagonal
+  var MAPA_RAIZ3 = Math.sqrt(3);
   var MAPA_SALA = SALA.replace(/[^a-zA-Z0-9_-]/g, '_');
   var MAPA_ARQ = SB_URL + '/storage/v1/object/personagens/mesa/d20/' + MAPA_SALA + '.json';
   var MAPA_HDR = { 'apikey':SB_KEY, 'Authorization':'Bearer ' + SB_KEY };
@@ -2670,6 +2706,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   var mapaMundo    = document.getElementById('mapaMundo');
   var mapaImg      = document.getElementById('mapaImg');
   var mapaGrade    = document.getElementById('mapaGrade');
+  var mapaHex      = document.getElementById('mapaHex');
   var mapaTokens   = document.getElementById('mapaTokens');
   var mapaVazio    = document.getElementById('mapaVazio');
   var mapaDistEl   = document.getElementById('mapaDist');
@@ -2692,7 +2729,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   var _mapaNpcImg = null, _mapaNpcSubindo = false, _mapaSoltando = 0;
 
   function mapaClamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
-  function mapaCenaVazia() { return { v:1, img:null, branco:false, w:0, h:0, grade:{ tam:70, dx:0, dy:0, cor:'escura' }, tokens:[] }; }
+  function mapaCenaVazia() { return { v:1, img:null, branco:false, w:0, h:0, grade:{ tipo:'quadrada', tam:70, dx:0, dy:0, cor:'escura' }, tokens:[] }; }
   function mapaTemMapa() { return !!(mapaCena.img || mapaCena.branco); }
   function mapaUrlOk(u) { return (typeof u === 'string' && /^https?:\/\//i.test(u)) ? u : null; }
   function mapaStatus(t) { mapaStatusEl.textContent = t || ''; }
@@ -2739,13 +2776,18 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   }
   function mapaGradeNorm(g, base) {
     g = g || {};
-    base = base || { tam:70, dx:0, dy:0, cor:'escura' };
+    base = base || { tipo:'quadrada', tam:70, dx:0, dy:0, cor:'escura' };
     var tam = mapaClamp(+g.tam || base.tam, 10, 400);
-    function dentro(v) { v = +v || 0; return ((v % tam) + tam) % tam; }
+    // o passo vertical do hexágono não é o mesmo do quadrado: mover a grade
+    // tem que dar a volta no passo certo, senão o ajuste "pula" a cada volta
+    var tipo = (g.tipo || base.tipo) === 'hex' ? 'hex' : 'quadrada';
+    var passoY = tipo === 'hex' ? 1.5 * (tam / MAPA_RAIZ3) : tam;
+    function dentro(v, passo) { v = +v || 0; return ((v % passo) + passo) % passo; }
     return {
+      tipo: tipo,
       tam: tam,
-      dx: dentro(g.dx != null ? g.dx : base.dx),
-      dy: dentro(g.dy != null ? g.dy : base.dy),
+      dx: dentro(g.dx != null ? g.dx : base.dx, tam),
+      dy: dentro(g.dy != null ? g.dy : base.dy, passoY),
       cor: Object.prototype.hasOwnProperty.call(MAPA_GCOR, g.cor) ? g.cor : base.cor
     };
   }
@@ -2792,12 +2834,79 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     var r = mapaView.getBoundingClientRect();
     return { x:(cx - r.left - mapaVs.tx) / mapaVs.s, y:(cy - r.top - mapaVs.ty) / mapaVs.s };
   }
+  // ── geometria da grade (vale pros dois tipos) ──────────────────────
+  // Quadrada: a casa (col,row) começa em (dx + col·tam, dy + row·tam).
+  // Hexagonal: hexágono de ponta pra cima, "tam" é a largura entre os lados
+  // retos — a mesma medida do quadrado, então 1 casa continua valendo 1,5 m.
+  // As linhas ímpares entram meia casa pra direita (offset "odd-r"), e o
+  // token fica no CENTRO do hexágono. col/row continuam sendo o que se grava:
+  // mudar a grade de tipo não mexe no que está salvo.
+  function mapaHexR() { return mapaCena.grade.tam / MAPA_RAIZ3; }   // centro até a ponta
+  function mapaCasaCentro(col, row) {
+    var g = mapaCena.grade;
+    if (g.tipo !== 'hex') return { x:g.dx + (col + 0.5) * g.tam, y:g.dy + (row + 0.5) * g.tam };
+    var R = mapaHexR();
+    return { x:g.dx + g.tam * (col + (row & 1 ? 0.5 : 0)) + g.tam / 2, y:g.dy + 1.5 * R * row + R };
+  }
+  function mapaCasaEm(x, y) {              // ponto do mundo → casa
+    var g = mapaCena.grade;
+    if (g.tipo !== 'hex') return { col:Math.floor((x - g.dx) / g.tam), row:Math.floor((y - g.dy) / g.tam) };
+    var R = mapaHexR();
+    var px = x - (g.dx + g.tam / 2), py = y - (g.dy + R);
+    var q = (MAPA_RAIZ3 / 3 * px - py / 3) / R, r = (2 / 3 * py) / R;
+    // arredondamento em coordenadas cúbicas: sem isso o ponto cai no hexágono
+    // errado perto das bordas diagonais
+    var cx = q, cz = r, cy = -cx - cz;
+    var rx = Math.round(cx), ry = Math.round(cy), rz = Math.round(cz);
+    var dx = Math.abs(rx - cx), dy = Math.abs(ry - cy), dz = Math.abs(rz - cz);
+    if (dx > dy && dx > dz) rx = -ry - rz; else if (dy > dz) ry = -rx - rz; else rz = -rx - ry;
+    return { col:rx + (rz - (rz & 1)) / 2, row:rz };
+  }
+  // quantas casas cabem no mapa, e quantos metros isso dá (a medida da sala)
+  function mapaCasasNoMapa() {
+    var g = mapaCena.grade;
+    if (!mapaCena.w || !mapaCena.h) return { cols:0, rows:0 };
+    if (g.tipo !== 'hex') {
+      return { cols:Math.max(0, Math.floor((mapaCena.w - g.dx) / g.tam)), rows:Math.max(0, Math.floor((mapaCena.h - g.dy) / g.tam)) };
+    }
+    var R = mapaHexR();
+    return {
+      cols: Math.max(0, Math.floor((mapaCena.w - g.dx - g.tam / 2) / g.tam)),
+      rows: Math.max(0, Math.floor((mapaCena.h - g.dy - R / 2) / (1.5 * R)))
+    };
+  }
+  function mapaMedidaTxt() {
+    var c = mapaCasasNoMapa();
+    if (!c.cols || !c.rows) return '';
+    var lar = c.cols * MAPA_M, alt = c.rows * MAPA_M;
+    var m2 = Math.round(lar * alt);
+    return c.cols + ' × ' + c.rows + ' ' + mapaNomeCasa(2) + ' · ' +
+           String(lar).replace('.', ',') + ' × ' + String(alt).replace('.', ',') + ' m · ' + m2 + ' m²';
+  }
+  function mapaNomeCasa(n) {
+    if (mapaCena.grade.tipo === 'hex') return n === 1 ? 'hexágono' : 'hexágonos';
+    return n === 1 ? 'quadrado' : 'quadrados';
+  }
+  function mapaCasasEntre(a, b) {          // distância em casas
+    if (mapaCena.grade.tipo !== 'hex') {
+      return Math.max(Math.abs(b.col - a.col), Math.abs(b.row - a.row));   // D&D 2024: diagonal conta 1
+    }
+    var q1 = a.col - ((a.row - (a.row & 1)) / 2), q2 = b.col - ((b.row - (b.row & 1)) / 2);
+    var dq = q2 - q1, dr = b.row - a.row;
+    return Math.max(Math.abs(dq), Math.abs(dr), Math.abs(dq + dr));
+  }
+  // No quadriculado o token grande ocupa casas inteiras a partir de (col,row),
+  // como no papel; no hexagonal ele cresce em volta do centro do hexágono.
   function mapaTokGeo(t) {
     var g = mapaCena.grade, lado = t.tam * g.tam;
-    var x = g.dx + t.col * g.tam, y = g.dy + t.row * g.tam;
-    if (t.tam < 1) { x += (g.tam - lado) / 2; y += (g.tam - lado) / 2; }   // miúdo fica no meio do quadrado
-    return { x:x, y:y, lado:lado };
+    if (g.tipo === 'hex') {
+      var c = mapaCasaCentro(t.col, t.row);
+      return { x:c.x - lado / 2, y:c.y - lado / 2, lado:lado };
+    }
+    var bloco = Math.max(1, Math.ceil(t.tam)) * g.tam, sobra = (bloco - lado) / 2;
+    return { x:g.dx + t.col * g.tam + sobra, y:g.dy + t.row * g.tam + sobra, lado:lado };
   }
+  function mapaTokCentro(t) { var geo = mapaTokGeo(t); return { x:geo.x + geo.lado / 2, y:geo.y + geo.lado / 2 }; }
 
   // ── desenho ──
   function mapaRender() {
@@ -2836,13 +2945,31 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   });
   function mapaRenderGrade() {
     var g = mapaCena.grade, cor = MAPA_GCOR[g.cor];
-    if (!cor) { mapaGrade.style.backgroundImage = 'none'; return; }
-    // 1px na tela em qualquer zoom (--inv = 1/escala), com teto pra não virar
-    // uma mancha quando o mapa está bem pequeno
-    var linha = cor + ' min(calc(1px * var(--inv, 1)), ' + (g.tam * 0.2).toFixed(2) + 'px), transparent 0';
-    mapaGrade.style.backgroundImage = 'linear-gradient(to right, ' + linha + '), linear-gradient(to bottom, ' + linha + ')';
-    mapaGrade.style.backgroundSize = g.tam + 'px ' + g.tam + 'px';
-    mapaGrade.style.backgroundPosition = g.dx + 'px ' + g.dy + 'px';
+    var traco = 'min(calc(1px * var(--inv, 1)), ' + (g.tam * 0.2).toFixed(2) + 'px)';   // 1px na tela em qualquer zoom
+    mapaGrade.style.backgroundImage = 'none';
+    mapaHex.style.display = 'none';
+    if (!cor) return;
+    if (g.tipo !== 'hex') {
+      var linha = cor + ' ' + traco + ', transparent 0';
+      mapaGrade.style.backgroundImage = 'linear-gradient(to right, ' + linha + '), linear-gradient(to bottom, ' + linha + ')';
+      mapaGrade.style.backgroundSize = g.tam + 'px ' + g.tam + 'px';
+      mapaGrade.style.backgroundPosition = g.dx + 'px ' + g.dy + 'px';
+      return;
+    }
+    // Favo em <pattern>: um ladrilho que se repete, em vez de desenhar
+    // hexágono por hexágono (num mapa grande seriam milhares de traços).
+    // O ladrilho traz só as arestas DE CIMA e a DA DIREITA de cada hexágono —
+    // as outras chegam pelos vizinhos, então nenhuma é desenhada duas vezes
+    // (o que deixaria essas linhas mais escuras que as demais).
+    var R = mapaHexR(), w = g.tam, n = function(v) { return (Math.round(v * 100) / 100); };
+    var d = 'M0,' + n(R / 2) + ' L' + n(w / 2) + ',0 L' + n(w) + ',' + n(R / 2) + ' L' + n(w) + ',' + n(1.5 * R) +
+            ' M0,' + n(1.5 * R) + ' L' + n(w / 2) + ',' + n(2 * R) + ' L' + n(w / 2) + ',' + n(3 * R) +
+            ' M' + n(w / 2) + ',' + n(2 * R) + ' L' + n(w) + ',' + n(1.5 * R);
+    mapaHex.innerHTML =
+      '<defs><pattern id="mapaFavo" patternUnits="userSpaceOnUse" x="' + n(g.dx) + '" y="' + n(g.dy) + '" width="' + n(w) + '" height="' + n(3 * R) + '">' +
+      '<path d="' + d + '" fill="none" stroke="' + cor + '" stroke-width="' + traco + '"/></pattern></defs>' +
+      '<rect width="100%" height="100%" fill="url(#mapaFavo)"/>';
+    mapaHex.style.display = '';
   }
   function mapaRenderTokens() {
     var vivos = {};
@@ -2927,14 +3054,15 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   // Ocupação por quadrado, pra token novo nascer num lugar livre perto do
   // centro da vista em vez de empilhar em cima de outro.
   function mapaLugarLivre(tam, extra) {
-    var g = mapaCena.grade, n = Math.max(1, Math.ceil(tam));
+    var n = Math.max(1, Math.ceil(tam));
     var r = mapaView.getBoundingClientRect();
     var c = mapaTelaParaMundo(r.left + r.width / 2, r.top + r.height / 2);
-    var cols = Math.max(n, Math.floor((mapaCena.w - g.dx) / g.tam));
-    var rows = Math.max(n, Math.floor((mapaCena.h - g.dy) / g.tam));
+    var cabe = mapaCasasNoMapa();
+    var cols = Math.max(n, cabe.cols), rows = Math.max(n, cabe.rows);
+    var meio = mapaCasaEm(c.x, c.y);
     var base = {
-      col: mapaClamp(Math.floor((c.x - g.dx) / g.tam) - Math.floor((n - 1) / 2), 0, cols - n),
-      row: mapaClamp(Math.floor((c.y - g.dy) / g.tam) - Math.floor((n - 1) / 2), 0, rows - n)
+      col: mapaClamp(meio.col - Math.floor((n - 1) / 2), 0, cols - n),
+      row: mapaClamp(meio.row - Math.floor((n - 1) / 2), 0, rows - n)
     };
     var occ = {};
     mapaCena.tokens.concat(extra || []).forEach(function(t) {
@@ -3143,12 +3271,49 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
       });
     }).catch(function(err){ mapaStatus(''); alert('Não deu pra usar esse mapa: ' + err.message); });
   }
-  function mapaNovoBranco() {
-    if (mapaCena.tokens.length && !confirm('A grade em branco começa uma cena nova: os tokens saem do mapa. Continuar?')) return;
-    var c = mapaCenaVazia();
-    c.branco = true; c.w = 70 * 30; c.h = 70 * 20;   // 30×20 quadrados = 45 × 30 m
+  // Sala em branco pela medida de verdade: digita os metros, a conta vira
+  // casas de 1,5 m e o mapa nasce do tamanho exato — sem ninguém contar
+  // quadradinho na mão.
+  var mapaSalaPop = document.getElementById('mapaSalaPop');
+  var mapaSalaL = document.getElementById('mapaSalaL'), mapaSalaA = document.getElementById('mapaSalaA');
+  var mapaSalaTipo = 'quadrada';
+  function mapaSalaCasas() {
+    return {
+      cols: mapaClamp(Math.round((parseFloat(mapaSalaL.value) || 0) / MAPA_M), 1, 200),
+      rows: mapaClamp(Math.round((parseFloat(mapaSalaA.value) || 0) / MAPA_M), 1, 200)
+    };
+  }
+  function mapaSalaConta() {
+    var c = mapaSalaCasas(), lar = c.cols * MAPA_M, alt = c.rows * MAPA_M;
+    var nome = mapaSalaTipo === 'hex' ? 'hexágonos' : 'quadrados';
+    document.getElementById('mapaSalaConta').textContent =
+      c.cols + ' × ' + c.rows + ' ' + nome + ' · ' + String(lar).replace('.', ',') + ' × ' + String(alt).replace('.', ',') + ' m · ' + Math.round(lar * alt) + ' m²';
+    document.querySelectorAll('#mapaSalaTipo .mapa-op').forEach(function(b){ b.classList.toggle('on', b.dataset.tipo === mapaSalaTipo); });
+  }
+  function mapaCriaSala() {
+    if (mapaCena.tokens.length && !confirm('A sala em branco começa uma cena nova: os tokens saem do mapa. Continuar?')) return;
+    var casas = mapaSalaCasas(), tam = 70, c = mapaCenaVazia();
+    c.branco = true;
+    c.grade.tipo = mapaSalaTipo;
+    c.grade.tam = tam;
+    if (mapaSalaTipo === 'hex') {
+      var R = tam / MAPA_RAIZ3;
+      c.w = casas.cols * tam + tam / 2;      // a meia casa da direita é o degrau das linhas ímpares
+      c.h = 1.5 * R * (casas.rows - 1) + 2 * R;
+    } else {
+      c.w = casas.cols * tam; c.h = casas.rows * tam;
+    }
+    mapaFechaPops();
     mapaNovaCena(c);
   }
+  [mapaSalaL, mapaSalaA].forEach(function(i) {
+    i.addEventListener('input', mapaSalaConta);
+    i.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); mapaCriaSala(); } });
+  });
+  document.querySelectorAll('#mapaSalaTipo .mapa-op').forEach(function(b) {
+    b.addEventListener('click', function(){ mapaSalaTipo = b.dataset.tipo; mapaSalaConta(); });
+  });
+  document.getElementById('mapaSalaOk').addEventListener('click', mapaCriaSala);
 
   // ── popovers ──
   var mapaGradeBtn = document.getElementById('mapaGradeBtn');
@@ -3156,7 +3321,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   var mapaLimparBt = document.getElementById('mapaLimparBt');
   var mapaLimparPop = document.getElementById('mapaLimparPop');
   function mapaFechaPops() {
-    [mapaGradePop, mapaNpcPop, mapaTokPop, mapaLimparPop].forEach(function(p){ p.classList.remove('show'); });
+    [mapaGradePop, mapaNpcPop, mapaTokPop, mapaLimparPop, mapaSalaPop].forEach(function(p){ p.classList.remove('show'); });
     mapaTokPop.dataset.id = '';
     mapaGradeBtn.classList.remove('on');
     mapaNpcBtn.classList.remove('on');
@@ -3295,6 +3460,20 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }   // o blur dispara o change
     else if (e.key === 'Escape') { mapaPreenchePv(true); e.target.blur(); }   // desfaz o que digitou (e o Esc fecha o balão)
   });
+  // Delete tira do mapa o token que está com o balão aberto (foi nele que se
+  // clicou). Só quando não se está digitando: dentro de um campo, Delete e
+  // Backspace são do texto — apagar o token sem querer ali seria péssimo.
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+    if (!mapaAberto()) return;
+    var a = document.activeElement;
+    if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || a.isContentEditable)) return;
+    var id = mapaTokPop.dataset.id;
+    if (!id || !mapaTokPop.classList.contains('show') || !mapaAchaTok(id)) return;
+    e.preventDefault();
+    mapaFechaPops();
+    mapaTok({ op:'del', id:id });
+  });
   // clique fora fecha; o clique no token abre o menu dele (no pointerup), não fecha aqui
   document.addEventListener('pointerdown', function(e) {
     if (e.target.closest && e.target.closest('.mapa-pop, #mapaGradeBtn, #mapaNpcBtn, #mapaLimparBt, .mapa-tok')) return;
@@ -3309,9 +3488,13 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     var g = mapaCena.grade;
     if (document.activeElement !== mapaGTam) mapaGTam.value = Math.round(g.tam * 10) / 10;
     mapaGTamR.value = g.tam;
-    mapaGDx.max = g.tam; mapaGDy.max = g.tam;   // max antes do value: senão o value é cortado no max antigo
+    // no favo o passo vertical é menor que a casa: o controle tem que dar
+    // exatamente uma volta, senão sobra ou falta pedaço no fim do curso
+    mapaGDx.max = g.tam; mapaGDy.max = g.tipo === 'hex' ? 1.5 * mapaHexR() : g.tam;   // max antes do value: senão o value é cortado no max antigo
     mapaGDx.value = g.dx; mapaGDy.value = g.dy;
     document.querySelectorAll('#mapaGCor .mapa-op').forEach(function(b){ b.classList.toggle('on', b.dataset.cor === g.cor); });
+    document.querySelectorAll('#mapaGTipo .mapa-op').forEach(function(b){ b.classList.toggle('on', b.dataset.tipo === g.tipo); });
+    document.getElementById('mapaMedida').textContent = mapaMedidaTxt();
   }
   mapaGTamR.addEventListener('input', function(){ mapaMudaGrade({ tam:+mapaGTamR.value }); });
   mapaGTam.addEventListener('input', function() {
@@ -3322,6 +3505,9 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   mapaGDy.addEventListener('input', function(){ mapaMudaGrade({ dy:+mapaGDy.value }); });
   document.querySelectorAll('#mapaGCor .mapa-op').forEach(function(b) {
     b.addEventListener('click', function(){ mapaMudaGrade({ cor:b.dataset.cor }); });
+  });
+  document.querySelectorAll('#mapaGTipo .mapa-op').forEach(function(b) {
+    b.addEventListener('click', function(){ mapaMudaGrade({ tipo:b.dataset.tipo }); });
   });
   mapaGradeBtn.addEventListener('click', function(){ mapaAbrePopEm(mapaGradePop, mapaGradeBtn, 'dir'); });
 
@@ -3408,7 +3594,10 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   });
   document.getElementById('mapaEscolher').addEventListener('click', function(){ mapaFile.click(); });
   document.getElementById('mapaTrocar').addEventListener('click', function(){ mapaFechaPops(); mapaFile.click(); });
-  document.getElementById('mapaBranco').addEventListener('click', mapaNovoBranco);
+  document.getElementById('mapaBranco').addEventListener('click', function() {
+    var bt = document.getElementById('mapaBranco');
+    if (mapaAbrePopEm(mapaSalaPop, bt, 'esq')) { mapaSalaConta(); mapaSalaL.focus(); mapaSalaL.select(); }
+  });
   document.getElementById('mapaFit').addEventListener('click', mapaFit);
   // o mapa aceita duas coisas soltas em cima: arquivo de imagem (mapa novo) e
   // personagem da mesa (token no quadrado onde soltou)
@@ -3437,8 +3626,8 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     if (temPj(e)) {
       var cid = e.dataTransfer.getData(MAPA_TIPO_PJ), c = null;
       mesaChars.forEach(function(x){ if (x.char_id === cid) c = x; });
-      var w = mapaTelaParaMundo(e.clientX, e.clientY), g = mapaCena.grade;
-      if (c) mapaPoePc(c, { col:Math.floor((w.x - g.dx) / g.tam), row:Math.floor((w.y - g.dy) / g.tam) });
+      var w = mapaTelaParaMundo(e.clientX, e.clientY);
+      if (c) mapaPoePc(c, mapaCasaEm(w.x, w.y));
       return;
     }
     mapaNovoArquivo(e.dataTransfer.files[0]);
@@ -3449,8 +3638,8 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     var t = mapaAchaTok(el.dataset.id);
     if (!t) return;
     e.preventDefault();
-    var w = mapaTelaParaMundo(e.clientX, e.clientY), geo = mapaTokGeo(t);
-    mapaDrag = { id:t.id, el:el, pid:e.pointerId, x0:e.clientX, y0:e.clientY, offX:w.x - geo.x, offY:w.y - geo.y, col0:t.col, row0:t.row, moveu:false };
+    var w = mapaTelaParaMundo(e.clientX, e.clientY), c = mapaTokCentro(t);
+    mapaDrag = { id:t.id, el:el, pid:e.pointerId, x0:e.clientX, y0:e.clientY, offX:w.x - c.x, offY:w.y - c.y, col0:t.col, row0:t.row, moveu:false };
     try { el.setPointerCapture(e.pointerId); } catch (_) {}
   }
   function mapaMoveArraste(e) {
@@ -3462,15 +3651,15 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
       d.el.classList.add('drag');
       mapaFechaPops();
     }
-    var g = mapaCena.grade, lado = t.tam * g.tam, w = mapaTelaParaMundo(e.clientX, e.clientY);
-    var x = w.x - d.offX, y = w.y - d.offY;
-    if (t.tam < 1) { x -= (g.tam - lado) / 2; y -= (g.tam - lado) / 2; }
-    var col = Math.round((x - g.dx) / g.tam), row = Math.round((y - g.dy) / g.tam);
-    if (col !== t.col || row !== t.row) mapaTok({ op:'mov', id:t.id, col:col, row:row });   // anda de quadrado em quadrado, ao vivo pra mesa
-    var n = Math.max(Math.abs(col - d.col0), Math.abs(row - d.row0));   // D&D 2024: diagonal conta 1 quadrado
+    // o centro do token é que escolhe a casa — vale igual pro quadriculado e
+    // pro favo, cada um com a sua conta
+    var w = mapaTelaParaMundo(e.clientX, e.clientY);
+    var casa = mapaCasaEm(w.x - d.offX, w.y - d.offY);
+    if (casa.col !== t.col || casa.row !== t.row) mapaTok({ op:'mov', id:t.id, col:casa.col, row:casa.row });   // anda de casa em casa, ao vivo pra mesa
+    var n = mapaCasasEntre({ col:d.col0, row:d.row0 }, casa);
     var p = mapaPontoView(e);
     mapaDistEl.hidden = !n;
-    mapaDistEl.textContent = n + (n === 1 ? ' quadrado' : ' quadrados') + ' · ' + String(n * 1.5).replace('.', ',') + ' m';
+    mapaDistEl.textContent = n + ' ' + mapaNomeCasa(n) + ' · ' + String(n * MAPA_M).replace('.', ',') + ' m';
     mapaDistEl.style.left = p.x + 'px';
     mapaDistEl.style.top = p.y + 'px';
   }
