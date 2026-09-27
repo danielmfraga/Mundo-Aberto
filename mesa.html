@@ -716,9 +716,6 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
 .mapa-ico:hover { color:var(--fg); border-color:var(--holo-soft); }
 .mapa-ico.on { color:var(--holo); border-color:var(--holo); box-shadow:0 0 8px rgba(78,211,232,0.3); }
 .mapa-x:hover { color:#fff; background:var(--danger); border-color:var(--danger); }
-.mapa-panel.sem-mapa .mapa-add, .mapa-panel.sem-mapa .mapa-npc-btn,
-.mapa-panel.sem-mapa #mapaTrocar, .mapa-panel.sem-mapa #mapaGradeBtn,
-.mapa-panel.sem-mapa #mapaFit, .mapa-panel.sem-mapa #mapaLimparBt { display:none; }
 .mapa-ico.mapa-limpar:hover, .mapa-ico.mapa-limpar.on { color:var(--danger); border-color:rgba(255,85,102,0.6); }
 .mapa-op[disabled] { opacity:0.4; cursor:default; }
 .mapa-op[disabled]:hover { border-color:var(--line); }
@@ -765,12 +762,6 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
 }
 .mapa-tok:hover { z-index:55 !important; }
 .mapa-tok:hover .nm, .mapa-tok.drag .nm { display:block; }
-.mapa-vazio {
-  position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
-  padding:20px; text-align:center; cursor:default; font-family:var(--font-mono); font-size:11px; letter-spacing:0.1em; color:var(--fg-dim);
-}
-.mapa-vazio[hidden] { display:none; }
-.mapa-vazio .acoes { display:flex; flex-wrap:wrap; gap:9px; justify-content:center; }
 .mapa-acao { background:rgba(255,110,90,0.1); border-color:rgba(255,110,90,0.45); color:#ff8a7a; }
 .mapa-acao:hover { background:rgba(255,110,90,0.2); border-color:#ff8a7a; box-shadow:0 0 12px rgba(255,110,90,0.3); }
 .mapa-acao:disabled { opacity:0.5; cursor:default; box-shadow:none; }
@@ -1064,13 +1055,14 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
 
   <!-- Mapa (mesa de D20): imagem › grade › tokens. Vem antes do rail pra, no
        celular (uma coluna só), ficar logo abaixo das caras. -->
-  <div class="panel mapa-panel sem-mapa" id="mapaPanel">
+  <div class="panel mapa-panel" id="mapaPanel">
     <div class="mapa-bar">
       <span class="led"></span><span class="panel-title">Mapa</span>
       <div class="mapa-add" id="mapaAdd"></div>
       <button class="mapa-npc-btn" id="mapaNpcBtn" type="button" title="Colocar NPC ou monstro no mapa">+ NPC</button>
       <span class="mapa-sp"></span>
       <button class="mapa-ico" id="mapaTrocar" type="button" title="Trocar o mapa (começa uma cena nova)">&#128444;</button>
+      <button class="mapa-ico" id="mapaSalaBtn" type="button" title="Sala em branco, por medida em metros">&#128208;</button>
       <button class="mapa-ico" id="mapaGradeBtn" type="button" title="Ajustar a grade">#</button>
       <button class="mapa-ico" id="mapaFit" type="button" title="Ver o mapa inteiro (ou duplo clique no mapa)">&#9974;</button>
       <button class="mapa-ico mapa-limpar" id="mapaLimparBt" type="button" title="Limpar o mapa">&#128465;</button>
@@ -1082,13 +1074,6 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
         <div class="mapa-grade" id="mapaGrade"></div>
         <svg class="mapa-grade mapa-hex" id="mapaHex" style="display:none" aria-hidden="true"></svg>
         <div class="mapa-tokens" id="mapaTokens"></div>
-      </div>
-      <div class="mapa-vazio" id="mapaVazio">
-        <div>Arraste a imagem do mapa pra cá</div>
-        <div class="acoes">
-          <button class="btn mapa-acao" id="mapaEscolher" type="button">Escolher imagem</button>
-          <button class="btn mapa-acao" id="mapaBranco" type="button">Sala em branco</button>
-        </div>
       </div>
       <div class="mapa-dist" id="mapaDist" hidden></div>
       <div class="mapa-status" id="mapaStatus"></div>
@@ -2708,7 +2693,6 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   var mapaGrade    = document.getElementById('mapaGrade');
   var mapaHex      = document.getElementById('mapaHex');
   var mapaTokens   = document.getElementById('mapaTokens');
-  var mapaVazio    = document.getElementById('mapaVazio');
   var mapaDistEl   = document.getElementById('mapaDist');
   var mapaStatusEl = document.getElementById('mapaStatus');
   var mapaAddEl    = document.getElementById('mapaAdd');
@@ -2718,7 +2702,11 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   var mapaTokPop   = document.getElementById('mapaTokPop');
   var mapaFile     = document.getElementById('mapaFile');
 
-  var mapaCena = mapaCenaVazia();
+  // Nasce já em branco: se o mapa abrir antes do Storage responder (a
+  // primeira vez que alguém entra na sala, ou a rede demorando), o que
+  // aparece por uma fração de segundo é a grade neutra, não uma caixa preta
+  // 0×0 — o normalizador troca por cima quando a resposta de verdade chegar.
+  var mapaCena = mapaCenaBrancoPadrao();
   // Só grava depois de saber o que já estava salvo: gravar a cena vazia do
   // começo por cima apagaria o mapa da sala.
   var mapaPronto = false, mapaCarregando = null;
@@ -2730,6 +2718,30 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
 
   function mapaClamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
   function mapaCenaVazia() { return { v:1, img:null, branco:false, w:0, h:0, grade:{ tipo:'quadrada', tam:70, dx:0, dy:0, cor:'escura' }, tokens:[] }; }
+  // Medida de uma sala em branco: quantas casas de largura/altura, no
+  // formato escolhido, viram pixels — a mesma conta pra criar uma sala nova
+  // e pro padrão que a mesa nasce com.
+  function mapaSalaMedida(cols, rows, tipo, tam) {
+    tipo = tipo === 'hex' ? 'hex' : 'quadrada';
+    tam = tam || 70;
+    var w, h;
+    if (tipo === 'hex') {
+      var R = tam / MAPA_RAIZ3;
+      w = cols * tam + tam / 2;      // a meia casa da direita é o degrau das linhas ímpares
+      h = 1.5 * R * (rows - 1) + 2 * R;
+    } else {
+      w = cols * tam; h = rows * tam;
+    }
+    return { w:w, h:h, grade:{ tipo:tipo, tam:tam, dx:0, dy:0, cor:'escura' } };
+  }
+  // A mesa nunca abre num "nada" pra arrastar imagem em cima — abre já numa
+  // grade neutra (18 × 12 m, do tamanho do popover de Sala em branco), e daí
+  // dá pra pôr uma imagem de fundo ou medir outra sala, os dois pela barra.
+  function mapaCenaBrancoPadrao() {
+    var c = mapaCenaVazia(), m = mapaSalaMedida(12, 8, 'quadrada', 70);
+    c.branco = true; c.w = m.w; c.h = m.h; c.grade = m.grade;
+    return c;
+  }
   function mapaTemMapa() { return !!(mapaCena.img || mapaCena.branco); }
   function mapaUrlOk(u) { return (typeof u === 'string' && /^https?:\/\//i.test(u)) ? u : null; }
   function mapaStatus(t) { mapaStatusEl.textContent = t || ''; }
@@ -2792,8 +2804,9 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     };
   }
   function mapaNormaliza(c) {
+    // sala nunca abriu (Storage disse "não existe")? nasce em branco, não vazia
+    if (!c || typeof c !== 'object') return mapaCenaBrancoPadrao();
     var n = mapaCenaVazia();
-    if (!c || typeof c !== 'object') return n;
     n.img = mapaUrlOk(c.img);
     n.branco = !n.img && !!c.branco;
     n.w = +c.w > 0 ? +c.w : 0;
@@ -2805,6 +2818,13 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
       vistos[t.id] = 1;
       return true;
     }).slice(0, 200);
+    // nem imagem nem branco marcado (só deveria acontecer com um JSON salvo
+    // à mão ou corrompido) — a mesa se cura sozinha, nunca fica sem nada
+    if (!n.img && !n.branco) {
+      var pad = mapaCenaBrancoPadrao();
+      n.branco = true;
+      if (!n.w || !n.h) { n.w = pad.w; n.h = pad.h; n.grade = pad.grade; }
+    }
     return n;
   }
 
@@ -2910,17 +2930,13 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
 
   // ── desenho ──
   function mapaRender() {
-    var tem = mapaTemMapa();
-    mapaPanel.classList.toggle('sem-mapa', !tem);
-    mapaVazio.hidden = tem;
-    mapaMundo.style.display = tem ? '' : 'none';
-    if (tem) {
-      mapaMundo.style.width = mapaCena.w + 'px';
-      mapaMundo.style.height = mapaCena.h + 'px';
-      mapaMundo.classList.toggle('branco', !!mapaCena.branco);
-    }
-    // fora do if: limpar o mapa tem que soltar a imagem de verdade, não só
-    // esconder — senão ela fica pendurada no elemento depois de "limpar tudo"
+    // a mesa sempre tem uma cena (imagem ou grade em branco — mapaNormaliza
+    // garante isso), então mapaMundo fica sempre visível: nada de tela vazia
+    mapaMundo.style.width = mapaCena.w + 'px';
+    mapaMundo.style.height = mapaCena.h + 'px';
+    mapaMundo.classList.toggle('branco', !!mapaCena.branco);
+    // limpar o mapa tem que soltar a imagem de verdade, não só esconder —
+    // senão ela fica pendurada no elemento depois de "limpar tudo"
     if (mapaCena.img) {
       if (mapaImg.getAttribute('src') !== mapaCena.img) mapaImg.src = mapaCena.img;
       mapaImg.style.display = '';
@@ -2930,6 +2946,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
       mapaImg.removeAttribute('src');
       mapaImg.style.display = 'none';
     }
+    mapaTrocarBt.title = mapaCena.branco ? 'Colocar uma imagem de fundo' : 'Trocar o mapa (começa uma cena nova)';
     mapaRenderGrade();
     mapaRenderTokens();
     mapaRenderRoster();
@@ -3292,17 +3309,8 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   }
   function mapaCriaSala() {
     if (mapaCena.tokens.length && !confirm('A sala em branco começa uma cena nova: os tokens saem do mapa. Continuar?')) return;
-    var casas = mapaSalaCasas(), tam = 70, c = mapaCenaVazia();
-    c.branco = true;
-    c.grade.tipo = mapaSalaTipo;
-    c.grade.tam = tam;
-    if (mapaSalaTipo === 'hex') {
-      var R = tam / MAPA_RAIZ3;
-      c.w = casas.cols * tam + tam / 2;      // a meia casa da direita é o degrau das linhas ímpares
-      c.h = 1.5 * R * (casas.rows - 1) + 2 * R;
-    } else {
-      c.w = casas.cols * tam; c.h = casas.rows * tam;
-    }
+    var casas = mapaSalaCasas(), c = mapaCenaVazia(), m = mapaSalaMedida(casas.cols, casas.rows, mapaSalaTipo, 70);
+    c.branco = true; c.w = m.w; c.h = m.h; c.grade = m.grade;
     mapaFechaPops();
     mapaNovaCena(c);
   }
@@ -3319,6 +3327,8 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   var mapaGradeBtn = document.getElementById('mapaGradeBtn');
   var mapaNpcBtn   = document.getElementById('mapaNpcBtn');
   var mapaLimparBt = document.getElementById('mapaLimparBt');
+  var mapaSalaBtn  = document.getElementById('mapaSalaBtn');
+  var mapaTrocarBt = document.getElementById('mapaTrocar');
   var mapaLimparPop = document.getElementById('mapaLimparPop');
   function mapaFechaPops() {
     [mapaGradePop, mapaNpcPop, mapaTokPop, mapaLimparPop, mapaSalaPop].forEach(function(p){ p.classList.remove('show'); });
@@ -3326,6 +3336,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     mapaGradeBtn.classList.remove('on');
     mapaNpcBtn.classList.remove('on');
     mapaLimparBt.classList.remove('on');
+    mapaSalaBtn.classList.remove('on');
   }
   function mapaAbrePopEm(pop, botao, lado) {   // abre embaixo do botão da barra (ou fecha, se já estava aberto)
     var abrir = !pop.classList.contains('show');
@@ -3476,7 +3487,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   });
   // clique fora fecha; o clique no token abre o menu dele (no pointerup), não fecha aqui
   document.addEventListener('pointerdown', function(e) {
-    if (e.target.closest && e.target.closest('.mapa-pop, #mapaGradeBtn, #mapaNpcBtn, #mapaLimparBt, .mapa-tok')) return;
+    if (e.target.closest && e.target.closest('.mapa-pop, #mapaGradeBtn, #mapaNpcBtn, #mapaLimparBt, #mapaSalaBtn, .mapa-tok')) return;
     mapaFechaPops();
   }, true);
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') mapaFechaPops(); });
@@ -3518,7 +3529,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   var mapaLimparToks = document.getElementById('mapaLimparToks');
   function mapaLimpa(tudo) {
     mapaFechaPops();
-    mapaNovaCena(tudo ? mapaCenaVazia() : Object.assign({}, mapaCena, { tokens:[] }));
+    mapaNovaCena(tudo ? mapaCenaBrancoPadrao() : Object.assign({}, mapaCena, { tokens:[] }));
   }
   mapaLimparBt.addEventListener('click', function() {
     var n = mapaCena.tokens.length;
@@ -3592,11 +3603,9 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     mapaFile.value = '';
     mapaNovoArquivo(f);
   });
-  document.getElementById('mapaEscolher').addEventListener('click', function(){ mapaFile.click(); });
-  document.getElementById('mapaTrocar').addEventListener('click', function(){ mapaFechaPops(); mapaFile.click(); });
-  document.getElementById('mapaBranco').addEventListener('click', function() {
-    var bt = document.getElementById('mapaBranco');
-    if (mapaAbrePopEm(mapaSalaPop, bt, 'esq')) { mapaSalaConta(); mapaSalaL.focus(); mapaSalaL.select(); }
+  mapaTrocarBt.addEventListener('click', function(){ mapaFechaPops(); mapaFile.click(); });
+  mapaSalaBtn.addEventListener('click', function() {
+    if (mapaAbrePopEm(mapaSalaPop, mapaSalaBtn, 'dir')) { mapaSalaConta(); mapaSalaL.focus(); mapaSalaL.select(); }
   });
   document.getElementById('mapaFit').addEventListener('click', mapaFit);
   // o mapa aceita duas coisas soltas em cima: arquivo de imagem (mapa novo) e
