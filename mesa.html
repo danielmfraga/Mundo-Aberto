@@ -15,7 +15,7 @@
   --line:rgba(120,200,220,0.10); --line-strong:rgba(120,200,220,0.20);
   --fg:#cfe9f0; --fg-dim:rgba(207,233,240,0.55); --fg-faint:rgba(207,233,240,0.32);
   --holo:#4ed3e8; --holo-soft:rgba(78,211,232,0.55); --accent:#ff7a3d; --danger:#ff5566;
-  --fome:#e0473a; --desp:#ff9d3d;
+  --fome:#e0473a; --desp:#ff9d3d; --temp:#4ade80;
   --font-display:'Space Grotesk',sans-serif; --font-mono:'JetBrains Mono',monospace;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -843,6 +843,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   font-family:var(--font-display); font-size:12px; font-weight:600; color:#fff;
   background:rgba(4,8,16,0.88); padding:1px 7px; border-radius:9px;
 }
+.mapa-tok .nm .tmp { color:var(--temp); font-weight:700; }   /* PV temporário some em verde, some sozinho quando zera */
 .mapa-tok:hover { z-index:55 !important; }
 .mapa-tok:hover .nm, .mapa-tok.drag .nm { display:block; }
 .mapa-acao { background:rgba(255,110,90,0.1); border-color:rgba(255,110,90,0.45); color:#ff8a7a; }
@@ -903,6 +904,9 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
 .mapa-pv-bt:hover { background:rgba(255,110,90,0.22); }
 .mapa-pop .mapa-pv input { width:54px; flex:0 0 auto; text-align:center; padding:6px 4px; font-size:15px; font-weight:700; }
 .mapa-pop .mapa-pv input.zero { color:var(--danger); }
+.mapa-pop .mapa-pv input.tem { color:var(--temp); }   /* enquanto há PV temporário, o valor atual fica verde */
+.mapa-lin > label.tmp { color:var(--temp); }
+.mapa-pop input.mapa-pv-temp.tem { color:var(--temp); font-weight:700; }
 /* o máximo vem por último, menor e mais apagado, com a legenda "máx" */
 .mapa-pv-maxw { display:flex; align-items:center; gap:4px; margin-left:4px; cursor:text; }
 .mapa-pv-maxw span { font-size:8.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--fg-faint); }
@@ -2892,6 +2896,12 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     if (!isFinite(v)) return null;
     return mapaClamp(v, 0, max != null ? max : 9999);
   }
+  // PV temporário: não tem relação com o máximo (pode passar dele), só não fica negativo.
+  function mapaPvTempNorm(v) {
+    if (v === null || v === undefined || v === '') return null;
+    v = Math.round(+v);
+    return isFinite(v) && v > 0 ? Math.min(v, 9999) : null;
+  }
   // O que chega do Storage ou de outro jogador passa por aqui antes de valer.
   function mapaTokNorm(t) {
     t = t || {};
@@ -2907,7 +2917,8 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
       char_id: t.char_id ? String(t.char_id) : null,
       ficha: typeof t.ficha === 'string' ? t.ficha : null,
       pv: mapaPvNorm(t.pv, pvMax),
-      pvMax: pvMax
+      pvMax: pvMax,
+      pvTemp: mapaPvTempNorm(t.pvTemp)
     };
   }
   function mapaGradeNorm(g, base) {
@@ -3160,7 +3171,13 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     num.textContent = n ? n[1] : '';
     num.style.fontSize = Math.max(7, geo.lado * 0.24) + 'px';
     el.classList.toggle('caido', t.pv != null && t.pv <= 0);   // PV 0: fica cinza, dá pra ver de longe quem caiu
-    el.querySelector('.nm').textContent = (t.nome || '') + (t.pv != null ? ' · ' + t.pv + (t.pvMax != null ? '/' + t.pvMax : '') + ' PV' : '');
+    var nm = el.querySelector('.nm');
+    if (t.pv != null) {
+      // temporário some em verde do lado do PV — vem de mapaPvTempNorm, some sozinho quando zera
+      nm.innerHTML = esc(t.nome || '') + ' · ' + t.pv + (t.pvTemp ? '<span class="tmp">+' + t.pvTemp + '</span>' : '') + (t.pvMax != null ? '/' + t.pvMax : '') + ' PV';
+    } else {
+      nm.textContent = t.nome || '';
+    }
     el.dataset.nome = t.nome || '';
   }
   // os personagens da mesa ficam na barra do mapa: um clique e o token entra;
@@ -3244,7 +3261,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
       if (t && MAPA_TAM_OK.indexOf(+op.tam) >= 0) t.tam = +op.tam;
     } else if (op.op === 'pv') {
       t = mapaAchaTok(op.id);
-      if (t) { t.pvMax = mapaPvMaxNorm(op.pvMax); t.pv = mapaPvNorm(op.pv, t.pvMax); }
+      if (t) { t.pvMax = mapaPvMaxNorm(op.pvMax); t.pv = mapaPvNorm(op.pv, t.pvMax); t.pvTemp = mapaPvTempNorm(op.pvTemp); }
       if (mapaTokPop.dataset.id === op.id) mapaPreenchePv();   // quem está com o balão aberto vê mudar
     } else if (op.op === 'del') {
       mapaCena.tokens = mapaCena.tokens.filter(function(x){ return x.id !== op.id; });
@@ -3521,7 +3538,8 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
         '<button type="button" class="mapa-pv-bt" data-pv="1" title="Somar 1 PV">+</button>' +
         '<label class="mapa-pv-maxw" title="PV máximo"><span>máx</span><input type="text" class="mapa-pv-max" inputmode="numeric" autocomplete="off" placeholder="—"></label>' +
       '</div>' +
-      '<div class="mapa-dica">Digite <b>-5</b> pra tirar, <b>+5</b> pra curar, ou o número novo.</div>' +
+      '<div class="mapa-lin"><label class="tmp">Temp.</label><input type="text" class="mapa-pv-temp" inputmode="numeric" autocomplete="off" placeholder="—" title="PV temporário: some ao PV e é gasto primeiro. Digite o total, ou +5/-5 pra ajustar."></div>' +
+      '<div class="mapa-dica">Digite <b>-5</b> pra tirar, <b>+5</b> pra curar, ou o número novo. O temporário é gasto primeiro.</div>' +
       '<div class="mapa-lin"><label>Tamanho</label><select class="mapa-tam">' + ops + '</select></div>' +
       (t.char_id ? '<button type="button" class="mapa-op" data-acao="ficha"><span>Abrir ficha</span><span class="q">&#8599;</span></button>' : '') +
       '<button type="button" class="mapa-op perigo" data-acao="tirar"><span>Tirar do mapa</span></button>';
@@ -3538,15 +3556,27 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   // forca: escreve mesmo no campo que está com o foco (depois de confirmar o que se digitou)
   function mapaPreenchePv(forca) {
     var t = mapaAchaTok(mapaTokPop.dataset.id);
-    var at = mapaTokPop.querySelector('.mapa-pv-at'), mx = mapaTokPop.querySelector('.mapa-pv-max');
+    var at = mapaTokPop.querySelector('.mapa-pv-at'), mx = mapaTokPop.querySelector('.mapa-pv-max'), tp = mapaTokPop.querySelector('.mapa-pv-temp');
     if (!t || !at) return;
     if (forca || document.activeElement !== at) at.value = t.pv != null ? t.pv : '';   // não atropela quem está digitando
     if (forca || document.activeElement !== mx) mx.value = t.pvMax != null ? t.pvMax : '';
+    if (tp && (forca || document.activeElement !== tp)) tp.value = t.pvTemp != null ? t.pvTemp : '';
     at.classList.toggle('zero', t.pv != null && t.pv <= 0);
+    at.classList.toggle('tem', !!t.pvTemp);   // enquanto há temporário, o PV atual aparece em verde
+    if (tp) tp.classList.toggle('tem', !!t.pvTemp);
   }
-  function mapaMudaPv(t, pv, pvMax) {
+  // pvTemp opcional: só quando o próprio campo Temp mudou (senão mantém o que já tinha).
+  // pv chega CRU (sem clamp) — é o que deixa medir o dano de verdade e tirar do
+  // temporário primeiro antes de clampar; curar (pv não cai) nunca mexe no temporário.
+  function mapaMudaPv(t, pv, pvMax, pvTemp) {
     pvMax = mapaPvMaxNorm(pvMax);
-    mapaTok({ op:'pv', id:t.id, pv:mapaPvNorm(pv, pvMax), pvMax:pvMax });
+    var temp = pvTemp !== undefined ? pvTemp : t.pvTemp;
+    if (t.pv != null && pv != null && pv < t.pv && temp) {
+      var dano = t.pv - pv, absorvido = Math.min(temp, dano);
+      pv += absorvido;
+      temp -= absorvido;
+    }
+    mapaTok({ op:'pv', id:t.id, pv:mapaPvNorm(pv, pvMax), pvMax:pvMax, pvTemp:mapaPvTempNorm(temp) });
     mapaPreenchePv(true);
   }
   // Lê o que se digitou no campo de PV:
@@ -3576,6 +3606,10 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
       var mx = mapaLePv(inp, t.pvMax);
       if (mx === undefined || mx === t.pvMax) { mapaPreenchePv(true); return; }
       mapaMudaPv(t, t.pv == null ? mx : t.pv, mx);   // ainda sem PV atual: começa cheio
+    } else if (inp.classList.contains('mapa-pv-temp')) {
+      var tp = mapaLePv(inp, t.pvTemp || 0);
+      if (tp === undefined || tp === (t.pvTemp || 0)) { mapaPreenchePv(true); return; }
+      mapaMudaPv(t, t.pv, t.pvMax, Math.max(0, tp));   // só troca o temporário, PV atual não muda
     } else {
       var at = mapaLePv(inp, t.pv != null ? t.pv : t.pvMax);
       if (at === undefined || at === t.pv) { mapaPreenchePv(true); return; }
