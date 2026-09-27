@@ -91,6 +91,39 @@ body {
 }
 .panel-head .led { width:6px; height:6px; border-radius:50%; background:var(--holo); box-shadow:0 0 7px var(--holo); }
 .panel-title { font-family:var(--font-mono); font-size:10px; letter-spacing:0.28em; text-transform:uppercase; color:var(--fg-dim); }
+
+/* ── Seções que dobram (layout novo) ──
+   Cada bloco da coluna recolhe pela setinha. É preferência de cada um, salva
+   no navegador — não é estado da mesa. A seta é desenhada em CSS pra girar
+   junto ao abrir/fechar. */
+.dobra-seta {
+  margin-left:auto; flex:0 0 auto; width:22px; height:22px; padding:0; cursor:pointer;
+  background:none; border:1px solid transparent; border-radius:5px;
+  display:flex; align-items:center; justify-content:center; transition:all .15s;
+}
+/* aberto = seta pra cima ("clique pra recolher"); fechado = pra baixo */
+.dobra-seta::before {
+  content:''; width:7px; height:7px; border-right:1.5px solid var(--fg-dim); border-bottom:1.5px solid var(--fg-dim);
+  transform:translateY(1px) rotate(-135deg); transition:transform .2s, border-color .15s;
+}
+.dobra-seta:hover { border-color:var(--line-strong); background:rgba(255,255,255,0.04); }
+.dobra-seta:hover::before { border-color:var(--holo); }
+.dobra-seta[aria-expanded="false"]::before { transform:translateY(-2px) rotate(45deg); }
+[data-dobra].dobrado > .dobra-corpo,
+[data-dobra].dobrado > .panel-head + .dobra-corpo,
+[data-dobra].dobrado > .dice-extras-head + .dobra-corpo { display:none; }
+/* dobrado, o painel encolhe pro cabeçalho: sem isso o flex do rail esticaria a sobra */
+.panel[data-dobra].dobrado { flex:0 0 auto; }
+.panel[data-dobra].dobrado .panel-head { border-bottom:none; }
+/* o toggle 3D fica antes da seta, não grudado nela */
+.dice-panel .toggle3d { margin-left:auto; }
+.dice-panel .toggle3d + .dobra-seta { margin-left:0; }
+
+/* Dados extras: sub-bloco dentro do painel de Dados */
+.dice-extras { margin-top:9px; border-top:1px solid var(--line); padding-top:4px; }
+.dice-extras-head { display:flex; align-items:center; gap:8px; padding:2px 1px 4px; }
+.dice-extras-head .panel-title { font-size:8.5px; letter-spacing:0.2em; color:var(--fg-faint); }
+.dice-extras .dice-grid { margin-top:4px; }
 /* Blindagem da transcrição: indicador de status + alarme */
 .trx-badge { margin-left:auto; display:flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:9px; letter-spacing:0.16em; text-transform:uppercase; color:var(--fg-faint); transition:color .3s; }
 .trx-badge .trx-dot { width:7px; height:7px; border-radius:50%; background:var(--fg-faint); transition:all .3s; }
@@ -410,6 +443,51 @@ body {
   border-radius:6px; padding:12px; cursor:pointer; transition:all .15s;
 }
 .wb-btn:hover { background:rgba(78,211,232,0.16); box-shadow:0 0 14px rgba(78,211,232,0.3); }
+
+/* ── Ferramentas em ícone (Quadro · Mapa · Som · Reservada) ──
+   Quatro numa linha no lugar de quatro botões largos empilhados: a altura
+   que sobra vai pro chat. Sem rótulo — o nome aparece no hover, numa dica
+   nossa (a do navegador demora ~1s e vem cinza, fora do chassi). */
+.ferramentas { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; flex:0 0 auto; }
+.ferr {
+  position:relative; aspect-ratio:1; padding:0; cursor:pointer; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--holo); background:rgba(78,211,232,0.08); border:1px solid var(--holo-soft); transition:all .15s;
+}
+.ferr svg { width:78%; height:78%; fill:currentColor; display:block; }
+.ferr:hover { background:rgba(78,211,232,0.18); box-shadow:0 0 14px rgba(78,211,232,0.3); }
+.ferr:active { transform:translateY(1px); }
+/* rótulo só pra leitor de tela: o visual é o ícone + a dica */
+.ferr .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.ferr::after {
+  content:attr(data-dica); position:absolute; bottom:calc(100% + 7px); left:50%; transform:translateX(-50%);
+  z-index:600; width:max-content; max-width:190px; pointer-events:none; opacity:0; transition:opacity .13s;
+  background:rgba(4,8,16,0.97); border:1px solid var(--line-strong); border-radius:6px; padding:6px 9px;
+  font-family:var(--font-mono); font-size:9px; letter-spacing:0.1em; text-transform:uppercase; line-height:1.5; color:var(--fg);
+}
+.ferr:hover::after, .ferr:focus-visible::after { opacity:1; }
+/* nas pontas a dica encosta na borda em vez de centralizar: a coluna corta o
+   que passa dela (overflow-x), e centralizada a dica do primeiro saía cortada */
+.ferr:first-child::after { left:0; transform:none; }
+.ferr:last-child::after { left:auto; right:0; transform:none; }
+/* cada ferramenta guarda a cor que já tinha no botão largo */
+.ferr-mapa { color:#ff8a7a; background:rgba(255,110,90,0.08); border-color:rgba(255,110,90,0.45); }
+.ferr-mapa:hover { background:rgba(255,110,90,0.18); box-shadow:0 0 14px rgba(255,110,90,0.28); }
+.ferr-mapa.open { background:rgba(255,110,90,0.24); border-color:#ff8a7a; }
+.ferr-som { color:#c3a6ff; background:rgba(160,130,255,0.08); border-color:rgba(160,130,255,0.45); }
+.ferr-som:hover { background:rgba(160,130,255,0.18); box-shadow:0 0 14px rgba(160,130,255,0.28); }
+.ferr-som.playing { border-color:#c3a6ff; }
+.ferr-som.playing::before {
+  content:''; position:absolute; top:5px; right:5px; width:6px; height:6px; border-radius:50%;
+  background:#c3a6ff; box-shadow:0 0 8px #c3a6ff; animation:somPulse 1.2s infinite;
+}
+.ferr-resv { color:#8fe6b2; background:rgba(90,220,140,0.08); border-color:rgba(90,220,140,0.45); }
+.ferr-resv:hover { background:rgba(90,220,140,0.18); box-shadow:0 0 14px rgba(90,220,140,0.28); }
+.ferr-resv.active { color:#06210f; background:#8fe6b2; border-color:#8fe6b2; box-shadow:0 0 16px rgba(90,220,140,0.5); }
+.ferr-resv.active::before {
+  content:''; position:absolute; top:5px; right:5px; width:6px; height:6px; border-radius:50%;
+  background:#06210f; animation:somPulse 1.2s infinite;
+}
 .wb-overlay { position:fixed; inset:0; z-index:9990; background:rgba(0,0,0,0.82); display:none; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:18px; overflow:auto; }
 .wb-overlay.show { display:flex; }
 .wb-toolbar { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:7px; max-width:94vw; background:#0b1320; border:1px solid var(--line-strong); border-radius:8px; padding:8px 12px; }
@@ -440,9 +518,6 @@ body {
 }
 
 /* ── Mesa de Som (soundboard compartilhado) ── */
-.som-btn { color:#c3a6ff; background:rgba(160,130,255,0.08); border-color:rgba(160,130,255,0.45); position:relative; }
-.som-btn:hover { background:rgba(160,130,255,0.16); box-shadow:0 0 14px rgba(160,130,255,0.28); }
-.som-btn.playing::after { content:''; position:absolute; top:9px; right:11px; width:7px; height:7px; border-radius:50%; background:#c3a6ff; box-shadow:0 0 8px #c3a6ff; animation:somPulse 1.2s infinite; }
 @keyframes somPulse { 0%,100%{opacity:1;} 50%{opacity:0.25;} }
 /* drawer retrátil na borda direita — não-modal: vídeo e rail seguem visíveis/usáveis */
 .som-overlay { position:fixed; top:0; right:0; height:100vh; width:250px; max-width:88vw; z-index:9992; display:flex; transform:translateX(calc(100% + 24px)); transition:transform .28s ease; will-change:transform; pointer-events:none; }
@@ -547,10 +622,6 @@ body {
 .diario-btn:hover { background:rgba(210,150,70,0.16); box-shadow:0 0 14px rgba(210,150,70,0.28); }
 
 /* ── Sala Reservada: aparte privado (breakout do Jitsi; rail sempre visível) ── */
-.resv-btn { color:#8fe6b2; background:rgba(90,220,140,0.08); border-color:rgba(90,220,140,0.45); position:relative; }
-.resv-btn:hover { background:rgba(90,220,140,0.16); box-shadow:0 0 14px rgba(90,220,140,0.28); }
-.resv-btn.active { color:#06210f; background:#8fe6b2; border-color:#8fe6b2; box-shadow:0 0 16px rgba(90,220,140,0.5); }
-.resv-btn.active::after { content:''; position:absolute; top:9px; right:11px; width:7px; height:7px; border-radius:50%; background:#06210f; animation:somPulse 1.2s infinite; }
 .resv-banner { position:fixed; top:10px; left:50%; transform:translateX(-50%); z-index:9996; display:none; align-items:center; gap:8px; max-width:92vw; text-align:center;
   font-family:var(--font-mono); font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#06210f;
   background:#8fe6b2; border:1px solid #6fd39a; border-radius:8px; padding:9px 16px; cursor:pointer; box-shadow:0 4px 18px rgba(0,0,0,0.45); }
@@ -674,9 +745,6 @@ body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
    Abre no lugar do vídeo, que vira uma faixa de caras em cima. O rail (dados,
    chat, personagens) continua do lado: em combate se rola dado olhando o mapa.
    O #jitsi continua sem ser reparentado — só a posição na grade muda. */
-.mapa-btn { color:#ff8a7a; background:rgba(255,110,90,0.08); border-color:rgba(255,110,90,0.45); }
-.mapa-btn:hover { background:rgba(255,110,90,0.16); box-shadow:0 0 14px rgba(255,110,90,0.28); }
-.mapa-btn.open { background:rgba(255,110,90,0.2); border-color:#ff8a7a; box-shadow:0 0 12px rgba(255,110,90,0.3); }
 .mapa-panel { display:none; overflow:hidden; }
 body.mapa-on .mesa-grid { grid-template-rows:150px minmax(0,1fr); }
 body.mapa-on .video-panel { grid-column:1; grid-row:1; }
@@ -1178,27 +1246,41 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
 
   <!-- Rail: trama + personagens + dados + chat -->
   <div class="rail">
-    <div class="panel" id="tramaPanel">
+    <div class="panel" id="tramaPanel" data-dobra="trama">
       <div class="panel-head">
         <span class="led"></span>
         <span class="panel-title">Trama</span>
         <button class="trama-add-btn" id="tramaAddBtn" title="Adicionar trama">+</button>
+        <button class="dobra-seta" type="button" aria-expanded="true" title="Recolher"></button>
       </div>
-      <div class="trama-list" id="tramaList"></div>
+      <div class="trama-list dobra-corpo" id="tramaList"></div>
     </div>
 
-    <div class="panel chars-panel">
-      <div class="panel-head"><span class="led"></span><span class="panel-title">Personagens</span></div>
-      <div class="chars-body" id="charsBody"></div>
+    <div class="panel chars-panel" data-dobra="personagens">
+      <div class="panel-head">
+        <span class="led"></span><span class="panel-title">Personagens</span>
+        <button class="dobra-seta" type="button" aria-expanded="true" title="Recolher"></button>
+      </div>
+      <div class="chars-body dobra-corpo" id="charsBody"></div>
     </div>
 
-    <div class="panel dice-panel">
+    <div class="panel dice-panel" data-dobra="dados">
       <div class="panel-head">
         <span class="led"></span><span class="panel-title">Dados</span>
         <div class="toggle3d" id="toggle3d" title="Dados 3D (experimental)"><span>3D</span><span class="sw"></span></div>
+        <button class="dobra-seta" type="button" aria-expanded="true" title="Recolher"></button>
       </div>
-      <div class="dice-body">
+      <div class="dice-body dobra-corpo">
         <div class="dice-grid" id="diceGrid"></div>
+        <!-- Dados extras: Fome e Desespero são de Caçador/Vampiro, e a moeda
+             não é dado. Numa noite de D&D isso é ruído, então vem dobrado. -->
+        <div class="dice-extras" data-dobra="dados-extras">
+          <div class="dice-extras-head">
+            <span class="panel-title">Dados extras</span>
+            <button class="dobra-seta" type="button" aria-expanded="false" title="Mostrar"></button>
+          </div>
+          <div class="dice-grid dobra-corpo" id="diceGridExtras"></div>
+        </div>
         <div class="dice-actions">
           <button class="btn btn-clear" id="clearDice">Limpar</button>
           <button class="btn btn-roll" id="rollBtn">Rolar</button>
@@ -1207,15 +1289,29 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
       <div class="rolllog" id="rollLog"></div>
     </div>
 
-    <button class="wb-btn" id="wbBtn" title="Abrir quadro branco">&#9998; Quadro Branco</button>
-
-    <button class="wb-btn mapa-btn" id="mapaBtn" type="button" title="Abrir o mapa (mesa de D20) pra mesa toda">&#128506; Mapa</button>
+    <!-- Quatro ferramentas em ícone (desenho do wireframe do grupo). Sem
+         rótulo: o nome aparece ao passar o mouse. Os glifos são os vetores
+         que o colega entregou, recoloridos pelo currentColor. -->
+    <div class="ferramentas">
+      <button class="ferr" id="wbBtn" type="button" data-dica="Quadro Branco">
+        <svg viewBox="0 0 56.21 55.89" aria-hidden="true"><path d="M21.95,30.05l7.28-7.29,4.06,4.06-7.29,7.28c-.33.33-.73.56-1.17.69l-3.76,1.11c-.26.08-.55,0-.74-.19-.19-.2-.27-.48-.19-.74l1.11-3.76c.13-.44.37-.84.69-1.17h.01ZM34.28,20.54l1.23,1.23c.78.78.78,2.05,0,2.83l-1.51,1.51-4.06-4.06,1.51-1.51c.78-.78,2.05-.78,2.83,0h0Z"/></svg>
+        <span class="sr">Quadro Branco</span>
+      </button>
+      <button class="ferr ferr-mapa" id="mapaBtn" type="button" data-dica="Mapa">
+        <svg viewBox="0 0 56.21 55.89" aria-hidden="true"><path d="M18.96,22.23c0-1.26,1.02-2.29,2.29-2.29h13.71c1.26,0,2.29,1.02,2.29,2.29v11.43c0,1.26-1.02,2.29-2.29,2.29h-13.71c-1.26,0-2.29-1.02-2.29-2.29v-11.43ZM24.68,21.09h-3.43c-.63,0-1.14.51-1.14,1.14v2.29h4.57v-3.43ZM20.11,25.66v4.57h4.57v-4.57h-4.57ZM20.11,31.37v2.29c0,.63.51,1.14,1.14,1.14h3.43v-3.43s-4.57,0-4.57,0ZM30.39,21.09h-4.57v3.43h4.57v-3.43ZM25.82,30.23h4.57v-4.57h-4.57v4.57ZM25.82,34.8h4.57v-3.43h-4.57v3.43ZM31.53,21.09v3.43h4.57v-2.29c0-.63-.51-1.14-1.14-1.14h-3.43ZM36.11,30.23v-4.57h-4.57v4.57h4.57ZM31.53,34.8h3.43c.63,0,1.14-.51,1.14-1.14v-2.29h-4.57s0,3.43,0,3.43Z"/></svg>
+        <span class="sr">Mapa</span>
+      </button>
+      <button class="ferr ferr-som" id="somBtn" type="button" data-dica="Mesa de Som">
+        <svg viewBox="0 0 56.21 55.89" aria-hidden="true"><path d="M35.7,20.14c.25.19.4.49.4.8v10.5c0,1.38-1.34,2.5-3,2.5s-3-1.12-3-2.5,1.34-2.5,3-2.5c.35,0,.69.05,1,.14v-4.55l-8,2.4v6.51c0,1.38-1.34,2.5-3,2.5s-3-1.12-3-2.5,1.34-2.5,3-2.5c.35,0,.69.05,1,.14v-7.14c0-.44.29-.83.71-.96l10-3c.3-.09.63-.04.88.16h0Z"/></svg>
+        <span class="sr">Mesa de Som</span>
+      </button>
+      <button class="ferr ferr-resv" id="resvBtn" type="button" data-dica="Sala Reservada · aparte privado por vídeo. A mesa não te ouve, e os dados rolados lá são secretos.">
+        <svg viewBox="0 0 56.21 55.89" aria-hidden="true"><path d="M28.93,30.69l-1.04,1.04c-.14.14-.33.22-.53.22h-1.25v1.25c0,.42-.33.75-.75.75h-1.25v1.25c0,.42-.33.75-.75.75h-2.5c-.42,0-.75-.33-.75-.75v-2.5c0-.2.08-.39.22-.53l5.04-5.04c-.17-.53-.26-1.09-.26-1.68,0-3.04,2.46-5.5,5.5-5.5s5.5,2.46,5.5,5.5-2.46,5.5-5.5,5.5c-.58,0-1.15-.09-1.68-.26ZM30.77,23.57c-.22.39-.22.86,0,1.25s.64.62,1.08.62.86-.24,1.08-.62c.22-.39.22-.86,0-1.25s-.64-.62-1.08-.62-.86.24-1.08.62Z"/></svg>
+        <span class="sr">Sala Reservada</span>
+      </button>
+    </div>
 
     <button class="wb-btn diario-btn" id="diarioBtn" title="Abrir o diário da mesa">&#128214; Diário da Mesa</button>
-
-    <button class="wb-btn som-btn" id="somBtn" title="Abrir a mesa de som (ambientação)">&#127925; Mesa de Som</button>
-
-    <button class="wb-btn resv-btn" id="resvBtn" type="button" title="Sala reservada: aparte privado por vídeo (clica e entra, clica e volta). A mesa não te ouve, e os dados rolados lá são secretos.">&#128682; Sala Reservada</button>
 
     <div class="panel chat-panel">
       <div class="panel-head"><span class="led"></span><span class="panel-title">Chat</span></div>
@@ -1439,18 +1535,21 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   var sbClient = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SB_URL, SB_KEY) : null;
 
   // ── Dados disponíveis ─────────────────────────────────────────────
+  // extra:true = vai pro bloco "Dados extras", que começa dobrado. Fome e
+  // Desespero são de Caçador/Vampiro e a moeda não é dado — numa mesa de D&D
+  // os três só ocupam espaço. A ORDEM aqui é a da bandeja.
   var DICE = [
-    { id:'coin', label:'Cara/Coroa', sides:2, kind:'coin', cls:'std' },
     { id:'d3',   label:'d3',  sides:3,  cls:'std' },
     { id:'d4',   label:'d4',  sides:4,  cls:'std' },
     { id:'d6',   label:'d6',  sides:6,  cls:'std' },
     { id:'d8',   label:'d8',  sides:8,  cls:'std' },
     { id:'d10',  label:'d10', sides:10, cls:'d10' },
-    { id:'d10f', label:'d10 Fome', sides:10, cls:'fome' },
-    { id:'d10d', label:'d10 Desespero', sides:10, cls:'desp' },
     { id:'d12',  label:'d12', sides:12, cls:'std' },
     { id:'d20',  label:'d20', sides:20, cls:'std' },
-    { id:'d100', label:'d100', sides:100, cls:'std' }
+    { id:'d100', label:'d100', sides:100, cls:'std' },
+    { id:'d10f', label:'d10 Fome', sides:10, cls:'fome', extra:true },
+    { id:'d10d', label:'d10 Desespero', sides:10, cls:'desp', extra:true },
+    { id:'coin', label:'Cara/Coroa', sides:2, kind:'coin', cls:'std', extra:true }
   ];
   var counts = {};
 
@@ -1461,8 +1560,10 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
 
   // ── Bandeja de dados ──────────────────────────────────────────────
   var diceGrid = document.getElementById('diceGrid');
+  var diceGridExtras = document.getElementById('diceGridExtras');
   function renderTray() {
     diceGrid.innerHTML = '';
+    diceGridExtras.innerHTML = '';
     DICE.forEach(function(d) {
       var n = counts[d.id] || 0;
       var sides = (d.kind === 'coin') ? 0 : (parseInt((d.label.match(/(\d+)/) || [])[1], 10) || 6);
@@ -1487,7 +1588,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
         counts[d.id] = v;
         tile.classList.toggle('has', v > 0);
       });
-      diceGrid.appendChild(tile);
+      (d.extra ? diceGridExtras : diceGrid).appendChild(tile);
     });
   }
 
@@ -5019,6 +5120,34 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   nameInput.addEventListener('keydown', function(e){ if (e.key==='Enter') setName(nameInput.value); });
   document.getElementById('whoName').addEventListener('click', function(){
     nameInput.value = nome; nameOv.classList.remove('hidden'); nameInput.focus();
+  });
+
+  // ── Seções que dobram ──────────────────────────────────────────────
+  // Cada bloco da coluna (e o "Dados extras") recolhe pela setinha. É
+  // preferência de cada um, salva no navegador — não é estado da mesa, então
+  // ninguém dobra nada na tela dos outros. Dados extras começa dobrado.
+  var DOBRA_KEY = 'mesaDobrado';
+  var dobrado = {};
+  try { dobrado = JSON.parse(localStorage.getItem(DOBRA_KEY)) || {}; } catch (_) { dobrado = {}; }
+  document.querySelectorAll('[data-dobra]').forEach(function(sec) {
+    var nome = sec.dataset.dobra, seta = sec.querySelector(':scope > .panel-head > .dobra-seta, :scope > .dice-extras-head > .dobra-seta');
+    if (!seta) return;
+    var fechado = Object.prototype.hasOwnProperty.call(dobrado, nome)
+      ? !!dobrado[nome]
+      : seta.getAttribute('aria-expanded') === 'false';   // o que o HTML pediu vale como padrão
+    function aplica() {
+      sec.classList.toggle('dobrado', fechado);
+      seta.setAttribute('aria-expanded', fechado ? 'false' : 'true');
+      seta.title = fechado ? 'Mostrar' : 'Recolher';
+    }
+    aplica();
+    seta.addEventListener('click', function(e) {
+      e.stopPropagation();
+      fechado = !fechado;
+      aplica();
+      dobrado[nome] = fechado;
+      try { localStorage.setItem(DOBRA_KEY, JSON.stringify(dobrado)); } catch (_) {}
+    });
   });
 
   // Aba lateral: recolhe a coluna de painéis pro canto (amplia a câmera).
