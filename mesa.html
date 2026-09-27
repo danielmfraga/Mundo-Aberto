@@ -725,9 +725,24 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
 }
 .mapa-view.panning { cursor:grabbing; }
 .mapa-view.soltando { box-shadow:inset 0 0 0 2px #ff8a7a; }
-.mapa-mundo { position:absolute; left:0; top:0; transform-origin:0 0; }
+.mapa-mundo { position:absolute; left:0; top:0; transform-origin:0 0; overflow:hidden; }
 .mapa-mundo.branco { background:#e9e1cc; }
-.mapa-img { display:block; user-select:none; pointer-events:none; }
+/* a imagem é fundo (não <img>): tamanho e posição não vêm do arquivo, vêm do
+   zoom/x/y do ajuste — a sala manda no tamanho, a imagem só decora dentro
+   dela, igual ao fundo por personagem da ficha de D&D */
+.mapa-img { position:absolute; inset:0; pointer-events:none; background-repeat:no-repeat; }
+/* pad de enquadrar o fundo: mesma ideia do "Fundo" da ficha de D&D — mostra
+   a imagem inteira, o alvo é o ponto dela que fica no centro da sala */
+.mapa-enq-pad {
+  position:relative; width:100%; aspect-ratio:16/9; border-radius:6px; cursor:grab; touch-action:none;
+  border:1px solid var(--line); background-color:rgba(0,0,0,0.3);
+  background-size:contain; background-position:center; background-repeat:no-repeat;
+}
+.mapa-enq-pad:active { cursor:grabbing; }
+.mapa-enq-alvo {
+  position:absolute; width:12px; height:12px; border-radius:50%; transform:translate(-50%,-50%); pointer-events:none;
+  border:2px solid #ff8a7a; background:rgba(255,110,90,0.3); box-shadow:0 0 0 1px rgba(0,0,0,0.65), 0 0 8px rgba(255,110,90,0.5);
+}
 .mapa-grade { position:absolute; inset:0; pointer-events:none; }
 /* o <svg> é elemento substituído: só com inset:0 ele fica no tamanho padrão
    (300×150) em vez de cobrir o mapa — daí o width/height explícitos */
@@ -1070,7 +1085,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     </div>
     <div class="mapa-view" id="mapaView">
       <div class="mapa-mundo" id="mapaMundo">
-        <img class="mapa-img" id="mapaImg" alt="" draggable="false">
+        <div class="mapa-img" id="mapaImg"></div>
         <div class="mapa-grade" id="mapaGrade"></div>
         <svg class="mapa-grade mapa-hex" id="mapaHex" style="display:none" aria-hidden="true"></svg>
         <div class="mapa-tokens" id="mapaTokens"></div>
@@ -1118,9 +1133,12 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
 
     <div class="mapa-pop" id="mapaTokPop"></div>
 
-    <!-- sala em branco com medida exata: digita em metros, vira casas de 1,5 m -->
+    <!-- tamanho da sala, por medida exata: digita em metros, vira casas de
+         1,5 m. Redimensiona a sala atual — não é mais "cena nova": token e
+         fundo continuam onde estão. O formato (quadrada/hex) é o mesmo da
+         Grade, ajustado por lá. -->
     <div class="mapa-pop" id="mapaSalaPop">
-      <h4>Sala em branco</h4>
+      <h4>Tamanho da sala</h4>
       <div class="mapa-lin">
         <label for="mapaSalaL">Largura</label>
         <input type="number" id="mapaSalaL" min="1.5" max="300" step="1.5" value="18"><span class="rot">m</span>
@@ -1129,15 +1147,20 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
         <label for="mapaSalaA">Altura</label>
         <input type="number" id="mapaSalaA" min="1.5" max="300" step="1.5" value="12"><span class="rot">m</span>
       </div>
-      <div class="mapa-lin">
-        <span class="rot">Formato</span>
-        <div class="mapa-seg" id="mapaSalaTipo">
-          <button class="mapa-op" type="button" data-tipo="quadrada">quadrados</button>
-          <button class="mapa-op" type="button" data-tipo="hex">hexágonos</button>
-        </div>
-      </div>
       <div class="mapa-dica" id="mapaSalaConta"></div>
-      <button class="btn mapa-acao" id="mapaSalaOk" type="button">Criar a sala</button>
+      <div class="mapa-dica">Redimensiona a sala atual — token e fundo continuam onde estão.</div>
+      <button class="btn mapa-acao" id="mapaSalaOk" type="button">Aplicar</button>
+    </div>
+
+    <!-- ajuste do fundo já colocado: zoom + arrastar, igual à ficha de D&D -->
+    <div class="mapa-pop" id="mapaImgPop">
+      <h4>Imagem de fundo</h4>
+      <div class="mapa-enq-pad" id="mapaEnqPad" title="Arraste pra mover a imagem"><span class="mapa-enq-alvo" id="mapaEnqAlvo"></span></div>
+      <div class="mapa-lin"><label for="mapaEnqZoom">Zoom</label><input type="range" id="mapaEnqZoom" min="20" max="400" step="1"><span class="rot" id="mapaEnqVal">100%</span></div>
+      <div class="mapa-seg">
+        <button class="mapa-op" type="button" id="mapaImgTrocar">Trocar imagem</button>
+        <button class="mapa-op perigo" type="button" id="mapaImgTira">Tirar</button>
+      </div>
     </div>
 
     <!-- limpar: some com tudo pra mesa inteira, então pergunta antes -->
@@ -2713,11 +2736,11 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   var mapaVs = { s:1, tx:0, ty:0 };   // vista local: escala e deslocamento
   var mapaTokEls = {};                // id do token → elemento
   var mapaDrag = null, mapaPan = null, mapaPinch = null, mapaToques = {};
-  var _mapaSalvarT = null, _mapaGradeT = null, _mapaFila = Promise.resolve();
+  var _mapaSalvarT = null, _mapaGradeT = null, _mapaImgT = null, _mapaFila = Promise.resolve();
   var _mapaNpcImg = null, _mapaNpcSubindo = false, _mapaSoltando = 0;
 
   function mapaClamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
-  function mapaCenaVazia() { return { v:1, img:null, branco:false, w:0, h:0, grade:{ tipo:'quadrada', tam:70, dx:0, dy:0, cor:'escura' }, tokens:[] }; }
+  function mapaCenaVazia() { return { v:1, img:null, branco:false, w:0, h:0, grade:{ tipo:'quadrada', tam:70, dx:0, dy:0, cor:'escura' }, imgZoom:100, imgX:50, imgY:50, tokens:[] }; }
   // Medida de uma sala em branco: quantas casas de largura/altura, no
   // formato escolhido, viram pixels — a mesma conta pra criar uma sala nova
   // e pro padrão que a mesa nasce com.
@@ -2812,6 +2835,14 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     n.w = +c.w > 0 ? +c.w : 0;
     n.h = +c.h > 0 ? +c.h : 0;
     n.grade = mapaGradeNorm(c.grade);
+    // enquadramento do fundo dentro da sala — zoom é % da LARGURA da sala
+    // (100 = a imagem cobre a sala de lado a lado), x/y é o ponto da imagem
+    // que fica no centro. Cena antiga (de antes disso existir) não tem esses
+    // campos — 100/50/50 reproduz exatamente como ela já aparecia, porque
+    // w/h dela É o tamanho da imagem.
+    n.imgZoom = mapaClamp(+c.imgZoom > 0 ? +c.imgZoom : 100, 20, 400);
+    n.imgX = c.imgX == null ? 50 : mapaClamp(+c.imgX, 0, 100);
+    n.imgY = c.imgY == null ? 50 : mapaClamp(+c.imgY, 0, 100);
     var vistos = {};
     n.tokens = (Array.isArray(c.tokens) ? c.tokens : []).map(mapaTokNorm).filter(function(t) {
       if (vistos[t.id]) return false;
@@ -2929,37 +2960,32 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   function mapaTokCentro(t) { var geo = mapaTokGeo(t); return { x:geo.x + geo.lado / 2, y:geo.y + geo.lado / 2 }; }
 
   // ── desenho ──
+  // a imagem é fundo dentro da sala, não a sala em si: tamanho vem do zoom
+  // (% da largura da sala) e posição do x/y — a sala nunca muda de tamanho
+  // por causa da imagem, só a imagem se ajusta dentro dela
+  function mapaRenderFundo() {
+    mapaMundo.classList.toggle('branco', !!mapaCena.branco);
+    if (mapaCena.img) {
+      mapaImg.style.backgroundImage = 'url("' + mapaCena.img.replace(/"/g, '%22') + '")';
+      mapaImg.style.backgroundSize = mapaCena.imgZoom + '% auto';
+      mapaImg.style.backgroundPosition = mapaCena.imgX + '% ' + mapaCena.imgY + '%';
+    } else {
+      mapaImg.style.backgroundImage = 'none';
+    }
+    mapaTrocarBt.title = mapaCena.img ? 'Ajustar a imagem de fundo' : 'Colocar uma imagem de fundo';
+  }
   function mapaRender() {
     // a mesa sempre tem uma cena (imagem ou grade em branco — mapaNormaliza
     // garante isso), então mapaMundo fica sempre visível: nada de tela vazia
     mapaMundo.style.width = mapaCena.w + 'px';
     mapaMundo.style.height = mapaCena.h + 'px';
-    mapaMundo.classList.toggle('branco', !!mapaCena.branco);
-    // limpar o mapa tem que soltar a imagem de verdade, não só esconder —
-    // senão ela fica pendurada no elemento depois de "limpar tudo"
-    if (mapaCena.img) {
-      if (mapaImg.getAttribute('src') !== mapaCena.img) mapaImg.src = mapaCena.img;
-      mapaImg.style.display = '';
-      mapaImg.style.width = mapaCena.w ? mapaCena.w + 'px' : '';
-      mapaImg.style.height = mapaCena.h ? mapaCena.h + 'px' : '';
-    } else {
-      mapaImg.removeAttribute('src');
-      mapaImg.style.display = 'none';
-    }
-    mapaTrocarBt.title = mapaCena.branco ? 'Colocar uma imagem de fundo' : 'Trocar o mapa (começa uma cena nova)';
+    mapaRenderFundo();
     mapaRenderGrade();
     mapaRenderTokens();
     mapaRenderRoster();
     mapaSyncGradeUI();
+    mapaSyncImgUI();
   }
-  // cena sem medida (não devia acontecer, mas não custa): mede pela imagem
-  mapaImg.addEventListener('load', function() {
-    if (mapaCena.img && (!mapaCena.w || !mapaCena.h) && mapaImg.naturalWidth) {
-      mapaCena.w = mapaImg.naturalWidth;
-      mapaCena.h = mapaImg.naturalHeight;
-      mapaRender(); mapaFit();
-    }
-  });
   function mapaRenderGrade() {
     var g = mapaCena.grade, cor = MAPA_GCOR[g.cor];
     var traco = 'min(calc(1px * var(--inv, 1)), ' + (g.tam * 0.2).toFixed(2) + 'px)';   // 1px na tela em qualquer zoom
@@ -3185,6 +3211,24 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     mapaCena.grade = mapaGradeNorm(p.grade, mapaCena.grade);
     mapaRenderGrade(); mapaRenderTokens(); mapaSyncGradeUI();
   }
+  // Ajuste do fundo (zoom/x/y): mesmo padrão do ajuste de grade — aplica na
+  // hora pra quem mexeu, e manda pros outros com um pequeno atraso (o
+  // arrasto dispara isso a cada pixel; sem o atraso, seria uma mensagem por
+  // frame).
+  function mapaMudaImg(parcial) {
+    Object.assign(mapaCena, parcial);
+    mapaRenderFundo(); mapaSyncImgUI();
+    clearTimeout(_mapaImgT);
+    _mapaImgT = setTimeout(function(){ send('mapa-img', { img:mapaCena.img, imgZoom:mapaCena.imgZoom, imgX:mapaCena.imgX, imgY:mapaCena.imgY, branco:mapaCena.branco, by:MAPA_ME }); }, 60);
+    mapaAgendaSalvar();
+  }
+  function mapaRecebeImg(p) {
+    if (!p || p.by === MAPA_ME) return;
+    mapaCena.img = mapaUrlOk(p.img); mapaCena.branco = !!p.branco;
+    mapaCena.imgZoom = mapaClamp(+p.imgZoom || 100, 20, 400);
+    mapaCena.imgX = mapaClamp(+p.imgX, 0, 100); mapaCena.imgY = mapaClamp(+p.imgY, 0, 100);
+    mapaRenderFundo(); mapaSyncImgUI();
+  }
 
   // ── Storage ──
   function mapaCarrega() {
@@ -3263,65 +3307,72 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
       im.src = u;
     });
   }
-  // Mapa pronto costuma dizer no nome quantos quadrados tem ("taverna_22x30.jpg").
-  // Sem isso, chuta uns 30 quadrados no lado maior — o ajuste da grade acerta o resto.
-  function mapaTamPadrao(w, h, nomeArq) {
-    var m = String(nomeArq || '').match(/(\d{1,3})\s*[x×]\s*(\d{1,3})/i);
-    if (m && +m[1] && +m[2]) {
-      var a = +m[1], b = +m[2];
-      if (Math.abs(w / a - h / b) <= Math.max(2, (w / a) * 0.03)) return mapaClamp(w / a, 10, 400);
-      if (Math.abs(w / b - h / a) <= Math.max(2, (w / b) * 0.03)) return mapaClamp(w / b, 10, 400);
-    }
-    return mapaClamp(Math.round(Math.max(w, h) / 30), 20, 300);
+  // Menor zoom que cobre a sala inteira com a imagem — mesma conta da ficha
+  // de D&D, só que contra o tamanho da SALA (que já existe), não da tela.
+  function mapaZoomCobre(imgW, imgH) {
+    var z = Math.ceil(100 * (mapaCena.h * imgW) / (mapaCena.w * imgH));
+    return mapaClamp(z || 100, 100, 400);
   }
+  // Subir uma imagem NÃO troca de cena: a sala (tamanho, grade, tokens)
+  // continua igual, a imagem só entra como fundo, cobrindo a sala inteira
+  // e centralizada — dali dá pra ajustar zoom e posição no popover dela.
   function mapaNovoArquivo(file) {
     if (!file) return;
     if (!/^image\//.test(file.type)) { alert('Isso não é uma imagem.'); return; }
     if (file.size > MAPA_MAX_MB * 1024 * 1024) { alert('Imagem muito grande (' + fmtBytes(file.size) + '). O limite do mapa é ' + MAPA_MAX_MB + ' MB.'); return; }
-    if (mapaCena.tokens.length && !confirm('Trocar o mapa começa uma cena nova: os tokens saem do mapa. Continuar?')) return;
     mapaMede(file).then(function(dim) {
-      return mapaSobe(file, 'mapa', 'enviando mapa…').then(function(url) {
-        var c = mapaCenaVazia();
-        c.img = url; c.w = dim.w; c.h = dim.h;
-        c.grade.tam = mapaTamPadrao(dim.w, dim.h, file.name);
-        mapaNovaCena(c);
+      return mapaSobe(file, 'mapa', 'enviando fundo…').then(function(url) {
+        mapaMudaImg({ img:url, branco:false, imgZoom:mapaZoomCobre(dim.w, dim.h), imgX:50, imgY:50 });
       });
-    }).catch(function(err){ mapaStatus(''); alert('Não deu pra usar esse mapa: ' + err.message); });
+    }).catch(function(err){ mapaStatus(''); alert('Não deu pra usar essa imagem: ' + err.message); });
   }
-  // Sala em branco pela medida de verdade: digita os metros, a conta vira
-  // casas de 1,5 m e o mapa nasce do tamanho exato — sem ninguém contar
-  // quadradinho na mão.
+  // Tamanho da sala pela medida de verdade: digita os metros, a conta vira
+  // casas de 1,5 m. O formato (quadrada/hex) é o da grade atual, ajustado
+  // pelo popover de Grade — aqui só o tamanho. Aplicar REDIMENSIONA a sala
+  // que já existe: fundo e tokens continuam onde estão, nada é substituído.
   var mapaSalaPop = document.getElementById('mapaSalaPop');
   var mapaSalaL = document.getElementById('mapaSalaL'), mapaSalaA = document.getElementById('mapaSalaA');
-  var mapaSalaTipo = 'quadrada';
   function mapaSalaCasas() {
     return {
       cols: mapaClamp(Math.round((parseFloat(mapaSalaL.value) || 0) / MAPA_M), 1, 200),
       rows: mapaClamp(Math.round((parseFloat(mapaSalaA.value) || 0) / MAPA_M), 1, 200)
     };
   }
+  // O inverso de mapaSalaMedida: quantas casas a sala atual já tem, pra
+  // preencher os campos com o tamanho de agora em vez de sempre 18×12.
+  function mapaSalaAtual() {
+    var g = mapaCena.grade;
+    if (g.tipo === 'hex') {
+      var R = mapaHexR();
+      return {
+        cols: mapaClamp(Math.round((mapaCena.w - g.tam / 2) / g.tam), 1, 200),
+        rows: mapaClamp(Math.round((mapaCena.h - 2 * R) / (1.5 * R) + 1), 1, 200)
+      };
+    }
+    return {
+      cols: mapaClamp(Math.round(mapaCena.w / g.tam), 1, 200),
+      rows: mapaClamp(Math.round(mapaCena.h / g.tam), 1, 200)
+    };
+  }
   function mapaSalaConta() {
     var c = mapaSalaCasas(), lar = c.cols * MAPA_M, alt = c.rows * MAPA_M;
-    var nome = mapaSalaTipo === 'hex' ? 'hexágonos' : 'quadrados';
+    var nome = mapaCena.grade.tipo === 'hex' ? 'hexágonos' : 'quadrados';
     document.getElementById('mapaSalaConta').textContent =
       c.cols + ' × ' + c.rows + ' ' + nome + ' · ' + String(lar).replace('.', ',') + ' × ' + String(alt).replace('.', ',') + ' m · ' + Math.round(lar * alt) + ' m²';
-    document.querySelectorAll('#mapaSalaTipo .mapa-op').forEach(function(b){ b.classList.toggle('on', b.dataset.tipo === mapaSalaTipo); });
   }
-  function mapaCriaSala() {
-    if (mapaCena.tokens.length && !confirm('A sala em branco começa uma cena nova: os tokens saem do mapa. Continuar?')) return;
-    var casas = mapaSalaCasas(), c = mapaCenaVazia(), m = mapaSalaMedida(casas.cols, casas.rows, mapaSalaTipo, 70);
-    c.branco = true; c.w = m.w; c.h = m.h; c.grade = m.grade;
+  function mapaAplicaSala() {
+    var casas = mapaSalaCasas(), m = mapaSalaMedida(casas.cols, casas.rows, mapaCena.grade.tipo, mapaCena.grade.tam);
+    mapaCena.w = m.w; mapaCena.h = m.h;
     mapaFechaPops();
-    mapaNovaCena(c);
+    mapaRender(); mapaFit();
+    send('mapa-cena', { cena:mapaCena, by:MAPA_ME });
+    mapaAgendaSalvar();
   }
   [mapaSalaL, mapaSalaA].forEach(function(i) {
     i.addEventListener('input', mapaSalaConta);
-    i.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); mapaCriaSala(); } });
+    i.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); mapaAplicaSala(); } });
   });
-  document.querySelectorAll('#mapaSalaTipo .mapa-op').forEach(function(b) {
-    b.addEventListener('click', function(){ mapaSalaTipo = b.dataset.tipo; mapaSalaConta(); });
-  });
-  document.getElementById('mapaSalaOk').addEventListener('click', mapaCriaSala);
+  document.getElementById('mapaSalaOk').addEventListener('click', mapaAplicaSala);
 
   // ── popovers ──
   var mapaGradeBtn = document.getElementById('mapaGradeBtn');
@@ -3330,13 +3381,15 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   var mapaSalaBtn  = document.getElementById('mapaSalaBtn');
   var mapaTrocarBt = document.getElementById('mapaTrocar');
   var mapaLimparPop = document.getElementById('mapaLimparPop');
+  var mapaImgPop = document.getElementById('mapaImgPop');
   function mapaFechaPops() {
-    [mapaGradePop, mapaNpcPop, mapaTokPop, mapaLimparPop, mapaSalaPop].forEach(function(p){ p.classList.remove('show'); });
+    [mapaGradePop, mapaNpcPop, mapaTokPop, mapaLimparPop, mapaSalaPop, mapaImgPop].forEach(function(p){ p.classList.remove('show'); });
     mapaTokPop.dataset.id = '';
     mapaGradeBtn.classList.remove('on');
     mapaNpcBtn.classList.remove('on');
     mapaLimparBt.classList.remove('on');
     mapaSalaBtn.classList.remove('on');
+    mapaTrocarBt.classList.remove('on');
   }
   function mapaAbrePopEm(pop, botao, lado) {   // abre embaixo do botão da barra (ou fecha, se já estava aberto)
     var abrir = !pop.classList.contains('show');
@@ -3487,7 +3540,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   });
   // clique fora fecha; o clique no token abre o menu dele (no pointerup), não fecha aqui
   document.addEventListener('pointerdown', function(e) {
-    if (e.target.closest && e.target.closest('.mapa-pop, #mapaGradeBtn, #mapaNpcBtn, #mapaLimparBt, #mapaSalaBtn, .mapa-tok')) return;
+    if (e.target.closest && e.target.closest('.mapa-pop, #mapaGradeBtn, #mapaNpcBtn, #mapaLimparBt, #mapaSalaBtn, #mapaTrocar, .mapa-tok')) return;
     mapaFechaPops();
   }, true);
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') mapaFechaPops(); });
@@ -3521,6 +3574,44 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     b.addEventListener('click', function(){ mapaMudaGrade({ tipo:b.dataset.tipo }); });
   });
   mapaGradeBtn.addEventListener('click', function(){ mapaAbrePopEm(mapaGradePop, mapaGradeBtn, 'dir'); });
+
+  // ── ajuste do fundo: zoom + arrastar (mesmo padrão do Fundo da ficha de
+  // D&D) — zoom é % da LARGURA da sala, x/y é o ponto da imagem que fica
+  // no centro dela ──
+  var mapaEnqPad = document.getElementById('mapaEnqPad'), mapaEnqAlvo = document.getElementById('mapaEnqAlvo');
+  var mapaEnqZoom = document.getElementById('mapaEnqZoom'), mapaEnqVal = document.getElementById('mapaEnqVal');
+  function mapaSyncImgUI() {
+    if (!mapaCena.img) return;
+    var css = 'url("' + mapaCena.img.replace(/"/g, '%22') + '")';
+    mapaEnqPad.style.backgroundImage = css;
+    mapaEnqAlvo.style.left = mapaCena.imgX + '%';
+    mapaEnqAlvo.style.top = mapaCena.imgY + '%';
+    if (document.activeElement !== mapaEnqZoom) mapaEnqZoom.value = mapaCena.imgZoom;
+    mapaEnqVal.textContent = mapaCena.imgZoom + '%';
+  }
+  function mapaMoveAlvo(ev) {
+    var r = mapaEnqPad.getBoundingClientRect();
+    mapaMudaImg({
+      imgX: mapaClamp(Math.round(((ev.clientX - r.left) / r.width) * 100), 0, 100),
+      imgY: mapaClamp(Math.round(((ev.clientY - r.top) / r.height) * 100), 0, 100)
+    });
+  }
+  mapaEnqPad.addEventListener('pointerdown', function(ev) {
+    if (!mapaCena.img) return;
+    ev.preventDefault();
+    try { mapaEnqPad.setPointerCapture(ev.pointerId); } catch (e) {}
+    mapaMoveAlvo(ev);
+  });
+  mapaEnqPad.addEventListener('pointermove', function(ev) {
+    if (!mapaCena.img || !(ev.buttons & 1)) return;
+    mapaMoveAlvo(ev);
+  });
+  mapaEnqZoom.addEventListener('input', function(){ mapaMudaImg({ imgZoom:+mapaEnqZoom.value }); });
+  document.getElementById('mapaImgTrocar').addEventListener('click', function(){ mapaFechaPops(); mapaFile.click(); });
+  document.getElementById('mapaImgTira').addEventListener('click', function() {
+    mapaMudaImg({ img:null, branco:true });
+    mapaFechaPops();
+  });
 
   // ── limpar ──
   // Some com tudo pra mesa inteira e não tem desfazer, então pergunta antes —
@@ -3603,9 +3694,20 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     mapaFile.value = '';
     mapaNovoArquivo(f);
   });
-  mapaTrocarBt.addEventListener('click', function(){ mapaFechaPops(); mapaFile.click(); });
+  // sem fundo ainda: o botão vai direto no seletor de arquivo (nada pra
+  // ajustar). Com fundo, abre o popover de zoom/posição — trocar a imagem
+  // fica dentro dele.
+  mapaTrocarBt.addEventListener('click', function() {
+    if (mapaCena.img) mapaAbrePopEm(mapaImgPop, mapaTrocarBt, 'dir');
+    else { mapaFechaPops(); mapaFile.click(); }
+  });
   mapaSalaBtn.addEventListener('click', function() {
-    if (mapaAbrePopEm(mapaSalaPop, mapaSalaBtn, 'dir')) { mapaSalaConta(); mapaSalaL.focus(); mapaSalaL.select(); }
+    if (mapaAbrePopEm(mapaSalaPop, mapaSalaBtn, 'dir')) {
+      var atual = mapaSalaAtual();
+      mapaSalaL.value = atual.cols * MAPA_M;
+      mapaSalaA.value = atual.rows * MAPA_M;
+      mapaSalaConta(); mapaSalaL.focus(); mapaSalaL.select();
+    }
   });
   document.getElementById('mapaFit').addEventListener('click', mapaFit);
   // o mapa aceita duas coisas soltas em cima: arquivo de imagem (mapa novo) e
@@ -4594,6 +4696,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     else if (event === 'mapa-req') { if (mapaAberto()) send('mapa-open', {}); }
     else if (event === 'mapa-cena') mapaRecebeCena(payload);
     else if (event === 'mapa-grade') mapaRecebeGrade(payload);
+    else if (event === 'mapa-img') mapaRecebeImg(payload);
     else if (event === 'mapa-tok') mapaRecebeTok(payload);
   }
   function initRealtime() {
@@ -4615,7 +4718,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     ['som-play','som-stop','som-state','som-state-req','som-lib','som-gain'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
-    ['mapa-open','mapa-close','mapa-req','mapa-cena','mapa-grade','mapa-tok'].forEach(function(ev){
+    ['mapa-open','mapa-close','mapa-req','mapa-cena','mapa-grade','mapa-img','mapa-tok'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
     channel.subscribe(function(status){
