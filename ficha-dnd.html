@@ -4932,7 +4932,10 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (/^sbc_/.test(chave)) return { r: 'Pôr em Subclasse' };
     if (/^lin_/.test(chave) && AJUDA[chave] && !AJUDA[chave].lista) return { r: 'Anotar em Traços' };
     if (/^mag_/.test(chave)) return { r: 'Pôr na lista de magias' };
-    if (/^ant_/.test(chave) || /^esp_/.test(chave) || /^cls_/.test(chave)) return { r: 'Aplicar na ficha' };
+    // cls_: a classe inteira (nível 1 completo) aplica; uma característica
+    // avulsa que já existe na base (Fúria, Retomar o Fôlego…) só se anota
+    if (/^cls_/.test(chave)) return { r: AJUDA.classe.lista.indexOf(chave) >= 0 ? 'Aplicar na ficha' : 'Anotar em Características' };
+    if (/^ant_/.test(chave) || /^esp_/.test(chave)) return { r: 'Aplicar na ficha' };
     return null;
   }
   function poeNaFicha(chave) {
@@ -5007,6 +5010,12 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       var cs = campo('subclasse');
       if (cs) cs.textContent = nome;
       return 'subclasse ' + nome;
+    }
+    if (/^cls_/.test(chave) && AJUDA.classe.lista.indexOf(chave) < 0) {
+      // característica avulsa (ex.: Fúria): já existe na base pra explicar um
+      // termo citado noutro lugar — aqui também dá pra soltar ela sozinha
+      var r4 = anota('caracteristicas_classe', nome + ' — ' + d.l);
+      return r4 === 'repetido' ? nome + ' já estava nas Características' : nome + ' nas Características de Classe';
     }
     if (/^cls_/.test(chave)) {
       var campoCls = campo('classe');
@@ -5095,9 +5104,14 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (BUSCA_CACHE[tipo]) return BUSCA_CACHE[tipo];
     var chaves;
     if (tipo === 'classe') {
-      // Características de Classe: só a classe inteira por enquanto — cada
-      // característica de nível 1 ainda não existe como item separado.
+      // classe inteira (nível 1 completo, igual ao botão direito de sempre)
+      // + as características avulsas que já existem na base como item
+      // próprio (Fúria, Retomar o Fôlego, Artes Marciais…) — de brinde,
+      // sem precisar separar as 12 classes inteiras em itens novos.
       chaves = AJUDA.classe.lista.slice();
+      Object.keys(AJUDA).forEach(function(k) {
+        if (/^cls_/.test(k) && chaves.indexOf(k) < 0) chaves.push(k);
+      });
     } else if (tipo === 'especie') {
       // espécie inteira + as linhagens/legados que já são item próprio
       // (drow, alto elfo, legado infernal…) — isso já vem de graça da base.
