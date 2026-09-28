@@ -575,7 +575,8 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 .historia { flex: 3 1 0; }   /* na oficial, história : equipamento ≈ 3 : 4 */
 .equip { flex: 4 1 0; }
 .historia .box-text, .equip .box-text { flex: 1; }
-.historia .box-text { min-height: 120px; }
+/* passou do que cabe: a caixa não estica (isso puxava a coluna inteira junto), rola por dentro */
+.historia .box-text { min-height: 120px; max-height: 220px; overflow-y: auto; }
 .historia .alin { margin-top: 8px; }
 .idiomas .box-text { min-height: 56px; }
 .equip .box-text { min-height: 150px; }
