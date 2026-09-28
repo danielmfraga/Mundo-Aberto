@@ -5038,7 +5038,15 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   function resvSetUI(dentro) {
     resvDentro = dentro;
     resvBtn.classList.toggle('active', dentro);
-    resvBtn.innerHTML = dentro ? '&#128682; No Reservado · Voltar' : '&#128682; Sala Reservada';
+    // O botão virou ícone. Reescrever o innerHTML aqui apagava o desenho e
+    // devolvia a porta + o rótulo escrito — e isso só acontecia na mesa de
+    // verdade, porque quem dispara é o 'videoConferenceJoined' do Jitsi (em
+    // teste headless o vídeo nunca entra). Agora muda só o que se LÊ.
+    resvBtn.dataset.dica = dentro
+      ? 'No Reservado · clique pra voltar pra mesa'
+      : 'Sala Reservada · aparte privado por vídeo. A mesa não te ouve, e os dados rolados lá são secretos.';
+    var resvRotulo = resvBtn.querySelector('.sr');
+    if (resvRotulo) resvRotulo.textContent = dentro ? 'Voltar do Reservado' : 'Sala Reservada';
     if (resvBanner) resvBanner.classList.toggle('show', dentro);
     if (dentro) resvJoinChannel(); else resvLeaveChannel();
   }
