@@ -349,6 +349,29 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 .num { font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; border-radius: 4px; min-width: 1.5ch; }
 .box-text { font-size: 12.5px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; border-radius: 4px; padding: 3px 4px; }
 
+/* busca rápida de verbete, embaixo do título de algumas caixas: pra quem
+   prefere digitar (com o livro na mão) em vez do Sumário lá de cima.
+   Mesmo tom de --dnd/--fg do .box-text: acompanha papel/sem-papel e noite. */
+.vbusca { position: relative; margin: 6px 0 2px; }
+.vbusca-in {
+  width: 100%; background: rgba(176,138,46,0.05); border: 1px solid var(--dnd-line); border-radius: 6px;
+  color: var(--fg); font-family: var(--font-mono); font-size: 10.5px; padding: 5px 8px; outline: none;
+}
+.vbusca-in::placeholder { color: var(--fg-faint); }
+.vbusca-in:focus { border-color: var(--dnd-soft); background: rgba(176,138,46,0.09); }
+.vbusca-res {
+  position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + 3px); max-height: 190px; overflow-y: auto;
+  background: var(--quadro); border: 1px solid var(--dnd-line); border-radius: 6px; box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  padding: 3px;
+}
+.vbusca-res[hidden] { display: none; }
+.vbusca-item {
+  display: block; width: 100%; text-align: left; cursor: pointer; padding: 5px 7px; border: 0; border-radius: 4px;
+  background: none; color: var(--fg); font-family: var(--font-display); font-size: 11.5px;
+}
+.vbusca-item:hover { background: rgba(176,138,46,0.14); }
+.vbusca-vazio { padding: 6px 7px; color: var(--fg-faint); font-family: var(--font-mono); font-size: 9.5px; }
+
 /* toggles */
 .prof {
   width: 12px; height: 12px; flex: 0 0 auto; padding: 0; cursor: pointer; background: transparent;
@@ -5059,6 +5082,103 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     }
     return null;
   }
+
+  // ── busca de verbete embutida em algumas caixas ──────────────────────
+  // Pra quem não quer usar o Sumário lá de cima: digita ali embaixo do
+  // título, escolhe e cai na ficha pelo mesmo poeNaFicha de sempre — o texto
+  // que ele escreve já é reconhecido pelo Sumário depois (casa pelo nome,
+  // não por marcação escondida), sem precisar de nada extra aqui.
+  // Cada caixa vê TUDO da categoria dela, de qualquer classe/espécie — não
+  // filtra pelo que já está escrito em "classe"/"espécie" no topo da ficha.
+  var BUSCA_CACHE = {};
+  function candidatosBusca(tipo) {
+    if (BUSCA_CACHE[tipo]) return BUSCA_CACHE[tipo];
+    var chaves;
+    if (tipo === 'classe') {
+      // Características de Classe: só a classe inteira por enquanto — cada
+      // característica de nível 1 ainda não existe como item separado.
+      chaves = AJUDA.classe.lista.slice();
+    } else if (tipo === 'especie') {
+      // espécie inteira + as linhagens/legados que já são item próprio
+      // (drow, alto elfo, legado infernal…) — isso já vem de graça da base.
+      chaves = AJUDA.especie.lista.slice();
+      AJUDA.especie.lista.forEach(function(k) {
+        (AJUDA[k].lista || []).forEach(function(sub) { chaves.push(sub); });
+      });
+    } else {
+      var alvo = tipo === 'talentos' ? 'Anotar em Talentos' : 'Anotar em Ferramentas';
+      chaves = Object.keys(AJUDA).filter(function(k) {
+        var d = destinoDe(k);
+        return d && d.r === alvo;
+      });
+    }
+    var lista = chaves.map(function(k) { return { k: k, t: AJUDA[k].t, n: semAcento(AJUDA[k].t) }; });
+    lista.sort(function(a, b) { return a.t.localeCompare(b.t, 'pt-BR'); });
+    return (BUSCA_CACHE[tipo] = lista);
+  }
+  // apósEl: o título (ou sub-título) depois do qual a busca entra, como irmã
+  function criaBusca(apósEl, tipo) {
+    if (!apósEl) return;
+    var caixa = document.createElement('div');
+    caixa.className = 'vbusca';
+    var input = document.createElement('input');
+    input.type = 'text'; input.className = 'vbusca-in'; input.autocomplete = 'off'; input.spellcheck = false;
+    input.placeholder = 'Buscar e adicionar…';
+    var res = document.createElement('div');
+    res.className = 'vbusca-res'; res.hidden = true;
+    caixa.appendChild(input); caixa.appendChild(res);
+    apósEl.insertAdjacentElement('afterend', caixa);
+
+    function fecha() { res.hidden = true; res.innerHTML = ''; }
+    function escolhe(chave) {
+      if (somenteLeitura) return;
+      var feito = poeNaFicha(chave);
+      if (feito) { calcula(); marca(); avisa(feito); }
+      input.value = '';
+      fecha();
+      input.blur();
+    }
+    input.addEventListener('input', function() {
+      var q = semAcento(input.value.trim());
+      res.innerHTML = '';
+      if (!q) { res.hidden = true; return; }
+      var achados = candidatosBusca(tipo).filter(function(it) { return it.n.indexOf(q) >= 0; }).slice(0, 8);
+      if (!achados.length) {
+        var vazio = document.createElement('div');
+        vazio.className = 'vbusca-vazio';
+        vazio.textContent = 'Nada encontrado';
+        res.appendChild(vazio);
+      } else {
+        achados.forEach(function(it) {
+          var b = document.createElement('button');
+          b.type = 'button'; b.className = 'vbusca-item'; b.dataset.k = it.k; b.textContent = it.t;
+          res.appendChild(b);
+        });
+      }
+      res.hidden = false;
+    });
+    // mousedown (não click) com preventDefault: o input não perde o foco
+    // antes do clique valer, então não precisa de setTimeout pra "segurar" o blur
+    res.addEventListener('mousedown', function(e) {
+      var b = e.target.closest('.vbusca-item');
+      if (b) { e.preventDefault(); escolhe(b.dataset.k); }
+    });
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') { input.value = ''; fecha(); input.blur(); }
+      else if (e.key === 'Enter') {
+        var primeiro = res.querySelector('.vbusca-item');
+        if (primeiro) { e.preventDefault(); escolhe(primeiro.dataset.k); }
+      }
+    });
+    input.addEventListener('blur', function() { setTimeout(fecha, 150); });
+  }
+  criaBusca(document.querySelector('.bx.caract > .bx-t'), 'classe');
+  (function() {
+    var elTracos = campo('tracos_especie'), elTalentos = campo('talentos'), elFerr = campo('prof_ferramentas');
+    if (elTracos) criaBusca(elTracos.previousElementSibling, 'especie');
+    if (elTalentos) criaBusca(elTalentos.previousElementSibling, 'talentos');
+    if (elFerr) criaBusca(elFerr.previousElementSibling, 'ferramentas');
+  })();
 
   balao.addEventListener('contextmenu', function(e) {
     var alvo = e.target.closest('.tag, .balao-item-t');
