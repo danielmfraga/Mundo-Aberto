@@ -2611,6 +2611,34 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Até o começo do seu próximo turno, vantagem nos seus ataques com Força — e os ataques contra você também têm vantagem.',
       'O Caminho do Berserker vive disso: o Frenesi só dispara com ele.'] },
 
+    // ── nível 1 que ainda não tinha item próprio, extraído do pacote de
+    // cada classe (mesmo texto de sempre, só destacado pra dar pra buscar
+    // sozinho) — "Conjuração" e "Maestria em Armas" repetem em várias
+    // classes com um detalhe que muda (atributo, quantidade de armas),
+    // por isso viram um item por variante, não um por classe.
+    // Estilo de Luta, Ataque Furtivo, Especialista e Defesa sem Armadura já
+    // tinham verbete próprio (cnc_estilo_luta, cnc_ataque_furtivo,
+    // cnc_especialista, cnc_defesa_sem_armadura, mais completos que uma
+    // versão nova aqui) — só faltava deixá-los aplicáveis, ver CLS_CNC.
+    cls_maestria_armas_2: { t: 'Maestria em Armas (2 armas)', l: 'Escolhe duas armas e usa o efeito extra delas sempre.', b: [
+      'Escolha 2 tipos de arma entre os que você é proficiente; enquanto empunhar uma delas, usa a maestria dela (ver o catálogo de armas).'] },
+    cls_maestria_armas_3: { t: 'Maestria em Armas (3 armas)', l: 'Escolhe três armas e usa o efeito extra delas sempre.', b: [
+      'Escolha 3 tipos de arma entre os que você é proficiente; enquanto empunhar uma delas, usa a maestria dela (ver o catálogo de armas).'] },
+    cls_conjuracao_bardo: { t: 'Conjuração (Bardo)', l: 'Magia pela palavra e pela música — por Carisma.', b: [
+      'Magias de bardo, usando Carisma como atributo de conjuração.'] },
+    cls_conjuracao_clerigo: { t: 'Conjuração (Clérigo)', l: 'O canal do divino — por Sabedoria.', b: [
+      'Magias de clérigo, usando Sabedoria como atributo de conjuração; prepara a lista de novo a cada descanso longo.'] },
+    cls_conjuracao_druida: { t: 'Conjuração (Druida)', l: 'A magia da natureza — por Sabedoria.', b: [
+      'Magias de druida, usando Sabedoria como atributo de conjuração.'] },
+    cls_conjuracao_feiticeiro: { t: 'Conjuração (Feiticeiro)', l: 'A magia que já nasceu com você — por Carisma.', b: [
+      'Magias de feiticeiro, usando Carisma como atributo de conjuração.'] },
+    cls_conjuracao_guardiao: { t: 'Conjuração (Guardião)', l: 'Um pouco de magia junto do arco — por Sabedoria.', b: [
+      'Magias de guardião, usando Sabedoria como atributo de conjuração.'] },
+    cls_conjuracao_mago: { t: 'Conjuração (Mago)', l: 'Magia estudada e anotada no grimório — por Inteligência.', b: [
+      'Magias do grimório, usando Inteligência como atributo de conjuração.'] },
+    cls_conjuracao_paladino: { t: 'Conjuração (Paladino)', l: 'Magia com peso de juramento — por Carisma.', b: [
+      'Magias de paladino, usando Carisma como atributo de conjuração.'] },
+
     // ── os 10 estilos de luta, cada um com o seu ──────────────────────
     est_arquearia: { t: 'Arquearia', l: '+2 nos ataques com armas à distância.', b: [
       'Soma direto no ataque, não no dano — é o estilo que mais acerta.',
@@ -2955,6 +2983,78 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Você ilumina 3 m em volta, e no fim de cada turno seu toda criatura a até 3 m — aliado também — leva dano radiante igual ao seu bônus de proficiência.'] },
     lin_mortalha: { t: 'Mortalha Necrótica', l: 'Assusta quem está em volta.', b: [
       'Quem não for seu aliado a até 3 m faz salvaguarda de Carisma ou fica Amedrontado até o fim do seu próximo turno.'] },
+
+    // ── traços fixos de cada espécie, cada um virando item próprio ─────
+    // Mesmo texto de sempre (dos b[] de cada esp_*), só destacado pra dar
+    // pra buscar sozinho. "Visão no Escuro" repete em várias espécies com
+    // alcance diferente, por isso um item por espécie, não um genérico.
+    tra_aasimar_visao_escuro: { t: 'Visão no Escuro (Aasimar)', l: 'Enxerga no escuro até 18 m.', b: [
+      '[[cnc_visao_escuro|Visão no Escuro]] até 18 m.'] },
+    tra_aasimar_resistencia: { t: 'Resistência Celestial', l: 'O sangue celestial protege contra necrótico e radiante.', b: [
+      '[[cnc_resistencia|Resistência]] a dano necrótico e radiante.'] },
+    tra_aasimar_maos_curandeiras: { t: 'Mãos Curandeiras', l: 'Um toque que cura, uma vez por dia.', b: [
+      'Toca alguém e cura d4 igual ao seu bônus de proficiência — uma vez por [[cnc_descanso|descanso longo]].'] },
+    tra_aasimar_portador_luz: { t: 'Portador de Luz', l: 'Já nasce sabendo um truque de luz.', b: [
+      'Conhece o [[cnc_truque|truque]] [[mag_luz|Luz]], conjurado por Carisma.'] },
+    tra_anao_visao_escuro: { t: 'Visão no Escuro (Anão)', l: 'Enxerga no escuro até 36 m.', b: [
+      '[[cnc_visao_escuro|Visão no Escuro]] até 36 m.'] },
+    tra_anao_resiliencia: { t: 'Resiliência Anã', l: 'Veneno escorrega — quase não pega.', b: [
+      '[[cnc_resistencia|Resistência]] a dano de veneno, e vantagem pra evitar ou encerrar a condição Envenenado.'] },
+    tra_anao_fortitude: { t: 'Fortitude Anã', l: 'PV a mais, todo nível.', b: [
+      '+1 de PV máximo a cada nível.'] },
+    tra_anao_sentido_pedra: { t: 'Sentido de Pedra', l: 'Sente quem se move pela pedra.', b: [
+      'Com [[cnc_acao_bonus|ação bônus]], sente o que se move a até 18 m por 10 minutos, enquanto estiver pisando ou encostando em pedra — bônus de proficiência vezes por descanso longo.'] },
+    tra_draconato_visao_escuro: { t: 'Visão no Escuro (Draconato)', l: 'Enxerga no escuro até 18 m.', b: [
+      '[[cnc_visao_escuro|Visão no Escuro]] até 18 m.'] },
+    tra_draconato_ancestralidade: { t: 'Ancestralidade Dracônica (traço)', l: 'Qual dragão corre no seu sangue.', b: [
+      '[[cnc_dracos|Ancestralidade Dracônica]]: o dragão escolhido define o dano do sopro e da resistência.'] },
+    tra_draconato_sopro: { t: 'Sopro', l: 'Um cone ou uma linha do dano do seu dragão.', b: [
+      'Troca um ataque da ação Atacar por um cone de 4,5 m ou uma linha de 9 m; salvaguarda de Destreza, 1d10 (sobe nos níveis 5, 11 e 17) — bônus de proficiência vezes por [[cnc_descanso|descanso longo]].'] },
+    tra_draconato_resistencia: { t: 'Resistência Dracônica', l: 'O mesmo dano do seu sopro escorrega em você.', b: [
+      '[[cnc_resistencia|Resistência]] ao tipo de dano da sua ancestralidade.'] },
+    tra_draconato_voo: { t: 'Voo Dracônico', l: 'Nível 5: asas de verdade, por um tempo.', b: [
+      'Com [[cnc_acao_bonus|ação bônus]], ganha asas por 10 minutos — uma vez por descanso longo. Nível 5.'] },
+    tra_elfo_visao_escuro: { t: 'Visão no Escuro (Elfo)', l: 'Enxerga no escuro até 18 m.', b: [
+      '[[cnc_visao_escuro|Visão no Escuro]] até 18 m.'] },
+    tra_elfo_ancestralidade_feerica: { t: 'Ancestralidade Feérica', l: 'Difícil de enfeitiçar.', b: [
+      'Vantagem pra evitar ou encerrar a condição Enfeitiçado.'] },
+    tra_elfo_sentidos_agucados: { t: 'Sentidos Aguçados', l: 'Um sentido afiado, à escolha.', b: [
+      'Proficiência em [[per_intuicao|Intuição]], [[per_percepcao|Percepção]] ou [[per_sobrevivencia|Sobrevivência]].'] },
+    tra_elfo_transe: { t: 'Transe', l: 'Não dorme — entra em transe.', b: [
+      'Não precisa dormir, magia não te põe pra dormir, e o [[cnc_descanso|descanso longo]] leva só 4 horas.'] },
+    tra_gnomo_visao_escuro: { t: 'Visão no Escuro (Gnomo)', l: 'Enxerga no escuro até 18 m.', b: [
+      '[[cnc_visao_escuro|Visão no Escuro]] até 18 m.'] },
+    tra_gnomo_astucia: { t: 'Astúcia Gnômica', l: 'A cabeça gnômica resiste à magia.', b: [
+      'Vantagem em salvaguardas de Inteligência, Sabedoria e Carisma.'] },
+    tra_goliath_constituicao_robusta: { t: 'Constituição Robusta', l: 'Carrega como se fosse Grande.', b: [
+      'Vantagem pra se soltar da condição Agarrado, e carrega peso como se fosse de tamanho Grande.'] },
+    tra_goliath_forma_grande: { t: 'Forma Grande', l: 'Nível 5: fica Grande por um tempo.', b: [
+      'Com [[cnc_acao_bonus|ação bônus]], fica Grande por 10 minutos — vantagem em Força e +3 m de deslocamento; uma vez por descanso longo. Nível 5.'] },
+    tra_halfling_sorte: { t: 'Sorte', l: 'Tirou 1? Rola de novo.', b: [
+      'Tirou 1 no d20 de um teste, ataque ou salvaguarda? Rola de novo e fica com o resultado novo.'] },
+    tra_halfling_bravura: { t: 'Bravura', l: 'Difícil de assustar.', b: [
+      'Vantagem pra evitar ou encerrar a condição Amedrontado.'] },
+    tra_halfling_agilidade: { t: 'Agilidade Halfling', l: 'Passa pelo espaço de quem é maior.', b: [
+      'Pode se mover através do espaço de uma criatura de tamanho maior que o seu, sem parar nele.'] },
+    tra_halfling_furtividade: { t: 'Furtividade Natural', l: 'Se esconde atrás de quem é maior.', b: [
+      'Pode tentar se esconder mesmo estando só atrás de uma criatura que seja pelo menos um tamanho maior que você.'] },
+    tra_humano_habilidoso: { t: 'Habilidoso (Humano)', l: 'Aprendeu um pouco de tudo.', b: [
+      'Proficiência em uma [[pericia|perícia]] à sua escolha.'] },
+    tra_humano_versatil: { t: 'Versátil (Humano)', l: 'Um talento a mais, só por ser humano.', b: [
+      'Ganha um [[cnc_talento_origem|talento de origem]] além do que o antecedente já deu.'] },
+    tra_humano_engenhoso: { t: 'Engenhoso', l: 'Inspiração garantida a cada descanso longo.', b: [
+      'Ganha [[inspiracao|Inspiração Heroica]] ao terminar um [[cnc_descanso|descanso longo]].'] },
+    tra_orc_visao_escuro: { t: 'Visão no Escuro (Orc)', l: 'Enxerga no escuro até 36 m.', b: [
+      '[[cnc_visao_escuro|Visão no Escuro]] até 36 m.'] },
+    tra_orc_resistencia_implacavel: { t: 'Resistência Implacável', l: 'Cair a 0 PV não é sempre o fim.', b: [
+      'Ao cair a 0 PV sem morrer na hora, fica com 1 PV em vez disso — uma vez por [[cnc_descanso|descanso longo]].'] },
+    tra_orc_investida_adrenalina: { t: 'Investida Adrenalina', l: 'Um empurrão de PV temporário, disparado como ação bônus.', b: [
+      'Com [[cnc_acao_bonus|ação bônus]], ganha PV temporários iguais ao seu bônus de proficiência — bônus de proficiência vezes por descanso curto ou longo.'] },
+    tra_tiefling_visao_escuro: { t: 'Visão no Escuro (Tiefling)', l: 'Enxerga no escuro até 18 m.', b: [
+      '[[cnc_visao_escuro|Visão no Escuro]] até 18 m.'] },
+    tra_tiefling_presenca: { t: 'Presença de Outro Mundo', l: 'Já nasce sabendo um truque estranho.', b: [
+      'Conhece o [[cnc_truque|truque]] Taumaturgia.'] },
+
     cnc_dracos: { t: 'Ancestralidade Dracônica', l: 'Qual dragão é o seu — define o dano do sopro e a resistência.', b: [
       'Ácido: Negro ou Cobre.',
       'Elétrico: Azul ou Bronze.',
@@ -4924,14 +5024,18 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     el.textContent = atual ? atual + '\n' + txt : txt;
     return true;
   }
+  // verbetes cnc_ que já explicavam uma característica de classe por fora
+  // (criados só pra referência) e agora também dá pra soltar na ficha
+  var CLS_CNC = ['cnc_estilo_luta', 'cnc_ataque_furtivo', 'cnc_especialista', 'cnc_defesa_sem_armadura'];
   function destinoDe(chave) {
     if (/^per_/.test(chave)) return { r: 'Marcar proficiência' };
     if (/^tal_/.test(chave) || /^est_/.test(chave)) return { r: 'Anotar em Talentos' };
     if (/^ferr_/.test(chave)) return { r: 'Anotar em Ferramentas' };
     if (/^item_/.test(chave) && ITEM_DO_TERMO[chave]) return { r: 'Pôr no inventário' };
     if (/^sbc_/.test(chave)) return { r: 'Pôr em Subclasse' };
-    if (/^lin_/.test(chave) && AJUDA[chave] && !AJUDA[chave].lista) return { r: 'Anotar em Traços' };
+    if ((/^lin_/.test(chave) || /^tra_/.test(chave)) && AJUDA[chave] && !AJUDA[chave].lista) return { r: 'Anotar em Traços' };
     if (/^mag_/.test(chave)) return { r: 'Pôr na lista de magias' };
+    if (CLS_CNC.indexOf(chave) >= 0) return { r: 'Anotar em Características' };
     // cls_: a classe inteira (nível 1 completo) aplica; uma característica
     // avulsa que já existe na base (Fúria, Retomar o Fôlego…) só se anota
     if (/^cls_/.test(chave)) return { r: AJUDA.classe.lista.indexOf(chave) >= 0 ? 'Aplicar na ficha' : 'Anotar em Características' };
@@ -5002,7 +5106,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       });
       return nome + ' na lista de magias';
     }
-    if (/^lin_/.test(chave)) {
+    if (/^lin_/.test(chave) || /^tra_/.test(chave)) {
       var r3 = anota('tracos_especie', nome + ' — ' + d.l);
       return r3 === 'repetido' ? nome + ' já estava nos Traços' : nome + ' nos Traços de Espécie';
     }
@@ -5011,9 +5115,9 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       if (cs) cs.textContent = nome;
       return 'subclasse ' + nome;
     }
-    if (/^cls_/.test(chave) && AJUDA.classe.lista.indexOf(chave) < 0) {
-      // característica avulsa (ex.: Fúria): já existe na base pra explicar um
-      // termo citado noutro lugar — aqui também dá pra soltar ela sozinha
+    if ((/^cls_/.test(chave) && AJUDA.classe.lista.indexOf(chave) < 0) || CLS_CNC.indexOf(chave) >= 0) {
+      // característica avulsa (ex.: Fúria, ou um cnc_ que já existia por
+      // fora): já tem verbete pronto — aqui também dá pra soltar sozinha
       var r4 = anota('caracteristicas_classe', nome + ' — ' + d.l);
       return r4 === 'repetido' ? nome + ' já estava nas Características' : nome + ' nas Características de Classe';
     }
@@ -5108,17 +5212,19 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       // + as características avulsas que já existem na base como item
       // próprio (Fúria, Retomar o Fôlego, Artes Marciais…) — de brinde,
       // sem precisar separar as 12 classes inteiras em itens novos.
-      chaves = AJUDA.classe.lista.slice();
+      chaves = AJUDA.classe.lista.slice().concat(CLS_CNC);
       Object.keys(AJUDA).forEach(function(k) {
         if (/^cls_/.test(k) && chaves.indexOf(k) < 0) chaves.push(k);
       });
     } else if (tipo === 'especie') {
       // espécie inteira + as linhagens/legados que já são item próprio
-      // (drow, alto elfo, legado infernal…) — isso já vem de graça da base.
+      // (drow, alto elfo, legado infernal…) + agora os traços fixos de
+      // cada espécie (visão no escuro, transe, sorte…), cada um separado.
       chaves = AJUDA.especie.lista.slice();
       AJUDA.especie.lista.forEach(function(k) {
         (AJUDA[k].lista || []).forEach(function(sub) { chaves.push(sub); });
       });
+      Object.keys(AJUDA).forEach(function(k) { if (/^tra_/.test(k)) chaves.push(k); });
     } else {
       var alvo = tipo === 'talentos' ? 'Anotar em Talentos' : 'Anotar em Ferramentas';
       chaves = Object.keys(AJUDA).filter(function(k) {
