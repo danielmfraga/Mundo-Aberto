@@ -639,7 +639,7 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 /* ───────── inventário ─────────
    Quadros com ícone, como inventário de jogo, e um botão que vira lista pra
    quem prefere ler. O peso é a primeira conta da ficha: capacidade é
-   Força × 7,5 kg, e o que passa disso fica vermelho. */
+   Força × 7 kg, e o que passa disso fica vermelho. */
 .inv { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
 .inv-topo { display: flex; align-items: center; gap: 8px; }
 .inv-carga { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
@@ -1003,10 +1003,10 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
 <!-- ajuste da capacidade de carga -->
 <div class="inv-carga-pop" id="invCargaPop" hidden>
   <div class="fundo-t">Capacidade de carga</div>
-  <div class="inv-carga-l">Força × 7,5 kg</div>
+  <div class="inv-carga-l">Força × 7 kg</div>
   <label class="fundo-lin">Bônus (kg)<input type="number" id="invBonus" step="0.5" value="0"></label>
   <label class="fundo-lin">Dobrar<input type="checkbox" id="invDobra"></label>
-  <div class="inv-carga-l fino">Dobra vale para Constituição Robusta e para quem é Grande.</div>
+  <div class="inv-carga-l fino">Marque para quem é Grande ou tem Constituição Robusta: vira Força × 13,5 kg.</div>
 </div>
 
 <!-- balão do modo sumário -->
@@ -1426,56 +1426,62 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   //  magia). Essa parte entra depois, com o livro na mão.
   // ══════════════════════════════════════════════════════════════════
   var AJUDA = {
-    // ── propriedades de arma ──
+    // ── propriedades de arma (nomes e regras do capítulo 6 do Livro do Jogador 2024) ──
     prop_acuidade: { t: 'Acuidade', l: 'Você escolhe entre Força e Destreza — e usa o mesmo nos dois.', b: [
-      'Vale para o ataque e para o dano, sempre o mesmo atributo.',
+      'Vale para o ataque e para o dano: o mesmo modificador nas duas jogadas.',
       'É o que deixa o ladino bater com Destreza.'] },
     prop_leve: { t: 'Leve', l: 'Arma de uma mão só, boa para brigar com duas.', b: [
-      'Segurando duas armas leves, você ganha um ataque extra com a segunda, como ação bônus.',
-      'Esse ataque extra não soma o modificador ao dano — a não ser que a arma tenha a maestria Nick.'] },
-    prop_pesada: { t: 'Pesada', l: 'Grande demais para quem é pequeno.', b: [
-      'Criaturas Pequenas atacam com desvantagem.'] },
-    prop_alcance: { t: 'Alcance', l: 'Bate de mais longe que o normal.', b: [
-      '3 metros em vez de 1,5 — dá para atingir quem está atrás da linha de frente.'] },
+      'Ao usar a ação Atacar com uma arma Leve, dá pra fazer um ataque extra, como Ação Bônus, com OUTRA arma Leve.',
+      'Esse ataque extra não soma o modificador ao dano — a não ser que ele seja negativo.',
+      'Com a maestria Ágil, o ataque extra sai como parte da ação Atacar, sem gastar a Ação Bônus.'] },
+    prop_pesada: { t: 'Pesada', l: 'Exige braço: sem força, você erra mais.', b: [
+      'Desvantagem nos ataques se a arma é corpo a corpo e a sua Força é menor que 13, ou se é à distância e a sua Destreza é menor que 13.'] },
+    prop_extensao: { t: 'Extensão', l: 'Bate de mais longe que o normal.', b: [
+      'Soma 1,5 metro ao seu alcance corpo a corpo — inclusive pros Ataques de Oportunidade.'] },
+    prop_alcance: { t: 'Alcance', l: 'Os dois números de uma arma de longe.', b: [
+      'Aparece entre parênteses depois de Munição ou Arremesso: o primeiro é o alcance normal, o segundo o máximo, em metros.',
+      'Atacou além do normal, é com desvantagem. Além do máximo, não dá pra atacar.'] },
     prop_versatil: { t: 'Versátil', l: 'Uma ou duas mãos, você decide na hora.', b: [
-      'Com as duas mãos, o dano sobe para o dado entre parênteses.',
-      'Largar o escudo por um turno para bater mais forte é uma escolha legítima.'] },
+      'O dano entre parênteses vale quando você usa a arma com as duas mãos num ataque corpo a corpo.'] },
     prop_arremesso: { t: 'Arremesso', l: 'Dá para jogar a arma no alvo.', b: [
-      'Os dois números são o alcance normal e o máximo, em metros.',
-      'Passou do normal, o ataque é com desvantagem. Passou do máximo, nem role.',
-      'O arremesso usa o mesmo atributo do golpe corpo a corpo.'] },
-    prop_municao: { t: 'Munição', l: 'Precisa de projétil: flecha, virote, pedra.', b: [
-      'Os dois números são o alcance normal e o máximo, em metros.',
-      'Você recupera metade da munição gasta ao recolher do chão depois da luta.'] },
+      'Vale como ataque à distância, e sacar a arma faz parte do ataque.',
+      'Se a arma é corpo a corpo, o arremesso usa o mesmo modificador do golpe corpo a corpo.',
+      'Os dois números são o alcance normal e o máximo, em metros.'] },
+    prop_municao: { t: 'Munição', l: 'Precisa de projétil: flecha, virote, bala, agulha.', b: [
+      'Só ataca à distância se tiver munição; cada ataque gasta uma peça.',
+      'Sacar a munição faz parte do ataque (precisa de uma mão livre pra carregar uma arma de uma mão).',
+      'Depois da luta, 1 minuto recupera metade da munição gasta (arredondando pra baixo); o resto se perde.'] },
     prop_recarga: { t: 'Recarga', l: 'Um tiro por vez.', b: [
       'Só um disparo por ação, ação bônus ou reação, por mais ataques que você tenha.'] },
     prop_duas_maos: { t: 'Duas mãos', l: 'Exige as duas mãos para atacar.', b: [
-      'Não dá para usar escudo junto.'] },
+      'Pra atacar com ela, as duas mãos têm que estar na arma.'] },
     // ── maestrias (5.5) ──
     mst_maestria: { t: 'Maestria de arma', l: 'Um efeito extra que a arma dá — mas só para quem tem maestria nela.', b: [
       'Novidade da 5.5: cada arma tem a sua, fixa.',
+      'Só funciona pra quem tem uma característica que libere a maestria, como a Maestria em Armas da classe.',
       'A sua classe diz com quantas armas você tem maestria, e você escolhe quais.',
       'Sem maestria na arma, o efeito simplesmente não acontece.'] },
-    mst_nick: { t: 'Maestria: Nick', l: 'O ataque da mão secundária sai de graça.', b: [
-      'O ataque extra da propriedade Leve vem junto da ação Ataque, em vez de gastar a sua ação bônus.',
-      'Na prática: você bate duas vezes e ainda tem a ação bônus livre.',
-      'Este é o único nome de maestria que ficou em inglês no nosso catálogo — se o seu livro traz outro, me avise que eu troco.'] },
-    mst_atormentar: { t: 'Maestria: Atormentar', l: 'Acertou uma, a próxima fica mais fácil.', b: [
-      'Ao acertar, o seu próximo ataque contra a mesma criatura é com vantagem.'] },
-    mst_debilitar: { t: 'Maestria: Debilitar', l: 'O golpe atrapalha a resposta.', b: [
-      'Ao acertar, o próximo ataque daquela criatura é com desvantagem.'] },
+    mst_agil: { t: 'Maestria: Ágil', l: 'O ataque da mão secundária sai junto da ação Atacar.', b: [
+      'O ataque extra da propriedade Leve sai como parte da ação Atacar, em vez de gastar a sua Ação Bônus.',
+      'Só uma vez por turno.'] },
+    mst_afligir: { t: 'Maestria: Afligir', l: 'Acertou uma, a próxima fica mais fácil.', b: [
+      'Acertou e causou dano? Vantagem no seu próximo ataque contra a mesma criatura, até o fim do seu próximo turno.'] },
+    mst_drenar: { t: 'Maestria: Drenar', l: 'O golpe atrapalha a resposta.', b: [
+      'Acertou? A criatura tem desvantagem no próximo ataque dela, antes do início do seu próximo turno.'] },
     mst_empurrar: { t: 'Maestria: Empurrar', l: 'Tira o inimigo de cima de você.', b: [
-      'Ao acertar, empurra o alvo até 3 metros para longe.'] },
+      'Acertou? Você pode empurrar o alvo até 3 metros pra longe — só se ele for Grande ou menor.'] },
     mst_derrubar: { t: 'Maestria: Derrubar', l: 'Põe o inimigo no chão.', b: [
-      'Ao acertar, o alvo faz salvaguarda de Constituição ou fica Caído.',
+      'Acertou? Você pode forçar uma salvaguarda de Constituição: se falhar, o alvo fica Caído.',
       'A CD é 8 + seu bônus de proficiência + o modificador que você usou no ataque.'] },
     mst_lentidao: { t: 'Maestria: Lentidão', l: 'Quem apanha, anda menos.', b: [
-      'Ao acertar, o deslocamento do alvo cai 3 metros até o começo do seu próximo turno.'] },
-    mst_fender: { t: 'Maestria: Fender', l: 'O golpe pega dois.', b: [
-      'Ao acertar, uma segunda criatura a até 1,5 m da primeira leva o dano da arma — sem somar o seu modificador.',
-      'Uma vez por turno.'] },
-    mst_raspar: { t: 'Maestria: Raspar', l: 'Errar deixa de ser errar à toa.', b: [
-      'Errou o ataque? O alvo leva dano igual ao modificador do atributo que você usou.'] },
+      'Acertou e causou dano? Você pode reduzir o deslocamento do alvo em 3 metros até o começo do seu próximo turno.',
+      'Várias armas com Lentidão não acumulam: o máximo é 3 metros.'] },
+    mst_trespassar: { t: 'Maestria: Trespassar', l: 'O golpe pega dois.', b: [
+      'Acertou um ataque corpo a corpo? Você pode atacar com a mesma arma uma segunda criatura a até 1,5 m da primeira, que também esteja ao seu alcance.',
+      'Se acertar, ela leva o dano da arma — sem somar o seu modificador, a não ser que seja negativo. Só uma vez por turno.'] },
+    mst_garantido: { t: 'Maestria: Garantido', l: 'Errar deixa de ser errar à toa.', b: [
+      'Errou o ataque? O alvo leva dano igual ao modificador do atributo que você usou, do mesmo tipo da arma.',
+      'Esse dano só cresce se o modificador crescer.'] },
     // ── 2º círculo: mago, feiticeiro e druida ─────────────────────────
     mag_passo_nebuloso: { t: 'Passo Nebuloso', l: 'Teleporte curto como ação bônus — a magia que mais salva vida.', b: [
       '2º círculo · mago · feiticeiro',
@@ -2842,7 +2848,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     // ── o que cada classe entrega no nível 1 ──────────────────────────
     cls_furia: { t: 'Fúria', l: 'O bárbaro liga o motor: mais dano, menos dano recebido.', b: [
       'Entra em fúria com uma [[cnc_acao_bonus|ação bônus]], sem armadura pesada. Dois usos no nível 1: volta um no [[cnc_descanso|descanso curto]] e todos no longo.',
-      '+2 de dano nos ataques que usam Força (com arma ou desarmado), resistência a dano cortante, perfurante e de concussão, e vantagem em testes e salvaguardas de Força.',
+      '+2 de dano nos ataques que usam Força (com arma ou desarmado), resistência a dano cortante, perfurante e contundente, e vantagem em testes e salvaguardas de Força.',
       'Enquanto dura, não dá pra conjurar nem manter concentração.',
       'Dura até o fim do seu próximo turno e se renova se você atacar um inimigo, forçar um inimigo a fazer salvaguarda ou gastar uma ação bônus pra mantê-la — até 10 minutos. Acaba se você vestir armadura pesada ou ficar Incapacitado.'] },
     cls_inspiracao_bardo: { t: 'Inspiração de Bardo', l: 'Um dado que você entrega pra outra pessoa usar.', b: [
@@ -3027,7 +3033,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Armaduras: leves, médias e escudos',
       'Armas: simples e marciais',
       'Perícias: 2 entre Atletismo, Intimidação, Lidar com Animais, Natureza, Percepção e Sobrevivência',
-      'Nível 1: Fúria — 2 usos; +2 de dano com Força, resistência a cortante, perfurante e concussão, e vantagem em Força',
+      'Nível 1: Fúria — 2 usos; +2 de dano com Força, resistência a cortante, perfurante e contundente, e vantagem em Força',
       'Nível 1: Defesa sem Armadura — CA 10 + Destreza + Constituição quando está sem armadura',
       'Nível 1: Maestria em Armas — escolhe 2 armas e usa a maestria delas'] },
     cls_bardo: { t: 'Bardo', l: 'Magia pela palavra e pela música. Ajuda o grupo inteiro a acertar mais.', b: [
@@ -3367,7 +3373,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Atributos: Inteligência, Sabedoria, Carisma',
       'Talento: [[tal_iniciado|Iniciado em Magia (Clérigo)]]',
       'Perícias: [[per_intuicao|Intuição]], [[per_religiao|Religião]]',
-      'Ferramenta: [[ferr_caligrafia|Suprimentos de Caligrafia]]'] },
+      'Ferramenta: [[ferr_caligrafia|Suprimentos de Calígrafo]]'] },
     ant_andarilho: { t: 'Andarilho', l: 'Cresceu na rua, sem teto fixo, vivendo do que aparecia — e sobreviveu.', b: [
       'Atributos: Destreza, Sabedoria, Carisma',
       'Talento: [[tal_sortudo|Sortudo]]',
@@ -3377,7 +3383,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Atributos: Força, Destreza, Inteligência',
       'Talento: [[tal_artesao|Artesão]]',
       'Perícias: [[per_investigacao|Investigação]], [[per_persuasao|Persuasão]]',
-      'Ferramenta: [[ferr_artesao|Instrumentos de Artesão]]'] },
+      'Ferramenta: [[ferr_artesao|Ferramentas de Artesão]]'] },
     ant_artista: { t: 'Artista', l: 'Vive de plateia: palco, praça, taverna — onde houver gente olhando.', b: [
       'Atributos: Força, Destreza, Carisma',
       'Talento: [[tal_musico|Músico]]',
@@ -3402,7 +3408,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Atributos: Destreza, Inteligência, Sabedoria',
       'Talento: [[tal_habilidoso|Habilidoso]]',
       'Perícias: [[per_investigacao|Investigação]], [[per_percepcao|Percepção]]',
-      'Ferramenta: [[ferr_caligrafia|Suprimentos de Caligrafia]]'] },
+      'Ferramenta: [[ferr_caligrafia|Suprimentos de Calígrafo]]'] },
     ant_fazendeiro: { t: 'Fazendeiro', l: 'Terra, bicho e tempo ruim. Corpo endurecido por trabalho, não por treino.', b: [
       'Atributos: Força, Constituição, Sabedoria',
       'Talento: [[tal_resistente|Resistente]]',
@@ -3412,7 +3418,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Atributos: Força, Inteligência, Sabedoria',
       'Talento: [[tal_alerta|Alerta]]',
       'Perícias: [[per_atletismo|Atletismo]], [[per_percepcao|Percepção]]',
-      'Ferramenta: [[ferr_jogos|Conjunto de Jogos]]'] },
+      'Ferramenta: [[ferr_jogos|Kit de Jogos]]'] },
     ant_guia: { t: 'Guia', l: 'Conhece o mato como quem conhece a própria casa, e leva os outros por ele.', b: [
       'Atributos: Destreza, Constituição, Sabedoria',
       'Talento: [[tal_iniciado|Iniciado em Magia (Druida)]]',
@@ -3433,17 +3439,17 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Atributos: Força, Inteligência, Carisma',
       'Talento: [[tal_habilidoso|Habilidoso]]',
       'Perícias: [[per_historia|História]], [[per_persuasao|Persuasão]]',
-      'Ferramenta: [[ferr_jogos|Conjunto de Jogos]]'] },
+      'Ferramenta: [[ferr_jogos|Kit de Jogos]]'] },
     ant_sabio: { t: 'Sábio', l: 'Cresceu entre livros. Sabe muito, e sabe onde procurar o que não sabe.', b: [
       'Atributos: Constituição, Inteligência, Sabedoria',
       'Talento: [[tal_iniciado|Iniciado em Magia (Mago)]]',
       'Perícias: [[per_arcanismo|Arcanismo]], [[per_historia|História]]',
-      'Ferramenta: [[ferr_caligrafia|Suprimentos de Caligrafia]]'] },
+      'Ferramenta: [[ferr_caligrafia|Suprimentos de Calígrafo]]'] },
     ant_soldado: { t: 'Soldado', l: 'Serviu numa tropa: marchou, obedeceu, lutou em formação e viu gente morrer.', b: [
       'Atributos: Força, Destreza, Constituição',
       'Talento: [[tal_atacante|Atacante Selvagem]]',
       'Perícias: [[per_atletismo|Atletismo]], [[per_intimidacao|Intimidação]]',
-      'Ferramenta: [[ferr_jogos|Conjunto de Jogos]]'] },
+      'Ferramenta: [[ferr_jogos|Kit de Jogos]]'] },
 
     cnc_talento_origem: { t: 'Talento de Origem', l: 'O talento que já vem de fábrica, no nível 1 — antes de qualquer escolha de classe.', b: [
       'Todo antecedente entrega um. É o que mais muda a cara do personagem no começo.',
@@ -3459,7 +3465,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Proficiência com três instrumentos de artesão à sua escolha.',
       'Desconto de 20% ao comprar equipamento não mágico.',
       'No descanso longo, pode fabricar itens simples com o material à mão.'] },
-    tal_curandeiro: { t: 'Curandeiro', l: 'Você cura com kit de medicina, sem gastar magia.', b: [
+    tal_curandeiro: { t: 'Curandeiro', l: 'Você cura com um Kit de Curandeiro, sem gastar magia.', b: [
       'Gastando um uso do kit, devolve 1d6 + bônus de proficiência PV a quem está caído ou ferido.',
       'A mesma criatura só se beneficia de novo depois de um descanso.',
       'Quando rola dados de cura, rola de novo qualquer 1.'] },
@@ -3484,41 +3490,120 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     tal_resistente: { t: 'Resistente', l: 'Mais couro que os outros.', b: [
       'Seus PV máximos sobem 2 por nível — e continuam subindo 2 a cada nível novo.'] },
 
-    // ── Grau 3: ferramentas ───────────────────────────────────────────
-    ferr_navegador: { t: 'Ferramentas de Navegador', l: 'Cartas náuticas, compasso e sextante.', b: [
-      'Traçar rota, ler carta, achar a posição pelas estrelas.',
-      'Ajuda a não se perder e a estimar quanto falta de viagem.'] },
-    ferr_ladrao: { t: 'Ferramentas de Ladrão', l: 'Gazuas, limas e arames.', b: [
-      'Abrir fechadura e desarmar armadilha — as duas coisas pedem essa proficiência.',
-      'É a ferramenta mais útil do jogo em masmorra.'] },
-    ferr_falsificacao: { t: 'Kit de Falsificação', l: 'Papel, selos, ceras e tintas.', b: [
-      'Forjar documentos, cartas, brasões e assinaturas.'] },
-    ferr_artesao: { t: 'Instrumentos de Artesão', l: 'O conjunto do ofício que você aprendeu.', b: [
-      'Cada tipo é uma proficiência: ferreiro, carpinteiro, joalheiro, alfaiate e por aí.',
-      'Serve pra fabricar, reparar e avaliar trabalho daquele ofício.'] },
-    ferr_caligrafia: { t: 'Suprimentos de Caligrafia', l: 'Pena, tinta e pergaminho bons.', b: [
-      'Escrever com capricho, reconhecer uma letra e desconfiar de assinatura forjada.'] },
+    // ── Grau 3: ferramentas (as 25 do livro; atributo, Usar Objeto e Fabricação do cap. 6) ──
+    ferr_artesao: { t: 'Ferramentas de Artesão', l: 'O conjunto do ofício que você aprendeu.', b: [
+      'Cada tipo é uma proficiência separada — são 17, de Carpinteiro a Cozinheiro.',
+      'Servem pra fabricar. Precisa de matéria-prima no valor de metade do preço, e leva 1 dia (8 horas) pra cada 10 PO do preço, arredondando pra cima.'],
+      mais: 'Ver as 17 ferramentas de artesão',
+      lista: ['ferr_carpinteiro', 'ferr_cartografo', 'ferr_coureiro', 'ferr_entalhador', 'ferr_ferreiro', 'ferr_funileiro', 'ferr_joalheiro', 'ferr_oleiro', 'ferr_pedreiro', 'ferr_sapateiro', 'ferr_tecelao', 'ferr_vidreiro', 'ferr_alquimista', 'ferr_caligrafia', 'ferr_cervejeiro', 'ferr_pintor', 'ferr_cozinheiro'] },
     ferr_carpinteiro: { t: 'Ferramentas de Carpinteiro', l: 'Serra, martelo, plaina.', b: [
-      'Construir e consertar em madeira: porta, ponte improvisada, barricada.'] },
-    ferr_jogos: { t: 'Conjunto de Jogos', l: 'Dados, cartas ou tabuleiro.', b: [
-      'Jogar bem, trapacear, e ler quem está do outro lado da mesa.',
-      'Dá conversa com soldado, guarda e taverneiro — que é metade do ponto.'] },
+      'Atributo: Força · 8 PO · 3 kg',
+      'Usar Objeto: selar ou abrir uma porta ou recipiente (CD 20).',
+      'Fabrica: Aríete Portável, Baliza, Barril, Baú, Cajado, Clava, Clava Grande, Escada, Tocha.'] },
     ferr_cartografo: { t: 'Ferramentas de Cartógrafo', l: 'Réguas, compassos e papel.', b: [
-      'Desenhar e ler mapas, estimar distância e reconhecer terreno pelo desenho.'] },
+      'Atributo: Sabedoria · 15 PO · 3 kg',
+      'Usar Objeto: elaborar o mapa de uma pequena área (CD 15).',
+      'Fabrica: Mapa.'] },
+    ferr_coureiro: { t: 'Ferramentas de Coureiro', l: 'Faca, agulha e couro curtido.', b: [
+      'Atributo: Destreza · 5 PO · 2,5 kg',
+      'Usar Objeto: moldar a estética de um item de couro (CD 10).',
+      'Fabrica: Algibeira, Aljava, Armadura de Couro, Armadura de Couro Batido, Cantil, Chicote, Estojo de Mapa ou Pergaminho, Estojo de Virotes de Besta, Funda, Gibão de Peles, Mochila, Pergaminho.'] },
+    ferr_entalhador: { t: 'Ferramentas de Entalhador', l: 'Faca e goiva pra trabalhar madeira.', b: [
+      'Atributo: Destreza · 1 PO · 2,5 kg',
+      'Usar Objeto: entalhar um padrão em madeira (CD 10).',
+      'Fabrica: armas à distância (exceto Funda, Mosquete e Pistola), Cajado, Caneta Tinteiro, Clava, Clava Grande, Dardos, Flechas, Foco Arcano, Foco Druídico, Virotes.'] },
+    ferr_ferreiro: { t: 'Ferramentas de Ferreiro', l: 'Martelo, tenaz e bigorna de viagem.', b: [
+      'Atributo: Força · 20 PO · 4 kg',
+      'Usar Objeto: forçar a abertura de uma porta ou recipiente (CD 20).',
+      'Fabrica: qualquer arma corpo a corpo (exceto Cajado, Chicote, Clava e Clava Grande), armadura Média (exceto Gibão de Peles), armadura Pesada, Arpéu e Gancho, Balas de Arma de Fogo, Balas de Funda, Balde, Corrente, Esferas de Metal, Estacas de Ferro, Estrepes, Panela de Ferro, Pé de Cabra.'] },
+    ferr_funileiro: { t: 'Ferramentas de Funileiro', l: 'Sucata, arame e engenhoca.', b: [
+      'Atributo: Destreza · 50 PO · 5 kg',
+      'Usar Objeto: montar um item Minúsculo de sucata, que se desfaz em 1 minuto (CD 20).',
+      'Fabrica: Apito Sinalizador, Armadilha de Caça, Cadeado ou Fechadura, Caixa para Fogo, Espelho, Grilhões, Lanterna Coberta, Lanterna Foca-facho, Mosquete, Pá, Pistola, Pote, Sino.'] },
+    ferr_joalheiro: { t: 'Ferramentas de Joalheiro', l: 'Lupa, pinça e cinzel fino.', b: [
+      'Atributo: Inteligência · 25 PO · 1 kg',
+      'Usar Objeto: discernir o valor de uma gema (CD 15).',
+      'Fabrica: Foco Arcano, Símbolo Sagrado.'] },
+    ferr_oleiro: { t: 'Ferramentas de Oleiro', l: 'Argila, espátula e torno.', b: [
+      'Atributo: Inteligência · 10 PO · 1,5 kg',
+      'Usar Objeto: discernir como um objeto de cerâmica foi manuseado nas últimas 24 horas (CD 15).',
+      'Fabrica: Jarro, Lâmpada.'] },
+    ferr_pedreiro: { t: 'Ferramentas de Pedreiro', l: 'Cinzel, marreta e prumo.', b: [
+      'Atributo: Força · 10 PO · 4 kg',
+      'Usar Objeto: cinzelar um símbolo ou buraco na pedra (CD 10).',
+      'Fabrica: Roldana e Polias.'] },
+    ferr_sapateiro: { t: 'Ferramentas de Sapateiro', l: 'Sovela, linha e forma de sapato.', b: [
+      'Atributo: Destreza · 5 PO · 2,5 kg',
+      'Usar Objeto: modificar calçado pra dar Vantagem no próximo teste de Destreza (Acrobacia) do usuário (CD 10).',
+      'Fabrica: Kit de Escalada.'] },
+    ferr_tecelao: { t: 'Ferramentas de Tecelão', l: 'Agulha, linha e tear de mão.', b: [
+      'Atributo: Destreza · 1 PO · 2,5 kg',
+      'Usar Objeto: reparar um rasgo em roupa (CD 10) ou costurar um ornamento Minúsculo (CD 10).',
+      'Fabrica: Armadura Acolchoada, Cesta, Cobertor, Saco de Dormir, Roupas Finas, Rede, Túnica, Corda, Saca, Cordão, Tenda, Roupas de Viagem.'] },
+    ferr_vidreiro: { t: 'Ferramentas de Vidreiro', l: 'Tubo de sopro e pinças.', b: [
+      'Atributo: Inteligência · 30 PO · 2,5 kg',
+      'Usar Objeto: discernir como um objeto de vidro foi manuseado nas últimas 24 horas (CD 15).',
+      'Fabrica: Frasco, Jarro, Luneta, Lupa.'] },
+    ferr_alquimista: { t: 'Suprimentos de Alquimista', l: 'Frascos, reagentes e uma balança.', b: [
+      'Atributo: Inteligência · 50 PO · 4 kg',
+      'Usar Objeto: identificar uma substância (CD 15) ou iniciar um incêndio (CD 15).',
+      'Fabrica: Ácido, Bolsa de Componentes, Fogo Alquímico, Óleo, Papel, Perfume.'] },
+    ferr_caligrafia: { t: 'Suprimentos de Calígrafo', l: 'Pena, tinta e pergaminho bons.', b: [
+      'Atributo: Destreza · 10 PO · 2,5 kg',
+      'Usar Objeto: escrever com uma caligrafia que protege contra falsificação (CD 15).',
+      'Fabrica: Pergaminho Mágico, Tinta.'] },
+    ferr_cervejeiro: { t: 'Suprimentos de Cervejeiro', l: 'Barril, lúpulo e fermento.', b: [
+      'Atributo: Inteligência · 20 PO · 4,5 kg',
+      'Usar Objeto: detectar bebida envenenada (CD 15) ou identificar álcool (CD 10).',
+      'Fabrica: Antitoxina.'] },
+    ferr_pintor: { t: 'Suprimentos de Pintor', l: 'Tintas, pincéis e tela.', b: [
+      'Atributo: Sabedoria · 10 PO · 2,5 kg',
+      'Usar Objeto: fazer uma pintura reconhecível de algo que você viu (CD 10).',
+      'Fabrica: Foco Druídico, Símbolo Sagrado.'] },
+    ferr_cozinheiro: { t: 'Utensílios de Cozinheiro', l: 'Panela, faca e tempero.', b: [
+      'Atributo: Sabedoria · 1 PO · 4 kg',
+      'Usar Objeto: melhorar o sabor dos alimentos (CD 10) ou detectar alimento estragado ou envenenado (CD 15).',
+      'Fabrica: Rações.'] },
+    ferr_ladrao: { t: 'Ferramentas de Ladrão', l: 'Gazuas, limas e arames.', b: [
+      'Atributo: Destreza · 25 PO · 0,5 kg',
+      'Usar Objeto: abrir uma fechadura (CD 15) ou desarmar uma armadilha (CD 15).'] },
+    ferr_navegador: { t: 'Ferramentas de Navegador', l: 'Cartas náuticas, compasso e sextante.', b: [
+      'Atributo: Sabedoria · 25 PO · 1 kg',
+      'Usar Objeto: traçar uma rota (CD 10) ou determinar a posição observando as estrelas (CD 15).'] },
+    ferr_disfarce: { t: 'Kit de Disfarce', l: 'Maquiagem, perucas e tinturas.', b: [
+      'Atributo: Carisma · 25 PO · 1,5 kg',
+      'Usar Objeto: aplicar maquiagem (CD 10).',
+      'Fabrica: Fantasia.'] },
+    ferr_falsificacao: { t: 'Kit de Falsificação', l: 'Papel, selos, ceras e tintas.', b: [
+      'Atributo: Destreza · 15 PO · 2,5 kg',
+      'Usar Objeto: imitar 10 ou menos palavras escritas por outra pessoa (CD 15) ou duplicar um selo de cera (CD 20).'] },
     ferr_herbalismo: { t: 'Kit de Herbalismo', l: 'Sacos, pilão e ervas.', b: [
-      'Identificar planta, preparar remédio e, com tempo e material, fabricar poção de cura.'] },
+      'Atributo: Inteligência · 5 PO · 1,5 kg',
+      'Usar Objeto: identificar uma planta (CD 10).',
+      'Fabrica: Antitoxina, Kit de Curandeiro, Poção de Cura, Vela.'] },
+    ferr_veneno: { t: 'Kit de Veneno', l: 'Frascos, ervas e agulhas.', b: [
+      'Atributo: Inteligência · 50 PO · 1 kg',
+      'Usar Objeto: detectar um objeto envenenado (CD 10).',
+      'Fabrica: Veneno Básico.'] },
+    ferr_jogos: { t: 'Kit de Jogos', l: 'Dados, cartas ou tabuleiro.', b: [
+      'Atributo: Sabedoria · preço varia · sem peso',
+      'Usar Objeto: discernir se alguém está trapaceando (CD 10) ou ganhar o jogo (CD 20).',
+      'Variantes, cada uma uma proficiência: Dados (1 PP), Xadrez-do-Dragão (1 PO), Baralho (5 PP), Conjunto do Jogo dos Três Dragões (1 PO).'] },
     ferr_instrumento: { t: 'Instrumento Musical', l: 'Alaúde, flauta, tambor — cada um é uma proficiência.', b: [
-      'Tocar para entreter, e acompanhar uma [[per_atuacao|Atuação]].'] },
+      'Atributo: Carisma · preço e peso variam',
+      'Usar Objeto: tocar uma música conhecida (CD 10) ou improvisar uma música (CD 15).',
+      'Variantes, cada uma uma proficiência: Alaúde (35 PO, 1 kg), Flauta (2 PO, 0,5 kg), Flauta de Pan (12 PO, 1 kg), Gaita de Foles (30 PO, 3 kg), Lira (30 PO, 1 kg), Oboé (2 PO, 0,5 kg), Tambor (6 PO, 1,5 kg), Trombeta (3 PO, 1 kg), Violino (30 PO, 0,5 kg), Xilofone (25 PO, 5 kg).',
+      'Serve pra entreter e acompanhar uma [[per_atuacao|Atuação]].'] },
 
     // ── Grau 3: itens que aparecem no equipamento ─────────────────────
     item_adaga: { t: 'Adaga', l: 'Arma simples, leve e discreta.', b: [
-      '1d4 de perfuração, com Acuidade (usa Força ou Destreza) e de arremesso (6/18 m).',
-      'Maestria Nick: o ataque extra de mão secundária sai de graça, sem gastar ação bônus.'] },
-    item_corda: { t: 'Corda', l: '15 metros de cânhamo.', b: [
-      'Escalar, amarrar, descer poço, prender prisioneiro.',
-      'Aguenta 3 personagens médios pendurados.'] },
-    item_roupas: { t: 'Roupas de Viagem', l: 'Roupa resistente de estrada, com capa e botas.', b: [
-      'Não dá bônus: é o que impede você de passar frio e chegar molhado.'] }
+      '1d4 perfurante, com Acuidade (usa Força ou Destreza), Leve e Arremesso (6/18 m).',
+      'Maestria Ágil: o ataque extra de mão secundária sai junto da ação Atacar, sem gastar a Ação Bônus.'] },
+    item_corda: { t: 'Corda', l: 'Escalar, amarrar, descer poço, prender prisioneiro.', b: [
+      'Dar um nó: Destreza (Prestidigitação) CD 10. Romper: Força (Atletismo) CD 20.',
+      'Só amarra uma criatura que esteja Contida, Imobilizada ou Incapacitada; ela escapa com Destreza (Acrobacia) CD 15.'] },
+    item_roupas: { t: 'Roupas de Viagem', l: 'Roupas resistentes pra viajar em vários ambientes.', b: [
+      'Roupas resistentes projetadas para viagens em vários ambientes.'] }
 ,
     for_salv: { t: 'Salvaguarda de Força', l: 'Segurar o próprio corpo no lugar.', b: [
       'Resistir a ser empurrado, agarrado ou arrastado.',
@@ -3695,7 +3780,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     armas: { t: 'Armas e Truques de Dano', l: 'Tudo com que você causa dano, numa lista só.', b: [
       'Bônus de ataque = modificador do atributo + proficiência, quando você é proficiente na arma.',
       'Acuidade deixa escolher entre Força e Destreza — o ladino vive disso.',
-      'Na 5.5 cada arma tem uma maestria (Nick, Vex, Derrubar…): anote nas observações.'] },
+      'Na 5.5 cada arma tem uma maestria (Ágil, Afligir, Derrubar…): anote nas observações.'] },
     caracteristicas: { t: 'Características de Classe', l: 'Tudo que a classe e a subclasse te deram, nível a nível.', b: [
       'São dois campos separados: o que você escreve de um lado fica nele.'] },
     tracos: { t: 'Traço de Espécies', l: 'O que vem do corpo, não do treino.', b: [
@@ -3730,13 +3815,13 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     idiomas: { t: 'Idiomas', l: 'O que você fala, lê e escreve.', b: [
       'Vêm do antecedente, da classe e da espécie.'] },
     equipamento: { t: 'Equipamento', l: 'O que você carrega.', b: [
-      'O peso máximo que dá para carregar é 15 × o valor puro de Força, em libras.'] },
+      'O peso máximo que dá para carregar é Força × 7 kg (Pequeno ou Médio) ou Força × 13,5 kg (Grande).'] },
     sintonizados: { t: 'Itens Mágicos Sintonizados', l: 'Itens que exigem sintonia para funcionar de verdade.', b: [
       'A sintonia leva um descanso curto e ocupa uma das três vagas.',
       'No máximo três ao mesmo tempo, não importa o nível.'] },
     moedas: { t: 'Moedas', l: 'O dinheiro do mundo.', b: [
       '10 PC = 1 PP  ·  10 PP = 1 PO  ·  10 PO = 1 PL.',
-      'A CE (electro) vale meia PO — é rara, quase sempre tesouro antigo.'] }
+      'A PE (electro) vale meia PO — é rara, quase sempre tesouro antigo.'] }
   };
 
   // Onde cada explicação se pendura. Fica aqui, e não no HTML, pra ligar o
@@ -4004,14 +4089,14 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   // Aqui cada propriedade e cada maestria vira termo clicável, sem precisar
   // marcar uma por uma na tabela.
   var PROPS = {
-    'Acuidade': 'prop_acuidade', 'Leve': 'prop_leve', 'Pesada': 'prop_pesada', 'Alcance': 'prop_alcance',
+    'Acuidade': 'prop_acuidade', 'Leve': 'prop_leve', 'Pesada': 'prop_pesada', 'Extensão': 'prop_extensao',
     'Versátil': 'prop_versatil', 'Arremesso': 'prop_arremesso', 'Munição': 'prop_municao',
     'Recarga': 'prop_recarga', 'Duas mãos': 'prop_duas_maos'
   };
   var MAESTRIAS = {
-    'Nick': 'mst_nick', 'Atormentar': 'mst_atormentar', 'Debilitar': 'mst_debilitar',
+    'Ágil': 'mst_agil', 'Afligir': 'mst_afligir', 'Drenar': 'mst_drenar',
     'Empurrar': 'mst_empurrar', 'Derrubar': 'mst_derrubar', 'Lentidão': 'mst_lentidao',
-    'Fender': 'mst_fender', 'Raspar': 'mst_raspar'
+    'Trespassar': 'mst_trespassar', 'Garantido': 'mst_garantido'
   };
   function comTermos(txt) {
     if (!txt) return txt;
@@ -4036,8 +4121,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     var tp = tipoDaArma(d);
     if (tp) b.push(tp);
     if (d.d) b.push(d.d);
-    if (d.o) b.push(comTermos(d.o));
-    b.push('Peso: ' + num(d.p) + ' kg');
+    if (d.o) b.push(d.cl ? comTermos(d.o) : d.o);
+    b.push('Peso: ' + num(d.p) + ' kg' + (d.v ? ' · Custo: ' + d.v : ''));
     if (d.e) b.push('Dá para equipar, pelo inventário.');
     AJUDA.__cat = { t: d.n, l: 'Item do catálogo.', b: b };
     ancora = elo; pilha = [];
@@ -4613,7 +4698,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   //  INVENTÁRIO
   //  Quadros com ícone (como inventário de jogo) ou lista, à escolha.
   //  É o primeiro lugar da ficha com CONTA: peso carregado contra
-  //  capacidade = Força × 7,5 kg, mais bônus. Arma, escudo e armadura
+  //  capacidade = Força × 7 kg (Grande: × 13,5 kg), mais bônus. Arma, escudo e armadura
   //  podem ser equipados pelo botão direito.
   //  Pesos em kg, seguindo a tradução brasileira. O catálogo é esta
   //  tabela só — corrigir ou ampliar é mexer aqui e mais nada.
@@ -4650,94 +4735,207 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (!d.cl) return null;
     return 'Arma ' + (d.cl === 's' ? 'simples' : 'marcial') + ', ' + (d.c === 'dist' ? 'à distância' : 'corpo a corpo');
   }
-  // n=nome · c=categoria · p=peso em kg · d=o número que importa · o=observações · e=dá pra equipar
+  // n=nome · c=categoria · p=peso em kg · v=custo · d=o número que importa · o=observações · e=dá pra equipar
+  // Tudo conferido contra o capítulo 6 do Livro do Jogador 2024 (nome, peso, custo, dano,
+  // propriedades, maestria). Os ids NUNCA mudam: o inventário de quem já salvou guarda o id,
+  // então um item que o livro chama de outra coisa (bordao = Cajado, florete = Rapieira,
+  // pederneira = Caixa para Fogo…) mantém o id antigo e só troca o que aparece.
   var ITENS = {
     // ── armas simples, corpo a corpo ──
-    adaga:        { n: 'Adaga', c: 'arma', p: 0.5, d: '1d4 perfurante', o: 'Acuidade, Leve, Arremesso 6/18 m · Maestria: Nick', e: 1, dd: '1d4', dt: 'perfurante', fin: 1, cl: 's' },
-    bordao:       { n: 'Bordão', c: 'arma', p: 2, d: '1d6 concussão', o: 'Versátil (1d8) · Maestria: Derrubar', e: 1, dd: '1d6', dt: 'concussão', ver: '1d8', cl: 's' },
-    clava:        { n: 'Clava', c: 'arma', p: 1, d: '1d4 concussão', o: 'Leve · Maestria: Lentidão', e: 1, dd: '1d4', dt: 'concussão', cl: 's' },
-    clava_grande: { n: 'Clava Grande', c: 'arma', p: 5, d: '1d8 concussão', o: 'Duas mãos · Maestria: Empurrar', e: 1, dd: '1d8', dt: 'concussão', cl: 's' },
-    foice_curta:  { n: 'Foice Curta', c: 'arma', p: 1, d: '1d4 cortante', o: 'Leve · Maestria: Nick', e: 1, dd: '1d4', dt: 'cortante', cl: 's' },
-    lanca:        { n: 'Lança', c: 'arma', p: 1.5, d: '1d6 perfurante', o: 'Arremesso 6/18 m, Versátil (1d8) · Maestria: Debilitar', e: 1, dd: '1d6', dt: 'perfurante', ver: '1d8', cl: 's' },
-    machadinha:   { n: 'Machadinha', c: 'arma', p: 1, d: '1d6 cortante', o: 'Leve, Arremesso 6/18 m · Maestria: Atormentar', e: 1, dd: '1d6', dt: 'cortante', cl: 's' },
-    maca:         { n: 'Maça', c: 'arma', p: 2, d: '1d6 concussão', o: 'Maestria: Debilitar', e: 1, dd: '1d6', dt: 'concussão', cl: 's' },
-    martelo_leve: { n: 'Martelo Leve', c: 'arma', p: 1, d: '1d4 concussão', o: 'Leve, Arremesso 6/18 m · Maestria: Nick', e: 1, dd: '1d4', dt: 'concussão', cl: 's' },
-    azagaia:      { n: 'Azagaia', c: 'arma', p: 1, d: '1d6 perfurante', o: 'Arremesso 9/36 m · Maestria: Lentidão', e: 1, dd: '1d6', dt: 'perfurante', cl: 's' },
+    adaga:        { n: 'Adaga', c: 'arma', p: 0.5, v: '2 PO', d: '1d4 perfurante', o: 'Acuidade, Leve, Arremesso 6/18 m · Maestria: Ágil', e: 1, dd: '1d4', dt: 'perfurante', fin: 1, cl: 's' },
+    azagaia:      { n: 'Azagaia', c: 'arma', p: 1, v: '5 PP', d: '1d6 perfurante', o: 'Arremesso 9/36 m · Maestria: Lentidão', e: 1, dd: '1d6', dt: 'perfurante', cl: 's' },
+    bordao:       { n: 'Cajado', c: 'arma', p: 2, v: '2 PP', d: '1d6 contundente', o: 'Versátil (1d8) · Maestria: Derrubar', e: 1, dd: '1d6', dt: 'contundente', ver: '1d8', cl: 's' },
+    clava:        { n: 'Clava', c: 'arma', p: 1, v: '1 PP', d: '1d4 contundente', o: 'Leve · Maestria: Lentidão', e: 1, dd: '1d4', dt: 'contundente', cl: 's' },
+    clava_grande: { n: 'Clava Grande', c: 'arma', p: 5, v: '2 PP', d: '1d8 contundente', o: 'Duas mãos · Maestria: Empurrar', e: 1, dd: '1d8', dt: 'contundente', cl: 's' },
+    foice_curta:  { n: 'Foice', c: 'arma', p: 1, v: '1 PO', d: '1d4 cortante', o: 'Leve · Maestria: Ágil', e: 1, dd: '1d4', dt: 'cortante', cl: 's' },
+    lanca:        { n: 'Lança', c: 'arma', p: 1.5, v: '1 PO', d: '1d6 perfurante', o: 'Arremesso 6/18 m, Versátil (1d8) · Maestria: Drenar', e: 1, dd: '1d6', dt: 'perfurante', ver: '1d8', cl: 's' },
+    maca:         { n: 'Maça', c: 'arma', p: 2, v: '5 PO', d: '1d6 contundente', o: 'Maestria: Drenar', e: 1, dd: '1d6', dt: 'contundente', cl: 's' },
+    machadinha:   { n: 'Machadinha', c: 'arma', p: 1, v: '5 PO', d: '1d6 cortante', o: 'Leve, Arremesso 6/18 m · Maestria: Afligir', e: 1, dd: '1d6', dt: 'cortante', cl: 's' },
+    martelo_leve: { n: 'Martelo Leve', c: 'arma', p: 1, v: '2 PO', d: '1d4 contundente', o: 'Leve, Arremesso 6/18 m · Maestria: Ágil', e: 1, dd: '1d4', dt: 'contundente', cl: 's' },
     // ── armas simples, à distância ──
-    arco_curto:   { n: 'Arco Curto', c: 'dist', p: 1, d: '1d6 perfurante', o: 'Munição 24/96 m, Duas mãos · Maestria: Atormentar', e: 1, dd: '1d6', dt: 'perfurante', rng: 1, cl: 's' },
-    besta_leve:   { n: 'Besta Leve', c: 'dist', p: 2.5, d: '1d8 perfurante', o: 'Munição 24/96 m, Recarga, Duas mãos · Maestria: Lentidão', e: 1, dd: '1d8', dt: 'perfurante', rng: 1, cl: 's' },
-    dardo:        { n: 'Dardo', c: 'dist', p: 0.15, d: '1d4 perfurante', o: 'Acuidade, Arremesso 6/18 m · Maestria: Atormentar', e: 1, dd: '1d4', dt: 'perfurante', fin: 1, cl: 's' },
-    funda:        { n: 'Funda', c: 'dist', p: 0, d: '1d4 concussão', o: 'Munição 9/36 m · Maestria: Lentidão', e: 1, dd: '1d4', dt: 'concussão', rng: 1, cl: 's' },
+    arco_curto:   { n: 'Arco Curto', c: 'dist', p: 1, v: '25 PO', d: '1d6 perfurante', o: 'Munição 24/96 m (Flecha), Duas mãos · Maestria: Afligir', e: 1, dd: '1d6', dt: 'perfurante', rng: 1, cl: 's' },
+    besta_leve:   { n: 'Besta Leve', c: 'dist', p: 2.5, v: '25 PO', d: '1d8 perfurante', o: 'Munição 24/96 m (Virote), Recarga, Duas mãos · Maestria: Lentidão', e: 1, dd: '1d8', dt: 'perfurante', rng: 1, cl: 's' },
+    dardo:        { n: 'Dardo', c: 'dist', p: 0.15, v: '5 PC', d: '1d4 perfurante', o: 'Acuidade, Arremesso 6/18 m · Maestria: Afligir', e: 1, dd: '1d4', dt: 'perfurante', fin: 1, cl: 's' },
+    funda:        { n: 'Funda', c: 'dist', p: 0, v: '1 PP', d: '1d4 contundente', o: 'Munição 9/36 m (Bala) · Maestria: Lentidão', e: 1, dd: '1d4', dt: 'contundente', rng: 1, cl: 's' },
     // ── armas marciais, corpo a corpo ──
-    espada_longa: { n: 'Espada Longa', c: 'arma', p: 1.5, d: '1d8 cortante', o: 'Versátil (1d10) · Maestria: Debilitar', e: 1, dd: '1d8', dt: 'cortante', ver: '1d10', cl: 'm' },
-    espada_curta: { n: 'Espada Curta', c: 'arma', p: 1, d: '1d6 perfurante', o: 'Acuidade, Leve · Maestria: Atormentar', e: 1, dd: '1d6', dt: 'perfurante', fin: 1, cl: 'm' },
-    espada_grande:{ n: 'Espada Grande', c: 'arma', p: 3, d: '2d6 cortante', o: 'Pesada, Duas mãos · Maestria: Raspar', e: 1, dd: '2d6', dt: 'cortante', cl: 'm' },
-    florete:      { n: 'Florete', c: 'arma', p: 1, d: '1d8 perfurante', o: 'Acuidade · Maestria: Atormentar', e: 1, dd: '1d8', dt: 'perfurante', fin: 1, cl: 'm' },
-    cimitarra:    { n: 'Cimitarra', c: 'arma', p: 1.5, d: '1d6 cortante', o: 'Acuidade, Leve · Maestria: Nick', e: 1, dd: '1d6', dt: 'cortante', fin: 1, cl: 'm' },
-    machado_bat:  { n: 'Machado de Batalha', c: 'arma', p: 2, d: '1d8 cortante', o: 'Versátil (1d10) · Maestria: Derrubar', e: 1, dd: '1d8', dt: 'cortante', ver: '1d10', cl: 'm' },
-    machado_gr:   { n: 'Machado Grande', c: 'arma', p: 3.5, d: '1d12 cortante', o: 'Pesada, Duas mãos · Maestria: Fender', e: 1, dd: '1d12', dt: 'cortante', cl: 'm' },
-    martelo_guerra:{ n: 'Martelo de Guerra', c: 'arma', p: 2, d: '1d8 concussão', o: 'Versátil (1d10) · Maestria: Empurrar', e: 1, dd: '1d8', dt: 'concussão', ver: '1d10', cl: 'm' },
-    maca_estrela: { n: 'Maça Estrela', c: 'arma', p: 2, d: '1d8 perfurante', o: 'Maestria: Debilitar', e: 1, dd: '1d8', dt: 'perfurante', cl: 'm' },
-    malho:        { n: 'Malho', c: 'arma', p: 5, d: '2d6 concussão', o: 'Pesada, Duas mãos · Maestria: Derrubar', e: 1, dd: '2d6', dt: 'concussão', cl: 'm' },
-    alabarda:     { n: 'Alabarda', c: 'arma', p: 3, d: '1d10 cortante', o: 'Pesada, Alcance, Duas mãos · Maestria: Fender', e: 1, dd: '1d10', dt: 'cortante', cl: 'm' },
-    glaive:       { n: 'Glaive', c: 'arma', p: 3, d: '1d10 cortante', o: 'Pesada, Alcance, Duas mãos · Maestria: Raspar', e: 1, dd: '1d10', dt: 'cortante', cl: 'm' },
-    pique:        { n: 'Pique', c: 'arma', p: 9, d: '1d10 perfurante', o: 'Pesada, Alcance, Duas mãos · Maestria: Empurrar', e: 1, dd: '1d10', dt: 'perfurante', cl: 'm' },
-    tridente:     { n: 'Tridente', c: 'arma', p: 2, d: '1d8 perfurante', o: 'Arremesso 6/18 m, Versátil (1d10) · Maestria: Derrubar', e: 1, dd: '1d8', dt: 'perfurante', ver: '1d10', cl: 'm' },
-    chicote:      { n: 'Chicote', c: 'arma', p: 1.5, d: '1d4 cortante', o: 'Acuidade, Alcance · Maestria: Lentidão', e: 1, dd: '1d4', dt: 'cortante', fin: 1, cl: 'm' },
-    lanca_montada:{ n: 'Lança Montada', c: 'arma', p: 3, d: '1d10 perfurante', o: 'Alcance, Duas mãos se não estiver montado · Maestria: Derrubar', e: 1, dd: '1d10', dt: 'perfurante', cl: 'm' },
+    alabarda:     { n: 'Alabarda', c: 'arma', p: 3, v: '20 PO', d: '1d10 cortante', o: 'Pesada, Extensão, Duas mãos · Maestria: Trespassar', e: 1, dd: '1d10', dt: 'cortante', cl: 'm' },
+    chicote:      { n: 'Chicote', c: 'arma', p: 1.5, v: '2 PO', d: '1d4 cortante', o: 'Acuidade, Extensão · Maestria: Lentidão', e: 1, dd: '1d4', dt: 'cortante', fin: 1, cl: 'm' },
+    cimitarra:    { n: 'Cimitarra', c: 'arma', p: 1.5, v: '25 PO', d: '1d6 cortante', o: 'Acuidade, Leve · Maestria: Ágil', e: 1, dd: '1d6', dt: 'cortante', fin: 1, cl: 'm' },
+    espada_curta: { n: 'Espada Curta', c: 'arma', p: 1, v: '10 PO', d: '1d6 perfurante', o: 'Acuidade, Leve · Maestria: Afligir', e: 1, dd: '1d6', dt: 'perfurante', fin: 1, cl: 'm' },
+    espada_grande:{ n: 'Espada Grande', c: 'arma', p: 3, v: '50 PO', d: '2d6 cortante', o: 'Pesada, Duas mãos · Maestria: Garantido', e: 1, dd: '2d6', dt: 'cortante', cl: 'm' },
+    espada_longa: { n: 'Espada Longa', c: 'arma', p: 1.5, v: '15 PO', d: '1d8 cortante', o: 'Versátil (1d10) · Maestria: Drenar', e: 1, dd: '1d8', dt: 'cortante', ver: '1d10', cl: 'm' },
+    glaive:       { n: 'Glaive', c: 'arma', p: 3, v: '20 PO', d: '1d10 cortante', o: 'Pesada, Extensão, Duas mãos · Maestria: Garantido', e: 1, dd: '1d10', dt: 'cortante', cl: 'm' },
+    lanca_montada:{ n: 'Lança de Montaria', c: 'arma', p: 3, v: '10 PO', d: '1d10 perfurante', o: 'Pesada, Extensão, Duas mãos (a menos que montado) · Maestria: Derrubar', e: 1, dd: '1d10', dt: 'perfurante', cl: 'm' },
+    pique:        { n: 'Lança Longa', c: 'arma', p: 9, v: '5 PO', d: '1d10 perfurante', o: 'Pesada, Extensão, Duas mãos · Maestria: Empurrar', e: 1, dd: '1d10', dt: 'perfurante', cl: 'm' },
+    maca_estrela: { n: 'Maça Estrela', c: 'arma', p: 2, v: '15 PO', d: '1d8 perfurante', o: 'Maestria: Drenar', e: 1, dd: '1d8', dt: 'perfurante', cl: 'm' },
+    machado_bat:  { n: 'Machado de Batalha', c: 'arma', p: 2.5, v: '10 PO', d: '1d8 cortante', o: 'Versátil (1d10) · Maestria: Derrubar', e: 1, dd: '1d8', dt: 'cortante', ver: '1d10', cl: 'm' },
+    machado_gr:   { n: 'Machado Grande', c: 'arma', p: 3.5, v: '30 PO', d: '1d12 cortante', o: 'Pesada, Duas mãos · Maestria: Trespassar', e: 1, dd: '1d12', dt: 'cortante', cl: 'm' },
+    malho:        { n: 'Malho', c: 'arma', p: 5, v: '10 PO', d: '2d6 contundente', o: 'Pesada, Duas mãos · Maestria: Derrubar', e: 1, dd: '2d6', dt: 'contundente', cl: 'm' },
+    mangual:      { n: 'Mangual', c: 'arma', p: 1, v: '10 PO', d: '1d8 contundente', o: 'Maestria: Drenar', e: 1, dd: '1d8', dt: 'contundente', cl: 'm' },
+    martelo_guerra:{ n: 'Martelo de Guerra', c: 'arma', p: 1, v: '15 PO', d: '1d8 contundente', o: 'Versátil (1d10) · Maestria: Empurrar', e: 1, dd: '1d8', dt: 'contundente', ver: '1d10', cl: 'm' },
+    picareta_guerra:{ n: 'Picareta de Guerra', c: 'arma', p: 1, v: '5 PO', d: '1d8 perfurante', o: 'Versátil (1d10) · Maestria: Drenar', e: 1, dd: '1d8', dt: 'perfurante', ver: '1d10', cl: 'm' },
+    florete:      { n: 'Rapieira', c: 'arma', p: 1, v: '25 PO', d: '1d8 perfurante', o: 'Acuidade · Maestria: Afligir', e: 1, dd: '1d8', dt: 'perfurante', fin: 1, cl: 'm' },
+    tridente:     { n: 'Tridente', c: 'arma', p: 2, v: '5 PO', d: '1d8 perfurante', o: 'Arremesso 6/18 m, Versátil (1d10) · Maestria: Derrubar', e: 1, dd: '1d8', dt: 'perfurante', ver: '1d10', cl: 'm' },
     // ── armas marciais, à distância ──
-    arco_longo:   { n: 'Arco Longo', c: 'dist', p: 1, d: '1d8 perfurante', o: 'Munição 45/180 m, Pesada, Duas mãos · Maestria: Lentidão', e: 1, dd: '1d8', dt: 'perfurante', rng: 1, cl: 'm' },
-    besta_mao:    { n: 'Besta de Mão', c: 'dist', p: 1.5, d: '1d6 perfurante', o: 'Munição 9/36 m, Leve, Recarga · Maestria: Atormentar', e: 1, dd: '1d6', dt: 'perfurante', rng: 1, cl: 'm' },
-    besta_pesada: { n: 'Besta Pesada', c: 'dist', p: 9, d: '1d10 perfurante', o: 'Munição 30/120 m, Pesada, Recarga, Duas mãos · Maestria: Empurrar', e: 1, dd: '1d10', dt: 'perfurante', rng: 1, cl: 'm' },
-    flechas:      { n: 'Flechas (20)', c: 'geral', p: 0.5, d: 'munição', o: 'Para arcos', i: 'flecha' },
-    virotes:      { n: 'Virotes (20)', c: 'geral', p: 0.75, d: 'munição', o: 'Para bestas', i: 'flecha' },
+    arco_longo:   { n: 'Arco Longo', c: 'dist', p: 1, v: '50 PO', d: '1d8 perfurante', o: 'Munição 45/180 m (Flecha), Pesada, Duas mãos · Maestria: Lentidão', e: 1, dd: '1d8', dt: 'perfurante', rng: 1, cl: 'm' },
+    besta_mao:    { n: 'Besta de Mão', c: 'dist', p: 1.5, v: '75 PO', d: '1d6 perfurante', o: 'Munição 9/36 m (Virote), Leve, Recarga · Maestria: Afligir', e: 1, dd: '1d6', dt: 'perfurante', rng: 1, cl: 'm' },
+    besta_pesada: { n: 'Besta Pesada', c: 'dist', p: 9, v: '50 PO', d: '1d10 perfurante', o: 'Munição 30/120 m (Virote), Pesada, Recarga, Duas mãos · Maestria: Empurrar', e: 1, dd: '1d10', dt: 'perfurante', rng: 1, cl: 'm' },
+    mosquete:     { n: 'Mosquete', c: 'dist', p: 5, v: '500 PO', d: '1d12 perfurante', o: 'Munição 12/36 m (Bala de Arma de Fogo), Duas mãos, Recarga · Maestria: Lentidão', e: 1, dd: '1d12', dt: 'perfurante', rng: 1, cl: 'm' },
+    pistola:      { n: 'Pistola', c: 'dist', p: 1.5, v: '250 PO', d: '1d10 perfurante', o: 'Munição 9/27 m (Bala de Arma de Fogo), Recarga · Maestria: Afligir', e: 1, dd: '1d10', dt: 'perfurante', rng: 1, cl: 'm' },
+    zarabatana:   { n: 'Zarabatana', c: 'dist', p: 0.5, v: '10 PO', d: '1 perfurante', o: 'Munição 7,5/30 m (Agulha), Recarga · Maestria: Afligir', e: 1, dd: '1', dt: 'perfurante', rng: 1, cl: 'm' },
+    // ── munição (a quantidade é a do pacote, como no livro) ──
+    agulhas:      { n: 'Agulhas (50)', c: 'geral', p: 0.5, v: '1 PO', d: 'munição', o: 'Para zarabatana · guarde numa Algibeira', i: 'flecha' },
+    balas_fogo:   { n: 'Balas de Arma de Fogo (10)', c: 'geral', p: 1, v: '3 PO', d: 'munição', o: 'Para mosquete e pistola · guarde numa Algibeira', i: 'flecha' },
+    balas_funda:  { n: 'Balas de Funda (20)', c: 'geral', p: 0.75, v: '4 PC', d: 'munição', o: 'Para funda · guarde numa Algibeira', i: 'flecha' },
+    flechas:      { n: 'Flechas (20)', c: 'geral', p: 0.5, v: '1 PO', d: 'munição', o: 'Para arcos · guarde numa Aljava', i: 'flecha' },
+    virotes:      { n: 'Virotes (20)', c: 'geral', p: 0.75, v: '1 PO', d: 'munição', o: 'Para bestas · guarde num Estojo de Virotes', i: 'flecha' },
     // ── armaduras ──
-    acolchoada:   { n: 'Armadura Acolchoada', c: 'armadura', p: 4, d: 'CA 11 + DES', o: 'Leve · desvantagem em Furtividade', e: 1, ca: 11, dm: 99, furt: 1 },
-    couro:        { n: 'Armadura de Couro', c: 'armadura', p: 5, d: 'CA 11 + DES', o: 'Leve', e: 1, ca: 11, dm: 99 },
-    couro_batido: { n: 'Couro Batido', c: 'armadura', p: 6.5, d: 'CA 12 + DES', o: 'Leve', e: 1, ca: 12, dm: 99 },
-    peles:        { n: 'Armadura de Peles', c: 'armadura', p: 6, d: 'CA 12 + DES (máx 2)', o: 'Média', e: 1, ca: 12, dm: 2 },
-    camisao_malha:{ n: 'Camisão de Malha', c: 'armadura', p: 10, d: 'CA 13 + DES (máx 2)', o: 'Média', e: 1, ca: 13, dm: 2 },
-    brunea:       { n: 'Brunea', c: 'armadura', p: 22.5, d: 'CA 14 + DES (máx 2)', o: 'Média · desvantagem em Furtividade', e: 1, ca: 14, dm: 2, furt: 1 },
-    peitoral:     { n: 'Peitoral', c: 'armadura', p: 10, d: 'CA 14 + DES (máx 2)', o: 'Média', e: 1, ca: 14, dm: 2 },
-    meia_armadura:{ n: 'Meia-Armadura', c: 'armadura', p: 20, d: 'CA 15 + DES (máx 2)', o: 'Média · desvantagem em Furtividade', e: 1, ca: 15, dm: 2, furt: 1 },
-    cota_aneis:   { n: 'Cota de Anéis', c: 'armadura', p: 20, d: 'CA 14', o: 'Pesada · desvantagem em Furtividade', e: 1, ca: 14, dm: 0, furt: 1 },
-    cota_malha:   { n: 'Cota de Malha', c: 'armadura', p: 27.5, d: 'CA 16', o: 'Pesada · exige Força 13 · desvantagem em Furtividade', e: 1, ca: 16, dm: 0, exf: 13, furt: 1 },
-    talas:        { n: 'Armadura de Talas', c: 'armadura', p: 30, d: 'CA 17', o: 'Pesada · exige Força 15 · desvantagem em Furtividade', e: 1, ca: 17, dm: 0, exf: 15, furt: 1 },
-    placas:       { n: 'Armadura de Placas', c: 'armadura', p: 32.5, d: 'CA 18', o: 'Pesada · exige Força 15 · desvantagem em Furtividade', e: 1, ca: 18, dm: 0, exf: 15, furt: 1 },
-    escudo:       { n: 'Escudo', c: 'escudo', p: 3, d: '+2 na CA', o: 'Ocupa uma mão', e: 1, esc: 2 },
-    // ── ferramentas ──
-    ferr_ladrao:  { n: 'Ferramentas de Ladrão', c: 'ferr', p: 0.5, d: 'abrir e desarmar', o: 'Fechaduras e armadilhas' },
-    ferr_navegador:{ n: 'Ferramentas de Navegador', c: 'ferr', p: 1, d: 'rota e posição', o: 'Cartas, compasso, sextante' },
-    ferr_cartografo:{ n: 'Ferramentas de Cartógrafo', c: 'ferr', p: 3, d: 'mapas', o: '' },
-    ferr_carpinteiro:{ n: 'Ferramentas de Carpinteiro', c: 'ferr', p: 3, d: 'madeira', o: '' },
-    ferr_caligrafia:{ n: 'Suprimentos de Caligrafia', c: 'ferr', p: 2.5, d: 'escrita', o: '' },
-    ferr_falsificacao:{ n: 'Kit de Falsificação', c: 'ferr', p: 2.5, d: 'documentos falsos', o: '' },
-    ferr_herbalismo:{ n: 'Kit de Herbalismo', c: 'ferr', p: 1.5, d: 'ervas e remédios', o: '' },
-    ferr_jogos:   { n: 'Conjunto de Jogos', c: 'ferr', p: 0.1, d: 'dados ou cartas', o: '' },
-    ferr_instrumento:{ n: 'Instrumento Musical', c: 'ferr', p: 1, d: 'tocar', o: 'Alaúde, flauta, tambor…' },
-    kit_medicina: { n: 'Kit de Medicina', c: 'ferr', p: 1.5, d: '10 usos', o: 'Estabiliza sem rolar', i: 'cruz' },
-    kit_escalada: { n: 'Kit de Escalada', c: 'ferr', p: 6, d: 'ancoragem', o: 'Prende você onde parou' },
+    acolchoada:   { n: 'Armadura Acolchoada', c: 'armadura', p: 4, v: '5 PO', d: 'CA 11 + DES', o: 'Leve · desvantagem em Furtividade', e: 1, ca: 11, dm: 99, furt: 1 },
+    couro:        { n: 'Armadura de Couro', c: 'armadura', p: 5, v: '10 PO', d: 'CA 11 + DES', o: 'Leve', e: 1, ca: 11, dm: 99 },
+    couro_batido: { n: 'Armadura de Couro Batido', c: 'armadura', p: 6.5, v: '45 PO', d: 'CA 12 + DES', o: 'Leve', e: 1, ca: 12, dm: 99 },
+    peles:        { n: 'Gibão de Peles', c: 'armadura', p: 6, v: '10 PO', d: 'CA 12 + DES (máx 2)', o: 'Média', e: 1, ca: 12, dm: 2 },
+    camisao_malha:{ n: 'Cota de Malha Parcial', c: 'armadura', p: 10, v: '50 PO', d: 'CA 13 + DES (máx 2)', o: 'Média', e: 1, ca: 13, dm: 2 },
+    brunea:       { n: 'Loriga de Escamas', c: 'armadura', p: 22, v: '50 PO', d: 'CA 14 + DES (máx 2)', o: 'Média · desvantagem em Furtividade', e: 1, ca: 14, dm: 2, furt: 1 },
+    peitoral:     { n: 'Couraça Peitoral', c: 'armadura', p: 10, v: '400 PO', d: 'CA 14 + DES (máx 2)', o: 'Média', e: 1, ca: 14, dm: 2 },
+    meia_armadura:{ n: 'Armadura de Placas Parcial', c: 'armadura', p: 20, v: '750 PO', d: 'CA 15 + DES (máx 2)', o: 'Média · desvantagem em Furtividade', e: 1, ca: 15, dm: 2, furt: 1 },
+    cota_aneis:   { n: 'Cota de Anéis', c: 'armadura', p: 20, v: '30 PO', d: 'CA 14', o: 'Pesada · desvantagem em Furtividade', e: 1, ca: 14, dm: 0, furt: 1 },
+    cota_malha:   { n: 'Cota de Malha', c: 'armadura', p: 27, v: '75 PO', d: 'CA 16', o: 'Pesada · exige Força 13 · desvantagem em Furtividade', e: 1, ca: 16, dm: 0, exf: 13, furt: 1 },
+    talas:        { n: 'Armadura de Talas', c: 'armadura', p: 30, v: '200 PO', d: 'CA 17', o: 'Pesada · exige Força 15 · desvantagem em Furtividade', e: 1, ca: 17, dm: 0, exf: 15, furt: 1 },
+    placas:       { n: 'Armadura de Placas', c: 'armadura', p: 32, v: '1.500 PO', d: 'CA 18', o: 'Pesada · exige Força 15 · desvantagem em Furtividade', e: 1, ca: 18, dm: 0, exf: 15, furt: 1 },
+    escudo:       { n: 'Escudo', c: 'escudo', p: 3, v: '10 PO', d: '+2 na CA', o: 'Ocupa uma mão · equipar e desequipar gasta a ação Usar Objeto', e: 1, esc: 2 },
+    // ── ferramentas de artesão ──
+    ferr_carpinteiro:{ n: 'Ferramentas de Carpinteiro', c: 'ferr', p: 3, v: '8 PO', d: 'Atributo: Força', o: 'Usar Objeto: selar ou abrir porta ou recipiente (CD 20)' },
+    ferr_cartografo:{ n: 'Ferramentas de Cartógrafo', c: 'ferr', p: 3, v: '15 PO', d: 'Atributo: Sabedoria', o: 'Usar Objeto: elaborar o mapa de uma pequena área (CD 15)' },
+    ferr_coureiro:{ n: 'Ferramentas de Coureiro', c: 'ferr', p: 2.5, v: '5 PO', d: 'Atributo: Destreza', o: 'Usar Objeto: moldar a estética de um item de couro (CD 10)' },
+    ferr_entalhador:{ n: 'Ferramentas de Entalhador', c: 'ferr', p: 2.5, v: '1 PO', d: 'Atributo: Destreza', o: 'Usar Objeto: entalhar um padrão em madeira (CD 10)' },
+    ferr_ferreiro:{ n: 'Ferramentas de Ferreiro', c: 'ferr', p: 4, v: '20 PO', d: 'Atributo: Força', o: 'Usar Objeto: forçar a abertura de porta ou recipiente (CD 20)' },
+    ferr_funileiro:{ n: 'Ferramentas de Funileiro', c: 'ferr', p: 5, v: '50 PO', d: 'Atributo: Destreza', o: 'Usar Objeto: montar um item Minúsculo de sucata, que se desfaz em 1 minuto (CD 20)' },
+    ferr_joalheiro:{ n: 'Ferramentas de Joalheiro', c: 'ferr', p: 1, v: '25 PO', d: 'Atributo: Inteligência', o: 'Usar Objeto: discernir o valor de uma gema (CD 15)' },
+    ferr_oleiro:  { n: 'Ferramentas de Oleiro', c: 'ferr', p: 1.5, v: '10 PO', d: 'Atributo: Inteligência', o: 'Usar Objeto: discernir como um objeto de cerâmica foi manuseado nas últimas 24 horas (CD 15)' },
+    ferr_pedreiro:{ n: 'Ferramentas de Pedreiro', c: 'ferr', p: 4, v: '10 PO', d: 'Atributo: Força', o: 'Usar Objeto: cinzelar um símbolo ou buraco na pedra (CD 10)' },
+    ferr_sapateiro:{ n: 'Ferramentas de Sapateiro', c: 'ferr', p: 2.5, v: '5 PO', d: 'Atributo: Destreza', o: 'Usar Objeto: modificar calçado pra dar Vantagem no próximo teste de Destreza (Acrobacia) do usuário (CD 10)' },
+    ferr_tecelao: { n: 'Ferramentas de Tecelão', c: 'ferr', p: 2.5, v: '1 PO', d: 'Atributo: Destreza', o: 'Usar Objeto: reparar um rasgo em roupa (CD 10) ou costurar um ornamento Minúsculo (CD 10)' },
+    ferr_vidreiro:{ n: 'Ferramentas de Vidreiro', c: 'ferr', p: 2.5, v: '30 PO', d: 'Atributo: Inteligência', o: 'Usar Objeto: discernir como um objeto de vidro foi manuseado nas últimas 24 horas (CD 15)' },
+    ferr_alquimista:{ n: 'Suprimentos de Alquimista', c: 'ferr', p: 4, v: '50 PO', d: 'Atributo: Inteligência', o: 'Usar Objeto: identificar uma substância (CD 15) ou iniciar um incêndio (CD 15)' },
+    ferr_caligrafia:{ n: 'Suprimentos de Calígrafo', c: 'ferr', p: 2.5, v: '10 PO', d: 'Atributo: Destreza', o: 'Usar Objeto: escrever com caligrafia que protege contra falsificação (CD 15)' },
+    ferr_cervejeiro:{ n: 'Suprimentos de Cervejeiro', c: 'ferr', p: 4.5, v: '20 PO', d: 'Atributo: Inteligência', o: 'Usar Objeto: detectar bebida envenenada (CD 15) ou identificar álcool (CD 10)' },
+    ferr_pintor:  { n: 'Suprimentos de Pintor', c: 'ferr', p: 2.5, v: '10 PO', d: 'Atributo: Sabedoria', o: 'Usar Objeto: fazer uma pintura reconhecível de algo que você viu (CD 10)' },
+    ferr_cozinheiro:{ n: 'Utensílios de Cozinheiro', c: 'ferr', p: 4, v: '1 PO', d: 'Atributo: Sabedoria', o: 'Usar Objeto: melhorar o sabor dos alimentos (CD 10) ou detectar alimento estragado ou envenenado (CD 15)' },
+    // ── outras ferramentas ──
+    ferr_ladrao:  { n: 'Ferramentas de Ladrão', c: 'ferr', p: 0.5, v: '25 PO', d: 'Atributo: Destreza', o: 'Usar Objeto: abrir fechadura (CD 15) ou desarmar armadilha (CD 15)' },
+    ferr_navegador:{ n: 'Ferramentas de Navegador', c: 'ferr', p: 1, v: '25 PO', d: 'Atributo: Sabedoria', o: 'Usar Objeto: traçar uma rota (CD 10) ou determinar a posição pelas estrelas (CD 15)' },
+    ferr_disfarce:{ n: 'Kit de Disfarce', c: 'ferr', p: 1.5, v: '25 PO', d: 'Atributo: Carisma', o: 'Usar Objeto: aplicar maquiagem (CD 10)' },
+    ferr_falsificacao:{ n: 'Kit de Falsificação', c: 'ferr', p: 2.5, v: '15 PO', d: 'Atributo: Destreza', o: 'Usar Objeto: imitar 10 ou menos palavras escritas por outra pessoa (CD 15) ou duplicar um selo de cera (CD 20)' },
+    ferr_herbalismo:{ n: 'Kit de Herbalismo', c: 'ferr', p: 1.5, v: '5 PO', d: 'Atributo: Inteligência', o: 'Usar Objeto: identificar uma planta (CD 10)' },
+    ferr_veneno:  { n: 'Kit de Veneno', c: 'ferr', p: 1, v: '50 PO', d: 'Atributo: Inteligência', o: 'Usar Objeto: detectar um objeto envenenado (CD 10)' },
+    ferr_jogos:   { n: 'Kit de Jogos', c: 'ferr', p: 0, v: 'Varia', d: 'Atributo: Sabedoria', o: 'Usar Objeto: discernir se alguém trapaceia (CD 10) ou ganhar o jogo (CD 20)' },
+    jogo_dados:   { n: 'Jogo: Dados', c: 'ferr', p: 0, v: '1 PP', d: 'Atributo: Sabedoria', o: 'Variante do Kit de Jogos — proficiência separada' },
+    jogo_xadrez:  { n: 'Jogo: Xadrez-do-Dragão', c: 'ferr', p: 0, v: '1 PO', d: 'Atributo: Sabedoria', o: 'Variante do Kit de Jogos — proficiência separada' },
+    jogo_baralho: { n: 'Jogo: Baralho', c: 'ferr', p: 0, v: '5 PP', d: 'Atributo: Sabedoria', o: 'Variante do Kit de Jogos — proficiência separada' },
+    jogo_tres_dragoes:{ n: 'Jogo: Três Dragões', c: 'ferr', p: 0, v: '1 PO', d: 'Atributo: Sabedoria', o: 'Conjunto do Jogo dos Três Dragões · variante do Kit de Jogos — proficiência separada' },
+    ferr_instrumento:{ n: 'Instrumento Musical', c: 'ferr', p: 1, v: 'Varia', d: 'Atributo: Carisma', o: 'Usar Objeto: tocar uma música conhecida (CD 10) ou improvisar uma música (CD 15)' },
+    inst_alaude:  { n: 'Instrumento: Alaúde', c: 'ferr', p: 1, v: '35 PO', d: 'Atributo: Carisma', o: 'Variante do Instrumento Musical — proficiência separada' },
+    inst_flauta:  { n: 'Instrumento: Flauta', c: 'ferr', p: 0.5, v: '2 PO', d: 'Atributo: Carisma', o: 'Variante do Instrumento Musical — proficiência separada' },
+    inst_flauta_pan:{ n: 'Instrumento: Flauta de Pan', c: 'ferr', p: 1, v: '12 PO', d: 'Atributo: Carisma', o: 'Variante do Instrumento Musical — proficiência separada' },
+    inst_gaita:   { n: 'Instrumento: Gaita de Foles', c: 'ferr', p: 3, v: '30 PO', d: 'Atributo: Carisma', o: 'Variante do Instrumento Musical — proficiência separada' },
+    inst_lira:    { n: 'Instrumento: Lira', c: 'ferr', p: 1, v: '30 PO', d: 'Atributo: Carisma', o: 'Variante do Instrumento Musical — proficiência separada' },
+    inst_oboe:    { n: 'Instrumento: Oboé', c: 'ferr', p: 0.5, v: '2 PO', d: 'Atributo: Carisma', o: 'Variante do Instrumento Musical — proficiência separada' },
+    inst_tambor:  { n: 'Instrumento: Tambor', c: 'ferr', p: 1.5, v: '6 PO', d: 'Atributo: Carisma', o: 'Variante do Instrumento Musical — proficiência separada' },
+    inst_trombeta:{ n: 'Instrumento: Trombeta', c: 'ferr', p: 1, v: '3 PO', d: 'Atributo: Carisma', o: 'Variante do Instrumento Musical — proficiência separada' },
+    inst_violino: { n: 'Instrumento: Violino', c: 'ferr', p: 0.5, v: '30 PO', d: 'Atributo: Carisma', o: 'Variante do Instrumento Musical — proficiência separada' },
+    inst_xilofone:{ n: 'Instrumento: Xilofone', c: 'ferr', p: 5, v: '25 PO', d: 'Atributo: Carisma', o: 'Variante do Instrumento Musical — proficiência separada' },
     // ── consumíveis ──
-    pocao_cura:   { n: 'Poção de Cura', c: 'cons', p: 0.25, d: 'cura 2d4 + 2', o: 'Ação Bônus para beber' },
-    racao:        { n: 'Ração (1 dia)', c: 'cons', p: 1, d: 'comida', o: '', i: 'pao' },
-    oleo:         { n: 'Frasco de Óleo', c: 'cons', p: 0.5, d: 'arremesso', o: '5 de fogo se incendiado' },
-    tocha:        { n: 'Tocha', c: 'cons', p: 0.5, d: 'luz 6/12 m', o: 'Queima 1 hora', i: 'chama' },
-    // ── geral ──
-    mochila:      { n: 'Mochila', c: 'geral', p: 2.5, d: 'carrega o resto', o: '' },
-    corda:        { n: 'Corda (15 m)', c: 'geral', p: 5, d: 'cânhamo', o: 'Aguenta 3 pessoas', i: 'rolo' },
-    saco_dormir:  { n: 'Saco de Dormir', c: 'geral', p: 3.5, d: 'descanso', o: '' },
-    cantil:       { n: 'Cantil', c: 'geral', p: 2.5, d: 'água por 1 dia', o: 'Peso com ele cheio', i: 'garrafa' },
-    pe_de_cabra:  { n: 'Pé de Cabra', c: 'geral', p: 2.5, d: 'vantagem pra forçar', o: '', i: 'barra' },
-    lampiao:      { n: 'Lampião', c: 'geral', p: 1, d: 'luz 9/18 m', o: 'Gasta óleo', i: 'lanterna' },
-    algemas:      { n: 'Algemas', c: 'geral', p: 3, d: 'prender', o: 'CD 20 para escapar' },
-    corrente:     { n: 'Corrente (3 m)', c: 'geral', p: 5, d: 'amarrar', o: '', i: 'rolo' },
-    espelho:      { n: 'Espelho de Aço', c: 'geral', p: 0.25, d: 'olhar a esquina', o: '' },
-    pederneira:   { n: 'Pederneira', c: 'geral', p: 0.5, d: 'fogo', o: '' },
-    simbolo:      { n: 'Símbolo Sagrado', c: 'geral', p: 0.5, d: 'foco divino', o: 'Clérigo e paladino conjuram por ele', i: 'amuleto' },
-    saco:         { n: 'Saco', c: 'geral', p: 0.25, d: 'guardar', o: '' },
-    roupas_viagem:{ n: 'Roupas de Viagem', c: 'geral', p: 2, d: 'estrada', o: '' },
-    estaca:       { n: 'Estaca de Ferro', c: 'geral', p: 0.25, d: 'fixar', o: '', i: 'barra' },
-    vara:         { n: 'Vara (3 m)', c: 'geral', p: 3.5, d: 'cutucar de longe', o: 'Salva de armadilha', i: 'barra' }
+    acido:        { n: 'Ácido', c: 'cons', p: 0.5, v: '25 PO', d: '2d6 de ácido', o: 'Jogue no lugar de um ataque, a até 6 m: salvaguarda de Destreza (CD 8 + Des + proficiência) ou 2d6 de ácido', i: 'garrafa' },
+    agua_benta:   { n: 'Água Benta', c: 'cons', p: 0.5, v: '25 PO', d: '2d8 radiante', o: 'Jogue no lugar de um ataque, a até 6 m: salvaguarda de Destreza ou 2d8 radiante, só em Ínfero ou Morto-vivo', i: 'garrafa' },
+    antitoxina:   { n: 'Antitoxina', c: 'cons', p: 0, v: '50 PO', d: 'vantagem contra Envenenado', o: 'Beber é Ação Bônus · 1 hora de Vantagem nas salvaguardas contra a condição Envenenado', i: 'garrafa' },
+    fogo_alquimico:{ n: 'Fogo Alquímico', c: 'cons', p: 0.5, v: '50 PO', d: '1d4 ígneo', o: 'Jogue no lugar de um ataque, a até 6 m: salvaguarda de Destreza ou 1d4 ígneo e entra em combustão', i: 'chama' },
+    oleo:         { n: 'Óleo', c: 'cons', p: 0.5, v: '1 PP', d: 'combustível ou 5 ígneo', o: 'Jogado no alvo (a até 6 m): salvaguarda de Destreza ou fica coberto, e leva 5 ígneo se sofrer dano ígneo antes de secar · espalhado em 1,5 m: queima por 2 rodadas e dá 5 ígneo · combustível: 6 horas em lâmpada ou lanterna', i: 'garrafa' },
+    pocao_cura:   { n: 'Poção de Cura', c: 'cons', p: 0.25, v: '50 PO', d: 'cura 2d4 + 2', o: 'Item mágico · Ação Bônus para beber, ou dar a quem está a 1,5 m' },
+    perfume:      { n: 'Perfume', c: 'cons', p: 0, v: '5 PO', d: 'vantagem em Persuasão', o: 'Frasco de 120 mL · por 1 hora, Vantagem em Persuasão ao Influenciar um Humanoide Indiferente a 1,5 m', i: 'garrafa' },
+    pergaminho_truque:{ n: 'Pergaminho Mágico (Truque)', c: 'cons', p: 0, v: '30 PO', d: 'conjura um truque', o: 'Item mágico · lê e conjura sem componentes se a magia é da sua lista · CD 13, ataque +5 · desintegra no fim', i: 'rolo' },
+    pergaminho_1: { n: 'Pergaminho Mágico (1º Círculo)', c: 'cons', p: 0, v: '50 PO', d: 'conjura magia de 1º círculo', o: 'Item mágico · lê e conjura sem componentes se a magia é da sua lista · CD 13, ataque +5 · desintegra no fim', i: 'rolo' },
+    racao:        { n: 'Rações (1 dia)', c: 'cons', p: 1, v: '5 PP', d: 'comida', o: 'Biscoito duro, carne seca, frutas secas e nozes', i: 'pao' },
+    tocha:        { n: 'Tocha', c: 'cons', p: 0.5, v: '1 PC', d: 'luz 6/12 m', o: 'Queima 1 hora · dá pra atacar com ela como arma simples corpo a corpo: 1 de dano ígneo', i: 'chama' },
+    vela:         { n: 'Vela', c: 'cons', p: 0, v: '1 PC', d: 'luz 1,5/3 m', o: 'Queima 1 hora', i: 'chama' },
+    veneno_basico:{ n: 'Veneno Básico', c: 'cons', p: 0, v: '100 PO', d: '+1d4 venenoso', o: 'Ação Bônus para passar numa arma ou em até 3 munições · vale por 1 minuto ou até causar o dano', i: 'garrafa' },
+    // ── kits de aventura ──
+    kit_artista:  { n: 'Kit de Artista', c: 'geral', p: 29, v: '40 PO', d: 'conjunto', o: 'Caixa para Fogo, Cantil, Espelho, 3 Fantasias, Lanterna Foca-facho, Mochila, 8 potes de Óleo, 9 dias de Rações, Saco de Dormir, Sino' },
+    kit_assaltante:{ n: 'Kit de Assaltante', c: 'geral', p: 21, v: '16 PO', d: 'conjunto', o: 'Caixa para Fogo, Cantil, Corda, Esferas de Metal, Lanterna Coberta, Mochila, 7 potes de Óleo, Pé de Cabra, 5 dias de Rações, Sino, 10 Velas' },
+    kit_aventureiro:{ n: 'Kit de Aventureiro', c: 'geral', p: 27.5, v: '10 PO', d: 'conjunto', o: 'Caixa para Fogo, Cantil, Corda, Mochila, 2 potes de Óleo, 10 dias de Rações, Saco de Dormir, 10 Tochas' },
+    kit_diplomata:{ n: 'Kit de Diplomata', c: 'geral', p: 19.5, v: '39 PO', d: 'conjunto', o: 'Baú, Caixa para Fogo, 5 Canetas Tinteiro, 2 Estojos de Mapa ou Pergaminho, Lâmpada, 4 potes de Óleo, Perfume, 5 folhas de Papel, 5 folhas de Pergaminho, Roupas Finas, Tinta' },
+    kit_erudito:  { n: 'Kit de Erudito', c: 'geral', p: 11, v: '40 PO', d: 'conjunto', o: 'Caixa para Fogo, Caneta Tinteiro, Lâmpada, Livro, Mochila, 10 potes de Óleo, 10 folhas de Pergaminho, Tinta' },
+    kit_escalada: { n: 'Kit de Escalada', c: 'geral', p: 6, v: '25 PO', d: 'ancoragem', o: 'Arnês, luvas, pítons e ponteiras de bota · Usar Objeto: ancora você — não cai a mais de 7,5 m do ponto, e só se afasta 7,5 m dele desfazendo a âncora (Ação Bônus)' },
+    kit_explorador:{ n: 'Kit de Explorador de Masmorras', c: 'geral', p: 27.5, v: '12 PO', d: 'conjunto', o: 'Caixa para Fogo, Cantil, Corda, Estrepes, Mochila, 2 potes de Óleo, Pé de Cabra, 10 dias de Rações, 10 Tochas' },
+    kit_sacerdote:{ n: 'Kit de Sacerdote', c: 'geral', p: 14.5, v: '33 PO', d: 'conjunto', o: 'Água Benta, Caixa para Fogo, Cobertor, Lâmpada, Mochila, 7 dias de Rações, Túnica' },
+    kit_medicina: { n: 'Kit de Curandeiro', c: 'geral', p: 1.5, v: '5 PO', d: '10 usos', o: 'Usar Objeto: gasta um uso pra estabilizar um Inconsciente a 0 PV, sem teste de Sabedoria (Medicina)', i: 'cruz' },
+    // ── equipamento de aventura ──
+    algibeira:    { n: 'Algibeira', c: 'geral', p: 0.5, v: '5 PP', d: 'comporta 3 kg', o: 'Até 3 kg em 6 litros' },
+    aljava:       { n: 'Aljava', c: 'geral', p: 0.5, v: '1 PO', d: 'comporta 20 flechas', o: '' },
+    apito:        { n: 'Apito Sinalizador', c: 'geral', p: 0, v: '5 PC', d: 'ouvido a 180 m', o: 'Soprar é a ação Usar Objeto' },
+    ariete:       { n: 'Aríete Portável', c: 'geral', p: 16.5, v: '4 PO', d: '+4 pra arrombar', o: 'Bônus de +4 no teste de Força pra arrombar porta · um ajudante dá Vantagem no teste', i: 'barra' },
+    armadilha_caca:{ n: 'Armadilha de Caça', c: 'geral', p: 12.5, v: '5 PO', d: '1d4 perfurante e prende', o: 'Armar é a ação Usar Objeto · quem pisa: salvaguarda de Destreza CD 13 ou 1d4 perfurante e deslocamento 0 · soltar-se: Força (Atletismo) CD 13 como ação · cada falha dá 1 de dano' },
+    arpeu:        { n: 'Arpéu', c: 'geral', p: 2, v: '2 PO', d: 'ancora uma corda', o: 'Usar Objeto: arremessa a até 15 m e ancora com Destreza (Acrobacia) CD 13 · amarrando uma corda, dá pra escalar', i: 'rolo' },
+    balde:        { n: 'Balde', c: 'geral', p: 1, v: '5 PC', d: 'recipiente', o: '' },
+    vara:         { n: 'Baliza', c: 'geral', p: 3.5, v: '5 PC', d: '3 m de comprimento', o: 'Toca algo a até 3 m · num salto (Força (Atletismo)), a Baliza dá Vantagem no teste', i: 'barra' },
+    barril:       { n: 'Barril', c: 'geral', p: 35, v: '2 PO', d: 'comporta 160 L', o: 'Até 160 litros de líquido' },
+    bau:          { n: 'Baú', c: 'geral', p: 12.5, v: '5 PO', d: 'comporta 350 L', o: '' },
+    bolsa_componentes:{ n: 'Bolsa de Componentes', c: 'geral', p: 1, v: '25 PO', d: 'componentes sem custo', o: 'À prova d’água · guarda todos os componentes Materiais sem custo das suas magias' },
+    cadeado:      { n: 'Cadeado', c: 'geral', p: 0.5, v: '10 PO', d: 'tranca', o: 'Vem com chave · sem a chave: Ferramentas de Ladrão, Destreza (Prestidigitação) CD 15' },
+    pederneira:   { n: 'Caixa para Fogo', c: 'geral', p: 0.5, v: '5 PP', d: 'acende fogo', o: 'Acender lâmpada, lanterna, tocha ou vela custa uma Ação Bônus · qualquer outro fogo leva 1 minuto', i: 'chama' },
+    caneta_tinteiro:{ n: 'Caneta Tinteiro', c: 'geral', p: 0, v: '2 PC', d: 'escrever com tinta', o: '' },
+    cantil:       { n: 'Cantil', c: 'geral', p: 2.5, v: '2 PP', d: 'comporta 2 L', o: 'Peso com ele cheio · sem beber o bastante, risco de desidratação', i: 'garrafa' },
+    cesta:        { n: 'Cesta', c: 'geral', p: 1, v: '4 PP', d: 'comporta 20 kg', o: '' },
+    cobertor:     { n: 'Cobertor', c: 'geral', p: 1.5, v: '5 PP', d: 'vantagem contra frio extremo', o: 'Enrolado nele, Vantagem em salvaguardas contra frio extremo' },
+    corda:        { n: 'Corda', c: 'geral', p: 2.5, v: '1 PO', d: 'amarrar e escalar', o: 'Dar nó: Destreza (Prestidigitação) CD 10 · romper: Força (Atletismo) CD 20 · só amarra criatura Contida, Imobilizada ou Incapacitada · escapar: Destreza (Acrobacia) CD 15', i: 'rolo' },
+    cordao:       { n: 'Cordão', c: 'geral', p: 0, v: '1 PP', d: '3 m de fio', o: 'Dar nó é a ação Usar Objeto', i: 'rolo' },
+    corrente:     { n: 'Corrente', c: 'geral', p: 5, v: '5 PO', d: 'amarrar', o: 'Usar Objeto: enrola numa criatura a até 1,5 m com Força (Atletismo) CD 13 · escapar: Destreza (Acrobacia) CD 18 · estourar: Força (Atletismo) CD 20', i: 'rolo' },
+    escada:       { n: 'Escada', c: 'geral', p: 12.5, v: '1 PP', d: '3 m de altura', o: 'Precisa escalar pra subir ou descer' },
+    esferas_metal:{ n: 'Esferas de Metal', c: 'geral', p: 1, v: '1 PO', d: 'derruba quem pisa', o: 'Saco · Usar Objeto: espalha numa área de 3 m de lado a até 3 m · quem entra: Destreza CD 10 ou fica Caído · 10 minutos pra recolher' },
+    espelho:      { n: 'Espelho', c: 'geral', p: 0.25, v: '5 PO', d: 'olhar a esquina', o: 'Espelho de aço portátil · serve de sinal refletindo luz' },
+    estaca:       { n: 'Estacas de Ferro (10)', c: 'geral', p: 2.5, v: '1 PO', d: 'fixar', o: 'Usar Objeto: com um objeto contundente (Martelo Leve), crava em madeira, terra ou similar · fecha porta, prende corda ou corrente', i: 'barra' },
+    estojo_mapa:  { n: 'Estojo, Mapa ou Pergaminho', c: 'geral', p: 0.5, v: '1 PO', d: 'guarda 10 papéis ou 5 pergaminhos', o: '' },
+    estojo_virote:{ n: 'Estojo, Virote de Besta', c: 'geral', p: 0.5, v: '1 PO', d: 'guarda 20 virotes', o: '' },
+    estrepes:     { n: 'Estrepes', c: 'geral', p: 1, v: '1 PO', d: '1 perfurante e deslocamento 0', o: 'Saco · Usar Objeto: espalha numa área de 1,5 m de lado a até 1,5 m · quem entra: Destreza CD 15 ou 1 perfurante e deslocamento 0 · 10 minutos pra recolher' },
+    fantasia:     { n: 'Roupas, Fantasia', c: 'geral', p: 2, v: '5 PO', d: 'se passar por outra pessoa', o: 'Vantagem em testes de atributo pra se passar pela pessoa ou tipo de pessoa que a fantasia representa' },
+    foco_arc_cajado:{ n: 'Foco Arcano: Cajado', c: 'geral', p: 2, v: '5 PO', d: 'foco de conjuração', o: 'Bruxo, Feiticeiro e Mago conjuram por ele · também serve de bastão', i: 'amuleto' },
+    foco_arc_cetro:{ n: 'Foco Arcano: Cetro', c: 'geral', p: 1, v: '10 PO', d: 'foco de conjuração', o: 'Bruxo, Feiticeiro e Mago conjuram por ele', i: 'amuleto' },
+    foco_arc_cristal:{ n: 'Foco Arcano: Cristal', c: 'geral', p: 0.5, v: '10 PO', d: 'foco de conjuração', o: 'Bruxo, Feiticeiro e Mago conjuram por ele', i: 'amuleto' },
+    foco_arc_orbe:{ n: 'Foco Arcano: Orbe', c: 'geral', p: 1.5, v: '20 PO', d: 'foco de conjuração', o: 'Bruxo, Feiticeiro e Mago conjuram por ele', i: 'amuleto' },
+    foco_arc_varinha:{ n: 'Foco Arcano: Varinha', c: 'geral', p: 0.5, v: '10 PO', d: 'foco de conjuração', o: 'Bruxo, Feiticeiro e Mago conjuram por ele', i: 'amuleto' },
+    foco_dru_cajado:{ n: 'Foco Druídico: Cajado de madeira', c: 'geral', p: 2, v: '5 PO', d: 'foco de conjuração', o: 'Druida e Guardião conjuram por ele · também serve de bastão', i: 'amuleto' },
+    foco_dru_visco:{ n: 'Foco Druídico: Ramo de visco', c: 'geral', p: 0, v: '1 PO', d: 'foco de conjuração', o: 'Druida e Guardião conjuram por ele', i: 'amuleto' },
+    foco_dru_varinha:{ n: 'Foco Druídico: Varinha de teixo', c: 'geral', p: 0.5, v: '10 PO', d: 'foco de conjuração', o: 'Druida e Guardião conjuram por ele', i: 'amuleto' },
+    frasco:       { n: 'Frasco', c: 'geral', p: 0, v: '1 PO', d: 'comporta 150 mL', o: '', i: 'garrafa' },
+    garrafa_vidro:{ n: 'Garrafa de Vidro', c: 'geral', p: 1, v: '2 PO', d: 'comporta 1 L', o: '', i: 'garrafa' },
+    algemas:      { n: 'Grilhões', c: 'geral', p: 3, v: '2 PO', d: 'prender', o: 'Usar Objeto: prende criatura Pequena ou Média Contida, Imobilizada ou Incapacitada (Destreza (Prestidigitação) CD 13) · ela fica com desvantagem nos ataques · escapar: Destreza (Prestidigitação) CD 20 · estourar: Força (Atletismo) CD 25 · vem com chave', i: 'rolo' },
+    jarro:        { n: 'Jarro', c: 'geral', p: 2, v: '2 PC', d: 'comporta 4 L', o: '', i: 'garrafa' },
+    lampada:      { n: 'Lâmpada', c: 'geral', p: 0.5, v: '5 PP', d: 'luz 4,5/13,5 m', o: 'Gasta óleo', i: 'lanterna' },
+    lampiao:      { n: 'Lanterna Coberta', c: 'geral', p: 1, v: '5 PO', d: 'luz 9/18 m', o: 'Gasta óleo · Ação Bônus pra baixar o capuz (meia-luz num raio de 1,5 m) ou levantar de novo', i: 'lanterna' },
+    lanterna_foca:{ n: 'Lanterna Foca-facho', c: 'geral', p: 1, v: '10 PO', d: 'cone 18/36 m', o: 'Gasta óleo · ilumina um cone', i: 'lanterna' },
+    livro:        { n: 'Livro', c: 'geral', p: 2.5, v: '25 PO', d: '+5 em testes de conhecimento', o: 'Livro de não ficção especializado: +5 em Inteligência (Arcanismo, História, Natureza ou Religião) sobre o tema' },
+    luneta:       { n: 'Luneta', c: 'geral', p: 0.5, v: '1.000 PO', d: 'aumenta 2×', o: 'Objetos vistos por ela aparecem com o dobro do tamanho' },
+    lupa:         { n: 'Lupa', c: 'geral', p: 0, v: '100 PO', d: 'vantagem pra inspecionar', o: 'Vantagem em teste pra avaliar item muito detalhado · acende fogueira com luz de sol, uns 5 minutos' },
+    mapa:         { n: 'Mapa', c: 'geral', p: 0, v: '1 PO', d: '+5 pra achar caminho', o: 'Mapa detalhado: +5 em Sabedoria (Sobrevivência) pra achar caminho no lugar mostrado' },
+    mochila:      { n: 'Mochila', c: 'geral', p: 2.5, v: '2 PO', d: 'comporta 15 kg', o: 'Também serve de alforje' },
+    pa:           { n: 'Pá', c: 'geral', p: 2.5, v: '2 PO', d: 'cava 1,5 m em 1 hora', o: 'Buraco de 1,5 m de lado no solo ou material parecido' },
+    papel:        { n: 'Papel', c: 'geral', p: 0, v: '2 PP', d: '250 palavras', o: 'Uma folha' },
+    pe_de_cabra:  { n: 'Pé de Cabra', c: 'geral', p: 2.5, v: '2 PO', d: 'vantagem pra forçar', o: 'Vantagem em testes de Força onde a alavanca ajude', i: 'barra' },
+    pergaminho:   { n: 'Pergaminho', c: 'geral', p: 0, v: '1 PP', d: '250 palavras', o: 'Uma folha', i: 'rolo' },
+    pote:         { n: 'Pote', c: 'geral', p: 0.5, v: '2 PC', d: 'comporta 0,5 L', o: '', i: 'garrafa' },
+    pote_ferro:   { n: 'Pote de Ferro', c: 'geral', p: 5, v: '2 PO', d: 'comporta 4 L', o: '' },
+    rede:         { n: 'Rede', c: 'geral', p: 1.5, v: '1 PO', d: 'prende o alvo (Contido)', o: 'Jogue no lugar de um ataque, a até 4,5 m: salvaguarda de Destreza ou fica Contido · Enormes passam direto · escapar: Força (Atletismo) CD 10 · destruir: CA 10, 5 PV', i: 'rolo' },
+    roldana:      { n: 'Roldana e Polias', c: 'geral', p: 2.5, v: '1 PO', d: 'levanta até 4×', o: 'Permite içar até quatro vezes o peso que você normalmente levantaria', i: 'rolo' },
+    roupas_finas: { n: 'Roupas, Finas', c: 'geral', p: 3, v: '15 PO', d: 'tecido caro', o: 'Alguns eventos e locais só admitem quem veste isso' },
+    roupas_viagem:{ n: 'Roupas, Viagem', c: 'geral', p: 2, v: '2 PO', d: 'estrada', o: 'Resistentes, projetadas pra viajar em vários ambientes' },
+    saco:         { n: 'Saca', c: 'geral', p: 0.25, v: '1 PC', d: 'comporta 15 kg', o: '' },
+    saco_dormir:  { n: 'Saco de Dormir', c: 'geral', p: 3.5, v: '1 PO', d: 'descanso', o: 'Acomoda uma criatura Pequena ou Média · dentro dele, sucesso automático em salvaguardas contra frio extremo' },
+    simbolo:      { n: 'Símbolo Sagrado: Amuleto', c: 'geral', p: 0.5, v: '5 PO', d: 'foco divino', o: 'Clérigo e Paladino conjuram por ele · usado ou segurado', i: 'amuleto' },
+    simbolo_emblema:{ n: 'Símbolo Sagrado: Emblema', c: 'geral', p: 0, v: '5 PO', d: 'foco divino', o: 'Clérigo e Paladino conjuram por ele · exibido em tecido ou num Escudo', i: 'amuleto' },
+    simbolo_relicario:{ n: 'Símbolo Sagrado: Relicário', c: 'geral', p: 1, v: '5 PO', d: 'foco divino', o: 'Clérigo e Paladino conjuram por ele · segurado', i: 'amuleto' },
+    sino:         { n: 'Sino', c: 'geral', p: 0, v: '1 PO', d: 'ouvido a 18 m', o: 'Tocar é a ação Usar Objeto' },
+    tenda:        { n: 'Tenda', c: 'geral', p: 10, v: '2 PO', d: 'dorme 2 criaturas', o: 'Acomoda até duas criaturas Pequenas ou Médias' },
+    tinta:        { n: 'Tinta', c: 'geral', p: 0, v: '10 PO', d: 'garrafa de 30 mL', o: 'Dá pra escrever uns 500 páginas', i: 'garrafa' },
+    tunica:       { n: 'Túnica', c: 'geral', p: 2, v: '1 PO', d: 'vocacional ou cerimonial', o: 'Alguns eventos e locais só admitem quem veste uma túnica de certas cores ou símbolos' }
   };
 
   var inv = { itens: [], bonus: 0, dobra: false, modo: 'grade', maestrias: [] };
@@ -4785,7 +4983,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   function capacidade() {
     var f = parseInt((document.querySelector('[data-field="for_valor"]') || {}).textContent, 10);
     if (!f) return null;
-    return f * 7.5 * (inv.dobra ? 2 : 1) + (+inv.bonus || 0);
+    return f * (inv.dobra ? 13.5 : 7) + (+inv.bonus || 0);
   }
   function pesoTotal() {
     var t = 0;
@@ -4838,8 +5036,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     var tp = tipoDaArma(d);
     if (tp) b.push(tp);
     if (d.d) b.push(d.d);
-    if (d.o) b.push(comTermos(d.o));
-    b.push('Peso: ' + num(d.p) + ' kg' + ((it.q || 1) > 1 ? '  (×' + it.q + ' = ' + num(d.p * it.q) + ' kg)' : ''));
+    if (d.o) b.push(d.cl ? comTermos(d.o) : d.o);
+    b.push('Peso: ' + num(d.p) + ' kg' + ((it.q || 1) > 1 ? '  (×' + it.q + ' = ' + num(d.p * it.q) + ' kg)' : '') + (d.v ? ' · Custo: ' + d.v : ''));
     var nm = nomeDaMaestria(d);
     if (nm) b.push(temMaestria(it.id)
       ? 'Maestria de ' + nm + ': VALENDO neste personagem.'
@@ -4976,7 +5174,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       achou++;
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'cat-i'; b.dataset.id = id;
-      b.innerHTML = svgDe(iconeDe(d)) + '<span class="n">' + d.n + '</span><span class="d">' + num(d.p) + ' kg</span>';
+      b.innerHTML = svgDe(iconeDe(d)) + '<span class="n">' + d.n + '</span><span class="d">' + num(d.p) + ' kg' + (d.v ? ' · ' + d.v : '') + '</span>';
       catLista.appendChild(b);
     });
     if (!achou) catLista.innerHTML = '<div class="cat-vazio">Nada com esse nome. Use o campo de baixo pra criar um item avulso.</div>';
