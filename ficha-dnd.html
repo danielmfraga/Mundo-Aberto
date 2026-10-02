@@ -1259,7 +1259,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
         <div class="moedas-g">
           <div class="moeda pc" title="Cobre"><div class="num" contenteditable="true" inputmode="numeric" data-field="moeda_pc"></div><span>PC</span></div>
           <div class="moeda pp" title="Prata"><div class="num" contenteditable="true" inputmode="numeric" data-field="moeda_pp"></div><span>PP</span></div>
-          <div class="moeda ce" title="Electro"><div class="num" contenteditable="true" inputmode="numeric" data-field="moeda_ce"></div><span>CE</span></div>
+          <div class="moeda ce" title="Electro"><div class="num" contenteditable="true" inputmode="numeric" data-field="moeda_ce"></div><span>PE</span></div>
           <div class="moeda po" title="Ouro"><div class="num" contenteditable="true" inputmode="numeric" data-field="moeda_po"></div><span>PO</span></div>
           <div class="moeda pl" title="Platina"><div class="num" contenteditable="true" inputmode="numeric" data-field="moeda_pl"></div><span>PL</span></div>
         </div>
@@ -3365,91 +3365,122 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Veneno: Verde.'] },
 
     // ── Grau 2: os 16 antecedentes ────────────────────────────────────
-    // Atributos, talento, perícias e ferramenta conferidos contra o bloco do
-    // Marinheiro que o Daniel passou do livro. O EQUIPAMENTO só está aqui no
-    // Marinheiro, que veio verbatim — os outros quinze entram quando ele
-    // passar; é a parte que eu erraria de cabeça.
+    // Atributos, talento, perícias, ferramenta e equipamento (opção A) conferidos
+    // contra o capítulo 4 do Livro do Jogador 2024. "kit" é o que "Aplicar na
+    // ficha" joga no inventário: [id do catálogo, quantidade]. O que o jogador
+    // escolhe (qual Ferramenta de Artesão, qual Kit de Jogos) fica pra ele.
     ant_acolito: { t: 'Acólito', l: 'Você serviu num templo, aprendeu os ritos e carrega um pouco do poder do seu deus.', b: [
       'Atributos: Inteligência, Sabedoria, Carisma',
       'Talento: [[tal_iniciado|Iniciado em Magia (Clérigo)]]',
       'Perícias: [[per_intuicao|Intuição]], [[per_religiao|Religião]]',
-      'Ferramenta: [[ferr_caligrafia|Suprimentos de Calígrafo]]'] },
+      'Ferramenta: [[ferr_caligrafia|Suprimentos de Calígrafo]]',
+      'Equipamento: (A) Suprimentos de Calígrafo, Livro (orações), Símbolo Sagrado, Pergaminho (10 folhas), Túnica e 8 PO; ou (B) 50 PO'],
+      kit: [['ferr_caligrafia', 1], ['livro', 1], ['simbolo', 1], ['pergaminho', 10], ['tunica', 1]] },
     ant_andarilho: { t: 'Andarilho', l: 'Cresceu na rua, sem teto fixo, vivendo do que aparecia — e sobreviveu.', b: [
       'Atributos: Destreza, Sabedoria, Carisma',
       'Talento: [[tal_sortudo|Sortudo]]',
       'Perícias: [[per_intuicao|Intuição]], [[per_furtividade|Furtividade]]',
-      'Ferramenta: [[ferr_ladrao|Ferramentas de Ladrão]]'] },
+      'Ferramenta: [[ferr_ladrao|Ferramentas de Ladrão]]',
+      'Equipamento: (A) 2 Adagas, Ferramentas de Ladrão, Kit de Jogos (qualquer um), 2 Algibeiras, Roupas de Viagem, Saco de Dormir e 16 PO; ou (B) 50 PO'],
+      kit: [['adaga', 2], ['ferr_ladrao', 1], ['ferr_jogos', 1], ['algibeira', 2], ['roupas_viagem', 1], ['saco_dormir', 1]] },
     ant_artesao: { t: 'Artesão', l: 'Aprendeu um ofício de verdade: sabe fazer, consertar e reconhecer trabalho bem-feito.', b: [
       'Atributos: Força, Destreza, Inteligência',
       'Talento: [[tal_artesao|Artesão]]',
       'Perícias: [[per_investigacao|Investigação]], [[per_persuasao|Persuasão]]',
-      'Ferramenta: [[ferr_artesao|Ferramentas de Artesão]]'] },
+      'Ferramenta: [[ferr_artesao|Ferramentas de Artesão]]',
+      'Equipamento: (A) Ferramentas de Artesão (a mesma que acima), 2 Algibeiras, Roupas de Viagem e 32 PO; ou (B) 50 PO'],
+      kit: [['algibeira', 2], ['roupas_viagem', 1]] },
     ant_artista: { t: 'Artista', l: 'Vive de plateia: palco, praça, taverna — onde houver gente olhando.', b: [
       'Atributos: Força, Destreza, Carisma',
       'Talento: [[tal_musico|Músico]]',
       'Perícias: [[per_acrobacia|Acrobacia]], [[per_atuacao|Atuação]]',
-      'Ferramenta: [[ferr_instrumento|Instrumento Musical]]'] },
+      'Ferramenta: [[ferr_instrumento|Instrumento Musical]]',
+      'Equipamento: (A) Instrumento Musical (o mesmo que acima), Espelho, 2 Fantasias, Perfume, Roupas de Viagem e 11 PO; ou (B) 50 PO'],
+      kit: [['ferr_instrumento', 1], ['espelho', 1], ['fantasia', 2], ['perfume', 1], ['roupas_viagem', 1]] },
     ant_charlatao: { t: 'Charlatão', l: 'Vende o que não tem para quem quer acreditar. O papel importa mais que a verdade.', b: [
       'Atributos: Destreza, Constituição, Carisma',
       'Talento: [[tal_habilidoso|Habilidoso]]',
       'Perícias: [[per_enganacao|Enganação]], [[per_prestidigitacao|Prestidigitação]]',
-      'Ferramenta: [[ferr_falsificacao|Kit de Falsificação]]'] },
+      'Ferramenta: [[ferr_falsificacao|Kit de Falsificação]]',
+      'Equipamento: (A) Kit de Falsificação, Fantasia, Roupas Finas e 15 PO; ou (B) 50 PO'],
+      kit: [['ferr_falsificacao', 1], ['fantasia', 1], ['roupas_finas', 1]] },
     ant_criminoso: { t: 'Criminoso', l: 'Trabalhou fora da lei e aprendeu a entrar, sair e não ser pego.', b: [
       'Atributos: Destreza, Constituição, Inteligência',
       'Talento: [[tal_alerta|Alerta]]',
       'Perícias: [[per_prestidigitacao|Prestidigitação]], [[per_furtividade|Furtividade]]',
-      'Ferramenta: [[ferr_ladrao|Ferramentas de Ladrão]]'] },
+      'Ferramenta: [[ferr_ladrao|Ferramentas de Ladrão]]',
+      'Equipamento: (A) 2 Adagas, Ferramentas de Ladrão, 2 Algibeiras, Pé de Cabra, Roupas de Viagem e 16 PO; ou (B) 50 PO'],
+      kit: [['adaga', 2], ['ferr_ladrao', 1], ['algibeira', 2], ['pe_de_cabra', 1], ['roupas_viagem', 1]] },
     ant_eremita: { t: 'Eremita', l: 'Viveu longe de todos, cuidando de si — e virou bom em cuidar dos outros.', b: [
       'Atributos: Constituição, Sabedoria, Carisma',
       'Talento: [[tal_curandeiro|Curandeiro]]',
       'Perícias: [[per_medicina|Medicina]], [[per_religiao|Religião]]',
-      'Ferramenta: [[ferr_herbalismo|Kit de Herbalismo]]'] },
+      'Ferramenta: [[ferr_herbalismo|Kit de Herbalismo]]',
+      'Equipamento: (A) Cajado, Kit de Herbalismo, Lâmpada, Livro (filosofia), Óleo (3 frascos), Roupas de Viagem, Saco de Dormir e 16 PO; ou (B) 50 PO'],
+      kit: [['bordao', 1], ['ferr_herbalismo', 1], ['lampada', 1], ['livro', 1], ['oleo', 3], ['roupas_viagem', 1], ['saco_dormir', 1]] },
     ant_escriba: { t: 'Escriba', l: 'Passou a vida copiando, corrigindo e arquivando o que os outros escreveram.', b: [
       'Atributos: Destreza, Inteligência, Sabedoria',
       'Talento: [[tal_habilidoso|Habilidoso]]',
       'Perícias: [[per_investigacao|Investigação]], [[per_percepcao|Percepção]]',
-      'Ferramenta: [[ferr_caligrafia|Suprimentos de Calígrafo]]'] },
+      'Ferramenta: [[ferr_caligrafia|Suprimentos de Calígrafo]]',
+      'Equipamento: (A) Suprimentos de Calígrafo, Lâmpada, Óleo (3 frascos), Pergaminho (12 folhas), Roupas Finas e 23 PO; ou (B) 50 PO'],
+      kit: [['ferr_caligrafia', 1], ['lampada', 1], ['oleo', 3], ['pergaminho', 12], ['roupas_finas', 1]] },
     ant_fazendeiro: { t: 'Fazendeiro', l: 'Terra, bicho e tempo ruim. Corpo endurecido por trabalho, não por treino.', b: [
       'Atributos: Força, Constituição, Sabedoria',
       'Talento: [[tal_resistente|Resistente]]',
       'Perícias: [[per_lidar_com_animais|Lidar com Animais]], [[per_natureza|Natureza]]',
-      'Ferramenta: [[ferr_carpinteiro|Ferramentas de Carpinteiro]]'] },
+      'Ferramenta: [[ferr_carpinteiro|Ferramentas de Carpinteiro]]',
+      'Equipamento: (A) Foice, Ferramentas de Carpinteiro, Kit de Curandeiro, Balde de Ferro, Pá e 30 PO; ou (B) 50 PO'],
+      kit: [['foice_curta', 1], ['ferr_carpinteiro', 1], ['kit_medicina', 1], ['balde', 1], ['pa', 1]] },
     ant_guarda: { t: 'Guarda', l: 'Ficou de sentinela em muralha ou portão, olhando o escuro por horas.', b: [
       'Atributos: Força, Inteligência, Sabedoria',
       'Talento: [[tal_alerta|Alerta]]',
       'Perícias: [[per_atletismo|Atletismo]], [[per_percepcao|Percepção]]',
-      'Ferramenta: [[ferr_jogos|Kit de Jogos]]'] },
+      'Ferramenta: [[ferr_jogos|Kit de Jogos]]',
+      'Equipamento: (A) Lança, Besta Leve, 20 Virotes, Kit de Jogos (o mesmo que acima), Aljava, Grilhões, Lanterna Coberta, Roupas de Viagem e 12 PO; ou (B) 50 PO'],
+      kit: [['lanca', 1], ['besta_leve', 1], ['virotes', 1], ['ferr_jogos', 1], ['aljava', 1], ['algemas', 1], ['lampiao', 1], ['roupas_viagem', 1]] },
     ant_guia: { t: 'Guia', l: 'Conhece o mato como quem conhece a própria casa, e leva os outros por ele.', b: [
       'Atributos: Destreza, Constituição, Sabedoria',
       'Talento: [[tal_iniciado|Iniciado em Magia (Druida)]]',
       'Perícias: [[per_furtividade|Furtividade]], [[per_sobrevivencia|Sobrevivência]]',
-      'Ferramenta: [[ferr_cartografo|Ferramentas de Cartógrafo]]'] },
+      'Ferramenta: [[ferr_cartografo|Ferramentas de Cartógrafo]]',
+      'Equipamento: (A) Arco Curto, 20 Flechas, Ferramentas de Cartógrafo, Aljava, Roupas de Viagem, Saco de Dormir, Tenda e 3 PO; ou (B) 50 PO'],
+      kit: [['arco_curto', 1], ['flechas', 1], ['ferr_cartografo', 1], ['aljava', 1], ['roupas_viagem', 1], ['saco_dormir', 1], ['tenda', 1]] },
     ant_marinheiro: { t: 'Marinheiro', l: 'Viveu no convés: cordame, maré, porto e briga de taverna.', b: [
       'Atributos: Força, Destreza, Sabedoria',
       'Talento: [[tal_valentao|Valentão de Taverna]]',
       'Perícias: [[per_acrobacia|Acrobacia]], [[per_percepcao|Percepção]]',
       'Ferramenta: [[ferr_navegador|Ferramentas de Navegador]]',
-      'Equipamento: (A) [[item_adaga|Adaga]], Ferramentas de Navegador, [[item_corda|Corda]], [[item_roupas|Roupas de Viagem]] e 20 PO; ou (B) 50 PO'] },
+      'Equipamento: (A) Adaga, Ferramentas de Navegador, Corda, Roupas de Viagem e 20 PO; ou (B) 50 PO'],
+      kit: [['adaga', 1], ['ferr_navegador', 1], ['corda', 1], ['roupas_viagem', 1]] },
     ant_mercador: { t: 'Mercador', l: 'Comprou barato, vendeu caro e atravessou estrada com carga nas costas.', b: [
       'Atributos: Constituição, Inteligência, Carisma',
       'Talento: [[tal_sortudo|Sortudo]]',
       'Perícias: [[per_lidar_com_animais|Lidar com Animais]], [[per_persuasao|Persuasão]]',
-      'Ferramenta: [[ferr_navegador|Ferramentas de Navegador]]'] },
+      'Ferramenta: [[ferr_navegador|Ferramentas de Navegador]]',
+      'Equipamento: (A) Ferramentas de Navegador, 2 Algibeiras, Roupas de Viagem e 22 PO; ou (B) 50 PO'],
+      kit: [['ferr_navegador', 1], ['algibeira', 2], ['roupas_viagem', 1]] },
     ant_nobre: { t: 'Nobre', l: 'Nasceu com nome e criados. Sabe como funciona uma corte — e como se usa isso.', b: [
       'Atributos: Força, Inteligência, Carisma',
       'Talento: [[tal_habilidoso|Habilidoso]]',
       'Perícias: [[per_historia|História]], [[per_persuasao|Persuasão]]',
-      'Ferramenta: [[ferr_jogos|Kit de Jogos]]'] },
+      'Ferramenta: [[ferr_jogos|Kit de Jogos]]',
+      'Equipamento: (A) Kit de Jogos (o mesmo que acima), Perfume, Roupas Finas e 29 PO; ou (B) 50 PO'],
+      kit: [['ferr_jogos', 1], ['perfume', 1], ['roupas_finas', 1]] },
     ant_sabio: { t: 'Sábio', l: 'Cresceu entre livros. Sabe muito, e sabe onde procurar o que não sabe.', b: [
       'Atributos: Constituição, Inteligência, Sabedoria',
       'Talento: [[tal_iniciado|Iniciado em Magia (Mago)]]',
       'Perícias: [[per_arcanismo|Arcanismo]], [[per_historia|História]]',
-      'Ferramenta: [[ferr_caligrafia|Suprimentos de Calígrafo]]'] },
+      'Ferramenta: [[ferr_caligrafia|Suprimentos de Calígrafo]]',
+      'Equipamento: (A) Cajado, Suprimentos de Calígrafo, Livro (história), Pergaminho (8 folhas), Túnica e 8 PO; ou (B) 50 PO'],
+      kit: [['bordao', 1], ['ferr_caligrafia', 1], ['livro', 1], ['pergaminho', 8], ['tunica', 1]] },
     ant_soldado: { t: 'Soldado', l: 'Serviu numa tropa: marchou, obedeceu, lutou em formação e viu gente morrer.', b: [
       'Atributos: Força, Destreza, Constituição',
       'Talento: [[tal_atacante|Atacante Selvagem]]',
       'Perícias: [[per_atletismo|Atletismo]], [[per_intimidacao|Intimidação]]',
-      'Ferramenta: [[ferr_jogos|Kit de Jogos]]'] },
+      'Ferramenta: [[ferr_jogos|Kit de Jogos]]',
+      'Equipamento: (A) Lança, Arco Curto, 20 Flechas, Kit de Curandeiro, Kit de Jogos (o mesmo que acima), Aljava, Roupas de Viagem e 14 PO; ou (B) 50 PO'],
+      kit: [['lanca', 1], ['arco_curto', 1], ['flechas', 1], ['kit_medicina', 1], ['ferr_jogos', 1], ['aljava', 1], ['roupas_viagem', 1]] },
 
     cnc_talento_origem: { t: 'Talento de Origem', l: 'O talento que já vem de fábrica, no nível 1 — antes de qualquer escolha de classe.', b: [
       'Todo antecedente entrega um. É o que mais muda a cara do personagem no começo.',
@@ -5685,6 +5716,10 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       (d.b || []).join(' ').replace(/\[\[([a-z0-9_]+)\|[^\]]+\]\]/g, function(_, k) {
         if (poeNaFicha(k)) feitos++;
         return '';
+      });
+      (d.kit || []).forEach(function(par) {
+        for (var q = 0; q < (par[1] || 1); q++) poeItem(par[0]);
+        feitos++;
       });
       return 'antecedente ' + nome + ' aplicado (' + feitos + ' itens)';
     }
