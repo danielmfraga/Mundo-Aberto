@@ -2622,22 +2622,22 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     // ── Grau 2: as subclasses, por classe ─────────────────────────────
     // Na 5.5 TODAS chegam no nível 3, então aqui não há o que aplicar
     // antes disso: a lista serve pra escolher com antecedência.
-    sub_barbaro: { t: 'Bárbaro', l: 'Caminhos do bárbaro, escolhidos no nível 3.', b: [
-      '[[sbc_berserker|Caminho do Berserker]] — Fúria bruta, sem filtro: quem ataca de peito aberto bate muito mais.',
-      '[[sbc_coracao_selvagem|Caminho do Coração Selvagem]] — Chama o espírito de bichos e empresta o que eles têm de melhor.',
-      '[[sbc_arvore_mundo|Caminho da Árvore do Mundo]] — Puxa vida e espaço da árvore que liga os planos.',
-      '[[sbc_zelote|Caminho do Zelote]] — Fúria divina: bate com dano sagrado e se cura no meio da briga.'] },
-    sbc_berserker: { t: 'Caminho do Berserker', l: 'Fúria bruta, sem filtro: quem ataca de peito aberto bate muito mais.', b: [
+    sub_barbaro: { t: 'Bárbaro', l: 'Trilhas do bárbaro, escolhidos no nível 3.', b: [
+      '[[sbc_berserker|Trilha do Berserker]] — Fúria bruta, sem filtro: quem ataca de peito aberto bate muito mais.',
+      '[[sbc_coracao_selvagem|Trilha do Coração Selvagem]] — Chama o espírito de bichos e empresta o que eles têm de melhor.',
+      '[[sbc_arvore_mundo|Trilha da Árvore do Mundo]] — Puxa vida e espaço da árvore que liga os planos.',
+      '[[sbc_fanatico|Trilha do Fanático]] — Fúria divina: bate com dano sagrado e se cura no meio da briga.'] },
+    sbc_berserker: { t: 'Trilha do Berserker', l: 'Fúria bruta, sem filtro: quem ataca de peito aberto bate muito mais.', b: [
       'É a escolha mais direta: pouca regra nova, muito dano.',
       'Nível 3 — Frenesi: em [[cls_furia|fúria]] e usando [[cls_ataque_imprudente|Ataque Imprudente]], o primeiro alvo que você acerta no turno leva d6 extras — tantos quanto o seu bônus de dano da fúria.'] },
-    sbc_coracao_selvagem: { t: 'Caminho do Coração Selvagem', l: 'Chama o espírito de bichos e empresta o que eles têm de melhor.', b: [
+    sbc_coracao_selvagem: { t: 'Trilha do Coração Selvagem', l: 'Chama o espírito de bichos e empresta o que eles têm de melhor.', b: [
       'Muda o que a fúria faz conforme o animal que você invoca.',
       'Nível 3 — Voz dos Animais: [[mag_sentidos_animais|Sentidos Animais]] e [[mag_falar_com_animais|Falar com Animais]], só como ritual.',
       'Nível 3 — Fúria da Natureza: ao entrar em [[cls_furia|fúria]], escolhe um espírito. Urso: resistência a todo dano menos energia, necrótico, psíquico e radiante. Águia: Disparada e Desengajar juntos, com [[cnc_acao_bonus|ação bônus]]. Lobo: aliados têm vantagem contra inimigos que estejam do seu lado.'] },
-    sbc_arvore_mundo: { t: 'Caminho da Árvore do Mundo', l: 'Puxa vida e espaço da árvore que liga os planos.', b: [
+    sbc_arvore_mundo: { t: 'Trilha da Árvore do Mundo', l: 'Puxa vida e espaço da árvore que liga os planos.', b: [
       'Novidade da 5.5: PV temporários pra você e pro grupo; mais adiante puxa inimigo pra perto e teleporta.',
       'Nível 3 — Vitalidade da Árvore: ao entrar em [[cls_furia|fúria]], PV temporários iguais ao seu nível de bárbaro. E no começo de cada turno em fúria, um aliado a até 3 m ganha PV temporários — d6 igual ao seu bônus de dano da fúria.'] },
-    sbc_zelote: { t: 'Caminho do Zelote', l: 'Fúria divina: bate com dano sagrado e se cura no meio da briga.', b: [
+    sbc_fanatico: { t: 'Trilha do Fanático', l: 'Fúria divina: bate com dano sagrado e se cura no meio da briga.', b: [
       'O bárbaro que mais aguenta sozinho.',
       'Nível 3 — Fúria Divina: em [[cls_furia|fúria]], o primeiro alvo que você acerta no turno leva 1d6 + metade do seu nível de bárbaro, radiante ou necrótico, à sua escolha.',
       'Nível 3 — Guerreiro dos Deuses: uma reserva de quatro d12 pra se curar com [[cnc_acao_bonus|ação bônus]]; volta cheia no [[cnc_descanso|descanso longo]].'] },
@@ -2696,7 +2696,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       '[[sbc_terra|Círculo da Terra]] — Magia do terreno, que dá pra trocar a cada descanso longo.',
       '[[sbc_lua|Círculo da Lua]] — Vira bicho de verdade e briga nessa forma.',
       '[[sbc_mar|Círculo do Mar]] — Tempestade e maré como arma.',
-      '[[sbc_astros|Círculo dos Astros]] — Lê constelações e assume a forma delas.'] },
+      '[[sbc_estrelas|Círculo das Estrelas]] — Lê constelações e assume a forma delas.'] },
     sbc_terra: { t: 'Círculo da Terra', l: 'Magia do terreno, que dá pra trocar a cada descanso longo.', b: [
       'A cada [[cnc_descanso|descanso longo]] você escolhe a terra — árida, polar, temperada ou tropical — e ela define magias extras sempre preparadas.',
       'Nível 3 — Auxílio da Terra: gasta um uso de [[cls_forma_selvagem|Forma Selvagem]]; quem você escolher numa esfera de 3 m faz salvaguarda de Constituição ou leva 2d6 necrótico, e uma criatura ali dentro cura 2d6.'] },
@@ -2708,7 +2708,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Novidade da 5.5: uma aura de maresia em volta de você.',
       'Nível 3 — Ira do Mar: gasta um uso de [[cls_forma_selvagem|Forma Selvagem]] e fica 10 minutos numa aura de 1,5 m. Com [[cnc_acao_bonus|ação bônus]], escolhe alguém dentro dela: salvaguarda de Constituição, ou leva frio (d6 igual à sua Sabedoria) e é empurrado 4,5 m.',
       'Nível 3 — sempre preparadas: [[mag_raio_gelo|Raio de Gelo]], [[mag_nevoa_obscurecente|Névoa Obscurecente]], [[mag_onda_trovejante|Onda Trovejante]], [[mag_lufada_vento|Lufada de Vento]] e [[mag_despedacar|Despedaçar]].'] },
-    sbc_astros: { t: 'Círculo dos Astros', l: 'Lê constelações e assume a forma delas.', b: [
+    sbc_estrelas: { t: 'Círculo das Estrelas', l: 'Lê constelações e assume a forma delas.', b: [
       'Troca de forma conforme o que o grupo precisa: dano, cura ou foco.',
       'Nível 3 — Mapa Estelar: [[mag_orientacao|Orientação]] e Raio Guia sempre preparados, e Raio Guia de graça algumas vezes por dia.',
       'Nível 3 — Forma Estrelada: gasta um uso de [[cls_forma_selvagem|Forma Selvagem]] e vira constelação. Arqueiro: ataque radiante com [[cnc_acao_bonus|ação bônus]]. Cálice: cura extra sempre que você cura com magia. Dragão: nos testes de concentração, Inteligência e Sabedoria, o d20 vale no mínimo 10.'] },
@@ -2752,22 +2752,22 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Nível 3 — Golpes Temíveis (dano psíquico extra) e Carisma somando nos testes sociais.'] },
     sub_guerreiro: { t: 'Guerreiro', l: 'Arquétipos do guerreiro, escolhidos no nível 3.', b: [
       '[[sbc_campeao|Campeão]] — Crítico mais fácil e atleta melhor. Nada pra decorar.',
-      '[[sbc_mestre_batalha|Mestre de Batalha]] — Manobras: derrubar, desarmar, provocar, comandar.',
-      '[[sbc_cavaleiro_arcano|Cavaleiro Arcano]] — Guerreiro que conjura magia de mago.',
-      '[[sbc_guerreiro_psi|Guerreiro Psi]] — Força da mente: escudo, empurrão e teleporte psiônicos.'] },
+      '[[sbc_mestre_batalha|Mestre da Batalha]] — Manobras: derrubar, desarmar, provocar, comandar.',
+      '[[sbc_cavaleiro_mistico|Cavaleiro Místico]] — Guerreiro que conjura magia de mago.',
+      '[[sbc_combatente_psiquico|Combatente Psíquico]] — Força da mente: escudo, empurrão e teleporte psiônicos.'] },
     sbc_campeao: { t: 'Campeão', l: 'Crítico mais fácil e atleta melhor. Nada pra decorar.', b: [
       'A escolha de quem quer bater sem gerenciar recurso.',
       'Nível 3 — Crítico Aprimorado: você crita em 19 e 20, não só no 20.',
       'Nível 3 — Atleta Notável: vantagem na iniciativa e em Atletismo, e um avanço de graça quando crita.'] },
-    sbc_mestre_batalha: { t: 'Mestre de Batalha', l: 'Manobras: derrubar, desarmar, provocar, comandar.', b: [
+    sbc_mestre_batalha: { t: 'Mestre da Batalha', l: 'Manobras: derrubar, desarmar, provocar, comandar.', b: [
       'O guerreiro tático — o que mais tem escolha em combate.',
       'Nível 3 — Superioridade em Combate: dados de manobra pra derrubar, desarmar, provocar e comandar aliados.',
       'Nível 3 — Estudante da Guerra: uma ferramenta e uma perícia a mais.'] },
-    sbc_cavaleiro_arcano: { t: 'Cavaleiro Arcano', l: 'Guerreiro que conjura magia de mago.', b: [
+    sbc_cavaleiro_mistico: { t: 'Cavaleiro Místico', l: 'Guerreiro que conjura magia de mago.', b: [
       'Arma encantada e proteção mágica.',
       'Nível 3 — Conjuração de mago, puxando de abjuração e evocação.',
       'Nível 3 — Vínculo com Arma: a arma volta pra sua mão e ninguém consegue te desarmar.'] },
-    sbc_guerreiro_psi: { t: 'Guerreiro Psi', l: 'Força da mente: escudo, empurrão e teleporte psiônicos.', b: [
+    sbc_combatente_psiquico: { t: 'Combatente Psíquico', l: 'Força da mente: escudo, empurrão e teleporte psiônicos.', b: [
       'Recursos pequenos e frequentes, sem parecer conjurador.',
       'Nível 3 — Poder Psiônico: dados de energia pra reduzir o dano de um aliado, somar dano à distância ou mover coisas com a mente.'] },
     sub_ladino: { t: 'Ladino', l: 'Arquétipos do ladino, escolhidos no nível 3.', b: [
@@ -2795,7 +2795,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       '[[sbc_abjurador|Abjurador]] — Escudo arcano ambulante: proteção e anular magia.',
       '[[sbc_evocador|Evocador]] — Dano de área — sem acertar os aliados.',
       '[[sbc_ilusionista|Ilusionista]] — Ilusões que quase viram verdade.',
-      '[[sbc_adivinho|Adivinho]] — Vê o que vem: troca rolagens do jogo por números que você já guardou.'] },
+      '[[sbc_adivinhador|Adivinhador]] — Vê o que vem: troca rolagens do jogo por números que você já guardou.'] },
     sbc_abjurador: { t: 'Abjurador', l: 'Escudo arcano ambulante: proteção e anular magia.', b: [
       'O mago mais difícil de matar.',
       'Nível 3 — Guarda Arcana: um escudo de PV que recarrega toda vez que você conjura abjuração.'] },
@@ -2806,7 +2806,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     sbc_ilusionista: { t: 'Ilusionista', l: 'Ilusões que quase viram verdade.', b: [
       'Resolve problema sem rolar ataque.',
       'Nível 3 — Ilusão Menor com som E imagem ao mesmo tempo, e suas ilusões podem ser remodeladas de longe.'] },
-    sbc_adivinho: { t: 'Adivinho', l: 'Vê o que vem: troca rolagens do jogo por números que você já guardou.', b: [
+    sbc_adivinhador: { t: 'Adivinhador', l: 'Vê o que vem: troca rolagens do jogo por números que você já guardou.', b: [
       'Um dos poderes mais fortes do livro.',
       'Nível 3 — Presságio: no descanso longo você rola dois d20 e guarda. Durante o dia, troca qualquer rolagem por um deles.',
       'É um dos poderes mais fortes do livro: você decide um acerto ou um erro do dia.'] },
@@ -2867,13 +2867,12 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Protetor: proficiência com armas marciais e armadura pesada.',
       'Taumaturgo: um [[cnc_truque|truque]] a mais e Sabedoria somando nos testes de conhecimento sagrado.',
       'Escolha no nível 1, e não muda depois.'] },
-    cls_druidico: { t: 'Druídico', l: 'A língua secreta dos druidas — e a conversa com os bichos.', b: [
+    cls_druidico: { t: 'Idioma Druídico', l: 'A língua secreta dos druidas — e a conversa com os bichos.', b: [
       'Dá pra deixar recado escondido em pedra, folha ou marca. Quem fala Druídico vê na hora; os outros precisam de Investigação CD 15 só pra perceber que tem recado, e mesmo assim não leem sem magia.',
       'Aprender a língua abriu a conversa com os animais: você tem [[mag_falar_com_animais|Falar com Animais]] sempre preparada.'] },
-    cls_ordem_primitiva: { t: 'Ordem Primitiva', l: 'O druida escolhe entre magia e mato.', b: [
-      'Mágico: um [[cnc_truque|truque]] de druida a mais, e soma a Sabedoria (no mínimo +1) nos testes de Arcanismo e Natureza.',
-      'Guardião: proficiência com armas marciais e treino com armadura média.',
-      'Escolha no nível 1, e não muda depois.'] },
+    cls_ordem_primal: { t: 'Ordem Primal', l: 'Você se dedicou a uma das funções sagradas à sua escolha.', b: [
+      'Protetor: proficiência com armas Marciais e treinamento com armadura Média.',
+      'Xamã: um [[cnc_truque|truque]] a mais da lista de Druida, e um bônus em testes de Inteligência (Arcanismo ou Natureza) igual ao seu modificador de Sabedoria (mínimo +1).'] },
     cls_feiticaria_inata: { t: 'Feitiçaria Inata', l: 'O feiticeiro abre a torneira por um minuto.', b: [
       '[[cnc_acao_bonus|Ação bônus]]: por 1 minuto, suas magias de feiticeiro ganham +1 na CD e vantagem nas jogadas de ataque.',
       'Dois usos, que voltam no [[cnc_descanso|descanso longo]].'] },
@@ -2907,11 +2906,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       '[[cnc_acao_bonus|Ação bônus]]. Dois usos: volta um no [[cnc_descanso|descanso curto]] e todos no longo.',
       'Dura um número de horas igual à metade do seu nível de druida, e você ganha PV temporários iguais ao seu nível de druida.',
       'A cabeça continua sua: Inteligência, Sabedoria, Carisma e proficiências não mudam. Não dá pra conjurar na forma, mas a concentração que já estava rolando continua.',
-      'No nível 2 você conhece 4 formas de fera de ND até 1/4 e sem voo. Os círculos da Lua, do Mar, da Terra e dos Astros gastam usos dela nos poderes deles.'] },
+      'No nível 2 você conhece 4 formas de fera de ND até 1/4 e sem voo. Os círculos da Lua, do Mar, da Terra e das Estrelas gastam usos dela nos poderes deles.'] },
     cls_ataque_imprudente: { t: 'Ataque Imprudente', l: 'Nível 2 do bárbaro: acerta mais — e apanha mais.', b: [
       'No primeiro ataque do seu turno você decide atacar de peito aberto.',
       'Até o começo do seu próximo turno, vantagem nos seus ataques com Força — e os ataques contra você também têm vantagem.',
-      'O Caminho do Berserker vive disso: o Frenesi só dispara com ele.'] },
+      'O Trilha do Berserker vive disso: o Frenesi só dispara com ele.'] },
 
     // ── nível 1 que ainda não tinha item próprio, extraído do pacote de
     // cada classe (mesmo texto de sempre, só destacado pra dar pra buscar
@@ -3060,7 +3059,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Perícias: 2 entre História, Intuição, Medicina, Persuasão e Religião',
       'Nível 1: Conjuração — magias de clérigo, por Sabedoria; prepara a lista a cada descanso longo',
       'Nível 1: Ordem Divina — Protetor (armas marciais e armadura pesada) ou Taumaturgo (truque extra e Religião melhor)'] },
-    cls_druida: { t: 'Druida', l: 'A natureza como fonte de magia — e como forma de corpo.', b: [
+    cls_druida: { t: 'Druida', l: 'Pertencem a ordens antigas que invocam as forças da natureza.', b: [
       'Dado de Vida: d8 · Atributo principal: Sabedoria',
       'Salvaguardas: Inteligência e Sabedoria',
       'Armaduras: leves e escudos',
@@ -3068,8 +3067,9 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Ferramentas: [[ferr_herbalismo|Kit de Herbalismo]]',
       'Perícias: 2 entre Arcanismo, Intuição, Lidar com Animais, Medicina, Natureza, Percepção, Religião e Sobrevivência',
       'Nível 1: Conjuração — magias de druida, por Sabedoria',
-      'Nível 1: [[cls_druidico|Druídico]] — a língua secreta dos druidas, e [[mag_falar_com_animais|Falar com Animais]] sempre preparada',
-      'Nível 1: Ordem Primitiva — Mágico (truque extra e Sabedoria em Arcanismo e Natureza) ou Guardião (armas marciais e armadura média)'],
+      'Nível 1: [[cls_druidico|Idioma Druídico]] — a língua secreta dos druidas, e [[mag_falar_com_animais|Falar com Animais]] sempre preparada',
+      'Nível 1: [[cls_ordem_primal|Ordem Primal]] — Xamã (truque extra e bônus em Arcanismo ou Natureza) ou Protetor (armas Marciais e armadura Média)',
+      'Equipamento inicial: (A) Armadura de Couro, Escudo, Foice, Foco Druídico (Cajado), Kit de Explorador, Kit de Herbalismo e 9 PO; ou (B) 50 PO'],
       mais: 'Ver as magias do druida',
       lista: ['trq_druida', 'c1_druida', 'c2_druida'] },
     cls_feiticeiro: { t: 'Feiticeiro', l: 'A magia não foi estudada nem concedida: já nasceu com ele.', b: [
@@ -3205,10 +3205,10 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       '[[cnc_visao_escuro|Visão no Escuro]] 36 m',
       'Resistência Implacável: ao cair a 0 PV sem morrer na hora, fica com 1 — uma vez por [[cnc_descanso|descanso longo]]',
       'Investida Adrenalina: Disparada como [[cnc_acao_bonus|ação bônus]], ganhando PV temporários iguais ao bônus de proficiência — bônus de proficiência vezes por descanso curto ou longo'] },
-    esp_tiefling: { t: 'Tiefling', l: 'Marca de outro plano no sangue: chifres, cauda e magia herdada.', b: [
+    esp_tiferino: { t: 'Tiferino', l: 'Os tiferinos nascem nos Planos Inferiores ou têm ancestrais que se originaram lá.', b: [
       'Tamanho: Médio ou Pequeno · Deslocamento: 9 m',
       '[[cnc_visao_escuro|Visão no Escuro]] 18 m',
-      'Presença de Outro Mundo: conhece o [[cnc_truque|truque]] Taumaturgia',
+      'Presença Sobrenatural: conhece o [[cnc_truque|truque]] Taumaturgia',
       '[[lin_infero|Legado Ínfero]]: Abissal, Ctônico ou Infernal — cada um dá uma resistência, um truque e mais duas magias, nos níveis 3 e 5'],
       mais: 'Ver os 3 legados',
       lista: ['lin_abissal', 'lin_ctonico', 'lin_infernal'] },
@@ -3247,7 +3247,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'O truque é seu desde o nível 1; as magias dos níveis 3 e 5 saem uma vez por [[cnc_descanso|descanso longo]] sem gastar espaço.'],
       mais: 'Ver os 3 legados', lista: ['lin_abissal', 'lin_ctonico', 'lin_infernal'] },
     lin_abissal: { t: 'Legado Abissal', l: 'Do Abismo: caos e veneno.', b: [
-      '[[cnc_resistencia|Resistência]] a dano de veneno.',
+      '[[cnc_resistencia|Resistência]] a dano Venenoso.',
       'Truque: [[mag_rajada_veneno|Rajada de Veneno]].',
       'Nível 3: [[mag_raio_nauseante|Raio Nauseante]] · Nível 5: [[mag_paralisar_pessoa|Paralisar Pessoa]].'] },
     lin_ctonico: { t: 'Legado Ctônico', l: 'Do mundo dos mortos: frio e vida roubada.', b: [
@@ -3255,9 +3255,9 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Truque: [[mag_toque_necrotico|Toque Necrótico]].',
       'Nível 3: [[mag_vitalidade_vazia|Vitalidade Vazia]] · Nível 5: Raio do Enfraquecimento.'] },
     lin_infernal: { t: 'Legado Infernal', l: 'Dos Nove Infernos: fogo e contrato.', b: [
-      '[[cnc_resistencia|Resistência]] a dano de fogo.',
+      '[[cnc_resistencia|Resistência]] a dano Ígneo.',
       'Truque: [[mag_raio_fogo|Raio de Fogo]].',
-      'Nível 3: Repreensão Infernal · Nível 5: [[mag_escuridao|Escuridão]].'] },
+      'Nível 3: Repreensão Diabólica · Nível 5: [[mag_escuridao|Escuridão]].'] },
     lin_gigante: { t: 'Ancestralidade Gigante', l: 'Qual gigante corre no seu sangue — cada um dá um poder.', b: [
       'Escolha um ao criar o personagem.',
       'Usos: bônus de proficiência vezes por [[cnc_descanso|descanso longo]].'],
@@ -3352,9 +3352,9 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Ao cair a 0 PV sem morrer na hora, fica com 1 PV em vez disso — uma vez por [[cnc_descanso|descanso longo]].'] },
     tra_orc_investida_adrenalina: { t: 'Investida Adrenalina', l: 'Um empurrão de PV temporário, disparado como ação bônus.', b: [
       'Com [[cnc_acao_bonus|ação bônus]], ganha PV temporários iguais ao seu bônus de proficiência — bônus de proficiência vezes por descanso curto ou longo.'] },
-    tra_tiefling_visao_escuro: { t: 'Visão no Escuro (Tiefling)', l: 'Enxerga no escuro até 18 m.', b: [
+    tra_tiferino_visao_escuro: { t: 'Visão no Escuro (Tiferino)', l: 'Enxerga no escuro até 18 m.', b: [
       '[[cnc_visao_escuro|Visão no Escuro]] até 18 m.'] },
-    tra_tiefling_presenca: { t: 'Presença de Outro Mundo', l: 'Já nasce sabendo um truque estranho.', b: [
+    tra_tiferino_presenca: { t: 'Presença Sobrenatural', l: 'Já nasce sabendo um truque estranho.', b: [
       'Conhece o [[cnc_truque|truque]] Taumaturgia.'] },
 
     cnc_dracos: { t: 'Ancestralidade Dracônica', l: 'Qual dragão é o seu — define o dano do sopro e a resistência.', b: [
@@ -3439,7 +3439,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Ferramenta: [[ferr_jogos|Kit de Jogos]]',
       'Equipamento: (A) Lança, Besta Leve, 20 Virotes, Kit de Jogos (o mesmo que acima), Aljava, Grilhões, Lanterna Coberta, Roupas de Viagem e 12 PO; ou (B) 50 PO'],
       kit: [['lanca', 1], ['besta_leve', 1], ['virotes', 1], ['ferr_jogos', 1], ['aljava', 1], ['algemas', 1], ['lampiao', 1], ['roupas_viagem', 1]] },
-    ant_guia: { t: 'Guia', l: 'Conhece o mato como quem conhece a própria casa, e leva os outros por ele.', b: [
+    ant_guia: { t: 'Guia', l: 'Você cresceu ao ar livre, longe de terras povoadas.', b: [
       'Atributos: Destreza, Constituição, Sabedoria',
       'Talento: [[tal_iniciado|Iniciado em Magia (Druida)]]',
       'Perícias: [[per_furtividade|Furtividade]], [[per_sobrevivencia|Sobrevivência]]',
@@ -3733,7 +3733,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Botão direito no nome de uma espécie aplica tamanho, deslocamento e traços de uma vez.'],
       mais: 'Ver as 10 espécies',
       lista: ['esp_aasimar', 'esp_anao', 'esp_draconato', 'esp_elfo', 'esp_gnomo', 'esp_goliath',
-        'esp_halfling', 'esp_humano', 'esp_orc', 'esp_tiefling'] },
+        'esp_halfling', 'esp_humano', 'esp_orc', 'esp_tiferino'] },
     nivel: { t: 'Nível e XP', l: 'O quanto o personagem já andou.', b: [
       'Cada nível novo traz características de classe e pode subir o bônus de proficiência.',
       'A subida vem por XP ou por decisão do Mestre — os dois jeitos são oficiais.'] },
@@ -5489,12 +5489,12 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     ['Inimigo Favorito', 'cls_inimigo_favorito'],
     ['Adepto de Rituais', 'cls_adepto_rituais'],
     ['Retomar o Fôlego', 'cls_retomar_folego'],
-    ['Ordem Primitiva', 'cls_ordem_primitiva'],
+    ['Ordem Primal', 'cls_ordem_primal'],
     ['Gíria de Ladrão', 'cls_giria_ladrao'],
     ['Artes Marciais', 'cls_artes_marciais'],
     ['Magia de Pacto', 'cls_magia_pacto'],
     ['Ordem Divina', 'cls_ordem_divina'],
-    ['Druídico', 'cls_druidico'],
+    ['Idioma Druídico', 'cls_druidico'],
     ['Fúria', 'cls_furia'],
     ['Defesa sem Armadura', 'cnc_defesa_sem_armadura'],
     ['Inspiração Heroica', 'inspiracao'],
