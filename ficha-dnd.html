@@ -2918,7 +2918,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     cls_inimigo_favorito: { t: 'Inimigo Favorito', l: 'Marca do Caçador de graça.', b: [
       'Você tem Marca do Caçador sempre preparada.',
       'Conjura sem gastar [[slots|espaço]], bônus de proficiência vezes por [[cnc_descanso|descanso longo]].'] },
-    cls_retomar_folego: { t: 'Recuperar Fôlego', l: 'O guerreiro se cura sozinho, no meio da briga.', b: [
+    cls_retomar_folego: { t: 'Recuperar Fôlego', tag: { tipo: 'caracteristica', nivel: 1, classes: ['guerreiro'] }, l: 'O guerreiro se cura sozinho, no meio da briga.', b: [
       '[[cnc_acao_bonus|Ação bônus]]: cura 1d10 + seu nível de guerreiro.',
       'Começa com dois usos: um volta no [[cnc_descanso|descanso curto]], e todos no [[cnc_descanso|descanso longo]].'] },
     cls_giria_ladrao: { t: 'Gíria de Ladrão', l: 'O idioma secreto do submundo.', b: [
@@ -2972,8 +2972,9 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     // versão nova aqui) — só faltava deixá-los aplicáveis, ver CLS_CNC.
     cls_maestria_armas_2: { t: 'Maestria em Armas (2 armas)', l: 'Escolhe duas armas e usa o efeito extra delas sempre.', b: [
       'Escolha 2 tipos de arma entre os que você é proficiente; enquanto empunhar uma delas, usa a maestria dela (ver o catálogo de armas).'] },
-    cls_maestria_armas_3: { t: 'Maestria em Armas (3 armas)', l: 'Escolhe três armas e usa o efeito extra delas sempre.', b: [
-      'Escolha 3 tipos de arma entre os que você é proficiente; enquanto empunhar uma delas, usa a maestria dela (ver o catálogo de armas).'] },
+    cls_maestria_armas_3: { t: 'Maestria em Armas (3 armas)', l: 'Três tipos de armas com a maestria delas, trocáveis a cada descanso longo.', tag: { tipo: 'caracteristica', nivel: 1, classes: ['guerreiro'] }, b: [
+      'Seu treinamento permite usar as propriedades de maestria com três tipos de armas Simples ou Marciais à sua escolha.',
+      'Sempre que completa um descanso longo, você pode trocar uma dessas escolhas de arma.'] },
     cls_conjuracao_bardo: { t: 'Conjuração (Bardo)', l: 'Magia pela palavra e pela música — por Carisma.', b: [
       'Magias de bardo, usando Carisma como atributo de conjuração.'] },
     cls_conjuracao_clerigo: { t: 'Conjuração (Clérigo)', l: 'O canal do divino — por Sabedoria.', b: [
@@ -3029,13 +3030,9 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Resolve a vida contra invisibilidade e escuridão mágica.'] },
 
     // ── conceitos que aparecem dentro das classes ─────────────────────
-    cnc_estilo_luta: { t: 'Estilo de Luta', l: 'Um jeito de brigar que te dá um bônus fixo, para sempre.', b: [
-      'Na 5.5 os estilos viraram talentos: você escolhe UM da lista, e ele não sai mais.',
-      'Guerreiro escolhe no nível 1; paladino e guardião, no 2.',
-      'Escolha pensando na arma que você vai usar a campanha inteira.'],
-      mais: 'Ver os 10 estilos',
-      lista: ['est_arquearia', 'est_defesa', 'est_duelo', 'est_arma_grande', 'est_duas_armas',
-        'est_protecao', 'est_intercepcao', 'est_arremesso', 'est_desarmada', 'est_cegas'] },
+    cnc_estilo_luta: { t: 'Estilo de Luta', l: 'Um talento de Estilo de Luta à sua escolha, no nível 1.', tag: { tipo: 'caracteristica', nivel: 1, classes: ['guerreiro'] }, b: [
+      'Você adquire um talento de Estilo de Luta à sua escolha (capítulo 5, na categoria Estilo de Luta).',
+      'Sempre que sobe de nível, pode trocar esse talento por outro de Estilo de Luta.'] },
     cnc_descanso: { t: 'Descanso curto e longo', l: 'Os dois relógios do jogo: quase todo poder recarrega num ou no outro.', b: [
       'Curto: pelo menos 1 hora. Serve para gastar [[dv|Dados de Vida]] e curar, e recarrega o que diz "por descanso curto".',
       'Longo: 8 horas. Devolve todos os PV, metade dos Dados de Vida e todos os [[slots|espaços de magia]].',
@@ -6173,7 +6170,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     // Sem filtro de deleted_at: personagem apagado AINDA EXISTE (e o código dele
     // é único). Antes, abrir um apagado não achava nada e criava uma 2ª linha
     // com o mesmo char_id. Linha viva tem prioridade; só apagada = só leitura.
-    return rest(TAB + '?char_id=eq.' + encodeURIComponent(RID) + '&select=sheet_data,sheet_data_v1,space_id,deleted_at&order=deleted_at.desc.nullsfirst', 'GET')
+    return rest(TAB + '?char_id=eq.' + encodeURIComponent(RID) + '&select=sheet_data,sheet_data_v1,space_id,eh_npc,deleted_at&order=deleted_at.desc.nullsfirst', 'GET')
       .then(function(todas) {
         var linhas = (todas || []).filter(function(l) { return !l.deleted_at; });
         var soApagadas = !linhas.length && todas && todas.length;
@@ -6181,9 +6178,12 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
         if (linhas && linhas.length) {
           existeNaTabela = true;
           // aberta sem ?esp=: o Voltar ainda devolve pro BOX onde o personagem mora
-          if (!ESP_PARAM && linhas[0].space_id) {
-            var voltaBox = document.getElementById('backBtn');
-            if (voltaBox) voltaBox.href = 'personagens.html?esp=' + encodeURIComponent(linhas[0].space_id);
+          var voltaBox = document.getElementById('backBtn');
+          if (voltaBox && !qs.get('returnTo')) {
+            // NPC volta pra lista de NPCs; personagem, pro espaço (BOX) onde mora
+            var npcLinha = (typeof linhas[0].eh_npc === 'boolean') ? linhas[0].eh_npc : RID.indexOf('npc_') === 0;
+            if (npcLinha) voltaBox.href = 'npcs.html';
+            else if (!ESP_PARAM && linhas[0].space_id) voltaBox.href = 'personagens.html?esp=' + encodeURIComponent(linhas[0].space_id);
           }
           return { existe: true, dados: linhas[0].sheet_data || {}, de: 'tabela', apagada: !!soApagadas };
         }
