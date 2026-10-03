@@ -1788,193 +1788,193 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Ele repete a salvaguarda no fim de cada turno.'] },
 
     // ── 3º círculo de mago ────────────────────────────────────────────
-    mag_animar_mortos: { t: 'Animar Mortos', l: 'Levanta um esqueleto ou um zumbi pra servir você.', b: [
+    mag_animar_mortos: { t: 'Animar Mortos', tag: { tipo: 'magia', circulo: 3, classes: ['clerigo', 'mago'] }, l: 'Levanta um esqueleto ou um zumbi pra servir você.', b: [
       '3º círculo · mago',
       '1 minuto · alcance 3 m · duração Instantânea',
       'Precisa de material (uma gota de sangue, um pedaço de carne e uma pitada de pó de osso).',
       'Pilha de ossos vira Esqueleto; cadáver de humanoide Médio ou Pequeno vira Zumbi.',
       'Com ação bônus você comanda os seus mortos-vivos a até 18 m, todos com a mesma ordem.'] },
-    mag_bola_fogo: { t: 'Bola de Fogo', l: 'O estouro clássico: 8d6 numa esfera de 6 m.', b: [
+    mag_bola_fogo: { t: 'Bola de Fogo', tag: { tipo: 'magia', circulo: 3, classes: ['feiticeiro', 'mago'] }, l: 'O estouro clássico: 8d6 numa esfera de 6 m.', b: [
       '3º círculo · mago · feiticeiro',
       'Ação · alcance 45 m · duração Instantânea',
       'Precisa de material (uma bola de guano de morcego e enxofre).',
       'Esfera de 6 m de raio: 8d6 de fogo, salvaguarda de Destreza pra metade.',
       'Acende objeto solto na área. Sobe 1d6 por círculo acima do 3º.'] },
-    mag_celeridade: { t: 'Celeridade', l: 'O aliado dobra de velocidade e ganha uma ação por turno.', b: [
+    mag_celeridade: { t: 'Celeridade', tag: { tipo: 'magia', circulo: 3, classes: ['feiticeiro', 'mago'] }, l: 'O aliado dobra de velocidade e ganha uma ação por turno.', b: [
       '3º círculo · mago · feiticeiro',
       'Ação · alcance 9 m · duração 1 minuto',
       'Precisa de concentração e de material (uma lasca de raiz de alcaçuz).',
       'Deslocamento dobrado, +2 na CA, vantagem em salvaguardas de Destreza.',
       'Ganha uma ação extra por turno, só pra Atacar (um ataque), Correr, Desengajar, Esconder ou Usar Objeto.',
       'Quando acaba, ele fica Incapacitado e com deslocamento 0 até o fim do próximo turno dele.'] },
-    mag_circulo_magico: { t: 'Círculo Mágico', l: 'Um cilindro que prende ou barra um tipo de criatura.', b: [
+    mag_circulo_magico: { t: 'Círculo Mágico', tag: { tipo: 'magia', circulo: 3, classes: ['bruxo', 'clerigo', 'mago', 'paladino'] }, l: 'Um cilindro que prende ou barra um tipo de criatura.', b: [
       '3º círculo · mago',
       '1 minuto · alcance 3 m · duração 1 hora',
       'Precisa de material (sal e prata em pó de 100 po, que a magia consome).',
       'Cilindro de 3 m de raio por 6 m de altura. Escolhe os tipos: celestial, elemental, feérico, ínfero ou morto-vivo.',
       'Eles não entram por meio não mágico, não enfeitiçam nem amedrontam quem está dentro.',
       'Dá pra inverter: o círculo prende em vez de barrar.'] },
-    mag_clarividencia: { t: 'Clarividência', l: 'Um sensor invisível pra ver ou ouvir um lugar longe.', b: [
+    mag_clarividencia: { t: 'Clarividência', tag: { tipo: 'magia', circulo: 3, classes: ['bardo', 'clerigo', 'feiticeiro', 'mago'] }, l: 'Um sensor invisível pra ver ou ouvir um lugar longe.', b: [
       '3º círculo · mago',
       '10 minutos · alcance 1,5 km · duração 10 minutos',
       'Precisa de concentração e de material (um foco de 100 po: um chifre pra ouvir ou um olho de vidro pra ver).',
       'O lugar precisa ser familiar, ou óbvio (atrás da porta, na esquina).',
       'Escolhe ver OU ouvir na conjuração; com ação bônus você troca.'] },
-    mag_contramagia: { t: 'Contramagia', l: 'Corta a magia do inimigo no meio da conjuração.', b: [
+    mag_contramagia: { t: 'Contramagia', tag: { tipo: 'magia', circulo: 3, classes: ['bruxo', 'feiticeiro', 'mago'] }, l: 'Corta a magia do inimigo no meio da conjuração.', b: [
       '3º círculo · mago · feiticeiro',
       'Reação · alcance 18 m · duração Instantânea',
       'Reação quando você VÊ alguém conjurando com componente verbal, somático ou material.',
       'Salvaguarda de Constituição do conjurador. Falhou: a magia morre e a ação dele é perdida.',
       'Na 5.5 virou salvaguarda — não é mais disputa de círculo. O espaço dele não é gasto.'] },
-    mag_convocar_feerico: { t: 'Convocar Feérico', l: 'Chama um espírito feérico pra lutar do seu lado.', b: [
+    mag_convocar_feerico: { t: 'Convocar Feérico', tag: { tipo: 'magia', circulo: 3, classes: ['bruxo', 'druida', 'guardiao', 'mago'] }, l: 'Chama um espírito feérico pra lutar do seu lado.', b: [
       '3º círculo · mago',
       'Ação · alcance 27 m · duração 1 hora',
       'Precisa de concentração e de material (uma flor dourada de 300 po).',
       'Escolhe o humor: Alegre, Enfurecido ou Malandro — é isso que define o bloco dele.',
       'Age na sua iniciativa e some a 0 PV ou quando a magia acaba.'] },
-    mag_dissipar_magia: { t: 'Dissipar Magia', l: 'Desliga magia alheia — de graça até o 3º círculo.', b: [
+    mag_dissipar_magia: { t: 'Dissipar Magia', tag: { tipo: 'magia', circulo: 3, classes: ['bardo', 'bruxo', 'clerigo', 'druida', 'feiti- ceiro', 'guardiao', 'mago', 'paladino'] }, l: 'Desliga magia alheia — de graça até o 3º círculo.', b: [
       '3º círculo · mago · feiticeiro',
       'Ação · alcance 36 m · duração Instantânea',
       'Magia de 3º círculo ou menor no alvo acaba automaticamente.',
       'De 4º pra cima, teste do seu atributo de conjuração contra CD 10 + o círculo dela.',
       'Com espaço maior, acaba automático com tudo até o círculo do espaço usado.'] },
-    mag_falar_mortos: { t: 'Falar com Mortos', l: 'Cinco perguntas para um cadáver que ainda tenha boca.', b: [
+    mag_falar_mortos: { t: 'Falar com Mortos', tag: { tipo: 'magia', circulo: 3, classes: ['bardo', 'clerigo', 'mago'] }, l: 'Cinco perguntas para um cadáver que ainda tenha boca.', b: [
       '3º círculo · mago',
       'Ação · alcance 3 m · duração 10 minutos',
       'Precisa de material (um incenso aceso).',
       'Ele só sabe o que sabia em vida, e responde curto, enigmático ou repetitivo.',
       'Não funciona se o morto já era morto-vivo, nem no mesmo cadáver duas vezes em 10 dias.'] },
-    mag_forma_gasosa: { t: 'Forma Gasosa', l: 'Vira névoa: passa por fresta e quase não apanha.', b: [
+    mag_forma_gasosa: { t: 'Forma Gasosa', tag: { tipo: 'magia', circulo: 3, classes: ['bruxo', 'feiticeiro', 'mago'] }, l: 'Vira névoa: passa por fresta e quase não apanha.', b: [
       '3º círculo · mago · feiticeiro',
       'Ação · alcance Toque · duração 1 hora',
       'Precisa de concentração e de material (um pouco de gaze).',
       'Voo de 3 m, paira, e entra no espaço de outra criatura.',
       'Resistência a contundente, cortante e perfurante; imune a Caído.'] },
-    mag_glifo_protecao: { t: 'Glifo de Proteção', l: 'Uma armadilha mágica que espera o gatilho.', b: [
+    mag_glifo_protecao: { t: 'Glifo de Proteção', tag: { tipo: 'magia', circulo: 3, classes: ['bardo', 'clerigo', 'mago'] }, l: 'Uma armadilha mágica que espera o gatilho.', b: [
       '3º círculo · mago',
       '1 hora · alcance Toque · duração Até ser dissipada ou acionada',
       'Precisa de material (diamante em pó de 200 po, que a magia consome).',
       'Área de até 3 m. Mover a superfície mais de 3 m quebra o glifo.',
       'Quase invisível: só acha com teste de Sabedoria (Percepção) contra a CD da sua magia.'] },
-    mag_imagem_maior: { t: 'Imagem Maior', l: 'Ilusão de cubo de 6 m, com som, cheiro e temperatura.', b: [
+    mag_imagem_maior: { t: 'Imagem Maior', tag: { tipo: 'magia', circulo: 3, classes: ['bardo', 'bruxo', 'feiticeiro', 'mago'] }, l: 'Ilusão de cubo de 6 m, com som, cheiro e temperatura.', b: [
       '3º círculo · mago · feiticeiro',
       'Ação · alcance 36 m · duração 10 minutos',
       'Precisa de concentração e de material (um pouco de lã).',
       'Diferente da Imagem Silenciosa: essa tem som, cheiro e calor. Mas não causa dano nem condição.',
       'Com uma ação você move e vai mudando a aparência pra o movimento ficar natural.'] },
-    mag_indetectavel: { t: 'Indetectável', l: 'Blinda alguém ou algo contra magia de adivinhação.', b: [
+    mag_indetectavel: { t: 'Indetectável', tag: { tipo: 'magia', circulo: 3, classes: ['bardo', 'guardiao', 'mago'] }, l: 'Blinda alguém ou algo contra magia de adivinhação.', b: [
       '3º círculo · mago',
       'Ação · alcance Toque · duração 8 horas',
       'Precisa de material (poeira de diamante de 25 po, que a magia consome).',
       'Alvo: criatura voluntária, lugar, ou objeto de até 3 m em qualquer dimensão.',
       'Nenhuma magia de Adivinhação pega, e nenhum sensor de vidência enxerga.'] },
-    mag_invocar_morto_vivo: { t: 'Invocar Morto-Vivo', l: 'Chama um espírito morto-vivo pra lutar do seu lado.', b: [
+    mag_invocar_morto_vivo: { t: 'Invocar Morto-Vivo', tag: { tipo: 'magia', circulo: 3, classes: ['bruxo', 'mago'] }, l: 'Chama um espírito morto-vivo pra lutar do seu lado.', b: [
       '3º círculo · mago',
       'Ação · alcance 27 m · duração 1 hora',
       'Precisa de concentração e de material (um crânio dourado de 300 po).',
       'Escolhe a forma: Esquelético, Fantasmagórico ou Pútrido.',
       'Age na sua iniciativa e some a 0 PV ou quando a magia acaba.'] },
-    mag_lentidao: { t: 'Lentidão', l: 'Até seis inimigos passam a fazer metade das coisas.', b: [
+    mag_lentidao: { t: 'Lentidão', tag: { tipo: 'magia', circulo: 3, classes: ['bardo', 'feiticeiro', 'mago'] }, l: 'Até seis inimigos passam a fazer metade das coisas.', b: [
       '3º círculo · mago · feiticeiro',
       'Ação · alcance 36 m · duração 1 minuto',
       'Precisa de concentração e de material (uma gota de melaço).',
       'Até 6 criaturas num cubo de 12 m, salvaguarda de Sabedoria.',
       'Falhou: deslocamento pela metade, −2 na CA e em salvaguardas de Destreza, sem reação.',
       'E no turno dele: ou ação ou ação bônus, nunca as duas, e só um ataque. Magia somática tem 25% de falhar.'] },
-    mag_linguas: { t: 'Línguas', l: 'Entende e é entendido em qualquer idioma, por uma hora.', b: [
+    mag_linguas: { t: 'Línguas', tag: { tipo: 'magia', circulo: 3, classes: ['bardo', 'bruxo', 'clerigo', 'feiticeiro', 'mago'] }, l: 'Entende e é entendido em qualquer idioma, por uma hora.', b: [
       '3º círculo · mago · feiticeiro',
       'Ação · alcance Toque · duração 1 hora',
       'Precisa de material (um zigurate em miniatura).',
       'O alvo entende qualquer idioma falado ou em sinais que ouça ou veja.',
       'E quem souber qualquer idioma entende o que ele fala.'] },
-    mag_medo: { t: 'Medo', l: 'Um cone de pânico: largam as armas e correm.', b: [
+    mag_medo: { t: 'Medo', tag: { tipo: 'magia', circulo: 3, classes: ['bardo', 'bruxo', 'feiticeiro', 'mago'] }, l: 'Um cone de pânico: largam as armas e correm.', b: [
       '3º círculo · mago · feiticeiro',
       'Ação · alcance Pessoal (cone de 9 m) · duração 1 minuto',
       'Precisa de concentração e de material (uma pena branca).',
       'Salvaguarda de Sabedoria ou larga o que está segurando e fica Amedrontado.',
       'Amedrontado assim, ele gasta o turno Correndo pra longe de você.',
       'Terminou o turno sem te ver? Repete a salvaguarda e pode se livrar.'] },
-    mag_montaria_fantasmagorica: { t: 'Montaria Fantasmagórica', l: 'Um cavalo quase real, por uma hora, de graça no ritual.', b: [
+    mag_montaria_fantasmagorica: { t: 'Montaria Fantasmagórica', tag: { tipo: 'magia', circulo: 3, classes: ['mago'] }, l: 'Um cavalo quase real, por uma hora, de graça no ritual.', b: [
       '3º círculo · mago',
       '1 minuto · alcance 9 m · duração 1 hora',
       'Precisa de ritual.',
       'Criatura Grande parecida com cavalo, já com sela, rédea e freio.',
       'O equipamento some em fumaça se levarem a mais de 3 m dela.'] },
-    mag_nevasca: { t: 'Nevasca', l: 'Granizo num cilindro que cega, atrasa e derruba.', b: [
+    mag_nevasca: { t: 'Nevasca', tag: { tipo: 'magia', circulo: 3, classes: ['druida', 'feiticeiro', 'mago'] }, l: 'Granizo num cilindro que cega, atrasa e derruba.', b: [
       '3º círculo · mago · feiticeiro',
       'Ação · alcance 45 m · duração 1 minuto',
       'Precisa de concentração e de material (um guarda-chuva em miniatura).',
       'Cilindro de 6 m de raio por 12 m de altura, Totalmente Obscurecido. Apaga chama exposta.',
       'Chão vira Terreno Difícil. Entrou ou começou o turno dentro: salvaguarda de Destreza ou fica Caído E perde a concentração.'] },
-    mag_nuvem_fetida: { t: 'Nuvem Fétida', l: 'Gás que tranca a ação de quem respira dentro.', b: [
+    mag_nuvem_fetida: { t: 'Nuvem Fétida', tag: { tipo: 'magia', circulo: 3, classes: ['bardo', 'feiticeiro', 'mago'] }, l: 'Gás que tranca a ação de quem respira dentro.', b: [
       '3º círculo · mago · feiticeiro',
       'Ação · alcance 27 m · duração 1 minuto',
       'Precisa de concentração e de material (um ovo podre).',
       'Esfera de 6 m de raio, Totalmente Obscurecida. Vento forte dispersa.',
       'Começou o turno lá dentro: salvaguarda de Constituição ou fica Envenenado e NÃO executa ação nem ação bônus naquele turno.'] },
-    mag_padrao_hipnotico: { t: 'Padrão Hipnótico', l: 'Um padrão de cores que congela quem olhar.', b: [
+    mag_padrao_hipnotico: { t: 'Padrão Hipnótico', tag: { tipo: 'magia', circulo: 3, classes: ['bardo', 'bruxo', 'feiticeiro', 'mago'] }, l: 'Um padrão de cores que congela quem olhar.', b: [
       '3º círculo · mago · feiticeiro',
       'Ação · alcance 36 m · duração 1 minuto',
       'Precisa de concentração e de material (uma pitada de confete). Não tem componente verbal.',
       'Cubo de 9 m. Quem vê: salvaguarda de Sabedoria ou fica Enfeitiçado, Incapacitado e com deslocamento 0.',
       'Acaba se levar dano ou se alguém gastar uma ação pra sacudir.'] },
-    mag_refugio_leomund: { t: 'Pequeno Refúgio de Leomund', l: 'Uma bolha de 3 m onde o grupo descansa em paz.', b: [
+    mag_refugio_leomund: { t: 'Pequeno Refúgio de Leomund', tag: { tipo: 'magia', circulo: 3, classes: ['bardo', 'mago'] }, l: 'Uma bolha de 3 m onde o grupo descansa em paz.', b: [
       '3º círculo · mago',
       '1 minuto · alcance Pessoal · duração 8 horas',
       'Precisa de ritual e de material (uma conta de cristal).',
       'Emanação de 3 m que não sai do lugar. Quem estava dentro na conjuração entra e sai; o resto não atravessa.',
       'Magia de 3º círculo ou menor não atravessa, nem de dentro pra fora nem o contrário.'] },
-    mag_piscar: { t: 'Piscar', l: 'Você some pro Etéreo e volta, sem controlar quando.', b: [
+    mag_piscar: { t: 'Piscar', tag: { tipo: 'magia', circulo: 3, classes: ['feiticeiro', 'mago'] }, l: 'Você some pro Etéreo e volta, sem controlar quando.', b: [
       '3º círculo · mago · feiticeiro',
       'Ação · alcance Pessoal · duração 1 minuto',
       'Role 1d6 no fim de cada turno seu: 4 a 6 e você vai pro Plano Etéreo.',
       'De lá você vê o plano de origem em tons de cinza, até 18 m, e quase nada te alcança.',
       'Não precisa de concentração.'] },
-    mag_protecao_energia: { t: 'Proteção Contra Energia', l: 'Resistência a um tipo de dano elemental, por uma hora.', b: [
+    mag_protecao_energia: { t: 'Proteção Contra Energia', tag: { tipo: 'magia', circulo: 3, classes: ['clerigo', 'druida', 'feiticeiro', 'guardiao', 'mago'] }, l: 'Resistência a um tipo de dano elemental, por uma hora.', b: [
       '3º círculo · mago · feiticeiro',
       'Ação · alcance Toque · duração 1 hora',
       'Precisa de concentração.',
       'Escolhe um: ácido, elétrico, gélido, ígneo ou trovejante. O alvo fica com Resistência a ele.'] },
-    mag_relampago: { t: 'Relâmpago', l: 'Uma linha de 30 m que atravessa a fila inteira.', b: [
+    mag_relampago: { t: 'Relâmpago', tag: { tipo: 'magia', circulo: 3, classes: ['feiticeiro', 'mago'] }, l: 'Uma linha de 30 m que atravessa a fila inteira.', b: [
       '3º círculo · mago · feiticeiro',
       'Ação · alcance Pessoal (linha de 30 m por 1,5 m) · duração Instantânea',
       'Precisa de material (um pouco de pelo e um cajado de cristal).',
       '8d6 de elétrico, salvaguarda de Destreza pra metade. Sobe 1d6 por círculo acima do 3º.'] },
-    mag_remeter: { t: 'Remeter', l: 'Um recado de 25 palavras pra qualquer lugar, até em outro plano.', b: [
+    mag_remeter: { t: 'Remeter', tag: { tipo: 'magia', circulo: 3, classes: ['bardo', 'clerigo', 'mago'] }, l: 'Um recado de 25 palavras pra qualquer lugar, até em outro plano.', b: [
       '3º círculo · mago',
       'Ação · alcance Ilimitado · duração Instantânea',
       'Precisa de material (um fio de cobre).',
       'Precisa ser alguém que você já encontrou, ou que te descreveram. Ele pode responder na hora.',
       'Em outro plano, 5% de chance de não chegar.'] },
-    mag_remover_maldicao: { t: 'Remover Maldição', l: 'Tira a maldição de uma criatura ou solta o item amaldiçoado.', b: [
+    mag_remover_maldicao: { t: 'Remover Maldição', tag: { tipo: 'magia', circulo: 3, classes: ['bruxo', 'clerigo', 'mago', 'paladino'] }, l: 'Tira a maldição de uma criatura ou solta o item amaldiçoado.', b: [
       '3º círculo · mago',
       'Ação · alcance Toque · duração Instantânea',
       'Em criatura, acaba com todas as maldições nela.',
       'Em item amaldiçoado, a maldição continua — mas quebra a sintonia e dá pra largar o troço.'] },
-    mag_respirar_agua: { t: 'Respirar na Água', l: 'Dez pessoas respirando embaixo da água por um dia.', b: [
+    mag_respirar_agua: { t: 'Respirar na Água', tag: { tipo: 'magia', circulo: 3, classes: ['druida', 'feiticeiro', 'guardiao', 'mago'] }, l: 'Dez pessoas respirando embaixo da água por um dia.', b: [
       '3º círculo · mago · feiticeiro',
       'Ação · alcance 9 m · duração 24 horas',
       'Precisa de ritual e de material (um pedaço de junco).',
       'Até dez criaturas voluntárias, e elas continuam respirando normal fora da água.'] },
-    mag_rogar_maldicao: { t: 'Rogar Maldição', l: 'Uma maldição à sua escolha, por um minuto.', b: [
+    mag_rogar_maldicao: { t: 'Rogar Maldição', tag: { tipo: 'magia', circulo: 3, classes: ['bardo', 'clerigo', 'mago'] }, l: 'Uma maldição à sua escolha, por um minuto.', b: [
       '3º círculo · mago',
       'Ação · alcance Toque · duração 1 minuto',
       'Precisa de concentração.',
       'Salvaguarda de Sabedoria. Falhou, você escolhe um efeito: desvantagem num atributo, desvantagem nos ataques contra você, ou ele perde o turno às vezes.',
       'Com espaço maior a duração sobe e deixa de precisar de concentração.'] },
-    mag_simular_morte: { t: 'Simular Morte', l: 'O alvo parece morto de verdade, por uma hora.', b: [
+    mag_simular_morte: { t: 'Simular Morte', tag: { tipo: 'magia', circulo: 3, classes: ['bardo', 'clerigo', 'druida', 'mago'] }, l: 'O alvo parece morto de verdade, por uma hora.', b: [
       '3º círculo · mago',
       'Ação · alcance Toque · duração 1 hora',
       'Precisa de ritual e de material (uma pitada de terra de cemitério).',
       'Nem inspeção nem magia de detecção percebem. Ele fica Cego, Incapacitado e com deslocamento 0.',
       'Ganha resistência a tudo menos psíquico, e imunidade a Envenenado.'] },
-    mag_toque_vampirico: { t: 'Toque Vampírico', l: 'Suga a vida do inimigo e cura metade em você.', b: [
+    mag_toque_vampirico: { t: 'Toque Vampírico', tag: { tipo: 'magia', circulo: 3, classes: ['bruxo', 'feiticeiro', 'mago'] }, l: 'Suga a vida do inimigo e cura metade em você.', b: [
       '3º círculo · mago · feiticeiro',
       'Ação · alcance Pessoal · duração 1 minuto',
       'Precisa de concentração.',
       'Ataque mágico corpo a corpo: 3d6 de necrótico, e você cura metade do dano causado.',
       'Dá pra repetir o ataque com uma ação em cada turno seu, no mesmo alvo ou em outro.'] },
-    mag_voo: { t: 'Voo', l: 'Deslocamento de voo de 18 m por dez minutos.', b: [
+    mag_voo: { t: 'Voo', tag: { tipo: 'magia', circulo: 3, classes: ['bruxo', 'feiticeiro', 'mago'] }, l: 'Deslocamento de voo de 18 m por dez minutos.', b: [
       '3º círculo · mago · feiticeiro',
       'Ação · alcance Toque · duração 10 minutos',
       'Precisa de concentração e de material (uma pena).',
@@ -2955,6 +2955,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     cls_mago_aumento_atributo: { t: 'Aumento no Valor de Atributo', l: 'Nível 4 do Mago: aumento de atributo ou outro talento.', tag: { tipo: 'caracteristica', nivel: [4, 8, 12, 16], classes: ['mago'] }, b: [
       'Você adquire o talento [[tal_aumento_no_valor_de_atributo|Aumento no Valor de Atributo]], ou outro talento à sua escolha para o qual atende os pré-requisitos.',
       'Você adquire essa característica de novo nos níveis 8, 12 e 16 de Mago.'] },
+    cls_memorizar_magia: { t: 'Memorizar Magia', l: 'Troca uma magia preparada por outra do livro, no descanso curto.', tag: { tipo: 'caracteristica', nivel: 5, classes: ['mago'] }, b: [
+      'Ao completar um descanso curto, você pode estudar seu livro de magias e substituir uma das magias de Mago de 1º círculo ou superior que preparou por outra magia de 1º círculo ou superior do livro.'] },
     cls_guerreiro_aumento_atributo: { t: 'Aumento no Valor de Atributo', l: 'Nível 4 do Guerreiro: aumento de atributo ou outro talento.', tag: { tipo: 'caracteristica', nivel: [4, 6, 8, 12, 14, 16], classes: ['guerreiro'] }, b: [
       'Você adquire o talento [[tal_aumento_no_valor_de_atributo|Aumento no Valor de Atributo]], ou outro talento à sua escolha para o qual atende os pré-requisitos.',
       'Você adquire essa característica de novo nos níveis 6, 8, 12, 14 e 16 de Guerreiro.'] },
