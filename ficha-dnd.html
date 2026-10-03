@@ -2653,7 +2653,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     // ── Grau 2: as subclasses, por classe ─────────────────────────────
     // Na 5.5 TODAS chegam no nível 3, então aqui não há o que aplicar
     // antes disso: a lista serve pra escolher com antecedência.
-    sub_barbaro: { t: 'Bárbaro', l: 'Trilhas do bárbaro, escolhidos no nível 3.', b: [
+    sub_barbaro: { t: 'Bárbaro', tag: { tipo: 'caracteristica', nivel: 3, classes: ['barbaro'] }, l: 'Trilhas do bárbaro, escolhidos no nível 3.', b: [
       '[[sbc_berserker|Trilha do Berserker]] — Fúria bruta, sem filtro: quem ataca de peito aberto bate muito mais.',
       '[[sbc_coracao_selvagem|Trilha do Coração Selvagem]] — Chama o espírito de bichos e empresta o que eles têm de melhor.',
       '[[sbc_arvore_mundo|Trilha da Árvore do Mundo]] — Puxa vida e espaço da árvore que liga os planos.',
@@ -2668,10 +2668,14 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     sbc_arvore_mundo: { t: 'Trilha da Árvore do Mundo', l: 'Puxa vida e espaço da árvore que liga os planos.', b: [
       'Novidade da 5.5: PV temporários pra você e pro grupo; mais adiante puxa inimigo pra perto e teleporta.',
       'Nível 3 — Vitalidade da Árvore: ao entrar em [[cls_furia|fúria]], PV temporários iguais ao seu nível de bárbaro. E no começo de cada turno em fúria, um aliado a até 3 m ganha PV temporários — d6 igual ao seu bônus de dano da fúria.'] },
-    sbc_fanatico: { t: 'Trilha do Fanático', l: 'Fúria divina: bate com dano sagrado e se cura no meio da briga.', b: [
-      'O bárbaro que mais aguenta sozinho.',
-      'Nível 3 — Fúria Divina: em [[cls_furia|fúria]], o primeiro alvo que você acerta no turno leva 1d6 + metade do seu nível de bárbaro, radiante ou necrótico, à sua escolha.',
-      'Nível 3 — Guerreiro dos Deuses: uma reserva de quatro d12 pra se curar com [[cnc_acao_bonus|ação bônus]]; volta cheia no [[cnc_descanso|descanso longo]].'] },
+    sbc_fanatico: { t: 'Trilha do Fanático', l: 'Fúria em êxtase com um deus.', tag: { tipo: 'subclasse', nivel: 3, classes: ['barbaro'], subclasse: 'fanatico' }, mais: 'Ver as características', lista: ['cls_fanatico_campeao_deuses', 'cls_fanatico_furia_divina'], b: [
+      'Bárbaros que seguem a Trilha do Fanático recebem bênçãos de um deus ou panteão. Experimentam a Fúria como um episódio extático de união divina.'] },
+    cls_fanatico_campeao_deuses: { t: 'Campeão dos Deuses', l: 'Uma reserva de quatro d12 para se curar.', tag: { tipo: 'subclasse', nivel: 3, classes: ['barbaro'], subclasse: 'fanatico' }, b: [
+      'Você tem uma reserva de quatro d12 que pode gastar para se curar. Com ação bônus, você gasta dados da reserva, joga e recupera PV igual ao total.',
+      'A reserva restaura todos os dados gastos no descanso longo. O número máximo de dados aumenta em um nos níveis 6 (5 dados), 12 (6 dados) e 17 (7 dados).'] },
+    cls_fanatico_furia_divina: { t: 'Fúria Divina', l: 'Dano extra no primeiro alvo que você atinge a cada turno.', tag: { tipo: 'subclasse', nivel: 3, classes: ['barbaro'], subclasse: 'fanatico' }, b: [
+      'Em cada turno, enquanto a Fúria está ativa, a primeira criatura que você atinge com arma ou Ataque Desarmado sofre 1d6 + metade do seu nível de Bárbaro (arredondado para baixo) de dano adicional.',
+      'O dano adicional é Necrótico ou Radiante, à sua escolha, cada vez que causa dano.'] },
     sub_bardo: { t: 'Bardo', l: 'Colégios do bardo, escolhidos no nível 3.', b: [
       '[[sbc_conhecimento|Colégio do Conhecimento]] — O bardo que sabe de tudo e rouba magia das outras classes.',
       '[[sbc_bravura|Colégio da Bravura]] — O bardo que entra na linha de frente.',
@@ -2883,7 +2887,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Nível 3 — Atleta Sem Igual e Golpe Inspirador: depois de castigar, reparte PV temporários pelo grupo.'] },
 
     // ── o que cada classe entrega no nível 1 ──────────────────────────
-    cls_furia: { t: 'Fúria', l: 'O bárbaro liga o motor: mais dano, menos dano recebido.', b: [
+    cls_furia: { t: 'Fúria', l: 'Força primitiva que concede força e resiliência extraordinárias.', tag: { tipo: 'caracteristica', nivel: 1, classes: ['barbaro'] }, b: [
       'Entra em fúria com uma [[cnc_acao_bonus|ação bônus]], sem armadura pesada. Dois usos no nível 1: volta um no [[cnc_descanso|descanso curto]] e todos no longo.',
       '+2 de dano nos ataques que usam Força (com arma ou desarmado), resistência a dano cortante, perfurante e contundente, e vantagem em testes e salvaguardas de Força.',
       'Enquanto dura, não dá pra conjurar nem manter concentração.',
@@ -2957,10 +2961,10 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Dura um número de horas igual à metade do seu nível de druida, e você ganha PV temporários iguais ao seu nível de druida.',
       'A cabeça continua sua: Inteligência, Sabedoria, Carisma e proficiências não mudam. Não dá pra conjurar na forma, mas a concentração que já estava rolando continua.',
       'No nível 2 você conhece 4 formas de fera de ND até 1/4 e sem voo. Os círculos da Lua, do Mar, da Terra e das Estrelas gastam usos dela nos poderes deles.'] },
-    cls_ataque_imprudente: { t: 'Ataque Imprudente', l: 'Nível 2 do bárbaro: acerta mais — e apanha mais.', b: [
+    cls_ataque_imprudente: { t: 'Ataque Imprudente', tag: { tipo: 'caracteristica', nivel: 2, classes: ['barbaro'] }, l: 'Vantagem nos seus ataques com Força, e os ataques contra você também.', b: [
       'No primeiro ataque do seu turno você decide atacar de peito aberto.',
       'Até o começo do seu próximo turno, vantagem nos seus ataques com Força — e os ataques contra você também têm vantagem.',
-      'O Trilha do Berserker vive disso: o Frenesi só dispara com ele.'] },
+      'A Trilha do Berserker depende disso: o Frenesi só dispara com ele.'] },
 
     // ── nível 1 que ainda não tinha item próprio, extraído do pacote de
     // cada classe (mesmo texto de sempre, só destacado pra dar pra buscar
@@ -2971,8 +2975,9 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     // tinham verbete próprio (cnc_estilo_luta, cnc_ataque_furtivo,
     // cnc_especialista, cnc_defesa_sem_armadura, mais completos que uma
     // versão nova aqui) — só faltava deixá-los aplicáveis, ver CLS_CNC.
-    cls_maestria_armas_2: { t: 'Maestria em Armas (2 armas)', l: 'Escolhe duas armas e usa o efeito extra delas sempre.', b: [
-      'Escolha 2 tipos de arma entre os que você é proficiente; enquanto empunhar uma delas, usa a maestria dela (ver o catálogo de armas).'] },
+    cls_maestria_armas_2: { t: 'Maestria em Armas (2 armas)', l: 'Dois tipos de armas com a maestria delas, trocáveis a cada descanso longo.', tag: { tipo: 'caracteristica', nivel: 1, classes: ['barbaro'] }, b: [
+      'Seu treinamento permite usar as propriedades de maestria com dois tipos de armas Corpo a Corpo Simples ou Marciais à sua escolha.',
+      'Sempre que completa um descanso longo, você pode trocar uma dessas escolhas de arma.'] },
     cls_maestria_armas_3: { t: 'Maestria em Armas (3 armas)', l: 'Três tipos de armas com a maestria delas, trocáveis a cada descanso longo.', tag: { tipo: 'caracteristica', nivel: 1, classes: ['guerreiro'] }, b: [
       'Seu treinamento permite usar as propriedades de maestria com três tipos de armas Simples ou Marciais à sua escolha.',
       'Sempre que completa um descanso longo, você pode trocar uma dessas escolhas de arma.'] },
@@ -2984,6 +2989,14 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'No seu turno, você pode executar uma ação adicional, exceto a ação Usar Magia.',
       'Depois de usar, só volta a poder no descanso curto ou longo.',
       'A partir do nível 17, você pode usar duas vezes antes de um descanso, mas só uma vez por turno.'] },
+    cls_sentido_perigo: { t: 'Sentido de Perigo', l: 'Vantagem em salvaguardas de Destreza.', tag: { tipo: 'caracteristica', nivel: 2, classes: ['barbaro'] }, b: [
+      'Você tem Vantagem em salvaguardas de Destreza, a menos que tenha a condição Incapacitado.'] },
+    cls_conhecimento_primordial: { t: 'Conhecimento Primordial', l: 'Uma perícia a mais, e o poder primitivo nos testes de perícia.', tag: { tipo: 'caracteristica', nivel: 3, classes: ['barbaro'] }, b: [
+      'Você adquire proficiência em outra perícia à sua escolha da lista de perícias disponíveis para Bárbaros no nível 1.',
+      'Enquanto a Fúria está ativa, testes de Acrobacia, Furtividade, Intimidação, Percepção ou Sobrevivência podem ser feitos com Força, mesmo que normalmente usem outro atributo.'] },
+    cls_barbaro_aumento_atributo: { t: 'Aumento no Valor de Atributo', l: 'Nível 4 do Bárbaro: aumento de atributo ou outro talento.', tag: { tipo: 'caracteristica', nivel: 4, classes: ['barbaro'] }, b: [
+      'Você adquire o talento [[tal_aumento_no_valor_de_atributo|Aumento no Valor de Atributo]], ou outro talento à sua escolha para o qual atende os pré-requisitos.',
+      'Você adquire essa característica de novo nos níveis 8, 12 e 16 de Bárbaro.'] },
     cls_mestre_estudioso_guerra: { t: 'Estudioso da Guerra', l: 'Uma ferramenta de artesão e uma perícia a mais.', tag: { tipo: 'caracteristica', nivel: 3, classes: ['guerreiro'], subclasse: 'mestre_batalha' }, b: [
       'Você adquire proficiência com um tipo de Ferramentas de Artesão à sua escolha.',
       'Você adquire proficiência em uma perícia à sua escolha entre as disponíveis para Guerreiros no nível 1.'] },
@@ -3084,7 +3097,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Não gasta [[slots|espaço de magia]] nenhum.',
       'Fica sempre conhecido — não precisa preparar.',
       'O dano de vários truques sobe sozinho nos níveis 5, 11 e 17.'] },
-    cnc_defesa_sem_armadura: { t: 'Defesa sem Armadura', l: 'A CA de quem luta sem armadura — e é diferente em cada classe.', b: [
+    cnc_defesa_sem_armadura: { t: 'Defesa sem Armadura', tag: { tipo: 'caracteristica', nivel: 1, classes: ['barbaro'] }, l: 'A CA de quem luta sem armadura — e é diferente em cada classe.', b: [
       'Bárbaro: 10 + Destreza + Constituição. Pode usar escudo junto.',
       'Monge: 10 + Destreza + Sabedoria. Não pode usar escudo.',
       'Vale só enquanto você não estiver vestindo armadura nenhuma.',
