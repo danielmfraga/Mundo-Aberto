@@ -4744,13 +4744,18 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   // o que vai pras colunas, além do sheet_data
   function nomeDoPersonagem() { return (texto('name') || '').trim() || 'Sem nome'; }
   function linhaDoPersonagem(dados) {
-    return {
+    var linha = {
       char_id: RID,
       name: nomeDoPersonagem(),
       img_url: retratoUrl || null,
-      sheet_data: dados,
-      space_id: ESP_PARAM || null
+      sheet_data: dados
     };
+    // O espaço (BOX) só entra na criação. Num personagem que já existe, gravar
+    // `space_id: ESP_PARAM || null` tirava ele do BOX toda vez que a ficha era
+    // aberta sem ?esp= (pela mesa, trama, link direto) e o mandava pra raiz.
+    // Quem muda de espaço é a lista de personagens ("Mover para espaço").
+    if (!existeNaTabela) linha.space_id = ESP_PARAM || null;
+    return linha;
   }
   function grava(dados, keepalive) {
     var linha = linhaDoPersonagem(dados);
@@ -6144,10 +6149,15 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   // Achou rascunho, ele abre normalmente e a primeira gravacao ja nasce na
   // tabela — a migracao acontece sozinha, sem ninguem perder nada.
   function carrega() {
-    return rest(TAB + '?char_id=eq.' + encodeURIComponent(RID) + '&select=sheet_data,sheet_data_v1&deleted_at=is.null', 'GET')
+    return rest(TAB + '?char_id=eq.' + encodeURIComponent(RID) + '&select=sheet_data,sheet_data_v1,space_id&deleted_at=is.null', 'GET')
       .then(function(linhas) {
         if (linhas && linhas.length) {
           existeNaTabela = true;
+          // aberta sem ?esp=: o Voltar ainda devolve pro BOX onde o personagem mora
+          if (!ESP_PARAM && linhas[0].space_id) {
+            var voltaBox = document.getElementById('backBtn');
+            if (voltaBox) voltaBox.href = 'personagens.html?esp=' + encodeURIComponent(linhas[0].space_id);
+          }
           return { existe: true, dados: linhas[0].sheet_data || {}, de: 'tabela' };
         }
         // nao esta na tabela: pode ser rascunho de antes
