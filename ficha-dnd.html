@@ -811,6 +811,12 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #e0b457;
 }
 .balao-mais:hover { background: rgba(224,180,87,0.08); border-style: solid; }
+.balao-add {
+  display: inline-block; margin: 8px 0 2px; padding: 3px 10px; border-radius: 999px; cursor: pointer;
+  font-family: var(--font-display); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: #e0b457; background: rgba(224,180,87,0.10); border: 1px solid rgba(224,180,87,0.45);
+}
+.balao-add:hover { background: rgba(224,180,87,0.22); color: #fff; }
 .balao-lista { margin-top: 9px; display: flex; flex-direction: column; }
 .balao-lista[hidden] { display: none; }
 .balao-item + .balao-item { border-top: 1px solid rgba(255,255,255,0.06); }
@@ -4160,11 +4166,31 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   }
   function fechaBalao() { balao.hidden = true; pilha = []; }
 
+  // Etiqueta "+ Anotar em Talentos" (ou o destino que for) — a mesma ação
+  // do botão direito, mas visível. Só aparece onde a ação existe.
+  function botaoAdd(chave) {
+    var dd = destinoDe(chave);
+    if (!dd || somenteLeitura) return null;
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'balao-add';
+    b.textContent = '+ ' + dd.r;
+    b.title = 'Pôr na ficha agora (também dá pra fazer pelo botão direito)';
+    b.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var feito = poeNaFicha(chave);
+      if (feito) { calcula(); marca(); avisa(feito); }
+    });
+    return b;
+  }
   function abre(chave, estado) {
     var d = AJUDA[chave];
     if (!d) return;
     balao.dataset.chave = chave;
     balaoT.textContent = d.t;
+    var velhoAdd = balao.querySelector(':scope > .balao-add');
+    if (velhoAdd) velhoAdd.remove();
+    var addTopo = botaoAdd(chave);
+    if (addTopo) balaoT.insertAdjacentElement('afterend', addTopo);
     balaoL.innerHTML = ''; balaoL.appendChild(comTags(d.l));
     bullets(balaoB, d.b);
 
@@ -4193,6 +4219,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
         l.className = 'balao-l'; l.appendChild(comTags(it.l));
         var ul = document.createElement('ul');
         bullets(ul, it.b);
+        var addItem = botaoAdd(k);
+        if (addItem) corpo.appendChild(addItem);
         corpo.appendChild(l); corpo.appendChild(ul);
         tt.addEventListener('click', function() {
           corpo.hidden = !corpo.hidden;
