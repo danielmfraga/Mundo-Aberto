@@ -1601,10 +1601,10 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Mesmo errando, causa metade do dano inicial.'] },
     mag_esfera_flamejante: { t: 'Esfera Flamejante', l: 'Uma bola de fogo que você empurra pelo campo a cada turno.', b: [
       '2º círculo · mago · feiticeiro · druida',
-      'Ação · alcance 18 m · duração 1 minuto',
-      'Precisa de concentração e de material (uma bola de cera).',
-      'Esfera de 1,5 m. Quem termina o turno a até 1,5 m dela: salvaguarda de Destreza, 2d6 de fogo ou metade.',
-      'Move 9 m com ação bônus, rolando pelo chão. Acende objeto solto que encostar.'] },
+      'Ação · alcance 18 m · duração Concentração, até 1 minuto',
+      'Precisa de material (uma bola de cera).',
+      'Esfera de 1,5 m. Quem termina o turno a até 1,5 m dela faz salvaguarda de Destreza: falhou, 2d6 de Ígneo; passou, metade.',
+      'Move 9 m com ação bônus, rolando pelo chão. Objetos inflamáveis que ela toca entram em combustão.'] },
     mag_cegueira_surdez: { t: 'Cegueira/Surdez', l: 'Cega ou ensurdece o alvo, à sua escolha.', b: [
       '2º círculo · mago · feiticeiro',
       'Ação · alcance 36 m · duração 1 minuto',
@@ -1624,7 +1624,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       '2º círculo · mago · feiticeiro · druida',
       'Ação · alcance Toque · duração 8 horas',
       'Precisa de material (uma cenoura seca).',
-      'Na 5.5 o alcance subiu pra 45 m. Resolve a vida do humano no grupo de meio-elfos.'] },
+      'A criatura tocada ganha Visão no Escuro com alcance de 45 m.'] },
     mag_lufada_vento: { t: 'Lufada de Vento', l: 'Um vendaval numa linha, que empurra e atrapalha.', b: [
       '2º círculo · mago · feiticeiro · druida',
       'Ação · alcance Pessoal (linha de 18 m por 3 m) · duração 1 minuto',
@@ -1680,48 +1680,66 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Antes de se mover, ele gasta a ação dele num ataque corpo a corpo contra quem você escolher.'] },
     mag_raio_lunar: { t: 'Raio Lunar', l: 'Uma coluna de luar que queima quem fica nela.', b: [
       '2º círculo · druida',
-      'Ação · alcance 36 m · duração 1 minuto',
-      'Precisa de concentração e de material (sementes de aipo e uma pedra da lua).',
-      '2d10 radiante, salvaguarda de Constituição; metamorfo rola com desvantagem.',
-      'Move 18 m por turno com uma ação.'] },
-    mag_aquecer_metal: { t: 'Aquecer Metal', l: 'Esquenta armadura ou arma até o sujeito largar.', b: [
+      'Ação · alcance 36 m · duração Concentração, até 1 minuto',
+      'Precisa de material (uma folha de dama-da-noite).',
+      'Cilindro de 1,5 m de raio e 12 m de altura, com Meia-luz. Quem está nele, ao ele surgir ou entrar ali, ou ao terminar o turno ali, faz salvaguarda de Constituição: falhou, 2d10 de Radiante; passou, metade. Se estiver multimorfado, reverte à forma verdadeira.',
+      'Com ação Usar Magia nos turnos seguintes, move o cilindro até 18 m.',
+      'Por círculo acima do 2º: +1d10.'] },
+    mag_esquentar_metal: { t: 'Esquentar Metal', l: 'Esquenta armadura ou arma até o sujeito largar.', b: [
       '2º círculo · druida',
-      'Ação · alcance 18 m · duração 1 minuto',
-      'Precisa de concentração e de material (um pedaço de ferro e uma chama).',
-      '2d8 de fogo na hora, e de novo a cada turno com uma ação bônus.',
-      'Quem está segurando faz salvaguarda de Constituição ou solta.'] },
-    mag_passos_sem_pegadas: { t: 'Passos sem Pegadas', l: '+10 em Furtividade pro grupo inteiro, e ninguém rastreia vocês.', b: [
+      'Ação · alcance 18 m · duração Concentração, até 1 minuto',
+      'Precisa de material (um pedaço de ferro e uma chama).',
+      '2d8 de Ígneo ao conjurar, e de novo a cada turno com ação bônus, enquanto o metal estiver no alcance.',
+      'Quem segura ou usa o objeto e sofre dano faz salvaguarda de Constituição ou solta o objeto; se não soltar, tem Desvantagem em ataques e testes de atributo até o início do próximo turno.',
+      'Por círculo acima do 2º: +1d8.'] },
+    mag_passo_sem_rastro: { t: 'Passo Sem Rastro', l: 'Ocultação: +10 em Furtividade e nenhum rastro para você e aliados escolhidos.', b: [
       '2º círculo · druida',
-      'Ação · alcance Pessoal (9 m) · duração 1 hora',
-      'Precisa de concentração e de material (cinza e visco).',
-      'É a magia que transforma um grupo barulhento em infiltrador.'] },
-    mag_crescimento_espinhoso: { t: 'Crescimento Espinhoso', l: 'O chão vira espinho: cada metro andado dói.', b: [
+      'Ação · alcance Pessoal (emanação de 9 m) · duração Concentração, até 1 hora',
+      'Precisa de material (cinzas de ramo de visco queimado).',
+      'Você e cada criatura escolhida na aura têm +10 em Destreza (Furtividade) e não deixam rastros.'] },
+    mag_crescer_espinhos: { t: 'Crescer Espinhos', l: 'O chão vira espinho: cada metro andado dói.', b: [
       '2º círculo · druida',
-      'Ação · alcance 45 m · duração 10 minutos',
-      'Precisa de concentração e de material (sete espinhos).',
-      '2d4 perfurante a cada 1,5 m andados na área.',
-      'A área também vira terreno difícil, e é disfarçada de mato comum.'] },
+      'Ação · alcance 45 m · duração Concentração, até 10 minutos',
+      'Precisa de material (sete espinhos).',
+      'Esfera de 6 m de raio vira Terreno Difícil, e quem entra ou anda ali sofre 2d4 de Perfurante a cada 1,5 m percorrido.',
+      'O terreno parece natural: quem não o vê precisa de um teste de Sabedoria (Percepção ou Sobrevivência) contra a CD para reconhecer o perigo antes de entrar.'] },
     mag_restauracao_menor: { t: 'Restauração Menor', l: 'Tira uma doença ou uma condição do aliado.', b: [
       '2º círculo · druida',
-      'Ação · alcance Toque · duração Instantânea',
-      'Cego, surdo, paralisado ou envenenado — escolhe uma.'] },
-    mag_pele_arvore: { t: 'Pele de Árvore', l: 'A CA do alvo nunca fica abaixo de 17.', b: [
+      'Ação bônus · alcance Toque · duração Instantânea',
+      'Remove uma condição de uma criatura tocada: Cego, Envenenado, Paralisado ou Surdo.'] },
+    mag_pele_casca: { t: 'Pele-Casca', l: 'A pele do alvo vira casca, com CA mínima de 17.', b: [
       '2º círculo · druida',
       'Ação bônus · alcance Toque · duração 1 hora',
-      'Precisa de concentração e de material (um punhado de casca de carvalho).',
-      'Vale só se a CA dele já não for maior que isso.'] },
+      'Precisa de material (um punhado de casca de árvore).',
+      'Criatura voluntária tocada: se a CA dela for menor que 17, passa a ser 17.'] },
     mag_lamina_flamejante: { t: 'Lâmina Flamejante', l: 'Uma espada de fogo na mão do druida.', b: [
+      '2º círculo · feiticeiro · druida',
+      'Ação bônus · alcance Pessoal · duração Concentração, até 10 minutos',
+      'Precisa de material (uma folha de sumagre).',
+      'Com ação Usar Magia, ataque mágico corpo a corpo: acertou, 3d6 de Ígneo mais seu modificador de atributo de conjuração. Ilumina em 3 m e Meia-luz em mais 3 m.',
+      'Por círculo acima do 2º: +1d6.'] },
+    mag_auxilio: { t: 'Auxílio', l: 'Dá 5 PV máximos e atuais a até três criaturas.', b: [
       '2º círculo · druida',
-      'Ação bônus · alcance Pessoal · duração 10 minutos',
-      'Precisa de concentração e de material (folha de sumagre).',
-      '3d6 de fogo no acerto; o ataque usa o atributo de conjuração.',
-      'Também ilumina como tocha.'] },
+      'Ação · alcance 9 m · duração 8 horas',
+      'Precisa de material (uma tira de pano branco).',
+      'Até três criaturas à sua escolha têm +5 nos PV máximos e atuais pela duração.',
+      'Por círculo acima do 2º: +5 PV para cada criatura.'] },
+    mag_encontrar_armadilhas: { t: 'Encontrar Armadilhas', l: 'Sente armadilhas à vista, mas não onde elas estão.', b: [
+      '2º círculo · druida',
+      'Ação · alcance 36 m · duração Instantânea',
+      'Revela que existe uma armadilha (objeto ou mecanismo feito para causar dano) e a natureza geral do perigo, mas não a localização.',
+      'Não revela perigos naturais, como um teto instável ou um sumidouro escondido.'] },
+    mag_localizar_animais_plantas: { t: 'Localizar Animais ou Plantas', l: 'Aponta a Fera ou planta mais próxima do tipo que você descreve.', b: [
+      '2º círculo · druida',
+      'Ação ou ritual · alcance Pessoal · duração Instantânea',
+      'Precisa de material (pelo de um cão de caça).',
+      'Descreve ou nomeia uma Fera, Planta ou planta não mágica: você descobre a direção e a distância até a mais próxima, a até 8 km.'] },
     mag_aprimorar_atributo: { t: 'Aprimorar Atributo', l: 'Vantagem em todos os testes de um atributo, por uma hora.', b: [
       '2º círculo · mago · feiticeiro · druida',
       'Ação · alcance Toque · duração 1 hora',
       'Precisa de concentração e de material (pelo ou uma pena).',
-      'Escolhe um atributo: o alvo fica com vantagem nos testes DESSE atributo.',
-      'Na 5.5 é só isso — saiu o PV temporário da Constituição e a carga dobrada da Força.'] },
+      'Você escolhe Força, Destreza, Inteligência, Sabedoria ou Carisma: o alvo tem vantagem nos testes desse atributo.',
+      'Por círculo acima do 2º: +1 criatura, cada uma com um atributo diferente.'] },
     mag_augurio: { t: 'Augúrio', l: 'Pergunta ao além se o plano dos próximos 30 minutos vai dar certo.', b: [
       '2º círculo · mago',
       '1 minuto · alcance Pessoal · duração Instantânea',
@@ -1949,28 +1967,28 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Precisa de concentração e de material (uma pena).',
       'Voo de 18 m e dá pra pairar. Acabou a magia no alto, cai.',
       'Uma criatura a mais por círculo acima do 3º.'] },
-    mag_invocar_besta: { t: 'Invocar Besta', l: 'Chama um espírito animal que luta com você.', b: [
+    mag_invocar_fera: { t: 'Invocar Fera', l: 'Chama um Espírito Bestial que luta ao seu lado.', b: [
       '2º círculo · druida',
-      'Ação · alcance 27 m · duração 1 hora',
-      'Precisa de concentração e de material (uma pena de ouro de 200 po).',
-      'Terra, mar ou céu — muda o deslocamento e o ataque.',
-      'Age no seu turno e obedece ordens.'] },
-    mag_protecao_veneno: { t: 'Proteção contra Veneno', l: 'Neutraliza um veneno e blinda contra outros.', b: [
+      'Ação · alcance 27 m · duração Concentração, até 1 hora',
+      'Precisa de material (pluma, tufo de pele e rabo de peixe dentro de uma bolota dourada de 200 PO ou mais).',
+      'Invoca um Espírito Bestial: escolha Água, Ar ou Terra, e ele assume a forma de um animal nativo desse ambiente. Desaparece ao cair a 0 PV ou quando a magia termina.',
+      'Compartilha sua Iniciativa, mas age logo depois de você, e obedece aos seus comandos verbais. Sem comando, executa Esquivar.',
+      'Por círculo acima do 2º: use o círculo do espaço no bloco de estatísticas.'] },
+    mag_protecao_veneno: { t: 'Proteção Contra Veneno', l: 'Encerra o Envenenado e blinda contra veneno por uma hora.', b: [
       '2º círculo · druida',
       'Ação · alcance Toque · duração 1 hora',
-      'Vantagem em salvaguardas contra veneno e resistência ao dano.'] },
+      'Encerra a condição Envenenado de uma criatura tocada. Pela duração, ela tem Vantagem em salvaguardas para evitar ou encerrar Envenenado e Resistência a dano Venenoso.'] },
     mag_mensageiro_animal: { t: 'Mensageiro Animal', l: 'Um bichinho leva recado pra alguém longe.', b: [
       '2º círculo · druida',
-      'Ação · alcance 9 m · duração 24 horas',
-      'Precisa de ritual e de material (um pedaço de comida).',
-      'Até 80 km; ele acha o destinatário sozinho.',
-      'Ritual.'] },
-    mag_sentidos_animais: { t: 'Sentidos Animais', l: 'Você enxerga e ouve pelos sentidos de um bicho.', b: [
+      'Ação ou ritual · alcance 9 m · duração 24 horas',
+      'Precisa de material (um bocado de comida).',
+      'Uma Besta Minúscula faz salvaguarda de Carisma (automática se o ND dela for 0) ou leva sua mensagem de até 25 palavras a um destinatário que você descreve, num local que visitou.',
+      'Viaja cerca de 40 km por dia (80 km se puder voar).'] },
+    mag_sentido_feral: { t: 'Sentido Feral', l: 'Você percebe pelos sentidos de uma Fera tocada.', b: [
       '2º círculo · druida',
-      'Ação · alcance Toque · duração 1 hora',
-      'Precisa de concentração e de ritual.',
-      'Seu corpo fica cego e surdo enquanto isso.',
-      'Ritual.'] },
+      'Ação ou ritual · alcance Toque · duração Concentração, até 1 hora',
+      'Somente gesto (sem fala nem material).',
+      'Você toca uma Fera voluntária e percebe pelos sentidos dela, além dos seus, e se beneficia dos sentidos especiais que ela tiver.'] },
 
     c2_mago: { t: '2º Círculo de Mago', l: 'As 39 magias de 2º círculo que o mago pode preparar.', b: [
       '[[mag_passo_nebuloso|Passo Nebuloso]] — Teleporte curto como ação bônus — a magia que mais salva vida.',
@@ -2072,24 +2090,30 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       '[[mag_nuvem_adagas|Nuvem de Adagas]] — Um cubo de lâminas girando onde você quiser.',
       '[[mag_coroa_loucura|Coroa da Loucura]] — O alvo ataca quem você mandar.',
       '[[mag_aprimorar_atributo|Aprimorar Atributo]] — Vantagem em todos os testes de um atributo, por uma hora.'] },
-    c2_druida: { t: '2º Círculo de Druida', l: 'As 17 magias de 2º círculo que o druida pode preparar.', b: [
-      '[[mag_paralisar_pessoa|Paralisar Pessoa]] — Paralisa um humanoide — e quem bate nele de perto crita automático.',
-      '[[mag_despedacar|Despedaçar]] — Um estouro que racha vidro, osso e pedra.',
-      '[[mag_esfera_flamejante|Esfera Flamejante]] — Uma bola de fogo que você empurra pelo campo a cada turno.',
-      '[[mag_visao_escuro|Visão no Escuro]] — Dá visão no escuro de 45 m pra quem não tem.',
-      '[[mag_lufada_vento|Lufada de Vento]] — Um vendaval numa linha, que empurra e atrapalha.',
-      '[[mag_raio_lunar|Raio Lunar]] — Uma coluna de luar que queima quem fica nela.',
-      '[[mag_aquecer_metal|Aquecer Metal]] — Esquenta armadura ou arma até o sujeito largar.',
-      '[[mag_passos_sem_pegadas|Passos sem Pegadas]] — +10 em Furtividade pro grupo inteiro, e ninguém rastreia vocês.',
-      '[[mag_crescimento_espinhoso|Crescimento Espinhoso]] — O chão vira espinho: cada metro andado dói.',
-      '[[mag_restauracao_menor|Restauração Menor]] — Tira uma doença ou uma condição do aliado.',
-      '[[mag_pele_arvore|Pele de Árvore]] — A CA do alvo nunca fica abaixo de 17.',
-      '[[mag_lamina_flamejante|Lâmina Flamejante]] — Uma espada de fogo na mão do druida.',
+    c2_druida: { t: '2º Círculo de Druida', l: 'As 23 magias de 2º círculo que o druida pode preparar.', b: [
       '[[mag_aprimorar_atributo|Aprimorar Atributo]] — Vantagem em todos os testes de um atributo, por uma hora.',
-      '[[mag_invocar_besta|Invocar Besta]] — Chama um espírito animal que luta com você.',
-      '[[mag_protecao_veneno|Proteção contra Veneno]] — Neutraliza um veneno e blinda contra outros.',
+      '[[mag_augurio|Augúrio]] — Pergunta ao além se o plano dos próximos 30 minutos vai dar certo.',
+      '[[mag_aumentar_reduzir|Aumentar/Reduzir]] — Dobra ou corta pela metade o tamanho do alvo.',
+      '[[mag_auxilio|Auxílio]] — Dá 5 PV máximos e atuais a até três criaturas.',
+      '[[mag_chama_continua|Chama Contínua]] — Uma tocha que nunca apaga e não esquenta.',
+      '[[mag_crescer_espinhos|Crescer Espinhos]] — O chão vira espinho: cada metro andado dói.',
+      '[[mag_encontrar_armadilhas|Encontrar Armadilhas]] — Sente armadilhas à vista, mas não onde elas estão.',
+      '[[mag_esfera_flamejante|Esfera Flamejante]] — Uma bola de fogo que você empurra pelo campo a cada turno.',
+      '[[mag_esquentar_metal|Esquentar Metal]] — Esquenta armadura ou arma até o sujeito largar.',
+      '[[mag_invocar_fera|Invocar Fera]] — Chama um Espírito Bestial que luta ao seu lado.',
+      '[[mag_lamina_flamejante|Lâmina Flamejante]] — Uma espada de fogo na mão do druida.',
+      '[[mag_localizar_animais_plantas|Localizar Animais ou Plantas]] — Aponta a Fera ou planta mais próxima do tipo que você descreve.',
+      '[[mag_localizar_objeto|Localizar Objeto]] — Aponta a direção de um objeto que você conhece, a até 300 m.',
+      '[[mag_lufada_vento|Lufada de Vento]] — Um vendaval numa linha, que empurra e atrapalha.',
       '[[mag_mensageiro_animal|Mensageiro Animal]] — Um bichinho leva recado pra alguém longe.',
-      '[[mag_sentidos_animais|Sentidos Animais]] — Você enxerga e ouve pelos sentidos de um bicho.'] },
+      '[[mag_paralisar_pessoa|Paralisar Pessoa]] — Paralisa um humanoide — e quem bate nele de perto crita automático.',
+      '[[mag_passo_sem_rastro|Passo Sem Rastro]] — Ocultação: +10 em Furtividade e nenhum rastro.',
+      '[[mag_pele_casca|Pele-Casca]] — A pele do alvo vira casca, com CA mínima de 17.',
+      '[[mag_protecao_veneno|Proteção Contra Veneno]] — Encerra o Envenenado e blinda contra veneno por uma hora.',
+      '[[mag_raio_lunar|Raio Lunar]] — Uma coluna de luar que queima quem fica nela.',
+      '[[mag_restauracao_menor|Restauração Menor]] — Remove Cego, Envenenado, Paralisado ou Surdo.',
+      '[[mag_sentido_feral|Sentido Feral]] — Você percebe pelos sentidos de uma Fera.',
+      '[[mag_visao_escuro|Visão no Escuro]] — Dá visão no escuro de 45 m pra quem não tem.'] },
 
     // ── 1º círculo: mago, feiticeiro e druida ─────────────────────────
     mag_misseis_magicos: { t: 'Mísseis Mágicos', l: 'Três dardos que NUNCA erram.', b: [
@@ -2626,7 +2650,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Nível 3 — Frenesi: em [[cls_furia|fúria]] e usando [[cls_ataque_imprudente|Ataque Imprudente]], o primeiro alvo que você acerta no turno leva d6 extras — tantos quanto o seu bônus de dano da fúria.'] },
     sbc_coracao_selvagem: { t: 'Trilha do Coração Selvagem', l: 'Chama o espírito de bichos e empresta o que eles têm de melhor.', b: [
       'Muda o que a fúria faz conforme o animal que você invoca.',
-      'Nível 3 — Voz dos Animais: [[mag_sentidos_animais|Sentidos Animais]] e [[mag_falar_com_animais|Falar com Animais]], só como ritual.',
+      'Nível 3 — Voz dos Animais: [[mag_sentido_feral|Sentidos Animais]] e [[mag_falar_com_animais|Falar com Animais]], só como ritual.',
       'Nível 3 — Fúria da Natureza: ao entrar em [[cls_furia|fúria]], escolhe um espírito. Urso: resistência a todo dano menos energia, necrótico, psíquico e radiante. Águia: Disparada e Desengajar juntos, com [[cnc_acao_bonus|ação bônus]]. Lobo: aliados têm vantagem contra inimigos que estejam do seu lado.'] },
     sbc_arvore_mundo: { t: 'Trilha da Árvore do Mundo', l: 'Puxa vida e espaço da árvore que liga os planos.', b: [
       'Novidade da 5.5: PV temporários pra você e pro grupo; mais adiante puxa inimigo pra perto e teleporta.',
@@ -2873,9 +2897,9 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     cls_inimigo_favorito: { t: 'Inimigo Favorito', l: 'Marca do Caçador de graça.', b: [
       'Você tem Marca do Caçador sempre preparada.',
       'Conjura sem gastar [[slots|espaço]], bônus de proficiência vezes por [[cnc_descanso|descanso longo]].'] },
-    cls_retomar_folego: { t: 'Retomar o Fôlego', l: 'O guerreiro se cura sozinho, no meio da briga.', b: [
+    cls_retomar_folego: { t: 'Recuperar Fôlego', l: 'O guerreiro se cura sozinho, no meio da briga.', b: [
       '[[cnc_acao_bonus|Ação bônus]]: cura 1d10 + seu nível de guerreiro.',
-      'Começa com dois usos, e eles voltam no [[cnc_descanso|descanso curto]].'] },
+      'Começa com dois usos: um volta no [[cnc_descanso|descanso curto]], e todos no [[cnc_descanso|descanso longo]].'] },
     cls_giria_ladrao: { t: 'Gíria de Ladrão', l: 'O idioma secreto do submundo.', b: [
       'Jargão, sinais e marcas que as guildas de ladrões usam pra se entender.',
       'Na 5.5 ela conta como um idioma — dos raros, como Druídico e Infernal. Quem não fala, não entende.',
@@ -3090,15 +3114,16 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Nível 1: Conjuração — magias de guardião, por Sabedoria',
       'Nível 1: Inimigo Favorito — Marca do Caçador sem gastar espaço, algumas vezes por descanso longo',
       'Nível 1: Maestria em Armas — escolhe 2 armas e usa a maestria delas'] },
-    cls_guerreiro: { t: 'Guerreiro', l: 'O ofício da luta, puro e simples. Aguenta e devolve.', b: [
+    cls_guerreiro: { t: 'Guerreiro', l: 'Dominam inúmeros campos de batalha, com armas e armaduras.', b: [
       'Dado de Vida: d10 · Atributo principal: Força ou Destreza',
       'Salvaguardas: Força e Constituição',
-      'Armaduras: todas, e escudos',
+      'Armaduras: leves, médias, pesadas e escudos',
       'Armas: simples e marciais',
-      'Perícias: 2 entre Acrobacia, Atletismo, História, Intimidação, Intuição, Lidar com Animais, Percepção e Sobrevivência',
-      'Nível 1: Estilo de Luta — um jeito de brigar que te dá bônus fixo (arquearia, defesa, duelo…)',
-      'Nível 1: Retomar o Fôlego — cura a si mesmo como ação bônus, algumas vezes por descanso',
-      'Nível 1: Maestria em Armas — escolhe 3 armas e usa a maestria delas'] },
+      'Perícias: 2 entre Acrobacia, Atletismo, História, Intimidação, Intuição, Lidar com Animais, Percepção, Persuasão e Sobrevivência',
+      'Nível 1: Estilo de Luta — um talento de Estilo de Luta à sua escolha; pode trocá-lo sempre que sobe de nível',
+      'Nível 1: [[cls_retomar_folego|Recuperar Fôlego]] — cura a si mesmo como ação bônus, algumas vezes por descanso',
+      'Nível 1: Maestria em Armas — três tipos de armas Simples ou Marciais, trocáveis a cada descanso longo',
+      'Equipamento inicial: (A) Cota de Malha, Espada Grande, Mangual, 8 Azagaias, Kit de Explorador de Masmorras e 4 PO; (B) Armadura de Couro Batido, Cimitarra, Espada Curta, Arco Longo, 20 Flechas, Aljava, Kit de Explorador de Masmorras e 11 PO; ou (C) 155 PO'] },
     cls_ladino: { t: 'Ladino', l: 'Precisão em vez de força: acerta onde dói e sai antes da resposta.', b: [
       'Dado de Vida: d8 · Atributo principal: Destreza',
       'Salvaguardas: Destreza e Inteligência',
@@ -3231,7 +3256,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     lin_elfo_floresta: { t: 'Elfo da Floresta', l: 'Elfo do mato: mais rápido e difícil de rastrear.', b: [
       'Deslocamento vai a 10,5 m.',
       'Truque: [[mag_arte_druidica|Arte Druídica]].',
-      'Nível 3: [[mag_passos_largos|Passos Largos]] · Nível 5: [[mag_passos_sem_pegadas|Passos sem Pegadas]].'] },
+      'Nível 3: [[mag_passos_largos|Passos Largos]] · Nível 5: [[mag_passo_sem_rastro|Passo Sem Rastro]].'] },
     lin_gnomica: { t: 'Linhagem Gnômica', l: 'O tipo de gnomo: da floresta ou das rochas.', b: [
       'Escolha uma ao criar o personagem. O atributo das magias dela é Inteligência, Sabedoria ou Carisma.'],
       mais: 'Ver as 2 linhagens', lista: ['lin_gnomo_floresta', 'lin_gnomo_rochas'] },
@@ -5489,7 +5514,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     ['Feitiçaria Inata', 'cls_feiticaria_inata'],
     ['Inimigo Favorito', 'cls_inimigo_favorito'],
     ['Adepto de Rituais', 'cls_adepto_rituais'],
-    ['Retomar o Fôlego', 'cls_retomar_folego'],
+    ['Recuperar Fôlego', 'cls_retomar_folego'],
     ['Ordem Primal', 'cls_ordem_primal'],
     ['Gíria de Ladrão', 'cls_giria_ladrao'],
     ['Artes Marciais', 'cls_artes_marciais'],
