@@ -3420,7 +3420,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       kit: [['adaga', 2], ['ferr_ladrao', 1], ['ferr_jogos', 1], ['algibeira', 2], ['roupas_viagem', 1], ['saco_dormir', 1]] },
     ant_artesao: { t: 'Artesão', l: 'Aprendeu um ofício de verdade: sabe fazer, consertar e reconhecer trabalho bem-feito.', b: [
       'Atributos: Força, Destreza, Inteligência',
-      'Talento: [[tal_artesao|Artesão]]',
+      'Talento: [[tal_artifista|Artifista]]',
       'Perícias: [[per_investigacao|Investigação]], [[per_persuasao|Persuasão]]',
       'Ferramenta: [[ferr_artesao|Ferramentas de Artesão]]',
       'Equipamento: (A) Ferramentas de Artesão (a mesma que acima), 2 Algibeiras, Roupas de Viagem e 32 PO; ou (B) 50 PO'],
@@ -3462,7 +3462,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       kit: [['ferr_caligrafia', 1], ['lampada', 1], ['oleo', 3], ['pergaminho', 12], ['roupas_finas', 1]] },
     ant_fazendeiro: { t: 'Fazendeiro', l: 'Terra, bicho e tempo ruim. Corpo endurecido por trabalho, não por treino.', b: [
       'Atributos: Força, Constituição, Sabedoria',
-      'Talento: [[tal_resistente|Resistente]]',
+      'Talento: [[tal_vigoroso|Vigoroso]]',
       'Perícias: [[per_lidar_com_animais|Lidar com Animais]], [[per_natureza|Natureza]]',
       'Ferramenta: [[ferr_carpinteiro|Ferramentas de Carpinteiro]]',
       'Equipamento: (A) Foice, Ferramentas de Carpinteiro, Kit de Curandeiro, Balde de Ferro, Pá e 30 PO; ou (B) 50 PO'],
@@ -3520,21 +3520,21 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     cnc_talento_origem: { t: 'Talento de Origem', l: 'O talento que já vem de fábrica, no nível 1 — antes de qualquer escolha de classe.', b: [
       'Todo antecedente entrega um. É o que mais muda a cara do personagem no começo.',
       'Ao contrário dos outros talentos, ele NÃO ocupa o lugar de um aumento de atributo.',
-      'São dez, todos pensados pra nível 1: [[tal_alerta|Alerta]], [[tal_artesao|Artesão]], [[tal_curandeiro|Curandeiro]], [[tal_sortudo|Sortudo]], [[tal_iniciado|Iniciado em Magia]], [[tal_musico|Músico]], [[tal_atacante|Atacante Selvagem]], [[tal_habilidoso|Habilidoso]], [[tal_valentao|Valentão de Taverna]] e [[tal_resistente|Resistente]].',
+      'São dez, todos pensados pra nível 1: [[tal_alerta|Alerta]], [[tal_artifista|Artifista]], [[tal_curandeiro|Curandeiro]], [[tal_sortudo|Sortudo]], [[tal_iniciado|Iniciado em Magia]], [[tal_musico|Músico]], [[tal_atacante|Atacante Selvagem]], [[tal_habilidoso|Habilidoso]], [[tal_valentao|Valentão de Taverna]] e [[tal_vigoroso|Vigoroso]].',
       'O Humano ganha um segundo, além do que o antecedente deu.'] },
 
     // ── Grau 3: talentos de origem ────────────────────────────────────
     tal_alerta: { t: 'Alerta', l: 'Você reage antes dos outros.', b: [
       'Soma o bônus de proficiência na iniciativa.',
-      'Depois de rolar, pode trocar a sua iniciativa com a de um aliado disposto.'] },
-    tal_artesao: { t: 'Artesão (talento)', l: 'Você fabrica e compra melhor que os outros.', b: [
-      'Proficiência com três instrumentos de artesão à sua escolha.',
-      'Desconto de 20% ao comprar equipamento não mágico.',
-      'No descanso longo, pode fabricar itens simples com o material à mão.'] },
-    tal_curandeiro: { t: 'Curandeiro', l: 'Você cura com um Kit de Curandeiro, sem gastar magia.', b: [
-      'Gastando um uso do kit, devolve 1d6 + bônus de proficiência PV a quem está caído ou ferido.',
-      'A mesma criatura só se beneficia de novo depois de um descanso.',
-      'Quando rola dados de cura, rola de novo qualquer 1.'] },
+      'Depois de rolar, pode trocar a sua iniciativa com a de um aliado disposto, no mesmo combate. Não dá se você ou ele estiver Incapacitado.'] },
+    tal_artifista: { t: 'Artifista', l: 'Fabrica e compra melhor que os outros.', b: [
+      'Proficiência com três Ferramentas de Artesão à sua escolha.',
+      'Desconto de 20% em todo item não mágico que você comprar.',
+      'Fabricação Rápida: no descanso longo, você fabrica uma peça da tabela, se tiver a ferramenta daquele item e proficiência com ela. A peça dura até o próximo descanso longo, quando se desfaz.',
+      'Carpinteiro: Escada, Tocha · Coureiro: Algibeira, Estojo · Entalhador: Cajado, Clava, Clava Grande · Ferreiro: Arpéu, Balde, Esferas de Metal, Estrepes, Panela de Ferro · Funileiro: Pederneira, Pá, Sino · Oleiro: Jarro, Lâmpada · Pedreiro: Roldana e Polias · Tecelão: Cesta, Corda, Rede, Tenda.'] },
+    tal_curandeiro: { t: 'Curandeiro', l: 'Cura com um Kit de Curandeiro, sem gastar magia.', b: [
+      'Médico de Combate: gastando um uso do kit, com ação Usar Objeto você cuida de uma criatura a até 1,5 m. Ela gasta um dos seus Dados de Vida, você joga esse dado, e ela recupera o resultado mais seu bônus de proficiência.',
+      'Cura Garantida: ao rolar dados para cura de magia ou do Médico de Combate, pode rolar de novo um 1, e fica com a nova jogada.'] },
     tal_sortudo: { t: 'Sortudo', l: 'Você tem pontos de sorte para gastar.', b: [
       'Pontos = bônus de proficiência, recuperados no descanso longo.',
       'Gaste um para rolar com vantagem, ou para dar desvantagem a quem ataca você.'] },
@@ -3546,17 +3546,20 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Repetível: pode pegar o talento de novo, mas com outra lista.'] },
     tal_musico: { t: 'Músico', l: 'Música que levanta o grupo.', b: [
       'Proficiência com três instrumentos musicais.',
-      'Ao terminar um descanso, dá [[inspiracao|Inspiração Heroica]] a aliados que ouviram você tocar, até o seu bônus de proficiência.'] },
+      'Canção Encorajadora: ao completar um descanso curto ou longo, toca um instrumento com que tem proficiência e dá [[inspiracao|Inspiração Heroica]] a aliados que ouvem, até o seu bônus de proficiência.'] },
     tal_atacante: { t: 'Atacante Selvagem', l: 'Quando acerta, acerta feio.', b: [
       'Uma vez por turno, rola de novo os dados de dano de um ataque com arma e escolhe qual resultado usar.'] },
     tal_habilidoso: { t: 'Habilidoso', l: 'Você aprendeu um pouco de tudo.', b: [
-      'Proficiência em três perícias ou ferramentas, à sua escolha, na combinação que quiser.'] },
+      'Proficiência em três perícias ou ferramentas, à sua escolha, na combinação que quiser.',
+      'Repetível: pode pegar este talento mais de uma vez.'] },
     tal_valentao: { t: 'Valentão de Taverna', l: 'Briga de bar: soco, banco na cabeça e empurrão.', b: [
-      'Seu ataque desarmado causa 1d4 em vez de 1 + Força.',
-      'Uma vez por turno, ao acertar desarmado, empurra o alvo 1,5 m.',
-      'Proficiência com armas improvisadas, e rola de novo qualquer 1 no dano delas.'] },
-    tal_resistente: { t: 'Resistente', l: 'Mais couro que os outros.', b: [
-      'Seus PV máximos sobem 2 por nível — e continuam subindo 2 a cada nível novo.'] },
+      'Ataque Desarmado Aprimorado: ao acertar com o desarmado, causa Contundente igual a 1d4 + Força, em vez do dano normal.',
+      'Dano Garantido: pode rolar de novo um 1 nos dados de dano do seu ataque desarmado, e fica com a nova jogada.',
+      'Armamento Improvisado: proficiência com armas improvisadas.',
+      'Empurrar: ao acertar uma criatura com ataque desarmado, na ação Atacar, causa o dano e empurra o alvo 1,5 m. Uma vez por turno.'] },
+    tal_vigoroso: { t: 'Vigoroso', l: 'Ganha Pontos de Vida a mais, de cara e a cada nível.', b: [
+      'Ao pegar o talento, os PV máximos sobem em um valor igual ao dobro do seu nível.',
+      'A cada nível de personagem depois disso, os PV máximos sobem 2.'] },
 
     // ── Grau 3: ferramentas (as 25 do livro; atributo, Usar Objeto e Fabricação do cap. 6) ──
     ferr_artesao: { t: 'Ferramentas de Artesão', l: 'O conjunto do ofício que você aprendeu.', b: [
