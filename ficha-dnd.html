@@ -2952,10 +2952,10 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     cls_academico: { t: 'Acadêmico', l: 'Especialidade em um campo de estudo do mago.', tag: { tipo: 'caracteristica', nivel: 2, classes: ['mago'] }, b: [
       'Escolha uma perícia em que você tem proficiência: Arcanismo, História, Investigação, Medicina, Natureza ou Religião.',
       'Você tem Especialização na perícia escolhida.'] },
-    cls_mago_aumento_atributo: { t: 'Aumento no Valor de Atributo', l: 'Nível 4 do Mago: aumento de atributo ou outro talento.', tag: { tipo: 'caracteristica', nivel: 4, classes: ['mago'] }, b: [
+    cls_mago_aumento_atributo: { t: 'Aumento no Valor de Atributo', l: 'Nível 4 do Mago: aumento de atributo ou outro talento.', tag: { tipo: 'caracteristica', nivel: [4, 8, 12, 16], classes: ['mago'] }, b: [
       'Você adquire o talento [[tal_aumento_no_valor_de_atributo|Aumento no Valor de Atributo]], ou outro talento à sua escolha para o qual atende os pré-requisitos.',
       'Você adquire essa característica de novo nos níveis 8, 12 e 16 de Mago.'] },
-    cls_guerreiro_aumento_atributo: { t: 'Aumento no Valor de Atributo', l: 'Nível 4 do Guerreiro: aumento de atributo ou outro talento.', tag: { tipo: 'caracteristica', nivel: 4, classes: ['guerreiro'] }, b: [
+    cls_guerreiro_aumento_atributo: { t: 'Aumento no Valor de Atributo', l: 'Nível 4 do Guerreiro: aumento de atributo ou outro talento.', tag: { tipo: 'caracteristica', nivel: [4, 6, 8, 12, 14, 16], classes: ['guerreiro'] }, b: [
       'Você adquire o talento [[tal_aumento_no_valor_de_atributo|Aumento no Valor de Atributo]], ou outro talento à sua escolha para o qual atende os pré-requisitos.',
       'Você adquire essa característica de novo nos níveis 6, 8, 12, 14 e 16 de Guerreiro.'] },
     cls_artes_marciais: { t: 'Artes Marciais', l: 'O corpo do monge vira arma de verdade.', b: [
@@ -2976,7 +2976,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Você pode invocar um espírito da natureza que assume a forma de um animal para auxiliá-lo.',
       'Como uma ação Usar Magia, você gasta um espaço de magia ou um uso de Forma Selvagem para conjurar Convocar Familiar sem componentes Materiais.',
       'Ao conjurar desse modo, o familiar é uma criatura Feérica e desaparece ao completar um descanso longo.'] },
-    cls_druida_aumento_atributo: { t: 'Aumento no Valor de Atributo', l: 'Nível 4 do Druida: aumento de atributo ou outro talento.', tag: { tipo: 'caracteristica', nivel: 4, classes: ['druida'] }, b: [
+    cls_druida_aumento_atributo: { t: 'Aumento no Valor de Atributo', l: 'Nível 4 do Druida: aumento de atributo ou outro talento.', tag: { tipo: 'caracteristica', nivel: [4, 8, 12, 16], classes: ['druida'] }, b: [
       'Você adquire o talento [[tal_aumento_no_valor_de_atributo|Aumento no Valor de Atributo]], ou outro talento à sua escolha para o qual atende os pré-requisitos.',
       'Você adquire essa característica de novo nos níveis 8, 12 e 16 de Druida.'] },
     cls_ataque_imprudente: { t: 'Ataque Imprudente', tag: { tipo: 'caracteristica', nivel: 2, classes: ['barbaro'] }, l: 'Vantagem nos seus ataques com Força, e os ataques contra você também.', b: [
@@ -3016,7 +3016,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     cls_conhecimento_primordial: { t: 'Conhecimento Primordial', l: 'Uma perícia a mais, e o poder primitivo nos testes de perícia.', tag: { tipo: 'caracteristica', nivel: 3, classes: ['barbaro'] }, b: [
       'Você adquire proficiência em outra perícia à sua escolha da lista de perícias disponíveis para Bárbaros no nível 1.',
       'Enquanto a Fúria está ativa, testes de Acrobacia, Furtividade, Intimidação, Percepção ou Sobrevivência podem ser feitos com Força, mesmo que normalmente usem outro atributo.'] },
-    cls_barbaro_aumento_atributo: { t: 'Aumento no Valor de Atributo', l: 'Nível 4 do Bárbaro: aumento de atributo ou outro talento.', tag: { tipo: 'caracteristica', nivel: 4, classes: ['barbaro'] }, b: [
+    cls_barbaro_aumento_atributo: { t: 'Aumento no Valor de Atributo', l: 'Nível 4 do Bárbaro: aumento de atributo ou outro talento.', tag: { tipo: 'caracteristica', nivel: [4, 8, 12, 16], classes: ['barbaro'] }, b: [
       'Você adquire o talento [[tal_aumento_no_valor_de_atributo|Aumento no Valor de Atributo]], ou outro talento à sua escolha para o qual atende os pré-requisitos.',
       'Você adquire essa característica de novo nos níveis 8, 12 e 16 de Bárbaro.'] },
     cls_mestre_estudioso_guerra: { t: 'Estudioso da Guerra', l: 'Uma ferramenta de artesão e uma perícia a mais.', tag: { tipo: 'caracteristica', nivel: 3, classes: ['guerreiro'], subclasse: 'mestre_batalha' }, b: [
@@ -4277,6 +4277,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   var PROG_CIRCULO = { mago: [1, 1, 2, 2, 3, 3, 4, 4, 5, 5], druida: [1, 1, 2, 2, 3, 3, 4, 4, 5, 5] };
 
   // Classe e nível escritos na ficha → o que esse nível traz, lido das etiquetas (tag).
+  // a etiqueta de nível pode ser um número ou uma lista de níveis
+  function niveisDe(t) { return Array.isArray(t.nivel) ? t.nivel : [t.nivel]; }
   function mostraProgressao(modo) {
     var velho = balao.querySelector('.balao-prog');
     if (velho) velho.remove();
@@ -4322,15 +4324,15 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     // características e subclasses do nível (ou até o nível)
     var feats = chaves.filter(function(k) {
       var t = etiq(k);
-      return (t.tipo === 'caracteristica' || t.tipo === 'subclasse') && (ate ? t.nivel <= n : t.nivel === n);
+      return (t.tipo === 'caracteristica' || t.tipo === 'subclasse') && (ate ? Math.min.apply(null, niveisDe(t)) <= n : niveisDe(t).indexOf(n) >= 0);
     }).sort(function(a, b) {
-      return etiq(a).nivel - etiq(b).nivel || AJUDA[a].t.localeCompare(AJUDA[b].t, 'pt-BR');
+      return Math.min.apply(null, niveisDe(etiq(a))) - Math.min.apply(null, niveisDe(etiq(b))) || AJUDA[a].t.localeCompare(AJUDA[b].t, 'pt-BR');
     });
     if (feats.length) {
       var ul = document.createElement('ul');
       feats.forEach(function(k) {
         var li = document.createElement('li');
-        li.appendChild(document.createTextNode(AJUDA[k].t + ' (nível ' + etiq(k).nivel + ')'));
+        li.appendChild(document.createTextNode(AJUDA[k].t + ' (nível ' + (ate ? Math.min.apply(null, niveisDe(etiq(k))) : n) + ')'));
         var a = botaoAdd(k);
         if (a) li.appendChild(a);
         ul.appendChild(li);
@@ -4340,7 +4342,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     // manobras e outras escolhas que o nível libera (ex.: as 21 manobras do Mestre)
     var escolhas = chaves.filter(function(k) {
       var t = etiq(k);
-      return t.tipo === 'manobra' && (ate ? t.nivel <= n : t.nivel === n);
+      return t.tipo === 'manobra' && (ate ? Math.min.apply(null, niveisDe(t)) <= n : niveisDe(t).indexOf(n) >= 0);
     });
     if (escolhas.length) {
       var pe = document.createElement('div'); pe.className = 'balao-l';
