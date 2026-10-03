@@ -2673,8 +2673,10 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     sbc_arvore_mundo: { t: 'Trilha da Árvore do Mundo', l: 'Puxa vida e espaço da árvore que liga os planos.', b: [
       'Novidade da 5.5: PV temporários pra você e pro grupo; mais adiante puxa inimigo pra perto e teleporta.',
       'Nível 3 — Vitalidade da Árvore: ao entrar em [[cls_furia|fúria]], PV temporários iguais ao seu nível de bárbaro. E no começo de cada turno em fúria, um aliado a até 3 m ganha PV temporários — d6 igual ao seu bônus de dano da fúria.'] },
-    sbc_fanatico: { t: 'Trilha do Fanático', l: 'Fúria em êxtase com um deus.', tag: { tipo: 'subclasse', nivel: 3, classes: ['barbaro'], subclasse: 'fanatico' }, mais: 'Ver as características', lista: ['cls_fanatico_campeao_deuses', 'cls_fanatico_furia_divina'], b: [
+    sbc_fanatico: { t: 'Trilha do Fanático', l: 'Fúria em êxtase com um deus.', tag: { tipo: 'subclasse', nivel: 3, classes: ['barbaro'], subclasse: 'fanatico' }, mais: 'Ver as características', lista: ['cls_fanatico_campeao_deuses', 'cls_fanatico_furia_divina', 'cls_fanatico_concentracao'], b: [
       'Bárbaros que seguem a Trilha do Fanático recebem bênçãos de um deus ou panteão. Experimentam a Fúria como um episódio extático de união divina.'] },
+    cls_fanatico_concentracao: { t: 'Concentração Fanática', l: 'Joga de novo uma salvaguarda falhada, uma vez por Fúria ativa.', tag: { tipo: 'subclasse', nivel: 6, classes: ['barbaro'], subclasse: 'fanatico' }, b: [
+      'Uma vez por Fúria ativa, se você falhar em uma salvaguarda, pode jogá-la novamente com um bônus igual ao seu bônus de Dano da Fúria, e deve usar o novo resultado.'] },
     cls_fanatico_campeao_deuses: { t: 'Campeão dos Deuses', l: 'Uma reserva de quatro d12 para se curar.', tag: { tipo: 'subclasse', nivel: 3, classes: ['barbaro'], subclasse: 'fanatico' }, b: [
       'Você tem uma reserva de quatro d12 que pode gastar para se curar. Com ação bônus, você gasta dados da reserva, joga e recupera PV igual ao total.',
       'A reserva restaura todos os dados gastos no descanso longo. O número máximo de dados aumenta em um nos níveis 6 (5 dados), 12 (6 dados) e 17 (7 dados).'] },
