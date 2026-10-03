@@ -2862,7 +2862,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Taumaturgo: um [[cnc_truque|truque]] a mais e Sabedoria somando nos testes de conhecimento sagrado.',
       'Escolha no nível 1, e não muda depois.'] },
     cls_druidico: { t: 'Idioma Druídico', l: 'A língua secreta dos druidas — e a conversa com os bichos.', b: [
-      'Dá pra deixar recado escondido em pedra, folha ou marca. Quem fala Druídico vê na hora; os outros precisam de Investigação CD 15 só pra perceber que tem recado, e mesmo assim não leem sem magia.',
+      'Dá pra deixar uma mensagem oculta. Quem fala Druídico identifica na hora; os outros precisam de um teste de Inteligência (Investigação) CD 15 só pra perceber que existe recado, e mesmo assim não conseguem decifrá-lo sem magia.',
       'Aprender a língua abriu a conversa com os animais: você tem [[mag_falar_com_animais|Falar com Animais]] sempre preparada.'] },
     cls_ordem_primal: { t: 'Ordem Primal', l: 'Você se dedicou a uma das funções sagradas à sua escolha.', b: [
       'Protetor: proficiência com armas Marciais e treinamento com armadura Média.',
@@ -2924,7 +2924,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     cls_conjuracao_clerigo: { t: 'Conjuração (Clérigo)', l: 'O canal do divino — por Sabedoria.', b: [
       'Magias de clérigo, usando Sabedoria como atributo de conjuração; prepara a lista de novo a cada descanso longo.'] },
     cls_conjuracao_druida: { t: 'Conjuração (Druida)', l: 'A magia da natureza — por Sabedoria.', b: [
-      'Magias de druida, usando Sabedoria como atributo de conjuração.'] },
+      'Truques: dois da lista de Druida no nível 1 (Arte Druídica e Criar Chamas são recomendadas). Ganha mais um nos níveis 4 e 10, e pode trocar um truque sempre que sobe de nível.',
+      'Magias preparadas: quatro de 1º círculo no nível 1 (Amizade Animal, Curar Ferimentos, Fogo das Fadas e Onda Trovejante são recomendadas). O número cresce com o nível, sempre de um círculo em que você tem espaço.',
+      'Espaços de magia: a tabela Características de Druida mostra quantos são; todos voltam no descanso longo.',
+      'Mudando as preparadas: no fim de um descanso longo, você pode trocar qualquer magia preparada por outra da lista de Druida de um círculo em que tenha espaço.',
+      'Atributo: Sabedoria. Foco: o Foco Druídico serve de foco de conjuração.'] },
     cls_conjuracao_feiticeiro: { t: 'Conjuração (Feiticeiro)', l: 'A magia que já nasceu com você — por Carisma.', b: [
       'Magias de feiticeiro, usando Carisma como atributo de conjuração.'] },
     cls_conjuracao_guardiao: { t: 'Conjuração (Guardião)', l: 'Um pouco de magia junto do arco — por Sabedoria.', b: [
@@ -3202,7 +3206,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     esp_tiferino: { t: 'Tiferino', l: 'Os tiferinos nascem nos Planos Inferiores ou têm ancestrais que se originaram lá.', b: [
       'Tamanho: Médio ou Pequeno · Deslocamento: 9 m',
       '[[cnc_visao_escuro|Visão no Escuro]] 18 m',
-      'Presença Sobrenatural: conhece o [[cnc_truque|truque]] Taumaturgia',
+      'Presença Sobrenatural: conhece o [[cnc_truque|truque]] Taumaturgia, que usa o mesmo atributo do seu Legado Ínfero',
       '[[lin_infero|Legado Ínfero]]: Abissal, Ctônico ou Infernal — cada um dá uma resistência, um truque e mais duas magias, nos níveis 3 e 5'],
       mais: 'Ver os 3 legados',
       lista: ['lin_abissal', 'lin_ctonico', 'lin_infernal'] },
@@ -3248,7 +3252,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       '[[cnc_resistencia|Resistência]] a dano necrótico.',
       'Truque: [[mag_toque_necrotico|Toque Necrótico]].',
       'Nível 3: [[mag_vitalidade_vazia|Vitalidade Vazia]] · Nível 5: Raio do Enfraquecimento.'] },
-    lin_infernal: { t: 'Legado Infernal', l: 'Dos Nove Infernos: fogo e contrato.', b: [
+    lin_infernal: { t: 'Legado Infernal', l: 'Ligado à Gehenna e aos Nove Infernos: chifres, espinhos e cheiro de enxofre.', b: [
       '[[cnc_resistencia|Resistência]] a dano Ígneo.',
       'Truque: [[mag_raio_fogo|Raio de Fogo]].',
       'Nível 3: Repreensão Diabólica · Nível 5: [[mag_escuridao|Escuridão]].'] },
@@ -3498,9 +3502,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Pontos = bônus de proficiência, recuperados no descanso longo.',
       'Gaste um para rolar com vantagem, ou para dar desvantagem a quem ataca você.'] },
     tal_iniciado: { t: 'Iniciado em Magia', l: 'Um pé na magia, sem ser conjurador.', b: [
-      'Dois truques e uma magia de 1º círculo da lista da classe indicada.',
-      'A magia de 1º círculo sai de graça uma vez por descanso longo — ou gastando espaço, se você tiver.',
-      'O antecedente diz de qual lista: Clérigo, Druida ou Mago.'] },
+      'Lista: escolha Clérigo, Druida ou Mago. Inteligência, Sabedoria ou Carisma vira o atributo de conjuração das magias deste talento, e você escolhe ao pegar o talento.',
+      'Dois truques da lista escolhida.',
+      'Uma magia de 1º círculo da mesma lista, sempre preparada. Você pode conjurá-la uma vez sem gastar espaço por descanso longo, ou com qualquer espaço que tiver.',
+      'Substituição: a cada novo nível, pode trocar uma dessas magias por outra do mesmo círculo da lista.',
+      'Repetível: pode pegar o talento de novo, mas com outra lista.'] },
     tal_musico: { t: 'Músico', l: 'Música que levanta o grupo.', b: [
       'Proficiência com três instrumentos musicais.',
       'Ao terminar um descanso, dá [[inspiracao|Inspiração Heroica]] a aliados que ouviram você tocar, até o seu bônus de proficiência.'] },
@@ -3525,7 +3531,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Atributo: Força · 8 PO · 3 kg',
       'Usar Objeto: selar ou abrir uma porta ou recipiente (CD 20).',
       'Fabrica: Aríete Portável, Baliza, Barril, Baú, Cajado, Clava, Clava Grande, Escada, Tocha.'] },
-    ferr_cartografo: { t: 'Ferramentas de Cartógrafo', l: 'Réguas, compassos e papel.', b: [
+    ferr_cartografo: { t: 'Ferramentas de Cartógrafo', l: 'Elabora mapas de pequenas áreas.', b: [
       'Atributo: Sabedoria · 15 PO · 3 kg',
       'Usar Objeto: elaborar o mapa de uma pequena área (CD 15).',
       'Fabrica: Mapa.'] },
@@ -3602,7 +3608,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     ferr_falsificacao: { t: 'Kit de Falsificação', l: 'Papel, selos, ceras e tintas.', b: [
       'Atributo: Destreza · 15 PO · 2,5 kg',
       'Usar Objeto: imitar 10 ou menos palavras escritas por outra pessoa (CD 15) ou duplicar um selo de cera (CD 20).'] },
-    ferr_herbalismo: { t: 'Kit de Herbalismo', l: 'Sacos, pilão e ervas.', b: [
+    ferr_herbalismo: { t: 'Kit de Herbalismo', l: 'Prepara antitoxina e poção de cura a partir de ervas.', b: [
       'Atributo: Inteligência · 5 PO · 1,5 kg',
       'Usar Objeto: identificar uma planta (CD 10).',
       'Fabrica: Antitoxina, Kit de Curandeiro, Poção de Cura, Vela.'] },
