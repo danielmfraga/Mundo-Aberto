@@ -1691,58 +1691,58 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Precisa de concentração.',
       'Só pega Humanoide. Salvaguarda de Sabedoria ou fica Enfeitiçado, repetindo no fim de cada turno dele.',
       'Antes de se mover, ele gasta a ação dele num ataque corpo a corpo contra quem você escolher.'] },
-    mag_raio_lunar: { t: 'Raio Lunar', l: 'Uma coluna de luar que queima quem fica nela.', b: [
+    mag_raio_lunar: { t: 'Raio Lunar', tag: { tipo: 'magia', circulo: 2, classes: ['druida'] }, l: 'Uma coluna de luar que queima quem fica nela.', b: [
       '2º círculo · druida',
       'Ação · alcance 36 m · duração Concentração, até 1 minuto',
       'Precisa de material (uma folha de dama-da-noite).',
       'Cilindro de 1,5 m de raio e 12 m de altura, com Meia-luz. Quem está nele, ao ele surgir ou entrar ali, ou ao terminar o turno ali, faz salvaguarda de Constituição: falhou, 2d10 de Radiante; passou, metade. Se estiver multimorfado, reverte à forma verdadeira.',
       'Com ação Usar Magia nos turnos seguintes, move o cilindro até 18 m.',
       'Por círculo acima do 2º: +1d10.'] },
-    mag_esquentar_metal: { t: 'Esquentar Metal', l: 'Esquenta armadura ou arma até o sujeito largar.', b: [
+    mag_esquentar_metal: { t: 'Esquentar Metal', tag: { tipo: 'magia', circulo: 2, classes: ['bardo', 'druida'] }, l: 'Esquenta armadura ou arma até o sujeito largar.', b: [
       '2º círculo · druida',
       'Ação · alcance 18 m · duração Concentração, até 1 minuto',
       'Precisa de material (um pedaço de ferro e uma chama).',
       '2d8 de Ígneo ao conjurar, e de novo a cada turno com ação bônus, enquanto o metal estiver no alcance.',
       'Quem segura ou usa o objeto e sofre dano faz salvaguarda de Constituição ou solta o objeto; se não soltar, tem Desvantagem em ataques e testes de atributo até o início do próximo turno.',
       'Por círculo acima do 2º: +1d8.'] },
-    mag_passo_sem_rastro: { t: 'Passo Sem Rastro', l: 'Ocultação: +10 em Furtividade e nenhum rastro para você e aliados escolhidos.', b: [
+    mag_passo_sem_rastro: { t: 'Passo Sem Rastro', tag: { tipo: 'magia', circulo: 2, classes: ['druida', 'guardiao'] }, l: 'Ocultação: +10 em Furtividade e nenhum rastro para você e aliados escolhidos.', b: [
       '2º círculo · druida',
       'Ação · alcance Pessoal (emanação de 9 m) · duração Concentração, até 1 hora',
       'Precisa de material (cinzas de ramo de visco queimado).',
       'Você e cada criatura escolhida na aura têm +10 em Destreza (Furtividade) e não deixam rastros.'] },
-    mag_crescer_espinhos: { t: 'Crescer Espinhos', l: 'O chão vira espinho: cada metro andado dói.', b: [
+    mag_crescer_espinhos: { t: 'Crescer Espinhos', tag: { tipo: 'magia', circulo: 2, classes: ['druida', 'guardiao'] }, l: 'O chão vira espinho: cada metro andado dói.', b: [
       '2º círculo · druida',
       'Ação · alcance 45 m · duração Concentração, até 10 minutos',
       'Precisa de material (sete espinhos).',
       'Esfera de 6 m de raio vira Terreno Difícil, e quem entra ou anda ali sofre 2d4 de Perfurante a cada 1,5 m percorrido.',
       'O terreno parece natural: quem não o vê precisa de um teste de Sabedoria (Percepção ou Sobrevivência) contra a CD para reconhecer o perigo antes de entrar.'] },
-    mag_restauracao_menor: { t: 'Restauração Menor', l: 'Tira uma doença ou uma condição do aliado.', b: [
+    mag_restauracao_menor: { t: 'Restauração Menor', tag: { tipo: 'magia', circulo: 2, classes: ['bardo', 'clerigo', 'druida', 'guardiao', 'paladino'] }, l: 'Tira uma doença ou uma condição do aliado.', b: [
       '2º círculo · druida',
       'Ação bônus · alcance Toque · duração Instantânea',
       'Remove uma condição de uma criatura tocada: Cego, Envenenado, Paralisado ou Surdo.'] },
-    mag_pele_casca: { t: 'Pele-Casca', l: 'A pele do alvo vira casca, com CA mínima de 17.', b: [
+    mag_pele_casca: { t: 'Pele-Casca', tag: { tipo: 'magia', circulo: 2, classes: ['druida', 'guardiao'] }, l: 'A pele do alvo vira casca, com CA mínima de 17.', b: [
       '2º círculo · druida',
       'Ação bônus · alcance Toque · duração 1 hora',
       'Precisa de material (um punhado de casca de árvore).',
       'Criatura voluntária tocada: se a CA dela for menor que 17, passa a ser 17.'] },
-    mag_lamina_flamejante: { t: 'Lâmina Flamejante', l: 'Uma espada de fogo na mão do druida.', b: [
+    mag_lamina_flamejante: { t: 'Lâmina Flamejante', tag: { tipo: 'magia', circulo: 2, classes: ['druida', 'feiticeiro'] }, l: 'Uma espada de fogo na mão do druida.', b: [
       '2º círculo · feiticeiro · druida',
       'Ação bônus · alcance Pessoal · duração Concentração, até 10 minutos',
       'Precisa de material (uma folha de sumagre).',
       'Com ação Usar Magia, ataque mágico corpo a corpo: acertou, 3d6 de Ígneo mais seu modificador de atributo de conjuração. Ilumina em 3 m e Meia-luz em mais 3 m.',
       'Por círculo acima do 2º: +1d6.'] },
-    mag_auxilio: { t: 'Auxílio', l: 'Dá 5 PV máximos e atuais a até três criaturas.', b: [
+    mag_auxilio: { t: 'Auxílio', tag: { tipo: 'magia', circulo: 2, classes: ['bardo', 'clerigo', 'druida', 'guardiao', 'paladino'] }, l: 'Dá 5 PV máximos e atuais a até três criaturas.', b: [
       '2º círculo · druida',
       'Ação · alcance 9 m · duração 8 horas',
       'Precisa de material (uma tira de pano branco).',
       'Até três criaturas à sua escolha têm +5 nos PV máximos e atuais pela duração.',
       'Por círculo acima do 2º: +5 PV para cada criatura.'] },
-    mag_encontrar_armadilhas: { t: 'Encontrar Armadilhas', l: 'Sente armadilhas à vista, mas não onde elas estão.', b: [
+    mag_encontrar_armadilhas: { t: 'Encontrar Armadilhas', tag: { tipo: 'magia', circulo: 2, classes: ['clerigo', 'druida', 'guardiao'] }, l: 'Sente armadilhas à vista, mas não onde elas estão.', b: [
       '2º círculo · druida',
       'Ação · alcance 36 m · duração Instantânea',
       'Revela que existe uma armadilha (objeto ou mecanismo feito para causar dano) e a natureza geral do perigo, mas não a localização.',
       'Não revela perigos naturais, como um teto instável ou um sumidouro escondido.'] },
-    mag_localizar_animais_plantas: { t: 'Localizar Animais ou Plantas', l: 'Aponta a Fera ou planta mais próxima do tipo que você descreve.', b: [
+    mag_localizar_animais_plantas: { t: 'Localizar Animais ou Plantas', tag: { tipo: 'magia', circulo: 2, classes: ['bardo', 'druida', 'guardiao'] }, l: 'Aponta a Fera ou planta mais próxima do tipo que você descreve.', b: [
       '2º círculo · druida',
       'Ação ou ritual · alcance Pessoal · duração Instantânea',
       'Precisa de material (pelo de um cão de caça).',
@@ -1980,24 +1980,24 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Precisa de concentração e de material (uma pena).',
       'Voo de 18 m e dá pra pairar. Acabou a magia no alto, cai.',
       'Uma criatura a mais por círculo acima do 3º.'] },
-    mag_invocar_fera: { t: 'Invocar Fera', l: 'Chama um Espírito Bestial que luta ao seu lado.', b: [
+    mag_invocar_fera: { t: 'Invocar Fera', tag: { tipo: 'magia', circulo: 2, classes: ['druida', 'guardiao'] }, l: 'Chama um Espírito Bestial que luta ao seu lado.', b: [
       '2º círculo · druida',
       'Ação · alcance 27 m · duração Concentração, até 1 hora',
       'Precisa de material (pluma, tufo de pele e rabo de peixe dentro de uma bolota dourada de 200 PO ou mais).',
       'Invoca um Espírito Bestial: escolha Água, Ar ou Terra, e ele assume a forma de um animal nativo desse ambiente. Desaparece ao cair a 0 PV ou quando a magia termina.',
       'Compartilha sua Iniciativa, mas age logo depois de você, e obedece aos seus comandos verbais. Sem comando, executa Esquivar.',
       'Por círculo acima do 2º: use o círculo do espaço no bloco de estatísticas.'] },
-    mag_protecao_veneno: { t: 'Proteção Contra Veneno', l: 'Encerra o Envenenado e blinda contra veneno por uma hora.', b: [
+    mag_protecao_veneno: { t: 'Proteção Contra Veneno', tag: { tipo: 'magia', circulo: 2, classes: ['clerigo', 'druida', 'guardiao', 'paladino'] }, l: 'Encerra o Envenenado e blinda contra veneno por uma hora.', b: [
       '2º círculo · druida',
       'Ação · alcance Toque · duração 1 hora',
       'Encerra a condição Envenenado de uma criatura tocada. Pela duração, ela tem Vantagem em salvaguardas para evitar ou encerrar Envenenado e Resistência a dano Venenoso.'] },
-    mag_mensageiro_animal: { t: 'Mensageiro Animal', l: 'Um bichinho leva recado pra alguém longe.', b: [
+    mag_mensageiro_animal: { t: 'Mensageiro Animal', tag: { tipo: 'magia', circulo: 2, classes: ['bardo', 'druida', 'guardiao'] }, l: 'Um bichinho leva recado pra alguém longe.', b: [
       '2º círculo · druida',
       'Ação ou ritual · alcance 9 m · duração 24 horas',
       'Precisa de material (um bocado de comida).',
       'Uma Besta Minúscula faz salvaguarda de Carisma (automática se o ND dela for 0) ou leva sua mensagem de até 25 palavras a um destinatário que você descreve, num local que visitou.',
       'Viaja cerca de 40 km por dia (80 km se puder voar).'] },
-    mag_sentido_feral: { t: 'Sentido Feral', l: 'Você percebe pelos sentidos de uma Fera tocada.', b: [
+    mag_sentido_feral: { t: 'Sentido Feral', tag: { tipo: 'magia', circulo: 2, classes: ['druida', 'guardiao'] }, l: 'Você percebe pelos sentidos de uma Fera tocada.', b: [
       '2º círculo · druida',
       'Ação ou ritual · alcance Toque · duração Concentração, até 1 hora',
       'Somente gesto (sem fala nem material).',
@@ -2612,6 +2612,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Ação · alcance Toque · duração 1 minuto',
       'Precisa de concentração.',
       'Você toca uma criatura voluntária e escolhe uma perícia. Ela soma 1d4 a qualquer teste de atributo com essa perícia.'] },
+    mag_raio_guia: { t: 'Raio Guia', l: 'Um raio de luz que fere e deixa o próximo ataque contra o alvo com vantagem.', tag: { tipo: 'magia', circulo: 1, classes: ['clerigo'] }, b: [
+      '1º círculo · clérigo',
+      'Ação · alcance 36 m · duração 1 rodada',
+      'Ataque mágico à distância: acertou, 4d6 de Radiante, e a próxima jogada de ataque contra o alvo antes do fim do seu próximo turno tem Vantagem.',
+      'Por círculo acima do 1º: +1d6.'] },
     mag_criar_chamas: { t: 'Criar Chamas', tag: { tipo: 'truque', circulo: 0, classes: ['druida'] }, l: 'Uma chama na mão que você pode arremessar num inimigo.', b: [
       'Truque (nível 0) · druida',
       'Ação bônus · alcance Pessoal · duração 10 minutos',
@@ -2727,7 +2732,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     sbc_guerra: { t: 'Domínio da Guerra', l: 'Sacerdote soldado: armadura pesada e ataques extras.', b: [
       'Fica na frente com o guerreiro.',
       'Nível 3 — Sacerdote de Guerra: ataque extra como [[cnc_acao_bonus|ação bônus]]; e Golpe Guiado, +10 num ataque que errou.'] },
-    sub_druida: { t: 'Druida', l: 'Círculos do druida, escolhidos no nível 3.', b: [
+    sub_druida: { t: 'Druida', tag: { tipo: 'caracteristica', nivel: 3, classes: ['druida'] }, l: 'Círculos do druida, escolhidos no nível 3.', b: [
       '[[sbc_terra|Círculo da Terra]] — Magia do terreno, que dá pra trocar a cada descanso longo.',
       '[[sbc_lua|Círculo da Lua]] — Vira bicho de verdade e briga nessa forma.',
       '[[sbc_mar|Círculo do Mar]] — Tempestade e maré como arma.',
@@ -2743,10 +2748,16 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Novidade da 5.5: uma aura de maresia em volta de você.',
       'Nível 3 — Ira do Mar: gasta um uso de [[cls_forma_selvagem|Forma Selvagem]] e fica 10 minutos numa aura de 1,5 m. Com [[cnc_acao_bonus|ação bônus]], escolhe alguém dentro dela: salvaguarda de Constituição, ou leva frio (d6 igual à sua Sabedoria) e é empurrado 4,5 m.',
       'Nível 3 — sempre preparadas: [[mag_raio_gelo|Raio de Gelo]], [[mag_nevoa_obscurecente|Névoa Obscurecente]], [[mag_onda_trovejante|Onda Trovejante]], [[mag_lufada_vento|Lufada de Vento]] e [[mag_despedacar|Despedaçar]].'] },
-    sbc_estrelas: { t: 'Círculo das Estrelas', l: 'Lê constelações e assume a forma delas.', b: [
-      'Troca de forma conforme o que o grupo precisa: dano, cura ou foco.',
-      'Nível 3 — Mapa Estelar: [[mag_orientacao|Orientação]] e Raio Guia sempre preparados, e Raio Guia de graça algumas vezes por dia.',
-      'Nível 3 — Forma Estrelada: gasta um uso de [[cls_forma_selvagem|Forma Selvagem]] e vira constelação. Arqueiro: ataque radiante com [[cnc_acao_bonus|ação bônus]]. Cálice: cura extra sempre que você cura com magia. Dragão: nos testes de concentração, Inteligência e Sabedoria, o d20 vale no mínimo 10.'] },
+    sbc_estrelas: { t: 'Círculo das Estrelas', l: 'Lê constelações e assume a forma delas.', tag: { tipo: 'subclasse', nivel: 3, classes: ['druida'], subclasse: 'estrelas' }, mais: 'Ver as características', lista: ['cls_estrelas_forma_estrelada', 'cls_estrelas_mapa_estelar'], b: [
+      'Os druidas deste círculo descobrem segredos ocultos entre as constelações e buscam dominar os poderes do cosmos.'] },
+    cls_estrelas_forma_estrelada: { t: 'Forma Estrelada', l: 'Vire uma constelação em vez de multimorfar.', tag: { tipo: 'subclasse', nivel: 3, classes: ['druida'], subclasse: 'estrelas' }, b: [
+      'Com ação bônus, você gasta um uso de Forma Selvagem para assumir uma forma estrelada em vez de multimorfar.',
+      'Você mantém suas estatísticas de jogo, mas o corpo fica luminoso: Luz Plena em 3 m e Meia-luz por mais 3 m. Dura 10 minutos, e encerra se você a dispensar, ficar Incapacitado ou usar a característica de novo.',
+      'Ao assumir a forma, escolha uma constelação. Arqueiro: com ação bônus, ataque mágico à distância a até 18 m, que causa 1d8 de Radiante + seu modificador de Sabedoria. Dragão: nos testes de Inteligência ou Sabedoria, e nas salvaguardas de Constituição para manter Concentração, um d20 de 9 ou menos conta como 10. Taça: sempre que você conjura uma magia de cura usando espaço, você ou outra criatura a até 9 m recupera 1d8 + seu modificador de Sabedoria em PV.'] },
+    cls_estrelas_mapa_estelar: { t: 'Mapa Estelar', l: 'Foco de conjuração com Orientação e Raio Guia sempre preparados.', tag: { tipo: 'subclasse', nivel: 3, classes: ['druida'], subclasse: 'estrelas' }, b: [
+      'Você cria um mapa estelar, objeto Minúsculo, que pode usar como Foco de Conjuração para magias de Druida.',
+      'Enquanto segura o mapa, você tem Orientação e [[mag_raio_guia|Raio Guia]] preparadas, e pode conjurar Raio Guia sem gastar espaço um número de vezes igual ao seu modificador de Sabedoria (mínimo uma), restaurado no descanso longo.',
+      'Se perder o mapa, pode criar um substituto com uma cerimônia de 1 hora, feita em descanso curto ou longo, que destrói o anterior.'] },
     sub_feiticeiro: { t: 'Feiticeiro', l: 'Origens do feiticeiro, escolhidas no nível 3.', b: [
       '[[sbc_draconica|Feitiçaria Dracônica]] — Sangue de dragão: mais vida, mais CA e dano do seu elemento.',
       '[[sbc_selvagem|Feitiçaria Selvagem]] — A magia escapa do controle e acontece o que tiver que acontecer.',
