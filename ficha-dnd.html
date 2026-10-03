@@ -2956,11 +2956,15 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       '[[cnc_acao_bonus|Ação bônus]] e um toque; volta cheia no [[cnc_descanso|descanso longo]].',
       'Gastando 5 pontos, cura uma doença ou um veneno em vez de PV.'] },
     // nível 2, mas as subclasses do nível 3 giram em torno deles
-    cls_forma_selvagem: { t: 'Forma Selvagem', l: 'Nível 2 do druida: vira um animal que você já conhece.', b: [
+    cls_forma_selvagem: { t: 'Forma Selvagem', l: 'Vire um animal que você aprendeu, por algumas horas.', tag: { tipo: 'caracteristica', nivel: 2, classes: ['druida'] }, b: [
       '[[cnc_acao_bonus|Ação bônus]]. Dois usos: volta um no [[cnc_descanso|descanso curto]] e todos no longo.',
       'Dura um número de horas igual à metade do seu nível de druida, e você ganha PV temporários iguais ao seu nível de druida.',
-      'A cabeça continua sua: Inteligência, Sabedoria, Carisma e proficiências não mudam. Não dá pra conjurar na forma, mas a concentração que já estava rolando continua.',
+      'Enquanto multimorfado, você mantém sua personalidade, memórias e capacidade de falar, além de Inteligência, Sabedoria, Carisma, proficiências, características de classe e talentos. As estatísticas de jogo viram as da fera.',
       'No nível 2 você conhece 4 formas de fera de ND até 1/4 e sem voo. Os círculos da Lua, do Mar, da Terra e das Estrelas gastam usos dela nos poderes deles.'] },
+    cls_companheiro_selvagem: { t: 'Companheiro Selvagem', l: 'Um espírito da natureza na forma de animal, invocado como familiar.', tag: { tipo: 'caracteristica', nivel: 2, classes: ['druida'] }, b: [
+      'Você pode invocar um espírito da natureza que assume a forma de um animal para auxiliá-lo.',
+      'Como uma ação Usar Magia, você gasta um espaço de magia ou um uso de Forma Selvagem para conjurar Convocar Familiar sem componentes Materiais.',
+      'Ao conjurar desse modo, o familiar é uma criatura Feérica e desaparece ao completar um descanso longo.'] },
     cls_ataque_imprudente: { t: 'Ataque Imprudente', tag: { tipo: 'caracteristica', nivel: 2, classes: ['barbaro'] }, l: 'Vantagem nos seus ataques com Força, e os ataques contra você também.', b: [
       'No primeiro ataque do seu turno você decide atacar de peito aberto.',
       'Até o começo do seu próximo turno, vantagem nos seus ataques com Força — e os ataques contra você também têm vantagem.',
