@@ -2916,7 +2916,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Custa 10 minutos a mais que o normal.'] },
     cls_recuperacao_arcana: { t: 'Recuperação Arcana', l: 'O mago recarrega no meio do dia.', b: [
       'Num [[cnc_descanso|descanso curto]], recupera espaços de magia somando metade do seu nível, arredondado pra cima.',
-      'Uma vez por dia. Nenhum espaço pode ser de 6º círculo ou acima.'] },
+      'Uma vez por descanso longo. Nenhum espaço pode ser de 6º círculo ou acima.'] },
     cls_artes_marciais: { t: 'Artes Marciais', l: 'O corpo do monge vira arma de verdade.', b: [
       'Ataque desarmado passa a causar d6.',
       'Pode usar Destreza no lugar da Força nos ataques desarmados e com armas de monge.',
@@ -2963,8 +2963,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Magias de feiticeiro, usando Carisma como atributo de conjuração.'] },
     cls_conjuracao_guardiao: { t: 'Conjuração (Guardião)', l: 'Um pouco de magia junto do arco — por Sabedoria.', b: [
       'Magias de guardião, usando Sabedoria como atributo de conjuração.'] },
-    cls_conjuracao_mago: { t: 'Conjuração (Mago)', l: 'Magia estudada e anotada no grimório — por Inteligência.', b: [
-      'Magias do grimório, usando Inteligência como atributo de conjuração.'] },
+    cls_conjuracao_mago: { t: 'Conjuração (Mago)', l: 'Magia estudada e anotada no livro — por Inteligência.', b: [
+      'Truques: três da lista de Mago no nível 1 (Luz, Mãos Mágicas e Raio de Gelo são recomendados). Ganha mais um nos níveis 4 e 10, e pode trocar um truque no descanso longo.',
+      'Magias preparadas: quatro de 1º círculo no nível 1, escolhidas do livro de magias. Você troca a lista no descanso longo, e o número cresce com o nível.',
+      'Espaços de magia: a tabela Características de Mago mostra quantos são; todos voltam no descanso longo.',
+      'Atributo: Inteligência. Foco: um Foco Arcano ou o próprio livro de magias.'] },
     cls_conjuracao_paladino: { t: 'Conjuração (Paladino)', l: 'Magia com peso de juramento — por Carisma.', b: [
       'Magias de paladino, usando Carisma como atributo de conjuração.'] },
 
@@ -3141,15 +3144,17 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Nível 1: Especialista — dobra a proficiência em duas perícias',
       'Nível 1: Gíria de Ladrão — o idioma secreto do submundo, e mais um idioma à escolha',
       'Nível 1: Maestria em Armas — escolhe 2 armas e usa a maestria delas'] },
-    cls_mago: { t: 'Mago', l: 'Magia estudada, anotada e preparada. O livro é o personagem.', b: [
+    cls_mago: { t: 'Mago', l: 'Reconhecidos pelo estudo aprofundado da magia.', b: [
       'Dado de Vida: d6 · Atributo principal: Inteligência',
       'Salvaguardas: Inteligência e Sabedoria',
       'Armaduras: nenhuma',
       'Armas: simples',
-      'Perícias: 2 entre Arcanismo, História, Intuição, Investigação, Medicina e Religião',
-      'Nível 1: Conjuração — magias do grimório, por Inteligência',
-      'Nível 1: Adepto de Rituais — conjura qualquer ritual do livro sem gastar espaço',
-      'Nível 1: Recuperação Arcana — recupera espaços de magia num descanso curto, uma vez por dia'],
+      'Perícias: 2 entre Arcanismo, História, Intuição, Investigação, Medicina, Natureza e Religião',
+      'Equipamento inicial: (A) 2 Adagas, Foco Arcano (Cajado), Kit de Erudito, Livro de Magias, Túnica e 5 PO; ou (B) 55 PO',
+      'Nível 1: [[cls_conjuracao_mago|Conjuração]] — magias de Mago, por Inteligência; três truques e quatro magias preparadas de 1º círculo, escolhidas do livro',
+      'Nível 1: Livro de Magias — começa com seis magias de 1º círculo; ganha duas a cada nível',
+      'Nível 1: Adepto de Rituais — conjura qualquer magia do livro marcada como Ritual, sem gastar espaço e sem precisar tê-la preparada; leva 10 minutos a mais',
+      'Nível 1: Recuperação Arcana — recupera espaços num descanso curto, com círculos somando até metade do nível de Mago, uma vez por descanso longo'],
       mais: 'Ver as magias do mago',
       lista: ['trq_mago', 'c1_mago', 'c2_mago', 'c3_mago'] },
     cls_monge: { t: 'Monge', l: 'O corpo é a arma. Rápido, difícil de acertar e sempre no lugar certo.', b: [
@@ -3196,7 +3201,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Sopro: troca um ataque da ação Atacar por um cone de 4,5 m ou uma linha de 9 m; salvaguarda de Destreza, 1d10 (sobe nos níveis 5, 11 e 17) — bônus de proficiência vezes por [[cnc_descanso|descanso longo]]',
       '[[cnc_resistencia|Resistência]] ao tipo de dano da sua ancestralidade',
       'Voo Dracônico (nível 5): com [[cnc_acao_bonus|ação bônus]], asas por 10 minutos — uma vez por descanso longo'] },
-    esp_elfo: { t: 'Elfo', l: 'Sentidos afiados e sangue mágico. Não dorme: entra em transe.', b: [
+    esp_elfo: { t: 'Elfo', l: 'Não dormem: entram em transe e mantêm a consciência do ambiente.', b: [
       'Tamanho: Médio · Deslocamento: 9 m',
       '[[cnc_visao_escuro|Visão no Escuro]] 18 m',
       'Ancestralidade Feérica: vantagem pra evitar ou encerrar a condição Enfeitiçado',
@@ -3256,7 +3261,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       '[[cnc_visao_escuro|Visão no Escuro]] vai a 36 m.',
       'Truque: [[mag_luzes_dancantes|Luzes Dançantes]].',
       'Nível 3: [[mag_fogo_das_fadas|Fogo das Fadas]] · Nível 5: [[mag_escuridao|Escuridão]].'] },
-    lin_alto_elfo: { t: 'Alto Elfo', l: 'Elfo de tradição arcana.', b: [
+    lin_alto_elfo: { t: 'Alto Elfo', l: 'Recebeu magia das encruzilhadas entre Faéria e o Plano Material.', b: [
       'Truque: [[mag_prestidigitacao_arcana|Prestidigitação Arcana]] — e a cada descanso longo dá pra trocar por outro truque de mago.',
       'Nível 3: [[mag_detectar_magia|Detectar Magia]] · Nível 5: [[mag_passo_nebuloso|Passo Nebuloso]].'] },
     lin_elfo_silvestre: { t: 'Elfo Silvestre', l: 'Carrega a magia das florestas primitivas.', b: [
@@ -3497,7 +3502,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Ferramenta: [[ferr_jogos|Kit de Jogos]]',
       'Equipamento: (A) Kit de Jogos (o mesmo que acima), Perfume, Roupas Finas e 29 PO; ou (B) 50 PO'],
       kit: [['ferr_jogos', 1], ['perfume', 1], ['roupas_finas', 1]] },
-    ant_sabio: { t: 'Sábio', l: 'Cresceu entre livros. Sabe muito, e sabe onde procurar o que não sabe.', b: [
+    ant_sabio: { t: 'Sábio', l: 'Estudou nas bibliotecas de mansões e mosteiros, e sua mente anseia por mais.', b: [
       'Atributos: Constituição, Inteligência, Sabedoria',
       'Talento: [[tal_iniciado|Iniciado em Magia (Mago)]]',
       'Perícias: [[per_arcanismo|Arcanismo]], [[per_historia|História]]',
