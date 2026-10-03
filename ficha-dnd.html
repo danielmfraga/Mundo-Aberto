@@ -2840,8 +2840,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       '[[sbc_evocador|Evocador]] — Dano de área — sem acertar os aliados.',
       '[[sbc_ilusionista|Ilusionista]] — Ilusões que quase viram verdade.',
       '[[sbc_adivinhador|Adivinhador]] — Vê o que vem: troca rolagens do jogo por números que você já guardou.'] },
-    sbc_abjurador: { t: 'Abjurador', l: 'Proteja seus companheiros e bana inimigos.', tag: { tipo: 'subclasse', nivel: 3, classes: ['mago'], subclasse: 'abjurador' }, mais: 'Ver as características', lista: ['sbc_abjurador_protecao_arcana', 'sbc_abjurador_versado_abjuracao'], b: [
+    sbc_abjurador: { t: 'Abjurador', l: 'Proteja seus companheiros e bana inimigos.', tag: { tipo: 'subclasse', nivel: 3, classes: ['mago'], subclasse: 'abjurador' }, mais: 'Ver as características', lista: ['sbc_abjurador_protecao_arcana', 'sbc_abjurador_versado_abjuracao', 'cls_abjurador_protecao_projetada'], b: [
       'Nível 3: Proteção Arcana e Versado em Abjuração.'] },
+    cls_abjurador_protecao_projetada: { t: 'Proteção Projetada', l: 'Sua Proteção Arcana absorve dano de quem está perto de você.', tag: { tipo: 'subclasse', nivel: 6, classes: ['mago'], subclasse: 'abjurador' }, b: [
+      'Quando uma criatura à sua vista a até 9 metros de você sofrer dano, você pode executar uma Reação para que sua Proteção Arcana absorva esse dano.',
+      'Caso isso reduza a proteção a 0 PV, a criatura protegida sofre qualquer dano restante. Se ela tiver alguma Resistência ou Vulnerabilidade, aplique-as antes de reduzir os PV da proteção.'] },
     sbc_abjurador_protecao_arcana: { t: 'Proteção Arcana', l: 'Uma proteção mágica que absorve dano, criada com a magia de Abjuração.', tag: { tipo: 'subclasse', nivel: 3, classes: ['mago'], subclasse: 'abjurador' }, b: [
       'Ao conjurar magia de Abjuração com espaço, você cria uma proteção em si, que dura até o descanso longo.',
       'Os PV máximos da proteção são o dobro do seu nível de Mago, mais o modificador de Inteligência.',
