@@ -2129,28 +2129,28 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       '[[mag_visao_escuro|Visão no Escuro]] — Dá visão no escuro de 45 m pra quem não tem.'] },
 
     // ── 1º círculo: mago, feiticeiro e druida ─────────────────────────
-    mag_misseis_magicos: { t: 'Mísseis Mágicos', l: 'Três dardos que NUNCA erram.', b: [
+    mag_misseis_magicos: { t: 'Mísseis Mágicos', tag: { tipo: 'magia', circulo: 1, classes: ['feiticeiro', 'mago'] }, l: 'Três dardos que NUNCA erram.', b: [
       '1º círculo · mago · feiticeiro',
       'Ação · alcance 36 m · duração Instantânea',
       '1d4+1 de energia cada, e você divide entre os alvos que quiser.',
       'Não tem rolagem de ataque nem salvaguarda: acerta e pronto.'] },
-    mag_escudo_arcano: { t: 'Escudo Arcano', l: '+5 na CA na hora em que o ataque vem.', b: [
+    mag_escudo_arcano: { t: 'Escudo Arcano', tag: { tipo: 'magia', circulo: 1, classes: ['feiticeiro', 'mago'] }, l: '+5 na CA na hora em que o ataque vem.', b: [
       '1º círculo · mago · feiticeiro',
       'Reação · alcance Pessoal · duração 1 rodada',
       'Usa a reação quando você é acertado — e pode fazer o acerto virar erro.',
       'Também anula Mísseis Mágicos contra você.'] },
-    mag_maos_flamejantes: { t: 'Mãos Flamejantes', l: 'Leque de fogo saindo das suas mãos.', b: [
+    mag_maos_flamejantes: { t: 'Mãos Flamejantes', tag: { tipo: 'magia', circulo: 1, classes: ['feiticeiro', 'mago'] }, l: 'Leque de fogo saindo das suas mãos.', b: [
       '1º círculo · mago · feiticeiro',
       'Ação · alcance Pessoal (cone de 4,5 m) · duração Instantânea',
       '3d6 de fogo, salvaguarda de Destreza pra metade.',
       'Acende o que estiver solto na área. Sobe 1d6 por círculo acima do 1º.'] },
-    mag_enfeiticar_pessoa: { t: 'Enfeitiçar Pessoa', l: 'O alvo passa a te ver como amigo.', b: [
+    mag_enfeiticar_pessoa: { t: 'Enfeitiçar Pessoa', tag: { tipo: 'magia', circulo: 1, classes: ['bardo', 'bruxo', 'druida', 'feiticeiro', 'mago'] }, l: 'O alvo passa a te ver como amigo.', b: [
       '1º círculo · mago · feiticeiro · druida',
       'Ação · alcance 9 m · duração 1 hora',
       'Só pega Humanoide. Salvaguarda de Sabedoria, com vantagem se você ou seus aliados estiverem brigando com ele.',
       'Se falhar, fica Enfeitiçado e Amigável a você, até você ou seus aliados causarem dano a ele.',
       'Quando a magia acaba, ele sabe que foi enfeitiçado. Por círculo acima do 1º: +1 criatura.'] },
-    mag_sono: { t: 'Sono', l: 'Derruba os mais fracos no sono, sem rolagem de ataque.', b: [
+    mag_sono: { t: 'Sono', tag: { tipo: 'magia', circulo: 1, classes: ['bardo', 'feiticeiro', 'mago'] }, l: 'Derruba os mais fracos no sono, sem rolagem de ataque.', b: [
       '1º círculo · mago · feiticeiro',
       'Ação · alcance 18 m · duração 1 minuto',
       'Precisa de concentração e de material (uma pitada de areia ou pétalas de rosa).',
@@ -2158,151 +2158,151 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Falhou: Incapacitado até o fim do próximo turno dele, e repete a salvaguarda. Falhou de novo: Inconsciente.',
       'Acaba se levar dano ou se alguém a 1,5 m gastar uma ação pra sacudir.',
       'Quem não dorme (elfo) ou é imune a Exaustão passa automático.'] },
-    mag_onda_trovejante: { t: 'Onda Trovejante', l: 'Um empurrão sonoro que tira todo mundo de cima de você.', b: [
+    mag_onda_trovejante: { t: 'Onda Trovejante', tag: { tipo: 'magia', circulo: 1, classes: ['bardo', 'druida', 'feiticeiro', 'mago'] }, l: 'Um empurrão sonoro que tira todo mundo de cima de você.', b: [
       '1º círculo · mago · feiticeiro · druida',
       'Ação · alcance Pessoal (cubo de 4,5 m) · duração Instantânea',
       'Salvaguarda de Constituição: falhou, 2d8 de trovejante e empurra 3 m; passou, metade do dano e fica no lugar.',
       'O estrondo é ouvido a 90 m. Sobe 1d8 por círculo acima do 1º.'] },
-    mag_armadura_arcana: { t: 'Armadura Arcana', l: 'CA 13 + Destreza pra quem não usa armadura.', b: [
+    mag_armadura_arcana: { t: 'Armadura Arcana', tag: { tipo: 'magia', circulo: 1, classes: ['feiticeiro', 'mago'] }, l: 'CA 13 + Destreza pra quem não usa armadura.', b: [
       '1º círculo · mago · feiticeiro',
       'Ação · alcance Toque · duração 8 horas',
       'Precisa de material (um pedaço de couro curtido).',
       'É o que mantém mago e feiticeiro vivos no começo.',
       'Acaba se o alvo vestir armadura.'] },
-    mag_orbe_cromatico: { t: 'Orbe Cromático', l: 'Uma esfera do elemento que você escolher.', b: [
+    mag_orbe_cromatico: { t: 'Orbe Cromático', tag: { tipo: 'magia', circulo: 1, classes: ['feiticeiro', 'mago'] }, l: 'Uma esfera do elemento que você escolher.', b: [
       '1º círculo · mago · feiticeiro',
       'Ação · alcance 27 m · duração Instantânea',
       'Precisa de material (um diamante de 50 po).',
       'Ataque mágico à distância: 3d8 do tipo escolhido — ácido, elétrico, gélido, ígneo, trovejante ou venenoso.',
       'Novidade da 5.5: se dois ou mais d8 saírem iguais, o orbe salta pra outro alvo a até 9 m (ataque e dano novos).'] },
-    mag_raio_nauseante: { t: 'Raio Nauseante', l: 'Um facho verde que envenena.', b: [
+    mag_raio_nauseante: { t: 'Raio Nauseante', tag: { tipo: 'magia', circulo: 1, classes: ['feiticeiro', 'mago'] }, l: 'Um facho verde que envenena.', b: [
       '1º círculo · mago · feiticeiro',
       'Ação · alcance 18 m · duração Instantânea',
       'Ataque mágico à distância: 2d8 de veneno e Envenenado até o fim do seu próximo turno. Na 5.5 virou ataque, não é mais salvaguarda.'] },
-    mag_nevoa_obscurecente: { t: 'Névoa Obscurecente', l: 'Uma esfera de névoa Totalmente Obscurecida, que um vento forte dispersa.', b: [
+    mag_nevoa_obscurecente: { t: 'Névoa Obscurecente', tag: { tipo: 'magia', circulo: 1, classes: ['druida', 'feiticeiro', 'guardiao', 'mago'] }, l: 'Uma esfera de névoa Totalmente Obscurecida, que um vento forte dispersa.', b: [
       '1º círculo · mago · feiticeiro · druida',
       'Ação · alcance 36 m · duração Concentração, até 1 hora',
       'Esfera de 6 m de raio, Totalmente Obscurecida. Dura até acabar a concentração ou até um vento forte (como o de Lufada de Vento) dispersá-la.',
       'Por círculo acima do 1º: +6 m de raio.'] },
-    mag_graxa: { t: 'Graxa', l: 'O chão vira patinação.', b: [
+    mag_graxa: { t: 'Graxa', tag: { tipo: 'magia', circulo: 1, classes: ['feiticeiro', 'mago'] }, l: 'O chão vira patinação.', b: [
       '1º círculo · mago · feiticeiro',
       'Ação · alcance 18 m · duração 1 minuto',
       'Precisa de material (um pouco de banha de porco ou manteiga). NÃO precisa de concentração.',
       'Quadrado de 3 m de lado, que vira Terreno Difícil.',
       'Quem está lá quando aparece, quem entra e quem termina o turno dentro: salvaguarda de Destreza ou fica Caído.',
       'A graxa NÃO é inflamável.'] },
-    mag_faca_gelo: { t: 'Faca de Gelo', l: 'Um estilhaço que acerta um e explode nos outros.', b: [
+    mag_faca_gelo: { t: 'Faca de Gelo', tag: { tipo: 'magia', circulo: 1, classes: ['druida', 'feiticeiro', 'mago'] }, l: 'Um estilhaço que acerta um e explode nos outros.', b: [
       '1º círculo · mago · feiticeiro · druida',
       'Ação · alcance 18 m · duração Instantânea',
       'Precisa de material (uma gota de água ou um pedaço de gelo).',
       'Ataque mágico à distância: acertou, 1d10 de Perfurante. O estilhaço explode mesmo se errar: o alvo e cada criatura a até 1,5 m fazem salvaguarda de Destreza ou sofrem 2d6 de Gélido.',
       'Por círculo acima do 1º: +1d6 de Gélido.'] },
-    mag_detectar_magia: { t: 'Detectar Magia', l: 'Enxerga aura mágica em volta — e dá pra conjurar como ritual.', b: [
+    mag_detectar_magia: { t: 'Detectar Magia', tag: { tipo: 'magia', circulo: 1, classes: ['bardo', 'bruxo', 'clerigo', 'druida', 'feiticeiro', 'guardiao', 'mago', 'paladino'] }, l: 'Enxerga aura mágica em volta — e dá pra conjurar como ritual.', b: [
       '1º círculo · mago · feiticeiro · druida',
       'Ação ou ritual · alcance Pessoal · duração Concentração, até 10 minutos',
       'Sente efeitos mágicos a até 9 m. Com ação Usar Magia, vê uma aura fraca em criatura ou objeto visível na área, e descobre a escola da magia que criou o efeito.',
       'Bloqueada por 30 cm de pedra, terra ou madeira, 2,5 cm de metal ou uma folha fina de chumbo.'] },
-    mag_compreender_idiomas: { t: 'Compreender Idiomas', l: 'Você entende qualquer língua falada, e lê tocando o texto.', b: [
+    mag_compreender_idiomas: { t: 'Compreender Idiomas', tag: { tipo: 'magia', circulo: 1, classes: ['bardo', 'bruxo', 'feiticeiro', 'mago'] }, l: 'Você entende qualquer língua falada, e lê tocando o texto.', b: [
       '1º círculo · mago · feiticeiro',
       'Ação · alcance Pessoal · duração 1 hora',
       'Precisa de ritual e de material (uma pitada de fuligem e sal).',
       'Não decifra código nem símbolo mágico.'] },
-    mag_identificar: { t: 'Identificar', l: 'Descobre o que um item mágico faz.', b: [
+    mag_identificar: { t: 'Identificar', tag: { tipo: 'magia', circulo: 1, classes: ['bardo', 'mago'] }, l: 'Descobre o que um item mágico faz.', b: [
       '1º círculo · mago',
       '1 minuto · alcance Toque · duração Instantânea',
       'Precisa de ritual e de material (uma pérola de 100 po).',
       'Diz as propriedades, se precisa de sintonia e quantas cargas tem.',
       'Ritual: dá pra fazer sem gastar espaço, no acampamento.'] },
-    mag_escrita_ilusoria: { t: 'Escrita Ilusória', l: 'Um texto que só quem você escolher consegue ler.', b: [
+    mag_escrita_ilusoria: { t: 'Escrita Ilusória', tag: { tipo: 'magia', circulo: 1, classes: ['bardo', 'bruxo', 'mago'] }, l: 'Um texto que só quem você escolher consegue ler.', b: [
       '1º círculo · mago',
       '1 minuto · alcance Toque · duração 10 dias',
       'Precisa de ritual e de material (tinta de 10 po, que a magia consome).',
       'Pra você e pra quem você escolher na conjuração, o texto aparece normal. Pros outros, vira alfabeto incompreensível.',
       'Dá pra trocar o sentido, a caligrafia e o idioma — desde que você conheça o idioma.',
       'Visão Verdadeira lê a mensagem escondida.'] },
-    mag_disfarcar_se: { t: 'Disfarçar-se', l: 'Muda a sua aparência, inclusive a roupa.', b: [
+    mag_disfarcar_se: { t: 'Disfarçar-se', tag: { tipo: 'magia', circulo: 1, classes: ['bardo', 'feiticeiro', 'mago'] }, l: 'Muda a sua aparência, inclusive a roupa.', b: [
       '1º círculo · mago · feiticeiro',
       'Ação · alcance Pessoal · duração 1 hora',
       'Ilusão: quem encosta percebe.',
       'Dá pra mudar altura em até 30 cm, mas não a forma do corpo.'] },
-    mag_imagem_silenciosa: { t: 'Imagem Silenciosa', l: 'Uma imagem do tamanho de um cubo de 4,5 m — sem som nenhum.', b: [
+    mag_imagem_silenciosa: { t: 'Imagem Silenciosa', tag: { tipo: 'magia', circulo: 1, classes: ['bardo', 'feiticeiro', 'mago'] }, l: 'Uma imagem do tamanho de um cubo de 4,5 m — sem som nenhum.', b: [
       '1º círculo · mago · feiticeiro',
       'Ação · alcance 18 m · duração 10 minutos',
       'Precisa de concentração e de material (um pouco de lã).',
       'Você pode movê-la com uma ação.',
       'Quem investiga e passa, atravessa com os olhos.'] },
-    mag_queda_suave: { t: 'Queda Suave', l: 'Até cinco criaturas caem como pena.', b: [
+    mag_queda_suave: { t: 'Queda Suave', tag: { tipo: 'magia', circulo: 1, classes: ['bardo', 'feiticeiro', 'mago'] }, l: 'Até cinco criaturas caem como pena.', b: [
       '1º círculo · mago · feiticeiro',
       'Reação · alcance 18 m · duração 1 minuto',
       'Precisa de material (uma pena pequena).',
       'Reação quando alguém cai: descem 18 m por rodada e não tomam dano.'] },
-    mag_retirada_acelerada: { t: 'Retirada Acelerada', l: 'Correr como ação bônus, todo turno.', b: [
+    mag_retirada_acelerada: { t: 'Retirada Acelerada', tag: { tipo: 'magia', circulo: 1, classes: ['bruxo', 'feiticeiro', 'mago'] }, l: 'Correr como ação bônus, todo turno.', b: [
       '1º círculo · mago · feiticeiro',
       'Ação bônus · alcance Pessoal · duração 10 minutos',
       'Precisa de concentração.',
       'Você já executa a ação Correr na conjuração, e passa a poder executá-la de novo como ação bônus em cada turno.'] },
-    mag_vitalidade_vazia: { t: 'Vitalidade Vazia', l: 'PV temporários de graça.', b: [
+    mag_vitalidade_vazia: { t: 'Vitalidade Vazia', tag: { tipo: 'magia', circulo: 1, classes: ['feiticeiro', 'mago'] }, l: 'PV temporários de graça.', b: [
       '1º círculo · mago · feiticeiro',
       'Ação · alcance Pessoal · duração Instantânea',
       'Precisa de material (uma gota de álcool).',
       '2d4 + 4 PV temporários; +5 por círculo acima do 1º.'] },
-    mag_salto: { t: 'Salto', l: 'Um salto de 9 m pelo preço de 3 m de movimento.', b: [
+    mag_salto: { t: 'Salto', tag: { tipo: 'magia', circulo: 1, classes: ['druida', 'feiticeiro', 'guardiao', 'mago'] }, l: 'Um salto de 9 m pelo preço de 3 m de movimento.', b: [
       '1º círculo · mago · feiticeiro · druida',
       'Ação bônus · alcance Toque · duração 1 minuto',
       'Precisa de material (perna traseira de um gafanhoto).',
       'Uma vez por turno da criatura, ela pode saltar até 9 m gastando 3 m de movimento.',
       'Por círculo acima do 1º: +1 criatura.'] },
-    mag_passos_largos: { t: 'Passos Largos', l: '+3 m de deslocamento por uma hora.', b: [
+    mag_passos_largos: { t: 'Passos Largos', tag: { tipo: 'magia', circulo: 1, classes: ['bardo', 'druida', 'guardiao', 'mago'] }, l: '+3 m de deslocamento por uma hora.', b: [
       '1º círculo · mago · druida',
       'Ação · alcance Toque · duração 1 hora',
       'Precisa de material (uma pitada de poeira).',
       'O Deslocamento da criatura tocada aumenta em 3 m.',
       'Por círculo acima do 1º: +1 criatura.'] },
-    mag_protecao_bem_mal: { t: 'Proteção Contra o Bem e o Mal', l: 'Blindagem contra seis tipos de criatura.', b: [
+    mag_protecao_bem_mal: { t: 'Proteção Contra o Bem e o Mal', tag: { tipo: 'magia', circulo: 1, classes: ['bruxo', 'clerigo', 'druida', 'mago', 'paladino'] }, l: 'Blindagem contra seis tipos de criatura.', b: [
       '1º círculo · mago · druida',
       'Ação · alcance Toque · duração 10 minutos',
       'Precisa de concentração e de material (um pote de água benta de 25 po, que a magia consome).',
       'Aberração, celestial, elemental, feérico, ínfero e morto-vivo atacam o alvo com desvantagem.',
       'E não conseguem enfeitiçar, amedrontar nem possuir. Se já estiver sob um desses efeitos, ele repete a salvaguarda com vantagem.'] },
-    mag_servo_invisivel: { t: 'Servo Invisível', l: 'Um criado invisível que faz tarefa simples.', b: [
+    mag_servo_invisivel: { t: 'Servo Invisível', tag: { tipo: 'magia', circulo: 1, classes: ['bardo', 'bruxo', 'mago'] }, l: 'Um criado invisível que faz tarefa simples.', b: [
       '1º círculo · mago',
       'Ação · alcance 18 m · duração 1 hora',
       'Precisa de ritual e de material (um pedaço de barbante e um pouco de madeira).',
       'Limpa, carrega, acende fogo, serve a mesa. Não ataca.',
       'Ritual: dá pra conjurar de graça.'] },
-    mag_disco_tenser: { t: 'Disco Flutuante de Tenser', l: 'Uma plataforma que carrega a carga do grupo.', b: [
+    mag_disco_tenser: { t: 'Disco Flutuante de Tenser', tag: { tipo: 'magia', circulo: 1, classes: ['mago'] }, l: 'Uma plataforma que carrega a carga do grupo.', b: [
       '1º círculo · mago',
       'Ação · alcance 9 m · duração 1 hora',
       'Precisa de ritual e de material (uma gota de mercúrio).',
       'Aguenta 225 kg e te segue sozinha, mantendo-se a até 6 m.',
       'Não vence degrau de 3 m ou mais. Some se você ficar a mais de 30 m dela.',
       'Ritual, e resolve a vida de quem está no limite de carga.'] },
-    mag_alarme: { t: 'Alarme', l: 'Um aviso mental quando alguém entra na área.', b: [
+    mag_alarme: { t: 'Alarme', tag: { tipo: 'magia', circulo: 1, classes: ['guardiao', 'mago'] }, l: 'Um aviso mental quando alguém entra na área.', b: [
       '1º círculo · mago',
       '1 minuto · alcance 9 m · duração 8 horas',
       'Precisa de ritual e de material (um sino pequeno e um fio de prata).',
       'Cubo de 6 m; você escolhe quem não dispara.',
       'Ritual: o acampamento inteiro fica vigiado de graça.'] },
-    mag_convocar_familiar: { t: 'Convocar Familiar', l: 'Um bichinho espiritual que vira seus olhos e ouvidos.', b: [
+    mag_convocar_familiar: { t: 'Convocar Familiar', tag: { tipo: 'magia', circulo: 1, classes: ['mago'] }, l: 'Um bichinho espiritual que vira seus olhos e ouvidos.', b: [
       '1º círculo · mago',
       '1 hora · alcance 3 m · duração Instantânea',
       'Precisa de ritual e de material (incenso de 10 po, que queima na conjuração).',
       'Fera de ND 0 à sua escolha, mas como celestial, feérico ou ínfero. Não ataca.',
       'Telepatia a 30 m; com ação bônus você vê e ouve pelos sentidos dele.',
       'Ele entrega suas magias de toque, gastando a reação dele.'] },
-    mag_gargalhada_tasha: { t: 'Gargalhada Nefasta de Tasha', l: 'O alvo cai no chão rindo e não consegue levantar.', b: [
+    mag_gargalhada_tasha: { t: 'Gargalhada Nefasta de Tasha', tag: { tipo: 'magia', circulo: 1, classes: ['bardo', 'bruxo', 'mago'] }, l: 'O alvo cai no chão rindo e não consegue levantar.', b: [
       '1º círculo · mago',
       'Ação · alcance 9 m · duração 1 minuto',
       'Precisa de concentração e de material (uma tortinha e uma pena).',
       'Salvaguarda de Sabedoria; falhou, fica Caído e Incapacitado.',
       'Repete a salvaguarda a cada turno, e com vantagem se levar dano.'] },
-    mag_raio_bruxa: { t: 'Raio de Bruxa', l: 'Um arco elétrico que continua sozinho todo turno.', b: [
+    mag_raio_bruxa: { t: 'Raio de Bruxa', tag: { tipo: 'magia', circulo: 1, classes: ['bruxo', 'feiticeiro', 'mago'] }, l: 'Um arco elétrico que continua sozinho todo turno.', b: [
       '1º círculo · mago · feiticeiro',
       'Ação · alcance 18 m · duração 1 minuto',
       'Precisa de concentração e de material (um galho atingido por raio).',
       'Ataque mágico à distância: 2d12 de elétrico. Nos turnos seguintes, ação bônus pra causar 1d12 automático — mesmo que o primeiro ataque tenha errado.',
       'Acaba se o alvo sair do alcance ou ficar com cobertura total.'] },
-    mag_leque_cromatico: { t: 'Leque Cromático', l: 'Um jorro de luz que cega quem estiver na frente.', b: [
+    mag_leque_cromatico: { t: 'Leque Cromático', tag: { tipo: 'magia', circulo: 1, classes: ['bardo', 'feiticeiro', 'mago'] }, l: 'Um jorro de luz que cega quem estiver na frente.', b: [
       '1º círculo · mago · feiticeiro',
       'Ação · alcance Pessoal (cone de 4,5 m) · duração Instantânea',
       'Precisa de material (uma pitada de areia colorida).',
@@ -2498,90 +2498,90 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     // ── Truques de mago, feiticeiro e druida ──────────────────────────
     // Cada um traz classe, tempo, alcance, duração e o que faz. Botão
     // direito põe na tabela de magias da página 2.
-    mag_bolha_acida: { t: 'Bolha Ácida', l: 'Bolha de ácido que estoura numa esfera e pega todo mundo dentro.', b: [
+    mag_bolha_acida: { t: 'Bolha Ácida', tag: { tipo: 'truque', circulo: 0, classes: ['feiticeiro', 'mago'] }, l: 'Bolha de ácido que estoura numa esfera e pega todo mundo dentro.', b: [
       'Truque (nível 0) · mago · feiticeiro',
       'Ação · alcance 18 m · duração Instantânea',
       'Estoura numa esfera de 1,5 m de raio: todo mundo lá dentro faz salvaguarda de Destreza ou leva 1d6 de ácido.',
       'Sobe 1d6 nos níveis 5, 11 e 17.'] },
-    mag_protecao_laminas: { t: 'Proteção Contra Lâminas', l: 'Quem ataca você erra mais enquanto ela durar.', b: [
+    mag_protecao_laminas: { t: 'Proteção Contra Lâminas', tag: { tipo: 'truque', circulo: 0, classes: ['bardo', 'bruxo', 'feiticeiro', 'mago'] }, l: 'Quem ataca você erra mais enquanto ela durar.', b: [
       'Truque (nível 0) · mago · feiticeiro',
       'Ação · alcance Pessoal · duração 1 minuto',
       'Precisa de concentração.',
       'Todo ataque contra você subtrai 1d4 da jogada de ataque.'] },
-    mag_toque_necrotico: { t: 'Toque Necrótico', l: 'O frio da sepultura na mão: fere e tranca a cura.', b: [
+    mag_toque_necrotico: { t: 'Toque Necrótico', tag: { tipo: 'truque', circulo: 0, classes: ['bruxo', 'feiticeiro', 'mago'] }, l: 'O frio da sepultura na mão: fere e tranca a cura.', b: [
       'Truque (nível 0) · mago · feiticeiro',
       'Ação · alcance Toque · duração Instantânea',
       'Ataque mágico corpo a corpo: 1d10 de necrótico, e o alvo não recupera PV até o fim do seu próximo turno.',
       'Sobe 1d10 nos níveis 5, 11 e 17.'] },
-    mag_luzes_dancantes: { t: 'Luzes Dançantes', l: 'Quatro luzinhas que você manda pra onde quiser.', b: [
+    mag_luzes_dancantes: { t: 'Luzes Dançantes', tag: { tipo: 'truque', circulo: 0, classes: ['bardo', 'feiticeiro', 'mago'] }, l: 'Quatro luzinhas que você manda pra onde quiser.', b: [
       'Truque (nível 0) · mago · feiticeiro',
       'Ação · alcance 36 m · duração 1 minuto',
       'Precisa de concentração e de material (um pouco de fósforo).',
       'Dá pra juntar as quatro numa forma Média vagamente humana. Cada luz dá meia-luz em 3 m.',
       'Move todas até 18 m com uma ação bônus.'] },
-    mag_elementalismo: { t: 'Elementalismo', l: 'Um efeito pequeno de ar, terra, fogo ou água.', b: [
+    mag_elementalismo: { t: 'Elementalismo', tag: { tipo: 'truque', circulo: 0, classes: ['druida', 'feiticeiro', 'mago'] }, l: 'Um efeito pequeno de ar, terra, fogo ou água.', b: [
       'Truque (nível 0) · mago · feiticeiro · druida',
       'Ação · alcance 9 m · duração Instantânea',
       'Escolha um efeito num cubo de 1,5 m: Convocar Água (névoa fria ou uma xícara de água), Convocar Brisa, Convocar Fogo (brasas inofensivas e fumaça colorida) ou Convocar Terra (poeira ou areia). Ou Esculpir Elemento, que dá forma rudimentar a até um cubo de 30 cm por 1 hora.'] },
-    mag_raio_fogo: { t: 'Raio de Fogo', l: 'O tiro padrão do mago. Ataque à distância, dano que sobe de nível.', b: [
+    mag_raio_fogo: { t: 'Raio de Fogo', tag: { tipo: 'truque', circulo: 0, classes: ['feiticeiro', 'mago'] }, l: 'O tiro padrão do mago. Ataque à distância, dano que sobe de nível.', b: [
       'Truque (nível 0) · mago · feiticeiro',
       'Ação · alcance 36 m · duração Instantânea',
       '1d10 de fogo, e acende o que não estiver vestido nem carregado.'] },
-    mag_amigos: { t: 'Amigos', l: 'Enfeitiça alguém por um minuto — e ele descobre depois.', b: [
+    mag_amigos: { t: 'Amigos', tag: { tipo: 'truque', circulo: 0, classes: ['bardo', 'bruxo', 'feiticeiro', 'mago'] }, l: 'Enfeitiça alguém por um minuto — e ele descobre depois.', b: [
       'Truque (nível 0) · mago · feiticeiro',
       'Ação · alcance 3 m · duração 1 minuto',
       'Precisa de concentração e de material (um pouco de maquiagem).',
       'Salvaguarda de Sabedoria ou fica Enfeitiçado. Passa automático quem não é Humanoide, quem já está brigando com você, ou quem levou essa magia nas últimas 24 horas.',
       'Acaba se o alvo levar dano, ou se você atacar, causar dano ou forçar uma salvaguarda em alguém.',
       'Acabou a magia, o alvo sabe que foi enfeitiçado e fica bravo.'] },
-    mag_luz: { t: 'Luz', l: 'Acende um objeto como se fosse tocha.', b: [
+    mag_luz: { t: 'Luz', tag: { tipo: 'truque', circulo: 0, classes: ['bardo', 'clerigo', 'feiticeiro', 'mago'] }, l: 'Acende um objeto como se fosse tocha.', b: [
       'Truque (nível 0) · mago · feiticeiro',
       'Ação · alcance Toque · duração 1 hora',
       'Precisa de material (um vaga-lume ou musgo fosforescente).',
       'Objeto Grande ou menor, desde que não esteja sendo usado nem carregado por outra pessoa.',
       'Luz plena em 6 m e meia-luz por mais 6. Cobrir o objeto bloqueia a luz.'] },
-    mag_maos_magicas: { t: 'Mãos Mágicas', l: 'Uma mão flutuante que pega, carrega e mexe.', b: [
+    mag_maos_magicas: { t: 'Mãos Mágicas', tag: { tipo: 'truque', circulo: 0, classes: ['bardo', 'bruxo', 'feiticeiro', 'mago'] }, l: 'Uma mão flutuante que pega, carrega e mexe.', b: [
       'Truque (nível 0) · mago · feiticeiro',
       'Ação · alcance 9 m · duração 1 minuto',
       'Carrega até 5 kg, abre porta e frasco, entrega item.',
       'Não ataca, não ativa item mágico e não vale como sua mão.'] },
-    mag_reparar: { t: 'Reparar', l: 'Conserta um estrago pequeno como se nunca tivesse existido.', b: [
+    mag_reparar: { t: 'Reparar', tag: { tipo: 'truque', circulo: 0, classes: ['bardo', 'clerigo', 'druida', 'feiticeiro', 'mago'] }, l: 'Conserta um estrago pequeno como se nunca tivesse existido.', b: [
       'Truque (nível 0) · mago · feiticeiro · druida',
       '1 minuto · alcance Toque · duração Instantânea',
       'Precisa de material (duas pedras-ímã).',
       'Corrente partida, chave quebrada, odre furado — uma ruptura só, de até 30 cm em qualquer dimensão.',
       'Conserta o corpo de um item mágico, mas não devolve a magia dele.'] },
-    mag_mensagem: { t: 'Mensagem', l: 'Sussurro que só o alvo ouve, e ele pode responder.', b: [
+    mag_mensagem: { t: 'Mensagem', tag: { tipo: 'truque', circulo: 0, classes: ['bardo', 'druida', 'feiticeiro', 'mago'] }, l: 'Sussurro que só o alvo ouve, e ele pode responder.', b: [
       'Truque (nível 0) · mago · feiticeiro · druida',
       'Ação · alcance 36 m · duração 1 rodada',
       'Precisa de material (um fio de cobre).',
       'Dá pra mandar a mensagem através de um obstáculo se você estiver familiarizado com o alvo e souber que ele está do outro lado. Silêncio mágico, 30 cm de pedra, metal ou madeira, ou uma folha fina de chumbo bloqueiam.'] },
-    mag_talho_mental: { t: 'Talho Mental', l: 'Agulha psíquica que também atrapalha a próxima defesa.', b: [
+    mag_talho_mental: { t: 'Talho Mental', tag: { tipo: 'truque', circulo: 0, classes: ['bruxo', 'feiticeiro', 'mago'] }, l: 'Agulha psíquica que também atrapalha a próxima defesa.', b: [
       'Truque (nível 0) · mago · feiticeiro',
       'Ação · alcance 18 m · duração 1 rodada',
       '1d6 psíquico, salvaguarda de Inteligência.',
       'Falhou: subtrai 1d4 da próxima salvaguarda dele, até o fim do próximo turno dele.'] },
-    mag_ilusao_menor: { t: 'Ilusão Menor', l: 'Um som OU uma imagem — escolhe um dos dois.', b: [
+    mag_ilusao_menor: { t: 'Ilusão Menor', tag: { tipo: 'truque', circulo: 0, classes: ['bardo', 'bruxo', 'feiticeiro', 'mago'] }, l: 'Um som OU uma imagem — escolhe um dos dois.', b: [
       'Truque (nível 0) · mago · feiticeiro',
       'Ação · alcance 9 m · duração 1 minuto',
       'Precisa de material (um tufo de lã).',
       'Objeto do tamanho de um cubo de 1,5 m, ou um barulho qualquer.',
       'Quem investiga e passa, percebe que é falso.'] },
-    mag_rajada_veneno: { t: 'Rajada de Veneno', l: 'Sopro de névoa tóxica na cara do alvo.', b: [
+    mag_rajada_veneno: { t: 'Rajada de Veneno', tag: { tipo: 'truque', circulo: 0, classes: ['bruxo', 'druida', 'feiticeiro', 'mago'] }, l: 'Sopro de névoa tóxica na cara do alvo.', b: [
       'Truque (nível 0) · mago · feiticeiro · druida',
       'Ação · alcance 9 m · duração Instantânea',
       'Ataque mágico à distância: acertou, 1d12 de veneno. Na 5.5 virou ataque, não é mais salvaguarda.',
       'Sobe 1d12 nos níveis 5, 11 e 17.'] },
-    mag_prestidigitacao_arcana: { t: 'Prestidigitação Arcana', l: 'O canivete suíço da magia: truquezinhos sem efeito mecânico.', b: [
+    mag_prestidigitacao_arcana: { t: 'Prestidigitação Arcana', tag: { tipo: 'truque', circulo: 0, classes: ['bardo', 'bruxo', 'feiticeiro', 'mago'] }, l: 'O canivete suíço da magia: truquezinhos sem efeito mecânico.', b: [
       'Truque (nível 0) · mago · feiticeiro',
       'Ação · alcance 3 m · duração Até 1 hora',
       'Acende e apaga vela, limpa ou suja, esfria ou esquenta, faz um cheiro ou um som.',
       'Não confunda com a perícia [[per_prestidigitacao|Prestidigitação]], que é mão leve.'] },
-    mag_raio_gelo: { t: 'Raio de Gelo', l: 'Feixe gelado que fere e atrasa.', b: [
+    mag_raio_gelo: { t: 'Raio de Gelo', tag: { tipo: 'truque', circulo: 0, classes: ['feiticeiro', 'mago'] }, l: 'Feixe gelado que fere e atrasa.', b: [
       'Truque (nível 0) · mago · feiticeiro',
       'Ação · alcance 18 m · duração Instantânea',
       '1d8 de frio, e o deslocamento do alvo cai 3 m até o seu próximo turno.'] },
-    mag_toque_chocante: { t: 'Toque Chocante', l: 'Choque que ainda tira a reação do alvo.', b: [
+    mag_toque_chocante: { t: 'Toque Chocante', tag: { tipo: 'truque', circulo: 0, classes: ['feiticeiro', 'mago'] }, l: 'Choque que ainda tira a reação do alvo.', b: [
       'Truque (nível 0) · mago · feiticeiro',
       'Ação · alcance Toque · duração Instantânea',
       'Ataque mágico corpo a corpo: 1d8 de elétrico, e o alvo não faz Ataque de Oportunidade até o começo do próximo turno dele.',
@@ -2591,17 +2591,17 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Ação · alcance 36 m · duração Instantânea',
       '1d8 do tipo escolhido na hora.',
       'Tirou o máximo no dado? Rola outro e soma — e repete enquanto sair o máximo.'] },
-    mag_trovao: { t: 'Trovão', l: 'Um estouro em volta de você, sem componente sonoro nenhum.', b: [
+    mag_trovao: { t: 'Trovão', tag: { tipo: 'truque', circulo: 0, classes: ['bardo', 'bruxo', 'druida', 'feiticeiro', 'mago'] }, l: 'Um estouro em volta de você, sem componente sonoro nenhum.', b: [
       'Truque (nível 0) · mago · feiticeiro · druida',
       'Ação · alcance Pessoal (emanação de 1,5 m) · duração Instantânea',
       '1d6 de trovejante em todo mundo a até 1,5 m, salvaguarda de Constituição.',
       'O barulho é ouvido a 30 m. Sobe 1d6 nos níveis 5, 11 e 17.'] },
-    mag_badalar_funebre: { t: 'Badalar Fúnebre', l: 'Um sino fúnebre que dói mais em quem já está ferido.', b: [
+    mag_badalar_funebre: { t: 'Badalar Fúnebre', tag: { tipo: 'truque', circulo: 0, classes: ['bruxo', 'clerigo', 'mago'] }, l: 'Um sino fúnebre que dói mais em quem já está ferido.', b: [
       'Truque (nível 0) · mago',
       'Ação · alcance 18 m · duração Instantânea',
       'Salvaguarda de Sabedoria ou 1d8 de necrótico — 1d12 se o alvo já tiver perdido PV.',
       'Sobe um dado nos níveis 5, 11 e 17.'] },
-    mag_golpe_certeiro: { t: 'Golpe Certeiro', l: 'Reescrito na 5.5: agora é um ataque de arma guiado pela magia.', b: [
+    mag_golpe_certeiro: { t: 'Golpe Certeiro', tag: { tipo: 'truque', circulo: 0, classes: ['bardo', 'bruxo', 'feiticeiro', 'mago'] }, l: 'Reescrito na 5.5: agora é um ataque de arma guiado pela magia.', b: [
       'Truque (nível 0) · mago · feiticeiro',
       'Ação · alcance Pessoal · duração Instantânea',
       'Precisa de material (uma arma com que você tem proficiência, valendo 1 PC ou mais).',
@@ -2917,13 +2917,17 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Jargão, sinais e marcas que as guildas de ladrões usam pra se entender.',
       'Na 5.5 ela conta como um idioma — dos raros, como Druídico e Infernal. Quem não fala, não entende.',
       'Junto com ela o ladino aprende mais um idioma à sua escolha.'] },
-    cls_adepto_rituais: { t: 'Adepto de Rituais', l: 'Rituais saem de graça, direto do grimório.', b: [
+    cls_adepto_rituais: { t: 'Adepto de Rituais', tag: { tipo: 'caracteristica', nivel: 1, classes: ['mago'] }, l: 'Rituais saem de graça, direto do grimório.', b: [
       'Qualquer magia do livro marcada como ritual, sem gastar [[slots|espaço]].',
       'Nem precisa estar preparada — basta estar escrita.',
       'Custa 10 minutos a mais que o normal.'] },
-    cls_recuperacao_arcana: { t: 'Recuperação Arcana', l: 'O mago recarrega no meio do dia.', b: [
+    cls_recuperacao_arcana: { t: 'Recuperação Arcana', tag: { tipo: 'caracteristica', nivel: 1, classes: ['mago'] }, l: 'O mago recarrega no meio do dia.', b: [
       'Num [[cnc_descanso|descanso curto]], recupera espaços de magia somando metade do seu nível, arredondado pra cima.',
       'Uma vez por descanso longo. Nenhum espaço pode ser de 6º círculo ou acima.'] },
+    cls_livro_magias: { t: 'Livro de Magias', l: 'O livro único do mago, onde estão as magias que ele conhece.', tag: { tipo: 'caracteristica', nivel: 1, classes: ['mago'] }, b: [
+      'Minúsculo, pesa 1,5 kg e tem 100 páginas. Só você lê, ou quem conjurar Identificar.',
+      'Começa com seis magias de 1º círculo à sua escolha. Armadura Arcana, Detectar Magia, Mísseis Mágicos, Onda Trovejante, Queda Suave e Sono são recomendadas.',
+      'A cada nível de Mago depois do primeiro, adiciona duas magias de Mago de círculos que você já pode conjurar.'] },
     cls_artes_marciais: { t: 'Artes Marciais', l: 'O corpo do monge vira arma de verdade.', b: [
       'Ataque desarmado passa a causar d6.',
       'Pode usar Destreza no lugar da Força nos ataques desarmados e com armas de monge.',
@@ -2970,7 +2974,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Magias de feiticeiro, usando Carisma como atributo de conjuração.'] },
     cls_conjuracao_guardiao: { t: 'Conjuração (Guardião)', l: 'Um pouco de magia junto do arco — por Sabedoria.', b: [
       'Magias de guardião, usando Sabedoria como atributo de conjuração.'] },
-    cls_conjuracao_mago: { t: 'Conjuração (Mago)', l: 'Magia estudada e anotada no livro — por Inteligência.', b: [
+    cls_conjuracao_mago: { t: 'Conjuração (Mago)', tag: { tipo: 'caracteristica', nivel: 1, classes: ['mago'] }, l: 'Magia estudada e anotada no livro — por Inteligência.', b: [
       'Truques: três da lista de Mago no nível 1 (Luz, Mãos Mágicas e Raio de Gelo são recomendados). Ganha mais um nos níveis 4 e 10, e pode trocar um truque no descanso longo.',
       'Magias preparadas: quatro de 1º círculo no nível 1, escolhidas do livro de magias. Você troca a lista no descanso longo, e o número cresce com o nível.',
       'Espaços de magia: a tabela Características de Mago mostra quantos são; todos voltam no descanso longo.',
