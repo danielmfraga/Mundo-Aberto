@@ -1512,12 +1512,18 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Precisa de concentração e de material (um cílio em goma arábica).',
       'Atacar ou conjurar acaba com ela na hora.',
       'Espaço maior pega mais de uma criatura.'] },
-    mag_paralisar_pessoa: { t: 'Paralisar Pessoa', l: 'Paralisa um humanoide — e quem bate nele de perto crita automático.', b: [
+    cnd_paralisado: { t: 'Paralisado', l: 'Não age, não anda e leva golpe de perto como crítico.', b: [
+      'Condição, do livro. Enquanto dura, a criatura:',
+      'Fica Incapacitada: não executa ações, Ações Bônus nem Reações.',
+      'Tem Deslocamento 0, que não pode ser aumentado.',
+      'Sofre ataques com Vantagem.',
+      'Leva Acerto Crítico automático de qualquer ataque feito a até 1,5 m dela.',
+      'Falha automaticamente em salvaguardas de Força e Destreza.'] },
+    mag_paralisar_pessoa: { t: 'Paralisar Pessoa', l: 'Paralisa um humanoide, que fica [[cnd_paralisado|Paralisado]].', b: [
       '2º círculo · mago · feiticeiro · druida',
-      'Ação · alcance 18 m · duração 1 minuto',
-      'Precisa de concentração.',
-      'Salvaguarda de Sabedoria, repetida a cada turno.',
-      'Paralisado: ataque de até 1,5 m acerta com vantagem E vira crítico.'] },
+      'Ação · alcance 18 m · duração Concentração, até 1 minuto',
+      'Precisa de material (um pedaço reto de ferro).',
+      'Um Humanoide à sua vista faz salvaguarda de Sabedoria ou fica [[cnd_paralisado|Paralisado]]; repete a salvaguarda no fim de cada turno dele.'] },
     mag_sugestao: { t: 'Sugestão', l: 'Uma ordem razoável que o alvo cumpre achando que quis.', b: [
       '2º círculo · mago · feiticeiro',
       'Ação · alcance 9 m · duração 8 horas',
