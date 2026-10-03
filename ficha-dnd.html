@@ -2111,8 +2111,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       '1º círculo · mago · feiticeiro · druida',
       'Ação · alcance 9 m · duração 1 hora',
       'Só pega Humanoide. Salvaguarda de Sabedoria, com vantagem se você ou seus aliados estiverem brigando com ele.',
-      'Enfeitiçado e Amigável a você, até alguém do seu lado causar dano nele.',
-      'Acabou, ele sabe que foi enfeitiçado.'] },
+      'Se falhar, fica Enfeitiçado e Amigável a você, até você ou seus aliados causarem dano a ele.',
+      'Quando a magia acaba, ele sabe que foi enfeitiçado. Por círculo acima do 1º: +1 criatura.'] },
     mag_sono: { t: 'Sono', l: 'Derruba os mais fracos no sono, sem rolagem de ataque.', b: [
       '1º círculo · mago · feiticeiro',
       'Ação · alcance 18 m · duração 1 minuto',
@@ -2142,12 +2142,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       '1º círculo · mago · feiticeiro',
       'Ação · alcance 18 m · duração Instantânea',
       'Ataque mágico à distância: 2d8 de veneno e Envenenado até o fim do seu próximo turno. Na 5.5 virou ataque, não é mais salvaguarda.'] },
-    mag_nevoa_obscurecente: { t: 'Névoa Obscurecente', l: 'Uma esfera de neblina que cega todo mundo dentro dela.', b: [
+    mag_nevoa_obscurecente: { t: 'Névoa Obscurecente', l: 'Uma esfera de névoa Totalmente Obscurecida, que um vento forte dispersa.', b: [
       '1º círculo · mago · feiticeiro · druida',
-      'Ação · alcance 36 m · duração 1 hora',
-      'Precisa de concentração.',
-      'Esfera de 6 m de raio; a área fica Totalmente Obscurecida.',
-      'Dura até acabar a concentração ou até um vento forte dispersar. Sobe 6 m de raio por círculo acima do 1º.'] },
+      'Ação · alcance 36 m · duração Concentração, até 1 hora',
+      'Esfera de 6 m de raio, Totalmente Obscurecida. Dura até acabar a concentração ou até um vento forte (como o de Lufada de Vento) dispersá-la.',
+      'Por círculo acima do 1º: +6 m de raio.'] },
     mag_graxa: { t: 'Graxa', l: 'O chão vira patinação.', b: [
       '1º círculo · mago · feiticeiro',
       'Ação · alcance 18 m · duração 1 minuto',
@@ -2159,14 +2158,13 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       '1º círculo · mago · feiticeiro · druida',
       'Ação · alcance 18 m · duração Instantânea',
       'Precisa de material (uma gota de água ou um pedaço de gelo).',
-      '1d10 perfurante no alvo do ataque, e 2d6 de frio em todo mundo a 1,5 m dele.',
-      'A explosão acontece mesmo se o ataque errar.'] },
+      'Ataque mágico à distância: acertou, 1d10 de Perfurante. O estilhaço explode mesmo se errar: o alvo e cada criatura a até 1,5 m fazem salvaguarda de Destreza ou sofrem 2d6 de Gélido.',
+      'Por círculo acima do 1º: +1d6 de Gélido.'] },
     mag_detectar_magia: { t: 'Detectar Magia', l: 'Enxerga aura mágica em volta — e dá pra conjurar como ritual.', b: [
       '1º círculo · mago · feiticeiro · druida',
-      'Ação · alcance Pessoal (9 m) · duração 10 minutos',
-      'Precisa de concentração e de ritual.',
-      'Mostra onde há magia e de qual escola.',
-      'Atravessa a maioria das barreiras finas, mas não chumbo nem pedra grossa.'] },
+      'Ação ou ritual · alcance Pessoal · duração Concentração, até 10 minutos',
+      'Sente efeitos mágicos a até 9 m. Com ação Usar Magia, vê uma aura fraca em criatura ou objeto visível na área, e descobre a escola da magia que criou o efeito.',
+      'Bloqueada por 30 cm de pedra, terra ou madeira, 2,5 cm de metal ou uma folha fina de chumbo.'] },
     mag_compreender_idiomas: { t: 'Compreender Idiomas', l: 'Você entende qualquer língua falada, e lê tocando o texto.', b: [
       '1º círculo · mago · feiticeiro',
       'Ação · alcance Pessoal · duração 1 hora',
@@ -2215,13 +2213,14 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       '1º círculo · mago · feiticeiro · druida',
       'Ação bônus · alcance Toque · duração 1 minuto',
       'Precisa de material (perna traseira de um gafanhoto).',
-      'Uma vez por turno dela, a criatura salta até 9 m gastando 3 m de deslocamento.',
-      'Na 5.5 deixou de ser "triplica o salto": agora é distância fixa.'] },
+      'Uma vez por turno da criatura, ela pode saltar até 9 m gastando 3 m de movimento.',
+      'Por círculo acima do 1º: +1 criatura.'] },
     mag_passos_largos: { t: 'Passos Largos', l: '+3 m de deslocamento por uma hora.', b: [
       '1º círculo · mago · druida',
       'Ação · alcance Toque · duração 1 hora',
       'Precisa de material (uma pitada de poeira).',
-      'Simples, barata e boa pra viagem e pra fuga. Uma criatura a mais por círculo acima do 1º.'] },
+      'O Deslocamento da criatura tocada aumenta em 3 m.',
+      'Por círculo acima do 1º: +1 criatura.'] },
     mag_protecao_bem_mal: { t: 'Proteção Contra o Bem e o Mal', l: 'Blindagem contra seis tipos de criatura.', b: [
       '1º círculo · mago · druida',
       'Ação · alcance Toque · duração 10 minutos',
@@ -2274,59 +2273,55 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     mag_curar_ferimentos: { t: 'Curar Ferimentos', l: 'A cura padrão: toque e PV de volta.', b: [
       '1º círculo · druida',
       'Ação · alcance Toque · duração Instantânea',
-      '2d8 + o seu atributo de conjuração.',
-      'Não funciona em morto-vivo nem em constructo.'] },
-    mag_palavra_curativa: { t: 'Palavra Curativa', l: 'Cura de longe e como ação bônus — levanta quem caiu.', b: [
+      'A criatura tocada recupera 2d8 + seu atributo de conjuração em Pontos de Vida.',
+      'Por círculo acima do 1º: +2d8.'] },
+    mag_palavra_curativa: { t: 'Palavra Curativa', l: 'Cura de longe, como ação bônus.', b: [
       '1º círculo · druida',
       'Ação bônus · alcance 18 m · duração Instantânea',
-      '2d4 + o seu atributo de conjuração.',
-      'Cura menos que Curar Ferimentos, mas deixa você agir no mesmo turno.'] },
-    mag_enredar: { t: 'Enredar', l: 'O chão vira mato e prende quem estiver nele.', b: [
+      'Uma criatura à sua escolha, à sua vista e no alcance, recupera 2d4 + seu atributo de conjuração em Pontos de Vida.',
+      'Por círculo acima do 1º: +2d4.'] },
+    mag_emaranhar: { t: 'Emaranhar', l: 'O chão vira mato que prende quem estiver nele.', b: [
       '1º círculo · druida',
-      'Ação · alcance 27 m · duração 1 minuto',
-      'Precisa de concentração.',
-      'Quadrado de 6 m; salvaguarda de Força ou fica Impedido.',
-      'Quem está preso pode tentar de novo a cada turno.'] },
+      'Ação · alcance 27 m · duração Concentração, até 1 minuto',
+      'Plantas agarradoras num quadrado de 6 m: o terreno vira Terreno Difícil.',
+      'Cada criatura (menos você) na área faz salvaguarda de Força ou fica Contida. Uma criatura Contida pode usar ação para fazer teste de Força (Atletismo) contra a CD e se soltar.'] },
     mag_fogo_das_fadas: { t: 'Fogo das Fadas', l: 'Pinta os alvos de luz: ninguém mais se esconde.', b: [
       '1º círculo · druida',
-      'Ação · alcance 18 m · duração 1 minuto',
-      'Precisa de concentração.',
-      'Cubo de 6 m, salvaguarda de Destreza.',
-      'Quem foi marcado é atacado com vantagem e não fica invisível.'] },
-    mag_amizade_animal: { t: 'Amizade Animal', l: 'Convence um bicho de que você não é ameaça.', b: [
+      'Ação · alcance 18 m · duração Concentração, até 1 minuto',
+      'Cubo de 6 m: cada criatura e objeto faz salvaguarda de Destreza ou fica delineado. Emite Meia-luz em 3 m e não pode se beneficiar de Invisível.',
+      'Ataques contra um alvo delineado têm vantagem se o atacante puder vê-lo.'] },
+    mag_amizade_animal: { t: 'Amizade Animal', l: 'Convence uma Fera de que você não é ameaça.', b: [
       '1º círculo · druida',
       'Ação · alcance 9 m · duração 24 horas',
-      'Precisa de material (um pedaço de comida).',
-      'Salvaguarda de Sabedoria; só funciona em animal com Inteligência 3 ou menos.'] },
+      'Precisa de material (um bocado de comida).',
+      'Uma Fera à sua vista e no alcance faz salvaguarda de Sabedoria. Se falhar, fica Enfeitiçada pela duração. Se você ou um aliado causar dano a ela, a magia encerra.',
+      'Por círculo acima do 1º: +1 criatura.'] },
     mag_falar_com_animais: { t: 'Falar com Animais', l: 'Conversa de verdade com bicho.', b: [
       '1º círculo · druida',
-      'Ação · alcance Pessoal · duração 10 minutos',
-      'Precisa de ritual.',
-      'O que ele sabe é limitado à cabeça dele, mas ele viu coisas.',
-      'Ritual: sai de graça.'] },
-    mag_baga_boa: { t: 'Bagas Nutritivas', l: 'Dez frutinhas que curam 1 PV e alimentam por um dia.', b: [
+      'Ação ou ritual · alcance Pessoal · duração 10 minutos',
+      'Você entende e se comunica verbalmente com Feras, e pode usar com elas as opções de perícia da ação Influenciar.',
+      'A maioria sabe pouco além da sobrevivência, mas pelo menos pode falar sobre áreas vizinhas e monstros, incluindo o que viu no último dia.'] },
+    mag_bom_fruto: { t: 'Bom Fruto', l: 'Dez frutos que alimentam e curam um pouco.', b: [
       '1º círculo · druida',
-      'Ação · alcance Toque · duração 24 horas',
+      'Ação · alcance Pessoal · duração 24 horas',
       'Precisa de material (um ramo de visco).',
-      'Cada baga cura 1 PV e sustenta uma criatura por um dia.',
-      'É a magia que segura um grupo sem suprimento.'] },
-    mag_purificar_comida: { t: 'Purificar Comida e Bebida', l: 'Tira veneno e doença de comida e água.', b: [
+      'Dez frutos aparecem na sua mão. Com ação bônus, uma criatura come um: recupera 1 PV e fica alimentada por um dia. Os que sobrarem somem quando a magia termina.'] },
+    mag_purificar_alimentos: { t: 'Purificar Alimentos e Bebidas', l: 'Tira veneno e podridão de comida e água.', b: [
       '1º círculo · druida',
-      'Ação · alcance 3 m · duração Instantânea',
-      'Precisa de ritual.',
-      'Esfera de 1,5 m de raio de comida e bebida não mágicas.',
-      'Ritual.'] },
+      'Ação ou ritual · alcance 3 m · duração Instantânea',
+      'Remove veneno e podridão de alimentos e bebidas não mágicos numa Esfera de 1,5 m de raio.'] },
     mag_criar_destruir_agua: { t: 'Criar ou Destruir Água', l: 'Faz 40 litros de água aparecer, ou some com eles.', b: [
       '1º círculo · druida',
       'Ação · alcance 9 m · duração Instantânea',
-      'Precisa de material (uma gota de água ou um punhado de areia).',
-      'Também apaga fogo numa área pequena.'] },
+      'Precisa de material (uma mistura de água e areia).',
+      'Criar: 40 litros de água limpa num recipiente aberto, ou chuva num cubo de 9 m que apaga chamas expostas. Destruir: até 40 litros de água num recipiente, ou uma névoa num cubo de 9 m.',
+      'Por círculo acima do 1º: +40 litros, ou +1,5 m no cubo.'] },
     mag_detectar_veneno: { t: 'Detectar Veneno e Doença', l: 'Sente veneno e doença em volta.', b: [
       '1º círculo · druida',
-      'Ação · alcance Pessoal (9 m) · duração 10 minutos',
-      'Precisa de concentração e de ritual e de material (uma folha de teixo).',
-      'Diz qual é, não só que existe.',
-      'Ritual.'] },
+      'Ação ou ritual · alcance Pessoal · duração Concentração, até 10 minutos',
+      'Precisa de material (uma folha de teixo).',
+      'Sente a localização de venenos, criaturas venenosas ou peçonhentas e contágios mágicos a até 9 m, e o tipo de cada um.',
+      'Bloqueado por 30 cm de pedra, terra ou madeira, 2,5 cm de metal ou uma folha fina de chumbo.'] },
 
     c1_mago: { t: '1º Círculo de Mago', l: 'As 31 magias de 1º círculo que o mago pode preparar.', b: [
       '[[mag_misseis_magicos|Mísseis Mágicos]] — Três dardos que NUNCA erram.',
@@ -2383,26 +2378,25 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       '[[mag_passos_largos|Passos Largos]] — +3 m de deslocamento por uma hora.',
       '[[mag_raio_bruxa|Raio de Bruxa]] — Um arco elétrico que continua sozinho todo turno.',
       '[[mag_leque_cromatico|Leque Cromático]] — Um jorro de luz que cega quem estiver na frente.'] },
-    c1_druida: { t: '1º Círculo de Druida', l: 'As 19 magias de 1º círculo que o druida pode preparar.', b: [
-      '[[mag_enfeiticar_pessoa|Enfeitiçar Pessoa]] — O alvo passa a te ver como amigo.',
-      '[[mag_onda_trovejante|Onda Trovejante]] — Um empurrão sonoro que tira todo mundo de cima de você.',
-      '[[mag_nevoa_obscurecente|Névoa Obscurecente]] — Uma esfera de neblina que cega todo mundo dentro dela.',
-      '[[mag_faca_gelo|Faca de Gelo]] — Um estilhaço que acerta um e explode nos outros.',
+    c1_druida: { t: '1º Círculo de Druida', l: 'As 18 magias de 1º círculo que o druida pode preparar.', b: [
+      '[[mag_amizade_animal|Amizade Animal]] — Convence uma Fera de que você não é ameaça.',
+      '[[mag_bom_fruto|Bom Fruto]] — Dez frutos que alimentam e curam um pouco.',
+      '[[mag_criar_destruir_agua|Criar ou Destruir Água]] — Faz 40 litros de água aparecer, ou some com eles.',
+      '[[mag_curar_ferimentos|Curar Ferimentos]] — A cura padrão: toque e PV de volta.',
       '[[mag_detectar_magia|Detectar Magia]] — Enxerga aura mágica em volta — e dá pra conjurar como ritual.',
-      '[[mag_salto|Salto]] — Um salto de 9 m pelo preço de 3 m de movimento.',
+      '[[mag_detectar_veneno|Detectar Veneno e Doença]] — Sente veneno e doença em volta.',
+      '[[mag_emaranhar|Emaranhar]] — O chão vira mato que prende quem estiver nele.',
+      '[[mag_enfeiticar_pessoa|Enfeitiçar Pessoa]] — O alvo passa a te ver como amigo.',
+      '[[mag_faca_gelo|Faca de Gelo]] — Um estilhaço que acerta um e explode nos outros.',
+      '[[mag_falar_com_animais|Falar com Animais]] — Conversa de verdade com bicho.',
+      '[[mag_fogo_das_fadas|Fogo das Fadas]] — Pinta os alvos de luz: ninguém mais se esconde.',
+      '[[mag_nevoa_obscurecente|Névoa Obscurecente]] — Uma esfera de névoa Totalmente Obscurecida.',
+      '[[mag_onda_trovejante|Onda Trovejante]] — Um empurrão sonoro que tira todo mundo de cima de você.',
+      '[[mag_palavra_curativa|Palavra Curativa]] — Cura de longe, como ação bônus.',
       '[[mag_passos_largos|Passos Largos]] — +3 m de deslocamento por uma hora.',
       '[[mag_protecao_bem_mal|Proteção Contra o Bem e o Mal]] — Blindagem contra seis tipos de criatura.',
-      '[[mag_raio_bruxa|Raio de Bruxa]] — Um arco elétrico que continua sozinho todo turno.',
-      '[[mag_curar_ferimentos|Curar Ferimentos]] — A cura padrão: toque e PV de volta.',
-      '[[mag_palavra_curativa|Palavra Curativa]] — Cura de longe e como ação bônus — levanta quem caiu.',
-      '[[mag_enredar|Enredar]] — O chão vira mato e prende quem estiver nele.',
-      '[[mag_fogo_das_fadas|Fogo das Fadas]] — Pinta os alvos de luz: ninguém mais se esconde.',
-      '[[mag_amizade_animal|Amizade Animal]] — Convence um bicho de que você não é ameaça.',
-      '[[mag_falar_com_animais|Falar com Animais]] — Conversa de verdade com bicho.',
-      '[[mag_baga_boa|Bagas Nutritivas]] — Dez frutinhas que curam 1 PV e alimentam por um dia.',
-      '[[mag_purificar_comida|Purificar Comida e Bebida]] — Tira veneno e doença de comida e água.',
-      '[[mag_criar_destruir_agua|Criar ou Destruir Água]] — Faz 40 litros de água aparecer, ou some com eles.',
-      '[[mag_detectar_veneno|Detectar Veneno e Doença]] — Sente veneno e doença em volta.'] },
+      '[[mag_purificar_alimentos|Purificar Alimentos e Bebidas]] — Tira veneno e podridão de comida e água.',
+      '[[mag_salto|Salto]] — Um salto de 9 m pelo preço de 3 m de movimento.'] },
 
     // ── Truques agrupados por classe ──────────────────────────────────
     // A lista de cada classe sai da linha 'Truque (nível 0) · …' do
@@ -2450,19 +2444,19 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       '[[mag_trovao|Trovão]] — Um estouro em volta de você, sem componente sonoro nenhum.',
       '[[mag_golpe_certeiro|Golpe Certeiro]] — Reescrito na 5.5: agora é um ataque de arma guiado pela magia.'] },
     trq_druida: { t: 'Truques de Druida', l: 'Os 13 truques que o druida pode conhecer.', b: [
-      '[[mag_elementalismo|Elementalismo]] — Truque novo da 5.5: um efeito pequeno de ar, terra, fogo ou água.',
-      '[[mag_reparar|Reparar]] — Conserta um estrago pequeno como se nunca tivesse existido.',
+      '[[mag_acudir_moribundos|Acudir os Moribundos]] — Deixa estável quem está caído com 0 PV.',
+      '[[mag_arte_druidica|Arte Druídica]] — Pequenos efeitos da natureza: fogo, flor, sensação ou clima.',
+      '[[mag_bordao_mistico|Bordão Místico]] — Seu cajado ou clava passa a bater com o poder da natureza.',
+      '[[mag_chicote_espinhos|Chicote de Espinhos]] — Um chicote de videira que puxa o inimigo pra perto.',
+      '[[mag_criar_chamas|Criar Chamas]] — Uma chama na mão que você pode arremessar num inimigo.',
+      '[[mag_elementalismo|Elementalismo]] — Um efeito pequeno de ar, terra, fogo ou água.',
+      '[[mag_fagulha_estelar|Fagulha Estelar]] — Uma faísca de luz que fere e deixa o alvo visível.',
       '[[mag_mensagem|Mensagem]] — Sussurro que só o alvo ouve, e ele pode responder.',
+      '[[mag_orientacao|Orientação]] — Um d4 extra num teste de atributo com a perícia escolhida.',
       '[[mag_rajada_veneno|Rajada de Veneno]] — Sopro de névoa tóxica na cara do alvo.',
-      '[[mag_trovao|Trovão]] — Um estouro em volta de você, sem componente sonoro nenhum.',
-      '[[mag_truque_druidico|Truque Druídico]] — A assinatura do druida: efeitos pequenos da natureza.',
-      '[[mag_orientacao|Orientação]] — Um d4 de brinde num teste de perícia do aliado.',
-      '[[mag_produzir_chama|Produzir Chama]] — Uma chama na mão que serve de lanterna ou de arma.',
-      '[[mag_resistencia|Resistência]] — Um d4 de brinde numa salvaguarda do aliado.',
-      '[[mag_shillelagh|Shillelagh]] — Transforma seu bordão ou clava em arma mágica de verdade.',
-      '[[mag_estabilizar|Estabilizar]] — Segura quem está em zero PV antes que morra.',
-      '[[mag_fagulha_estelar|Fagulha Estelar]] — Luz estelar que fere e denuncia.',
-      '[[mag_chicote_espinhos|Chicote de Espinhos]] — Um chicote de videira que puxa o inimigo pra perto.'] },
+      '[[mag_reparar|Reparar]] — Conserta um estrago pequeno como se nunca tivesse existido.',
+      '[[mag_resistencia|Resistência]] — Reduz em 1d4 um tipo de dano que o alvo sofrer.',
+      '[[mag_trovao|Trovão]] — Um estouro em volta de você, sem componente sonoro nenhum.'] },
 
     // ── Truques de mago, feiticeiro e druida ──────────────────────────
     // Cada um traz classe, tempo, alcance, duração e o que faz. Botão
@@ -2488,11 +2482,10 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Precisa de concentração e de material (um pouco de fósforo).',
       'Dá pra juntar as quatro numa forma Média vagamente humana. Cada luz dá meia-luz em 3 m.',
       'Move todas até 18 m com uma ação bônus.'] },
-    mag_elementalismo: { t: 'Elementalismo', l: 'Truque novo da 5.5: um efeito pequeno de ar, terra, fogo ou água.', b: [
+    mag_elementalismo: { t: 'Elementalismo', l: 'Um efeito pequeno de ar, terra, fogo ou água.', b: [
       'Truque (nível 0) · mago · feiticeiro · druida',
       'Ação · alcance 9 m · duração Instantânea',
-      'Cinco efeitos à escolha, todos num cubo de 1,5 m: convocar água, brisa, fogo (brasas que acendem vela e tocha) ou terra, ou esculpir um elemento numa forma tosca por 1 hora.',
-      'Efeito de cena, não de dano.'] },
+      'Escolha um efeito num cubo de 1,5 m: Convocar Água (névoa fria ou uma xícara de água), Convocar Brisa, Convocar Fogo (brasas inofensivas e fumaça colorida) ou Convocar Terra (poeira ou areia). Ou Esculpir Elemento, que dá forma rudimentar a até um cubo de 30 cm por 1 hora.'] },
     mag_raio_fogo: { t: 'Raio de Fogo', l: 'O tiro padrão do mago. Ataque à distância, dano que sobe de nível.', b: [
       'Truque (nível 0) · mago · feiticeiro',
       'Ação · alcance 36 m · duração Instantânea',
@@ -2525,7 +2518,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Truque (nível 0) · mago · feiticeiro · druida',
       'Ação · alcance 36 m · duração 1 rodada',
       'Precisa de material (um fio de cobre).',
-      'Atravessa obstáculo sólido se você conhecer o alvo e o caminho.'] },
+      'Dá pra mandar a mensagem através de um obstáculo se você estiver familiarizado com o alvo e souber que ele está do outro lado. Silêncio mágico, 30 cm de pedra, metal ou madeira, ou uma folha fina de chumbo bloqueiam.'] },
     mag_talho_mental: { t: 'Talho Mental', l: 'Agulha psíquica que também atrapalha a próxima defesa.', b: [
       'Truque (nível 0) · mago · feiticeiro',
       'Ação · alcance 18 m · duração 1 rodada',
@@ -2577,47 +2570,48 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Precisa de material (uma arma com que você tem proficiência, valendo 1 PC ou mais).',
       'Ataca com essa arma usando o atributo de conjuração no lugar de Força ou Destreza. O dano pode ser radiante ou o normal da arma, você escolhe.',
       'Soma dano radiante extra nos níveis 5 (1d6), 11 (2d6) e 17 (3d6).'] },
-    mag_truque_druidico: { t: 'Truque Druídico', l: 'A assinatura do druida: efeitos pequenos da natureza.', b: [
+    mag_orientacao: { t: 'Orientação', l: 'Um d4 extra num teste de atributo com a perícia escolhida.', b: [
+      'Truque (nível 0) · druida',
+      'Ação · alcance Toque · duração 1 minuto',
+      'Precisa de concentração.',
+      'Você toca uma criatura voluntária e escolhe uma perícia. Ela soma 1d4 a qualquer teste de atributo com essa perícia.'] },
+    mag_criar_chamas: { t: 'Criar Chamas', l: 'Uma chama na mão que você pode arremessar num inimigo.', b: [
+      'Truque (nível 0) · druida',
+      'Ação bônus · alcance Pessoal · duração 10 minutos',
+      'Uma chama que não esquenta nem queima: Luz Plena em 6 m e Meia-luz por mais 6 m. Conjurar de novo encerra a magia.',
+      'Enquanto ela durar, com uma ação Usar Magia você arremessa a chama a até 18 m: ataque mágico à distância, acertou, 1d8 de Ígneo.',
+      'Sobe 1d8 nos níveis 5 (2d8), 11 (3d8) e 17 (4d8).'] },
+    mag_resistencia: { t: 'Resistência', l: 'Reduz em 1d4 um tipo de dano que o alvo sofrer.', b: [
+      'Truque (nível 0) · druida',
+      'Ação · alcance Toque · duração 1 minuto',
+      'Precisa de concentração.',
+      'Você escolhe um tipo de dano (Ácido, Contundente, Cortante, Elétrico, Gélido, Ígneo, Necrótico, Perfurante, Radiante, Trovejante ou Venenoso). A criatura reduz em 1d4 o dano desse tipo que sofrer, e só se beneficia uma vez por turno.'] },
+    mag_bordao_mistico: { t: 'Bordão Místico', l: 'Seu cajado ou clava passa a bater com o poder da natureza.', b: [
+      'Truque (nível 0) · druida',
+      'Ação bônus · alcance Pessoal · duração 1 minuto',
+      'Precisa de material (um ramo de visco).',
+      'Um cajado ou clava que você segura usa seu atributo de conjuração em vez de Força no ataque e no dano corpo a corpo, e o dado de dano vira d8. O dano pode ser Energético ou do tipo normal da arma, à sua escolha.',
+      'O dado muda para d10 no nível 5, d12 no 11 e 2d6 no 17.'] },
+    mag_acudir_moribundos: { t: 'Acudir os Moribundos', l: 'Deixa estável quem está caído com 0 PV.', b: [
+      'Truque (nível 0) · druida',
+      'Ação · alcance 4,5 m · duração Instantânea',
+      'Uma criatura a até 4,5 m com 0 PV e que não esteja morta fica Estável.',
+      'O alcance dobra nos níveis 5 (9 m), 11 (18 m) e 17 (36 m).'] },
+    mag_arte_druidica: { t: 'Arte Druídica', l: 'Pequenos efeitos da natureza: fogo, flor, sensação ou clima.', b: [
       'Truque (nível 0) · druida',
       'Ação · alcance 9 m · duração Instantânea',
-      'Prevê o tempo das próximas 24 h, faz uma flor abrir, acende ou apaga fogueira pequena.'] },
-    mag_orientacao: { t: 'Orientação', l: 'Um d4 de brinde num teste de perícia do aliado.', b: [
-      'Truque (nível 0) · druida',
-      'Ação · alcance Toque · duração 1 minuto',
-      'Precisa de concentração.',
-      'Ele escolhe quando usar, antes de saber o resultado.'] },
-    mag_produzir_chama: { t: 'Produzir Chama', l: 'Uma chama na mão que serve de lanterna ou de arma.', b: [
-      'Truque (nível 0) · druida',
-      'Ação · alcance Pessoal · duração 10 minutos',
-      'Luz em 6 m; dá pra arremessar num ataque à distância por 1d8 de fogo.',
-      'Arremessou, acabou a magia.'] },
-    mag_resistencia: { t: 'Resistência', l: 'Um d4 de brinde numa salvaguarda do aliado.', b: [
-      'Truque (nível 0) · druida',
-      'Ação · alcance Toque · duração 1 minuto',
-      'Precisa de concentração.',
-      'É a irmã da Orientação, mas pra resistir em vez de tentar.'] },
-    mag_shillelagh: { t: 'Shillelagh', l: 'Transforma seu bordão ou clava em arma mágica de verdade.', b: [
-      'Truque (nível 0) · druida',
-      'Ação bônus · alcance Toque · duração 1 minuto',
-      'Precisa de material (visco, uma folha de trevo e o próprio bordão).',
-      'Passa a usar Sabedoria no ataque e no dano, e o dado vira d8.',
-      'Na 5.5 o dano vira de força ou radiante, à sua escolha.'] },
-    mag_estabilizar: { t: 'Estabilizar', l: 'Segura quem está em zero PV antes que morra.', b: [
-      'Truque (nível 0) · druida',
-      'Ação · alcance Toque · duração Instantânea',
-      'O alvo para de rolar salvaguarda contra morte, mas continua inconsciente.',
-      'Na 5.5 alcance de toque, e funciona em quem está caído há pouco.'] },
-    mag_fagulha_estelar: { t: 'Fagulha Estelar', l: 'Luz estelar que fere e denuncia.', b: [
+      'Um dos efeitos: acende ou apaga vela, tocha ou fogueira; cria um efeito sensorial inofensivo num cubo de 1,5 m (folhas caindo, brisa, som de animal); faz uma flor desabrochar ou uma vagem se abrir; ou prevê o clima das próximas 24 horas, num efeito que dura 1 rodada.'] },
+    mag_fagulha_estelar: { t: 'Fagulha Estelar', l: 'Uma faísca de luz que fere e deixa o alvo visível.', b: [
       'Truque (nível 0) · druida',
       'Ação · alcance 18 m · duração Instantânea',
-      '1d8 de radiante, salvaguarda de Sabedoria.',
-      'Falhou: o alvo fica brilhando até o seu próximo turno, e não se esconde.'] },
+      'Ataque mágico à distância: acertou, 1d8 de Radiante. Até o fim do seu próximo turno, o alvo emite Meia-luz em 3 m e não pode ficar Invisível.',
+      'Sobe 1d8 nos níveis 5 (2d8), 11 (3d8) e 17 (4d8).'] },
     mag_chicote_espinhos: { t: 'Chicote de Espinhos', l: 'Um chicote de videira que puxa o inimigo pra perto.', b: [
       'Truque (nível 0) · druida',
       'Ação · alcance 9 m · duração Instantânea',
-      'Precisa de material (o caule de uma planta com espinhos).',
-      '1d6 de perfurante e puxa o alvo 3 m na sua direção.',
-      'Só funciona em criatura Grande ou menor.'] },
+      'Precisa de material (o caule de uma planta espinhosa).',
+      'Ataque mágico corpo a corpo: acertou, 1d6 de Perfurante. Se o alvo for Grande ou menor, você o puxa até 3 m na sua direção.',
+      'Sobe 1d6 nos níveis 5 (2d6), 11 (3d6) e 17 (4d6).'] },
 
     // ── Grau 2: as subclasses, por classe ─────────────────────────────
     // Na 5.5 TODAS chegam no nível 3, então aqui não há o que aplicar
@@ -3231,7 +3225,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Nível 3: [[mag_detectar_magia|Detectar Magia]] · Nível 5: [[mag_passo_nebuloso|Passo Nebuloso]].'] },
     lin_elfo_floresta: { t: 'Elfo da Floresta', l: 'Elfo do mato: mais rápido e difícil de rastrear.', b: [
       'Deslocamento vai a 10,5 m.',
-      'Truque: [[mag_truque_druidico|Truque Druídico]].',
+      'Truque: [[mag_arte_druidica|Arte Druídica]].',
       'Nível 3: [[mag_passos_largos|Passos Largos]] · Nível 5: [[mag_passos_sem_pegadas|Passos sem Pegadas]].'] },
     lin_gnomica: { t: 'Linhagem Gnômica', l: 'O tipo de gnomo: da floresta ou das rochas.', b: [
       'Escolha uma ao criar o personagem. O atributo das magias dela é Inteligência, Sabedoria ou Carisma.'],
