@@ -1281,6 +1281,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
 
 </div>
 
+<script src="ficha-guard.js?v=2026100301"></script>
 <script>
 (function() {
   'use strict';
@@ -4569,6 +4570,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     .replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 60);
   if (qs.get('id') !== RID) { try { history.replaceState(null, '', location.pathname + '?id=' + RID + SUFIXO_ESP); } catch (e) {} }
   ls('dndRascunhoAtual', RID);
+  // Trava de identidade: ficha de outro sistema redireciona; apagada fica só-leitura; código nunca duplica
+  if (window.FichaGuard) FichaGuard.init({ tipo: 'dnd', charId: RID, exigeCarga: false });
 
   var cab = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
   function urlObj(nome) { return SB_URL + '/storage/v1/object/personagens/' + PASTA + nome; }
@@ -6149,8 +6152,14 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   // Achou rascunho, ele abre normalmente e a primeira gravacao ja nasce na
   // tabela — a migracao acontece sozinha, sem ninguem perder nada.
   function carrega() {
-    return rest(TAB + '?char_id=eq.' + encodeURIComponent(RID) + '&select=sheet_data,sheet_data_v1,space_id&deleted_at=is.null', 'GET')
-      .then(function(linhas) {
+    // Sem filtro de deleted_at: personagem apagado AINDA EXISTE (e o código dele
+    // é único). Antes, abrir um apagado não achava nada e criava uma 2ª linha
+    // com o mesmo char_id. Linha viva tem prioridade; só apagada = só leitura.
+    return rest(TAB + '?char_id=eq.' + encodeURIComponent(RID) + '&select=sheet_data,sheet_data_v1,space_id,deleted_at&order=deleted_at.desc.nullsfirst', 'GET')
+      .then(function(todas) {
+        var linhas = (todas || []).filter(function(l) { return !l.deleted_at; });
+        var soApagadas = !linhas.length && todas && todas.length;
+        if (soApagadas) linhas = [todas[0]];
         if (linhas && linhas.length) {
           existeNaTabela = true;
           // aberta sem ?esp=: o Voltar ainda devolve pro BOX onde o personagem mora
@@ -6158,7 +6167,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
             var voltaBox = document.getElementById('backBtn');
             if (voltaBox) voltaBox.href = 'personagens.html?esp=' + encodeURIComponent(linhas[0].space_id);
           }
-          return { existe: true, dados: linhas[0].sheet_data || {}, de: 'tabela' };
+          return { existe: true, dados: linhas[0].sheet_data || {}, de: 'tabela', apagada: !!soApagadas };
         }
         // nao esta na tabela: pode ser rascunho de antes
         return fetch(urlObj(RID + '.json') + '?t=' + Date.now(), { headers: cab, cache: 'no-store' })
@@ -6213,6 +6222,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       }
       else if (res.de === 'rascunho') status('salvo', 'Rascunho antigo · vira personagem ao salvar');
       else status('salvo', 'Personagem · carregado');
+      if (res.apagada) bloqueia('Personagem apagado · somente leitura');
       // veio do rascunho? grava ja, pra migrar sem depender de o Daniel digitar
       if (res.existe && res.de === 'rascunho') marca();
       checaCopiaLocal(res.existe ? res.dados : null);

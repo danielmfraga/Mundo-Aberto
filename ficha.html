@@ -1329,6 +1329,7 @@ body::after {
 
 </div>
 
+<script src="ficha-guard.js?v=2026100301"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="sheet-sync.js?v=2026053001"></script>
 <script>
@@ -1744,6 +1745,8 @@ function sbFetch(path, method, body) {
 var CHAR_ID      = (new URLSearchParams(window.location.search)).get('id')  || 'default';
 var ESP_PARAM    = (new URLSearchParams(window.location.search)).get('esp') || null;
 var CHAR_SPACE_ID = null; // preenchido em loadCharData quando personagem pertence a um espaço
+// Trava de identidade: uma ficha não vira outra, e nada é gravado antes de a ficha abrir com sucesso
+if (window.FichaGuard) FichaGuard.init({ tipo: 'cacador', charId: CHAR_ID, exigeCarga: true });
 
 // ── Serializa estado completo da ficha ──
 function captureSheet() {
@@ -1969,7 +1972,9 @@ function restoreSheet(data) {
 
   sbFetch('/rest/v1/personagens?char_id=eq.' + CHAR_ID + '&select=*', 'GET')
     .then(function(data) {
-      if (!data || !data.length) return;
+      // sbFetch devolve o corpo de erro como se fosse dado: só vale lista de verdade
+      if (!Array.isArray(data)) throw new Error('resposta inesperada ao abrir a ficha');
+      if (!data.length) { window.FichaGuard && FichaGuard.carregou(); return; }
       var c = data[0];
 
       // Espaço ao qual o personagem pertence
@@ -1991,7 +1996,8 @@ function restoreSheet(data) {
       if (c.sheet_data) {
         restoreSheet(c.sheet_data);
       }
-    }).catch(function() {});
+      window.FichaGuard && FichaGuard.carregou();
+    }).catch(function() { window.FichaGuard && FichaGuard.falhouCarga(); });
 })();
 
 // ── Botão salvar ──
