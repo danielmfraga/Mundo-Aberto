@@ -3024,15 +3024,16 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     //   [4] Perícias: … (informativo — a escolha é do jogador)
     //   Tirando o [0], a leitura é pelo começo da linha, não pela posição.
     //   [5+] Nível 1: …
-    cls_barbaro: { t: 'Bárbaro', l: 'Fúria como recurso: quanto mais apanha, mais assusta.', b: [
+    cls_barbaro: { t: 'Bárbaro', l: 'A Fúria é a ferocidade de um predador, a fúria de uma tempestade e a turbulência do mar.', b: [
       'Dado de Vida: d12 · Atributo principal: Força',
       'Salvaguardas: Força e Constituição',
       'Armaduras: leves, médias e escudos',
       'Armas: simples e marciais',
       'Perícias: 2 entre Atletismo, Intimidação, Lidar com Animais, Natureza, Percepção e Sobrevivência',
-      'Nível 1: Fúria — 2 usos; +2 de dano com Força, resistência a cortante, perfurante e contundente, e vantagem em Força',
-      'Nível 1: Defesa sem Armadura — CA 10 + Destreza + Constituição quando está sem armadura',
-      'Nível 1: Maestria em Armas — escolhe 2 armas e usa a maestria delas'] },
+      'Nível 1: Fúria — 2 usos, ativada como ação bônus fora de armadura Pesada. +2 de dano com Força, resistência a contundente, cortante e perfurante, vantagem em testes e salvaguardas de Força; e não pode conjurar magias nem manter Concentração enquanto dura',
+      'Nível 1: Defesa sem Armadura — CA 10 + Destreza + Constituição sem armadura; pode usar escudo',
+      'Nível 1: Maestria em Armas — dois tipos de armas Corpo a Corpo Simples ou Marciais, trocáveis a cada descanso longo',
+      'Equipamento inicial: (A) 4 Machadinhas, Machado Grande, Kit de Aventureiro e 15 PO; ou (B) 75 PO'] },
     cls_bardo: { t: 'Bardo', l: 'Magia pela palavra e pela música. Ajuda o grupo inteiro a acertar mais.', b: [
       'Dado de Vida: d8 · Atributo principal: Carisma',
       'Salvaguardas: Destreza e Carisma',
@@ -3198,11 +3199,11 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Habilidoso: proficiência em uma [[pericia|perícia]] à sua escolha',
       'Versátil: um [[cnc_talento_origem|talento de origem]] além do que o antecedente já deu',
       'Engenhoso: ganha [[inspiracao|Inspiração Heroica]] ao terminar um [[cnc_descanso|descanso longo]]'] },
-    esp_orc: { t: 'Orc', l: 'Fôlego de sobra e o costume de não cair na primeira.', b: [
+    esp_orc: { t: 'Orc', l: 'Herdam de Gruumsh resistência, determinação e visão na escuridão.', b: [
       'Tamanho: Médio · Deslocamento: 9 m',
       '[[cnc_visao_escuro|Visão no Escuro]] 36 m',
-      'Resistência Implacável: ao cair a 0 PV sem morrer na hora, fica com 1 — uma vez por [[cnc_descanso|descanso longo]]',
-      'Investida Adrenalina: Disparada como [[cnc_acao_bonus|ação bônus]], ganhando PV temporários iguais ao bônus de proficiência — bônus de proficiência vezes por descanso curto ou longo'] },
+      'Vigor Implacável: ao cair a 0 PV sem morrer na hora, fica com 1 — uma vez por [[cnc_descanso|descanso longo]]',
+      'Pico de Adrenalina: com [[cnc_acao_bonus|ação bônus]], você executa Correr e ganha PV temporários iguais ao seu bônus de proficiência — tantas vezes quanto o bônus de proficiência, recuperadas no descanso curto ou longo'] },
     esp_tiferino: { t: 'Tiferino', l: 'Os tiferinos nascem nos Planos Inferiores ou têm ancestrais que se originaram lá.', b: [
       'Tamanho: Médio ou Pequeno · Deslocamento: 9 m',
       '[[cnc_visao_escuro|Visão no Escuro]] 18 m',
@@ -3346,10 +3347,10 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Ganha [[inspiracao|Inspiração Heroica]] ao terminar um [[cnc_descanso|descanso longo]].'] },
     tra_orc_visao_escuro: { t: 'Visão no Escuro (Orc)', l: 'Enxerga no escuro até 36 m.', b: [
       '[[cnc_visao_escuro|Visão no Escuro]] até 36 m.'] },
-    tra_orc_resistencia_implacavel: { t: 'Resistência Implacável', l: 'Cair a 0 PV não é sempre o fim.', b: [
+    tra_orc_vigor_implacavel: { t: 'Vigor Implacável', l: 'Cair a 0 PV não é sempre o fim.', b: [
       'Ao cair a 0 PV sem morrer na hora, fica com 1 PV em vez disso — uma vez por [[cnc_descanso|descanso longo]].'] },
-    tra_orc_investida_adrenalina: { t: 'Investida Adrenalina', l: 'Um empurrão de PV temporário, disparado como ação bônus.', b: [
-      'Com [[cnc_acao_bonus|ação bônus]], ganha PV temporários iguais ao seu bônus de proficiência — bônus de proficiência vezes por descanso curto ou longo.'] },
+    tra_orc_pico_adrenalina: { t: 'Pico de Adrenalina', l: 'PV temporários a cada Correr como ação bônus.', b: [
+      'Com [[cnc_acao_bonus|ação bônus]], você executa Correr e ganha PV temporários iguais ao seu bônus de proficiência. Pode usar um número de vezes igual ao bônus de proficiência, e recupera os usos no descanso curto ou longo.'] },
     tra_tiferino_visao_escuro: { t: 'Visão no Escuro (Tiferino)', l: 'Enxerga no escuro até 18 m.', b: [
       '[[cnc_visao_escuro|Visão no Escuro]] até 18 m.'] },
     tra_tiferino_presenca: { t: 'Presença Sobrenatural', l: 'Já nasce sabendo um truque estranho.', b: [
@@ -3472,7 +3473,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Ferramenta: [[ferr_caligrafia|Suprimentos de Calígrafo]]',
       'Equipamento: (A) Cajado, Suprimentos de Calígrafo, Livro (história), Pergaminho (8 folhas), Túnica e 8 PO; ou (B) 50 PO'],
       kit: [['bordao', 1], ['ferr_caligrafia', 1], ['livro', 1], ['pergaminho', 8], ['tunica', 1]] },
-    ant_soldado: { t: 'Soldado', l: 'Serviu numa tropa: marchou, obedeceu, lutou em formação e viu gente morrer.', b: [
+    ant_soldado: { t: 'Soldado', l: 'A batalha está em seu sangue.', b: [
       'Atributos: Força, Destreza, Constituição',
       'Talento: [[tal_atacante|Atacante Selvagem]]',
       'Perícias: [[per_atletismo|Atletismo]], [[per_intimidacao|Intimidação]]',
