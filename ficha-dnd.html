@@ -4198,6 +4198,104 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     });
     return b;
   }
+  // Círculo máximo de magia que cada classe alcança em cada nível (índice = nível − 1).
+  // Vem da tabela de características da classe no livro; cada classe entra no seu lote.
+  var PROG_CIRCULO = { mago: [1, 1, 2, 2, 3, 3, 4, 4, 5, 5] };
+
+  // Classe e nível escritos na ficha → o que esse nível traz, lido das etiquetas (tag).
+  function mostraProgressao(modo) {
+    var velho = balao.querySelector('.balao-prog');
+    if (velho) velho.remove();
+    var clsTxt = texto('classe');
+    var cls = semAcento(clsTxt).replace(/\s+/g, '');
+    var n = parseInt(texto('nivel'), 10);
+    var box = document.createElement('div');
+    box.className = 'balao-prog';
+    if (!cls || !n || n < 1) {
+      var aviso = document.createElement('div'); aviso.className = 'balao-l';
+      aviso.textContent = 'Escreva a classe e o nível na ficha pra ver o que esse nível traz.';
+      box.appendChild(aviso);
+      balaoB.insertAdjacentElement('afterend', box);
+      return;
+    }
+    var ate = modo === 'ate';
+    var etiq = function(k) {
+      var t = AJUDA[k] && AJUDA[k].tag;
+      return t && t.classes && t.classes.indexOf(cls) >= 0 ? t : null;
+    };
+    var chaves = Object.keys(AJUDA).filter(function(k) { return etiq(k); });
+    var cabec = document.createElement('div'); cabec.className = 'balao-l';
+    cabec.textContent = (ate ? 'Tudo até o nível ' : 'Do nível ') + n + ' de ' + clsTxt;
+    box.appendChild(cabec);
+    var bt = document.createElement('button');
+    bt.type = 'button'; bt.className = 'balao-add';
+    bt.textContent = ate ? 'Ver só o nível ' + n : 'Ver tudo até o nível ' + n;
+    bt.addEventListener('click', function(e) { e.stopPropagation(); mostraProgressao(ate ? 'novo' : 'ate'); });
+    box.appendChild(bt);
+    // "revisado" = a classe tem características etiquetadas (magias de outras
+    // classes que também listam esta não contam)
+    var temFeat = chaves.some(function(k) {
+      var t = etiq(k);
+      return t.tipo === 'caracteristica' || t.tipo === 'subclasse';
+    });
+    if (!temFeat && !PROG_CIRCULO[cls]) {
+      var nada = document.createElement('div'); nada.className = 'balao-l';
+      nada.textContent = 'Ainda não revisado pra essa classe.';
+      box.appendChild(nada);
+      balaoB.insertAdjacentElement('afterend', box);
+      return;
+    }
+    // características e subclasses do nível (ou até o nível)
+    var feats = chaves.filter(function(k) {
+      var t = etiq(k);
+      return (t.tipo === 'caracteristica' || t.tipo === 'subclasse') && (ate ? t.nivel <= n : t.nivel === n);
+    }).sort(function(a, b) {
+      return etiq(a).nivel - etiq(b).nivel || AJUDA[a].t.localeCompare(AJUDA[b].t, 'pt-BR');
+    });
+    if (feats.length) {
+      var ul = document.createElement('ul');
+      feats.forEach(function(k) {
+        var li = document.createElement('li');
+        li.appendChild(document.createTextNode(AJUDA[k].t + ' (nível ' + etiq(k).nivel + ')'));
+        var a = botaoAdd(k);
+        if (a) li.appendChild(a);
+        ul.appendChild(li);
+      });
+      box.appendChild(ul);
+    }
+    // magias: o círculo que este nível libera (ou todos até ele)
+    var tabela = PROG_CIRCULO[cls] || [];
+    var circ = tabela.length ? tabela[Math.min(n, tabela.length) - 1] : 0;
+    var prev = tabela.length && n > 1 ? tabela[Math.min(n - 1, tabela.length) - 1] : 0;
+    var magias = chaves.filter(function(k) {
+      var t = etiq(k);
+      if (t.tipo !== 'magia') return false;
+      return ate ? t.circulo <= circ : (circ > prev && t.circulo === circ);
+    });
+    var truques = ate ? chaves.filter(function(k) { return etiq(k).tipo === 'truque'; }) : [];
+    var nomes = function(lista) {
+      return lista.map(function(k) { return AJUDA[k].t; }).sort(function(a, b) { return a.localeCompare(b, 'pt-BR'); }).join(', ');
+    };
+    if (truques.length) {
+      var pt = document.createElement('div'); pt.className = 'balao-l';
+      pt.textContent = 'Truques: ' + nomes(truques) + '.';
+      box.appendChild(pt);
+    }
+    if (ate) {
+      for (var c = 1; c <= circ; c++) {
+        var grupo = magias.filter(function(k) { return etiq(k).circulo === c; });
+        if (!grupo.length) continue;
+        var pc = document.createElement('div'); pc.className = 'balao-l';
+        pc.textContent = c + 'º círculo: ' + nomes(grupo) + '.';
+        box.appendChild(pc);
+      }
+    } else if (magias.length) {
+      var pm = document.createElement('div'); pm.className = 'balao-l';
+      pm.textContent = 'Círculo novo, ' + circ + 'º: ' + nomes(magias) + '.';
+      box.appendChild(pm);
+    }
+    balaoB.insertAdjacentElement('afterend', box);
+  }
   function abre(chave, estado) {
     var d = AJUDA[chave];
     if (!d) return;
@@ -4205,10 +4303,13 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     balaoT.textContent = d.t;
     var velhoAdd = balao.querySelector(':scope > .balao-add');
     if (velhoAdd) velhoAdd.remove();
+    var velhoProg = balao.querySelector('.balao-prog');
+    if (velhoProg) velhoProg.remove();
     var addTopo = botaoAdd(chave);
     if (addTopo) balaoT.insertAdjacentElement('afterend', addTopo);
     balaoL.innerHTML = ''; balaoL.appendChild(comTags(d.l));
     bullets(balaoB, d.b);
+    if (chave === 'nivel') mostraProgressao('novo');
 
     // limpa o grau 2 anterior e as ações de item de inventário
     var antigo = balao.querySelector('.balao-mais, .balao-lista, .balao-acoes');
