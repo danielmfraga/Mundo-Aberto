@@ -2442,13 +2442,13 @@
       charList.innerHTML = '<div style="text-align:center;color:rgba(207,233,240,0.5);padding:20px;font-family:\'Share Tech Mono\',monospace;font-size:11px;letter-spacing:2px;">CARREGANDO...</div>';
 
       try {
-        var chars = await sbFetch('/rest/v1/personagens?select=char_id,name,img_url,tipo:sheet_data-%3E%3Esheet_type,vtm:sheet_data-%3EvtmFields&deleted_at=is.null&order=created_at.desc', 'GET');
+        var chars = await sbFetch('/rest/v1/personagens?select=char_id,name,img_url,eh_npc,tipo:sheet_data-%3E%3Esheet_type,vtm:sheet_data-%3EvtmFields&deleted_at=is.null&order=created_at.desc', 'GET');
         // Só entram fichas do MESMO sistema do scan: misturar campos de Caçador/Vampiro
         // numa ficha de D&D (ou o contrário) estraga a ficha. Uma ficha não vira outra.
         var tipoDoScan = scanSheetType === 'vampiro' ? 'vampiro' : 'cacador';
         chars = (Array.isArray(chars) ? chars : []).filter(function(c) {
           var t = c.tipo || (c.vtm ? 'vampiro' : 'cacador');
-          return !c.char_id.startsWith('npc_') && t === tipoDoScan;
+          return !FichaGuard.ehNpc(c) && t === tipoDoScan;
         });
 
         if (chars.length === 0) {

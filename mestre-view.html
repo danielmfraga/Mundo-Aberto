@@ -804,7 +804,7 @@
   function openPicker() {
     var currentIds = Array.from(grid.querySelectorAll('.pj-card'))
       .map(function(c) { return c.dataset.charId; }).filter(Boolean);
-    sbGet('/rest/v1/personagens?select=char_id,name,img_url&order=name.asc')
+    sbGet('/rest/v1/personagens?select=char_id,name,img_url,eh_npc&order=name.asc')
       .then(function(rows) {
         var available = (rows || []).filter(function(r) {
           return currentIds.indexOf(r.char_id) === -1;
@@ -848,7 +848,7 @@
       rows.forEach(function(row) {
         var item = document.createElement('div');
         item.className = 'picker-item';
-        var isNpc = !!(row.char_id && row.char_id.startsWith('npc_'));
+        var isNpc = FichaGuard.ehNpc(row);
         // data-name para filtro ao vivo
         item.dataset.name = (row.name || row.char_id || '').toLowerCase();
 

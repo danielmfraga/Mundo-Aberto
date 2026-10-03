@@ -1585,7 +1585,7 @@
 
       function renderChars(chars) {
         if (!Array.isArray(chars)) return;
-        chars.filter(function(c) { return !c.char_id.startsWith('npc_'); })
+        chars.filter(function(c) { return !FichaGuard.ehNpc(c); })
              .sort(function(a,b){ return (a.name||'').localeCompare(b.name||'','pt'); })
              .forEach(function(char, i) {
           const card = createHoloCard(char.char_id, char.name, char.img_url, null, char.sheet_data);
@@ -1650,7 +1650,7 @@
       sbFetch('/rest/v1/personagens?select=*&order=created_at.asc&deleted_at=is.null')
         .then(function(chars) {
           if (!Array.isArray(chars)) return;
-          chars.filter(function(c) { return c.char_id.startsWith('npc_'); })
+          chars.filter(function(c) { return FichaGuard.ehNpc(c); })
                .sort(function(a,b){ return (a.name||'').localeCompare(b.name||'','pt'); })
                .forEach(function(npc, i) {
             var card = createHoloCard(npc.char_id, npc.name, npc.img_url, 'N P C', npc.sheet_data);
@@ -1702,7 +1702,7 @@
             divider.style.borderTopColor = 'rgba(' + sp.rgb + ',0.14)';
             roster.insertBefore(divider, newCharGrp);
 
-            chars.filter(function(c) { return !c.char_id.startsWith('npc_'); })
+            chars.filter(function(c) { return !FichaGuard.ehNpc(c); })
                  .forEach(function(char, i) {
               var card = createHoloCard(char.char_id, char.name, char.img_url, null, char.sheet_data);
               card.classList.add('sp-inline-char');
@@ -1921,13 +1921,13 @@
         const rows = await sbFetch('/rest/v1/personagens?char_id=eq.' + id + '&select=*');
         if (!rows || !rows[0]) return;
         const src = rows[0];
-        const prefix = id.startsWith('npc_') ? 'npc_' : 'char_';
-        const newId   = prefix + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+        const npc = FichaGuard.ehNpc(src);
+        const newId   = (npc ? 'npc_' : 'char_') + Date.now() + '_' + Math.random().toString(36).slice(2,7);
         const newName = (src.name || 'Personagem') + ' (Cópia)';
         const newData = JSON.parse(JSON.stringify(src.sheet_data || {}));
         if (newData.fields) newData.fields.name = newName;
         await sbFetch('/rest/v1/personagens', 'POST', {
-          char_id: newId, name: newName, img_url: src.img_url || null, sheet_data: newData
+          char_id: newId, name: newName, img_url: src.img_url || null, sheet_data: newData, eh_npc: npc
         });
         const card = createHoloCard(newId, newName, src.img_url, null, newData);
         document.getElementById('roster').insertBefore(card, document.getElementById('charEnd'));
@@ -1945,16 +1945,17 @@
       const id = ctxCharId, grp = ctxCharGroup;
       closeCtxMenu();
       try {
-        const rows = await sbFetch('/rest/v1/personagens?char_id=eq.' + id + '&select=*');
-        if (!rows || !rows[0]) return;
-        const src = rows[0];
-        const newId = 'npc_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-        // Anima saída ANTES das operações de rede
+        // A ficha NÃO muda de código nem é copiada/apagada: só vira NPC (mesmo
+        // char_id, mesmo histórico, mesmo espaço). Se a gravação falhar, o guard
+        // lança erro e a ficha continua onde estava.
         if (grp) grp.classList.add('transmit-out');
-        await sbFetch('/rest/v1/personagens', 'POST', {
-          char_id: newId, name: src.name, img_url: src.img_url || null, sheet_data: src.sheet_data
-        });
-        await sbFetch('/rest/v1/personagens?char_id=eq.' + id, 'PATCH', { deleted_at: new Date().toISOString() });
+        try {
+          await sbFetch('/rest/v1/personagens?char_id=eq.' + id, 'PATCH', { eh_npc: true });
+        } catch (err) {
+          if (grp) grp.classList.remove('transmit-out');
+          showToast('⚠ Não consegui mover para NPCs');
+          return;
+        }
         setTimeout(() => grp && grp.remove(), 680);
         showToast('⇄  Movido para N P C S');
       } finally { ctxBusy = false; }

@@ -6170,7 +6170,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     // Sem filtro de deleted_at: personagem apagado AINDA EXISTE (e o código dele
     // é único). Antes, abrir um apagado não achava nada e criava uma 2ª linha
     // com o mesmo char_id. Linha viva tem prioridade; só apagada = só leitura.
-    return rest(TAB + '?char_id=eq.' + encodeURIComponent(RID) + '&select=sheet_data,sheet_data_v1,space_id,deleted_at&order=deleted_at.desc.nullsfirst', 'GET')
+    return rest(TAB + '?char_id=eq.' + encodeURIComponent(RID) + '&select=sheet_data,sheet_data_v1,space_id,eh_npc,deleted_at&order=deleted_at.desc.nullsfirst', 'GET')
       .then(function(todas) {
         var linhas = (todas || []).filter(function(l) { return !l.deleted_at; });
         var soApagadas = !linhas.length && todas && todas.length;

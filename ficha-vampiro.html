@@ -1580,6 +1580,7 @@ function sbFetch(path, method, body) {
 var CHAR_ID       = (new URLSearchParams(window.location.search)).get('id')  || 'default';
 var ESP_PARAM     = (new URLSearchParams(window.location.search)).get('esp') || null;
 var CHAR_SPACE_ID = null;
+var CHAR_EH_NPC = null;   // chave eh_npc da linha (null = ainda não sei: vale o prefixo npc_)
 // Trava de identidade: uma ficha não vira outra, e nada é gravado antes de a ficha abrir com sucesso
 if (window.FichaGuard) FichaGuard.init({ tipo: 'vampiro', charId: CHAR_ID, exigeCarga: true });
 
@@ -1955,6 +1956,7 @@ function escHtml(str) {
       if (!data.length) { window.FichaGuard && FichaGuard.carregou(); return; }
       var c = data[0];
       if (c.space_id) CHAR_SPACE_ID = c.space_id;
+      if (typeof c.eh_npc === 'boolean') CHAR_EH_NPC = c.eh_npc;
       var nameEl = document.querySelector('[data-field="name"]');
       if (nameEl && c.name) nameEl.textContent = c.name;
       if (c.img_url) {
@@ -2400,7 +2402,7 @@ function applyRemoteSheet(data) {
     var espId    = ESP_PARAM || CHAR_SPACE_ID;
     var dest = returnTo
       ? returnTo
-      : ((id && id.startsWith('npc_'))
+      : (((CHAR_EH_NPC !== null) ? CHAR_EH_NPC : (id && id.startsWith('npc_')))
           ? 'npcs.html'
           : (espId ? 'personagens.html?esp=' + encodeURIComponent(espId) : 'personagens.html'));
     var nav = function() { window.location.href = dest; };

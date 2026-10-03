@@ -2270,10 +2270,10 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     charPicker.classList.add('show');
     var list = charPicker.querySelector('.char-picker-list');
     list.innerHTML = '<div style="text-align:center;color:var(--fg-faint);font-family:var(--font-mono);font-size:11px;padding:14px;">Carregando…</div>';
-    sbGet('/rest/v1/personagens?select=char_id,name,img_url,tipo:sheet_data->>sheet_type,vtm:sheet_data->vtmFields&deleted_at=is.null&order=name.asc').then(function(rows) {
+    sbGet('/rest/v1/personagens?select=char_id,name,img_url,eh_npc,tipo:sheet_data->>sheet_type,vtm:sheet_data->vtmFields&deleted_at=is.null&order=name.asc').then(function(rows) {
       if (!Array.isArray(rows)) rows = [];
       var chosen = {}; mesaChars.forEach(function(c){ chosen[c.char_id] = 1; });
-      rows = rows.filter(function(r){ return r.char_id && r.char_id.indexOf('npc_') !== 0 && !chosen[r.char_id]; });
+      rows = rows.filter(function(r){ var npc = (typeof r.eh_npc === 'boolean') ? r.eh_npc : (r.char_id && r.char_id.indexOf('npc_') === 0); return r.char_id && !npc && !chosen[r.char_id]; });
       if (!rows.length) { list.innerHTML = '<div style="text-align:center;color:var(--fg-faint);font-family:var(--font-mono);font-size:11px;padding:14px;">Nenhum personagem disponível.</div>'; return; }
       list.innerHTML = '';
       rows.forEach(function(r) {

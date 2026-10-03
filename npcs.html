@@ -854,8 +854,8 @@
       sbFetch('/rest/v1/personagens?select=*&order=created_at.asc&deleted_at=is.null', 'GET')
         .then(function(chars) {
           if (!Array.isArray(chars)) return;
-          // apenas NPCs (char_id começa com "npc_")
-          chars.filter(c => c.char_id.startsWith('npc_')).forEach(function(char, i) {
+          // apenas NPCs (coluna eh_npc)
+          chars.filter(c => FichaGuard.ehNpc(c)).forEach(function(char, i) {
             const card = createHoloCard(char.char_id, char.name, char.img_url);
             card.style.animationDelay = (i * 80) + 'ms';
             rosterEl.insertBefore(card, newCharGroup);
@@ -1004,7 +1004,7 @@
         const newData = JSON.parse(JSON.stringify(src.sheet_data || {}));
         if (newData.fields) newData.fields.name = newName;
         await sbFetch('/rest/v1/personagens', 'POST', {
-          char_id: newId, name: newName, img_url: src.img_url || null, sheet_data: newData
+          char_id: newId, name: newName, img_url: src.img_url || null, sheet_data: newData, eh_npc: true
         });
         const card = createHoloCard(newId, newName, src.img_url);
         document.getElementById('roster').insertBefore(card, document.querySelector('.new-char-group'));
@@ -1022,15 +1022,15 @@
       const id = ctxCharId, grp = ctxCharGroup;
       closeCtxMenu();
       try {
-        const rows = await sbFetch('/rest/v1/personagens?char_id=eq.' + id + '&select=*');
-        if (!rows || !rows[0]) return;
-        const src = rows[0];
-        const newId = 'char_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+        // Mesma ficha, mesmo código: só deixa de ser NPC (volta pro espaço que já tinha).
         if (grp) grp.classList.add('transmit-out');
-        await sbFetch('/rest/v1/personagens', 'POST', {
-          char_id: newId, name: src.name, img_url: src.img_url || null, sheet_data: src.sheet_data
-        });
-        await sbFetch('/rest/v1/personagens?char_id=eq.' + id, 'PATCH', { deleted_at: new Date().toISOString() });
+        try {
+          await sbFetch('/rest/v1/personagens?char_id=eq.' + id, 'PATCH', { eh_npc: false });
+        } catch (err) {
+          if (grp) grp.classList.remove('transmit-out');
+          showToast('⚠ Não consegui mover para Personagens');
+          return;
+        }
         setTimeout(() => grp && grp.remove(), 680);
         showToast('⇄  Movido para Personagens');
       } finally { ctxBusy = false; }

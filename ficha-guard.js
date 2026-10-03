@@ -41,6 +41,12 @@
     return 'cacador';
   }
   function paginaDoTipo(tipo) { return PAGINAS[tipo] || null; }
+  // NPC é uma chave da ficha (coluna eh_npc), não o começo do código. Se a coluna
+  // ainda não veio na linha, vale o jeito antigo (prefixo npc_).
+  function ehNpc(row) {
+    if (!row) return false;
+    return typeof row.eh_npc === 'boolean' ? row.eh_npc : String(row.char_id || '').indexOf('npc_') === 0;
+  }
 
   var realFetch = global.fetch ? global.fetch.bind(global) : null;
   if (!realFetch) return;
@@ -206,7 +212,7 @@
 
   global.FichaGuard = {
     init: init, carregou: carregou, falhouCarga: falhouCarga,
-    tipoDe: tipoDe, paginaDoTipo: paginaDoTipo, aviso: aviso, PAGINAS: PAGINAS,
+    tipoDe: tipoDe, paginaDoTipo: paginaDoTipo, ehNpc: ehNpc, aviso: aviso, PAGINAS: PAGINAS,
     _consulta: consulta
   };
 })(typeof window !== 'undefined' ? window : globalThis);
