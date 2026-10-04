@@ -370,7 +370,8 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
   background: none; color: var(--fg); font-family: var(--font-display); font-size: 11.5px;
 }
 .vbusca-item:hover { background: rgba(176,138,46,0.14); }
-.vbusca-vazio { padding: 6px 7px; color: var(--fg-faint); font-family: var(--font-mono); font-size: 9.5px; }
+.vbusca-tag { margin-left: 6px; color: var(--fg-faint); font-family: var(--font-mono); font-size: 9px; }
+.vbusca-vazio, .vbusca-mais { padding: 6px 7px; color: var(--fg-faint); font-family: var(--font-mono); font-size: 9.5px; }
 
 /* toggles */
 .prof {
@@ -1747,7 +1748,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Ação ou ritual · alcance Pessoal · duração Instantânea',
       'Precisa de material (pelo de um cão de caça).',
       'Descreve ou nomeia uma Fera, Planta ou planta não mágica: você descobre a direção e a distância até a mais próxima, a até 8 km.'] },
-    mag_aprimorar_atributo: { t: 'Aprimorar Atributo', tag: { tipo: 'magia', circulo: 2, classes: ['bardo', 'clerigo', 'druida', 'feiticei- ro', 'guardiao', 'mago'] }, l: 'Vantagem em todos os testes de um atributo, por uma hora.', b: [
+    mag_aprimorar_atributo: { t: 'Aprimorar Atributo', tag: { tipo: 'magia', circulo: 2, classes: ['bardo', 'clerigo', 'druida', 'feiticeiro', 'guardiao', 'mago'] }, l: 'Vantagem em todos os testes de um atributo, por uma hora.', b: [
       '2º círculo · mago · feiticeiro · druida',
       'Ação · alcance Toque · duração 1 hora',
       'Precisa de concentração e de material (pelo ou uma pena).',
@@ -1832,7 +1833,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Precisa de concentração e de material (uma flor dourada de 300 po).',
       'Escolhe o humor: Alegre, Enfurecido ou Malandro — é isso que define o bloco dele.',
       'Age na sua iniciativa e some a 0 PV ou quando a magia acaba.'] },
-    mag_dissipar_magia: { t: 'Dissipar Magia', tag: { tipo: 'magia', circulo: 3, classes: ['bardo', 'bruxo', 'clerigo', 'druida', 'feiti- ceiro', 'guardiao', 'mago', 'paladino'] }, l: 'Desliga magia alheia — de graça até o 3º círculo.', b: [
+    mag_dissipar_magia: { t: 'Dissipar Magia', tag: { tipo: 'magia', circulo: 3, classes: ['bardo', 'bruxo', 'clerigo', 'druida', 'feiticeiro', 'guardiao', 'mago', 'paladino'] }, l: 'Desliga magia alheia — de graça até o 3º círculo.', b: [
       '3º círculo · mago · feiticeiro',
       'Ação · alcance 36 m · duração Instantânea',
       'Magia de 3º círculo ou menor no alvo acaba automaticamente.',
@@ -6941,6 +6942,36 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     lista.sort(function(a, b) { return a.t.localeCompare(b.t, 'pt-BR'); });
     return (BUSCA_CACHE[tipo] = lista);
   }
+  // etiqueta pequena ao lado de cada resultado: o que é, em que nível/círculo
+  // e de quais classes. Sem tag (quase tudo fora de Características de Classe)
+  // cai numa categoria pelo prefixo da chave.
+  var TIPO_ROTULO = { caracteristica: 'característica', subclasse: 'subclasse', manobra: 'manobra', magia: 'magia', truque: 'truque' };
+  var CLASSES_NO_ROTULO = 3;
+  function rotuloBusca(k) {
+    var t = AJUDA[k] && AJUDA[k].tag;
+    if (!t) return rotuloSemTag(k);
+    var partes = [TIPO_ROTULO[t.tipo] || t.tipo];
+    if (t.circulo) partes.push(t.circulo + '.º círculo');
+    if (t.nivel) partes.push((niveisDe(t).length > 1 ? 'níveis ' : 'nível ') + niveisDe(t).join(', '));
+    if (t.classes && t.classes.length) {
+      var nomes = t.classes.map(function(c) { return AJUDA['cls_' + c] ? AJUDA['cls_' + c].t : c; });
+      var txt = nomes.slice(0, CLASSES_NO_ROTULO).join(', ');
+      if (nomes.length > CLASSES_NO_ROTULO) txt += ' +' + (nomes.length - CLASSES_NO_ROTULO);
+      partes.push(txt);
+    }
+    return partes.join(' · ');
+  }
+  function rotuloSemTag(k) {
+    if (AJUDA.classe.lista.indexOf(k) >= 0) return 'classe';
+    if (/^(tal_|est_)/.test(k)) return 'talento';
+    if (/^ferr_/.test(k)) return 'ferramenta';
+    if (/^tra_/.test(k)) return 'traço de espécie';
+    if (/^lin_/.test(k)) return 'linhagem';
+    if (/^esp_/.test(k)) return 'espécie';
+    if (/^cls_/.test(k) || CLS_CNC.indexOf(k) >= 0) return 'característica de classe';
+    return '';
+  }
+  var BUSCA_LIMITE = 10;
   // apósEl: o título (ou sub-título) depois do qual a busca entra, como irmã
   function criaBusca(apósEl, tipo) {
     if (!apósEl) return;
@@ -6967,7 +6998,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       var q = semAcento(input.value.trim());
       res.innerHTML = '';
       if (!q) { res.hidden = true; return; }
-      var achados = candidatosBusca(tipo).filter(function(it) { return it.n.indexOf(q) >= 0; }).slice(0, 8);
+      var todos = candidatosBusca(tipo).filter(function(it) { return it.n.indexOf(q) >= 0; });
+      var achados = todos.slice(0, BUSCA_LIMITE);
       if (!achados.length) {
         var vazio = document.createElement('div');
         vazio.className = 'vbusca-vazio';
@@ -6977,8 +7009,20 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
         achados.forEach(function(it) {
           var b = document.createElement('button');
           b.type = 'button'; b.className = 'vbusca-item'; b.dataset.k = it.k; b.textContent = it.t;
+          var rot = rotuloBusca(it.k);
+          if (rot) {
+            var etq = document.createElement('span');
+            etq.className = 'vbusca-tag'; etq.textContent = rot;
+            b.appendChild(etq);
+          }
           res.appendChild(b);
         });
+        if (todos.length > BUSCA_LIMITE) {
+          var mais = document.createElement('div');
+          mais.className = 'vbusca-mais';
+          mais.textContent = '+' + (todos.length - BUSCA_LIMITE) + ' — digite mais letras';
+          res.appendChild(mais);
+        }
       }
       res.hidden = false;
     });
