@@ -1004,6 +1004,9 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
 .msg { font-size:13px; line-height:1.5; }
 .msg-head { font-family:var(--font-mono); font-size:9px; letter-spacing:0.1em; color:var(--fg-faint); margin-bottom:2px; }
 .msg-head .who-b { color:var(--accent); }
+.msg-dia { align-self:stretch; text-align:center; font-family:var(--font-mono); font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:var(--fg-faint); display:flex; align-items:center; gap:8px; }
+.msg-dia::before, .msg-dia::after { content:''; flex:1; height:1px; background:var(--line, rgba(255,255,255,0.12)); }
+.msg-aviso { align-self:stretch; text-align:center; font-family:var(--font-mono); font-size:9px; letter-spacing:0.08em; color:var(--fg-faint); opacity:0.8; }
 .msg-text { color:var(--fg); word-break:break-word; }
 .msg-text a { color:var(--holo); }
 .msg-img { max-width:100%; max-height:240px; border-radius:5px; border:1px solid var(--line); margin-top:3px; display:block; cursor:zoom-in; }
@@ -2025,13 +2028,81 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
              '<span class="bd"><span class="nm">'+rotulo+'</span>' +
              '<span class="sz">'+(tam ? tam + ' · ' : '')+'abrir</span></span></a>';
   }
-  function renderChat(p) {
+  // ── Histórico do chat: cada mensagem vive CHAT_DIAS dias ───────────
+  // Toda mensagem enviada (texto ou anexo) também vai pra tabela `mesa_chat`
+  // (mesa-chat-setup.sql); quem entra na mesa vê as dos últimos 15 dias. A
+  // faxina diária (api/limpar-mesa) apaga as vencidas. Se a tabela não
+  // existir ainda, tudo segue como antes (chat só em tempo real).
+  var CHAT_DIAS = 15;
+  var chatVistos = {};          // mid → já está na tela (broadcast e histórico não duplicam)
+  var chatUltimoDia = null;     // dia (AAAA-M-D) da última mensagem desenhada
+  var chatHistFeito = false;
+  function chatMid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
+  function chatDiaChave(ts) { var d = new Date(ts || Date.now()); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+  function chatDiaEl(ts) {
+    var chave = chatDiaChave(ts), el = document.createElement('div');
+    el.className = 'msg-dia'; el.dataset.dia = chave;
+    el.textContent = chave === chatDiaChave(Date.now()) ? 'hoje'
+      : new Date(ts || Date.now()).toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'short' });
+    return el;
+  }
+  function chatMsgEl(p) {
     var el = document.createElement('div');
     el.className = 'msg';
     el.innerHTML =
       '<div class="msg-head"><span class="who-b">'+esc(p.autor||'?')+'</span> · '+hhmm(p.ts)+'</div>' + chatBody(p);
-    chatMsgs.appendChild(el);
+    return el;
+  }
+  function renderChat(p) {
+    if (p && p.mid) { if (chatVistos[p.mid]) return; chatVistos[p.mid] = 1; }
+    var chave = chatDiaChave(p.ts);
+    if (chave !== chatUltimoDia) { chatMsgs.appendChild(chatDiaEl(p.ts)); chatUltimoDia = chave; }
+    chatMsgs.appendChild(chatMsgEl(p));
     chatMsgs.scrollTop = chatMsgs.scrollHeight;
+  }
+  function chatGuarda(p) {
+    // melhor esforço: se falhar, a mensagem já foi pro vivo; só não fica no histórico
+    try {
+      fetch(SB_URL + '/rest/v1/mesa_chat', {
+        method:'POST',
+        headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Content-Type':'application/json', 'Prefer':'return=minimal' },
+        body: JSON.stringify({ sala:SALA, mid:p.mid, payload:p })
+      }).then(function(r){ if (!r.ok && window.console) console.warn('[chat] histórico não gravou (HTTP ' + r.status + ')'); })
+        .catch(function(e){ if (window.console) console.warn('[chat] histórico não gravou:', e && e.message); });
+    } catch (e) {}
+  }
+  function chatCarregaHistorico() {
+    if (chatHistFeito) return;
+    chatHistFeito = true;
+    var desde = new Date(Date.now() - CHAT_DIAS * 24 * 60 * 60 * 1000).toISOString();
+    fetch(SB_URL + '/rest/v1/mesa_chat?select=payload&sala=eq.' + encodeURIComponent(SALA) +
+          '&criado_em=gte.' + encodeURIComponent(desde) + '&order=criado_em.desc&limit=400',
+          { headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY } })
+      .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(rows){
+        if (!Array.isArray(rows)) return;
+        var frag = document.createDocumentFragment(), dia = null, fim = null;
+        var aviso = document.createElement('div');
+        aviso.className = 'msg-aviso';
+        aviso.textContent = 'As mensagens ficam ' + CHAT_DIAS + ' dias';
+        frag.appendChild(aviso);
+        rows.reverse().forEach(function(row){
+          var p = row && row.payload;
+          if (!p || (p.mid && chatVistos[p.mid])) return;      // já chegou ao vivo
+          if (p.mid) chatVistos[p.mid] = 1;
+          var chave = chatDiaChave(p.ts);
+          if (chave !== dia) { frag.appendChild(chatDiaEl(p.ts)); dia = chave; }
+          frag.appendChild(chatMsgEl(p)); fim = chave;
+        });
+        // o que já apareceu ao vivo fica DEPOIS do histórico; se o 1º divisor ao vivo
+        // for do mesmo dia em que o histórico terminou, não repete
+        var primeiro = chatMsgs.firstElementChild;
+        if (fim && primeiro && primeiro.classList.contains('msg-dia') && primeiro.dataset.dia === fim) primeiro.remove();
+        chatMsgs.insertBefore(frag, chatMsgs.firstChild);
+        if (fim && !chatUltimoDia) chatUltimoDia = fim;
+        chatMsgs.scrollTop = chatMsgs.scrollHeight;
+      })
+      .catch(function(e){ if (window.console) console.warn('[chat] sem histórico (tabela mesa_chat existe?):', e && e.message); });
   }
 
   // ── Lightbox: clique numa imagem do chat → abre com zoom ──────────
@@ -2100,7 +2171,9 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     var t = chatInput.value.trim();
     if (!t) return;
     chatInput.value = '';
-    send('chat', { autor:nome, ts:Date.now(), text:t });
+    var msg = { mid:chatMid(), autor:nome, ts:Date.now(), text:t };
+    send('chat', msg);
+    chatGuarda(msg);
   }
   document.getElementById('sendBtn').addEventListener('click', sendChat);
   chatInput.addEventListener('keydown', function(e){ if (e.key==='Enter') { e.preventDefault(); sendChat(); } });
@@ -2154,10 +2227,12 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
           : 'Falha ao enviar ' + CHAT_ROTULO[kind] + ' (HTTP ' + xhr.status + ').');
         return pronto();
       }
-      send('chat', { autor:nome, ts:Date.now(), file:{
+      var msgArq = { mid:chatMid(), autor:nome, ts:Date.now(), file:{
         url: SB_URL + '/storage/v1/object/public/personagens/' + path,
         kind: kind, nome: file.name, mime: file.type, tam: file.size
-      }});
+      }};
+      send('chat', msgArq);
+      chatGuarda(msgArq);
       pronto();
     });
     xhr.addEventListener('error', function(){ chatUpHide(); alert('Falha ao enviar ' + CHAT_ROTULO[kind] + ': erro de rede.'); pronto(); });
@@ -4925,6 +5000,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     else if (event === 'mapa-tok') mapaRecebeTok(payload);
   }
   function initRealtime() {
+    chatCarregaHistorico();
     if (!window.supabase || !window.supabase.createClient) return;
     var client = sbClient || window.supabase.createClient(SB_URL, SB_KEY);
     sbRealtimeClient = client;

@@ -21,6 +21,7 @@ const SB_KEY = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6
 const BUCKET         = 'personagens';
 const PASTA          = 'mesa/';   // NUNCA fora daqui: a raiz do bucket é retrato de personagem
 const RETENCAO_DIAS  = 30;
+const CHAT_DIAS      = 15;      // mensagens do chat (tabela mesa_chat) — mesmo número do CHAT_DIAS da mesa e da policy do SQL
 const PAGINA         = 1000;      // itens por página na listagem
 const LOTE           = 100;       // arquivos por chamada de delete
 
@@ -64,6 +65,20 @@ async function apagar(caminhos) {
   return caminhos.length;
 }
 
+// Mensagens do chat vencidas. A policy do SQL só deixa a chave anon apagar linhas
+// com mais de 15 dias, então mesmo a anon não consegue apagar mensagem viva.
+// Falha aqui NÃO impede a faxina dos anexos (e vice-versa).
+async function purgarChat(dry) {
+  const limite = new Date(Date.now() - CHAT_DIAS * 24 * 60 * 60 * 1000).toISOString();
+  const url = SB_URL + '/rest/v1/mesa_chat?criado_em=lt.' + encodeURIComponent(limite);
+  if (dry) return { dry: true, limite };
+  const r = await fetch(url, { method: 'DELETE', headers: { ...cab, 'Prefer': 'return=minimal,count=exact' } });
+  if (r.status === 404) return { ok: true, aviso: 'tabela mesa_chat ainda não existe', apagadas: 0 };
+  if (!r.ok) throw new Error('chat ' + r.status + ' ' + (await r.text().catch(() => '')).slice(0, 200));
+  const total = /\/(\d+)$/.exec(r.headers.get('content-range') || '');
+  return { ok: true, limite, apagadas: total ? Number(total[1]) : null };
+}
+
 export default async function handler(req, res) {
   const segredo = process.env.CRON_SECRET;
   const dry = /(^|&)dry=1(&|$)/.test((req.url || '').split('?')[1] || '');
@@ -103,7 +118,8 @@ export default async function handler(req, res) {
       apagados,
       mantidos: novos.length,
       mbLiberados: +(bytes / 1024 / 1024).toFixed(1),
-      exemplos: velhos.slice(0, 10).map(o => o.name)
+      exemplos: velhos.slice(0, 10).map(o => o.name),
+      chat: await purgarChat(dry).catch(e => ({ ok: false, erro: (e && e.message) || String(e) }))
     };
     console.log('[limpar-mesa]', JSON.stringify(resumo));
     return res.status(200).json(resumo);
