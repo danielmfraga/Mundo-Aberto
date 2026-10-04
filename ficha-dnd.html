@@ -819,6 +819,14 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
 }
 .balao-add:hover { background: rgba(224,180,87,0.22); color: #fff; }
 .balao-lista { margin-top: 9px; display: flex; flex-direction: column; }
+.balao-chips { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin: 4px 0 6px; }
+.balao-chip-h { width: 100%; margin-top: 4px; font-family: var(--font-mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-faint); }
+.balao-chip {
+  font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; border-radius: 999px; cursor: pointer;
+  background: none; border: 1px solid var(--dnd-line); color: var(--fg-dim);
+}
+.balao-chip:hover { border-color: var(--dnd-soft); }
+.balao-chip[aria-pressed="true"] { background: rgba(176,138,46,0.2); border-color: var(--gold); color: var(--fg); }
 .balao-lista[hidden] { display: none; }
 .balao-item + .balao-item { border-top: 1px solid rgba(255,255,255,0.06); }
 .balao-item-t {
@@ -4868,11 +4876,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'C = concentração: só uma dessas por vez, e levar dano pede salvaguarda de Constituição para não perder.',
       'R = ritual: dá para conjurar sem gastar espaço, levando 10 minutos a mais.',
       'M = precisa do componente material na mão.'],
-      mais: 'Ver truques e magias, por classe',
-      lista: ['trq_mago', 'trq_feiticeiro', 'trq_druida',
-        'c1_mago', 'c1_feiticeiro', 'c1_druida',
-        'c2_mago', 'c2_feiticeiro', 'c2_druida',
-        'c3_mago'] },
+      catalogo: 'magias' },
     aparencia: { t: 'Aparência', l: 'A cara do personagem, e a foto.', b: [
       'Clique no quadro para subir uma imagem.'] },
     historia: { t: 'História e Personalidade', l: 'Quem ele é fora da ficha.', b: [
@@ -5066,6 +5070,104 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     }
     balaoB.insertAdjacentElement('afterend', box);
   }
+  // uma linha de verbete dentro de uma lista: nome que abre, e o corpo com a
+  // explicação e o botão de adicionar. comRotulo põe a etiqueta da busca ao lado.
+  function linhaItem(k, comRotulo) {
+    var it = AJUDA[k];
+    if (!it) return null;
+    var linha = document.createElement('div');
+    linha.className = 'balao-item';
+    var tt = document.createElement('button');
+    tt.type = 'button'; tt.className = 'balao-item-t'; tt.textContent = it.t;
+    if (comRotulo) {
+      var rot = rotuloBusca(k);
+      if (rot) {
+        var etq = document.createElement('span');
+        etq.className = 'vbusca-tag'; etq.textContent = rot;
+        tt.appendChild(etq);
+      }
+    }
+    tt.dataset.k = k;
+    tt.setAttribute('aria-expanded', 'false');
+    var corpo = document.createElement('div');
+    corpo.className = 'balao-item-c'; corpo.hidden = true;
+    var l = document.createElement('div');
+    l.className = 'balao-l'; l.appendChild(comTags(it.l));
+    var ul = document.createElement('ul');
+    bullets(ul, it.b);
+    var addItem = botaoAdd(k);
+    if (addItem) corpo.appendChild(addItem);
+    corpo.appendChild(l); corpo.appendChild(ul);
+    tt.addEventListener('click', function() {
+      corpo.hidden = !corpo.hidden;
+      tt.setAttribute('aria-expanded', corpo.hidden ? 'false' : 'true');
+      posiciona();
+    });
+    linha.appendChild(tt); linha.appendChild(corpo);
+    return linha;
+  }
+  // catálogo de magias do balão "Truques e Magias Preparadas": todas as
+  // magias e truques com etiqueta, filtráveis por classe e por círculo.
+  // Dentro de um grupo é OU (Mago ou Druida); entre os grupos é E
+  // (Mago E 2º círculo). Sem botão marcado, mostra tudo.
+  function circDe(t) { return t.tipo === 'truque' ? 0 : t.circulo; }
+  function montaCatalogoMagias() {
+    var todas = Object.keys(AJUDA).filter(function(k) {
+      var t = AJUDA[k].tag;
+      return t && (t.tipo === 'magia' || t.tipo === 'truque');
+    });
+    var classes = [], circs = [];
+    todas.forEach(function(k) {
+      var t = AJUDA[k].tag;
+      (t.classes || []).forEach(function(c) { if (classes.indexOf(c) < 0) classes.push(c); });
+      if (circs.indexOf(circDe(t)) < 0) circs.push(circDe(t));
+    });
+    var nomeClasse = function(c) { return AJUDA['cls_' + c] ? AJUDA['cls_' + c].t : c; };
+    classes.sort(function(a, b) { return nomeClasse(a).localeCompare(nomeClasse(b), 'pt-BR'); });
+    circs.sort(function(a, b) { return a - b; });
+
+    var sel = { classe: [], circ: [] };
+    var raiz = document.createElement('div'); raiz.className = 'balao-lista';
+    var conta = document.createElement('div'); conta.className = 'balao-l';
+    var cont = document.createElement('div');
+
+    function grupo(rotulo, opcoes, campo) {
+      var linha = document.createElement('div'); linha.className = 'balao-chips';
+      var h = document.createElement('span'); h.className = 'balao-chip-h'; h.textContent = rotulo;
+      linha.appendChild(h);
+      opcoes.forEach(function(o) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'balao-chip';
+        b.textContent = o.t; b.setAttribute('aria-pressed', 'false');
+        b.addEventListener('click', function() {
+          var i = sel[campo].indexOf(o.v);
+          if (i >= 0) sel[campo].splice(i, 1); else sel[campo].push(o.v);
+          b.setAttribute('aria-pressed', i < 0 ? 'true' : 'false');
+          renderiza();
+        });
+        linha.appendChild(b);
+      });
+      return linha;
+    }
+    raiz.appendChild(grupo('Classe', classes.map(function(c) { return { v: c, t: nomeClasse(c) }; }), 'classe'));
+    raiz.appendChild(grupo('Círculo', circs.map(function(c) { return { v: c, t: c === 0 ? 'Truques' : c + 'º' }; }), 'circ'));
+    raiz.appendChild(conta);
+    raiz.appendChild(cont);
+
+    function bate(k) {
+      var t = AJUDA[k].tag;
+      if (sel.classe.length && !(t.classes || []).some(function(c) { return sel.classe.indexOf(c) >= 0; })) return false;
+      return !sel.circ.length || sel.circ.indexOf(circDe(t)) >= 0;
+    }
+    function renderiza() {
+      cont.innerHTML = '';
+      var lista = todas.filter(bate).sort(function(a, b) { return AJUDA[a].t.localeCompare(AJUDA[b].t, 'pt-BR'); });
+      conta.textContent = lista.length ? lista.length + (lista.length === 1 ? ' magia' : ' magias') : 'Nenhuma com esses filtros';
+      lista.forEach(function(k) { cont.appendChild(linhaItem(k, true)); });
+    }
+    renderiza();
+    return raiz;
+  }
   function abre(chave, estado) {
     var d = AJUDA[chave];
     if (!d) return;
@@ -5084,38 +5186,19 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     // limpa o grau 2 anterior e as ações de item de inventário
     var antigo = balao.querySelector('.balao-mais, .balao-lista, .balao-acoes');
     while (antigo) { antigo.remove(); antigo = balao.querySelector('.balao-mais, .balao-lista, .balao-acoes'); }
+    balao.classList.toggle('largo', !!d.catalogo);
 
-    if (d.lista && d.lista.length) {
+    if (d.catalogo === 'magias') {
+      balao.appendChild(montaCatalogoMagias());
+    } else if (d.lista && d.lista.length) {
       var bt = document.createElement('button');
       bt.type = 'button'; bt.className = 'balao-mais'; bt.textContent = d.mais || 'Ver a lista';
       bt.setAttribute('aria-expanded', 'false');
       var cx = document.createElement('div');
       cx.className = 'balao-lista'; cx.hidden = true;
       d.lista.forEach(function(k) {
-        var it = AJUDA[k];
-        if (!it) return;
-        var linha = document.createElement('div');
-        linha.className = 'balao-item';
-        var tt = document.createElement('button');
-        tt.type = 'button'; tt.className = 'balao-item-t'; tt.textContent = it.t;
-        tt.dataset.k = k;
-        tt.setAttribute('aria-expanded', 'false');
-        var corpo = document.createElement('div');
-        corpo.className = 'balao-item-c'; corpo.hidden = true;
-        var l = document.createElement('div');
-        l.className = 'balao-l'; l.appendChild(comTags(it.l));
-        var ul = document.createElement('ul');
-        bullets(ul, it.b);
-        var addItem = botaoAdd(k);
-        if (addItem) corpo.appendChild(addItem);
-        corpo.appendChild(l); corpo.appendChild(ul);
-        tt.addEventListener('click', function() {
-          corpo.hidden = !corpo.hidden;
-          tt.setAttribute('aria-expanded', corpo.hidden ? 'false' : 'true');
-          posiciona();
-        });
-        linha.appendChild(tt); linha.appendChild(corpo);
-        cx.appendChild(linha);
+        var linha = linhaItem(k);
+        if (linha) cx.appendChild(linha);
       });
       bt.addEventListener('click', function() {
         cx.hidden = !cx.hidden;
