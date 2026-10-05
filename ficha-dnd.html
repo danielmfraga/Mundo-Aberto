@@ -7257,13 +7257,18 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   }
 
   esperaOutraAba().then(function() {
-    if (somenteLeitura) return;
-    dono = true;
+    // Aba bloqueada (outra aba é dona): mostra a ficha igual, só que em leitura.
+    // Não vira dona e não grava nada — salva, marca e fundo já checam somenteLeitura.
+    var leitura = somenteLeitura;
+    if (!leitura) dono = true;
     return carrega().then(function(res) {
-      if (somenteLeitura) return;
       if (res.existe) { restaura(res.dados); ultimoSnapshot = res.dados; }
       calcula();
       carregado = true;
+      if (leitura) {
+        if (res.apagada) bloqueia('Personagem apagado · somente leitura');
+        return;
+      }
       if (!res.existe) {
         status('salvo', 'Personagem novo · salva sozinho');
         // ficha em branco: entra com o fundo padrão e sem a folha de papel
