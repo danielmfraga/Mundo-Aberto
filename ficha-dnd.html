@@ -4890,7 +4890,21 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'No máximo três ao mesmo tempo, não importa o nível.'] },
     moedas: { t: 'Moedas', l: 'O dinheiro do mundo.', b: [
       '10 PC = 1 PP  ·  10 PP = 1 PO  ·  10 PO = 1 PL.',
-      'A PE (electro) vale meia PO — é rara, quase sempre tesouro antigo.'] }
+      'A PE (electro) vale meia PO — é rara, quase sempre tesouro antigo.'] },
+    // trilha do mundo (compêndio synesis.html), não é regra do D&D
+    synesis: { t: 'Synesis', l: 'O grau de conexão entre um Consciente e seus Ecos através do Infinito, de 1 a 10.', b: [
+      'Mede o quanto sua mente compreende, influencia e atravessa outras realidades, sem perder a identidade.',
+      'I · O Desvelar (1–2): sonhos vívidos, déjà-vus e percepção de Fraturas e de outros Conscientes.',
+      'II · A Sintonia (3–4): comunicar-se em sonhos, transmitir imagens e emoções, conversar brevemente com um Eco.',
+      'III · A Projeção (5–6): projetar a consciência num Eco; no nível 6, sobreviver à morte indo para outra versão.',
+      'IV · A Convergência (7–8): permanecer em outro corpo e trocar habilidades. Cada Convergência exige Autocontrole + Determinação (Dif. 3).',
+      'V · A Ascendência (9–10): localizar Fraturas, abrir Travessias físicas e absorver Ecos.'],
+      extra: function() {
+        var n = document.querySelectorAll('#synDots .dot.filled').length;
+        if (!n) return 'Este personagem: Synesis 0 — ainda não despertou.';
+        var estagio = ['I · O Desvelar', 'II · A Sintonia', 'III · A Projeção', 'IV · A Convergência', 'V · A Ascendência'][Math.ceil(n / 2) - 1];
+        return 'Este personagem: Synesis ' + n + ' — ' + estagio + '.';
+      } }
   };
 
   // Onde cada explicação se pendura. Fica aqui, e não no HTML, pra ligar o
@@ -4907,7 +4921,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     ['.dupla .bx:nth-child(1)', 'tracos'], ['.dupla .bx:nth-child(2)', 'talentos'],
     ['.treino', 'treino'], ['.conj', 'conjuracao'], ['#slots', 'slots', '.bx'], ['#tblMagias', 'magias', '.bx'],
     ['.aparencia', 'aparencia'], ['.historia', 'historia'], ['.idiomas', 'idiomas'],
-    ['.equip', 'equipamento'], ['.sint', 'sintonizados'], ['.moedas-g', 'moedas']
+    ['.equip', 'equipamento'], ['.sint', 'sintonizados'], ['.moedas-g', 'moedas'], ['.syn-t', 'synesis']
   ];
   ALVOS.forEach(function(a) {
     document.querySelectorAll(a[0]).forEach(function(el) {
