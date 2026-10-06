@@ -516,7 +516,20 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 
 /* tabelas (armas, magias) */
 .tbl { display: flex; flex-direction: column; margin-top: 6px; }
-.magias-abas { display: flex; gap: 4px; margin: 4px 0 2px; }
+.magias-abas { display: flex; justify-content: center; gap: 4px; margin: 4px 0 2px; }
+.alca {
+  position: absolute; left: -12px; top: 50%; transform: translateY(-50%); cursor: grab; user-select: none;
+  font-size: 10px; line-height: 1; color: var(--fg-faint); opacity: 0; transition: opacity 0.15s;
+}
+.tbl-row:hover .alca { opacity: 0.8; }
+.tbl-row.arrastando { opacity: 0.4; }
+.prep {
+  position: absolute; right: 22px; bottom: 5px; font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.04em;
+  padding: 1px 6px; border-radius: 999px; cursor: pointer; background: var(--quadro); border: 1px solid var(--dnd-soft);
+  color: var(--fg-dim); opacity: 0; transition: opacity 0.15s;
+}
+.tbl-row:hover .prep { opacity: 1; }
+.prep:hover { background: rgba(176,138,46,0.18); color: var(--fg); }
 .magias-aba {
   font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .04em; padding: 2px 9px; border-radius: 999px; cursor: pointer;
   background: none; border: 1px solid var(--line-strong); color: var(--fg-dim);
@@ -878,7 +891,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
   body::after, .fundo, #backBtn, .preview-flag, .fundo-ctrl, .volta-local,
-  .dobra-bt, .tbl-add, .tbl-del, #fileInput, #fundoFile, .balao,
+  .dobra-bt, .tbl-add, .tbl-del, .alca, .prep, #fileInput, #fundoFile, .balao,
   .inv-bts, .inv-menu, .inv-carga-pop, .cat-ov, .aviso { display: none !important; }
   /* no papel o inventário sai em lista, que é o que se lê */
   .inv-corpo.modo-grade { display: flex !important; flex-direction: column !important; }
@@ -1218,10 +1231,10 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       </div>
 
       <div class="bx magias">
-        <div class="bx-t" id="magiasTit">Truques e Magias Preparadas</div>
+        <div class="bx-t">Truques e Magias</div>
         <div class="magias-abas" role="tablist">
-          <button type="button" class="magias-aba on" data-aba="preparadas" role="tab" aria-selected="true">Preparadas</button>
           <button type="button" class="magias-aba" data-aba="conhecidas" role="tab" aria-selected="false">Conhecidas</button>
+          <button type="button" class="magias-aba on" data-aba="preparadas" role="tab" aria-selected="true">Preparadas</button>
         </div>
         <div class="magias-pane" data-pane="preparadas">
           <div class="tbl" id="tblMagias">
@@ -5526,6 +5539,18 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       d.contentEditable = 'true'; d.spellcheck = false; d.dataset.col = cel.k;
       row.appendChild(d);
     });
+    if (tipo === 'magias' || tipo === 'magias_conhecidas') {
+      var alca = document.createElement('span');
+      alca.className = 'alca'; alca.title = 'Arrastar pra mudar a ordem'; alca.textContent = '⋮⋮';
+      row.appendChild(alca);
+    }
+    if (tipo === 'magias_conhecidas') {
+      var prep = document.createElement('button');
+      prep.type = 'button'; prep.className = 'prep'; prep.textContent = 'preparar';
+      prep.title = 'Copia a magia pras preparadas (ela continua conhecida)';
+      prep.addEventListener('click', function() { preparar(row); });
+      row.appendChild(prep);
+    }
     var del = document.createElement('button');
     del.type = 'button'; del.className = 'tbl-del'; del.title = 'Remover linha'; del.innerHTML = '&#10005;';
     del.addEventListener('click', function() { row.remove(); });
@@ -5554,8 +5579,65 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
         x.classList.toggle('on', on); x.setAttribute('aria-selected', on ? 'true' : 'false');
       });
       document.querySelectorAll('.magias-pane').forEach(function(p) { p.hidden = p.dataset.pane !== qual; });
-      document.getElementById('magiasTit').textContent = qual === 'preparadas' ? 'Truques e Magias Preparadas' : 'Truques e Magias Conhecidas';
     });
+  });
+
+  // "preparar" numa magia conhecida: copia a linha pras preparadas. Ela
+  // continua conhecida — no jogo, preparar não tira a magia do livro.
+  function preparar(row) {
+    var lerCel = function(r, col) { var c = r.querySelector('[data-col="' + col + '"]'); return c ? c.textContent.trim() : ''; };
+    var nome = lerCel(row, 'nome');
+    if (!nome) { avisa('Dê um nome à magia antes de preparar'); return; }
+    var prep = Array.prototype.slice.call(tabela.magias.querySelectorAll('.tbl-row:not(.tbl-head)'));
+    if (prep.some(function(r) { return lerCel(r, 'nome') === nome; })) { avisa(nome + ' já está nas preparadas'); return; }
+    var nova = novaLinha('magias');
+    ['circ', 'nome', 'tempo', 'alcance', 'obs'].forEach(function(col) {
+      var c = nova.querySelector('[data-col="' + col + '"]');
+      if (c) c.textContent = lerCel(row, col);
+    });
+    var origem = row.querySelectorAll('.flag'), destino = nova.querySelectorAll('.flag');
+    origem.forEach(function(f, i) { if (destino[i]) destino[i].classList.toggle('on', f.classList.contains('on')); });
+    // primeira linha pautada vazia, como faz a magia automática; senão no fim
+    var vazia = prep.find(function(r) { return !r.classList.contains('auto') && !lerCel(r, 'nome'); });
+    if (vazia) tabela.magias.replaceChild(nova, vazia); else tabela.magias.appendChild(nova);
+    calcula(); marca(); avisa(nome + ' nas preparadas');
+  }
+
+  // ── Arrastar magias pra mudar a ordem (pela alça ⋮⋮ de cada linha) ───
+  // Só reordena dentro da mesma tabela: Preparadas e Conhecidas são listas separadas.
+  var arrastando = null;
+  function ligaArrasto(tbl) {
+    tbl.addEventListener('mousedown', function(e) {
+      var al = e.target.closest && e.target.closest('.alca');
+      if (!al) return;
+      var row = al.closest('.tbl-row');
+      if (row) row.draggable = true;
+    });
+    tbl.addEventListener('dragstart', function(e) {
+      var row = e.target.closest && e.target.closest('.tbl-row:not(.tbl-head)');
+      if (!row || !row.draggable) return;
+      arrastando = row; row.classList.add('arrastando');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', 'magia');   // o Firefox só arrasta com algum dado
+    });
+    tbl.addEventListener('dragover', function(e) {
+      if (!arrastando || arrastando.parentNode !== tbl) return;
+      e.preventDefault();
+      var alvo = e.target.closest && e.target.closest('.tbl-row:not(.tbl-head)');
+      if (!alvo || alvo === arrastando) return;
+      var r = alvo.getBoundingClientRect();
+      tbl.insertBefore(arrastando, e.clientY > r.top + r.height / 2 ? alvo.nextSibling : alvo);
+    });
+    tbl.addEventListener('drop', function(e) { e.preventDefault(); });
+    tbl.addEventListener('dragend', function() {
+      if (arrastando) { arrastando.classList.remove('arrastando'); arrastando.draggable = false; }
+      arrastando = null;
+    });
+  }
+  ligaArrasto(tabela.magias);
+  ligaArrasto(tabela.magias_conhecidas);
+  document.addEventListener('mouseup', function() {
+    document.querySelectorAll('.tbl-row[draggable="true"]').forEach(function(r) { if (r !== arrastando) r.draggable = false; });
   });
 
   // ── Campos numéricos: Enter não quebra linha ────────────────────────
