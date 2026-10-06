@@ -1238,9 +1238,15 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 @keyframes entGira2 { from { transform:rotateX(75deg) rotate(0); } to { transform:rotateX(75deg) rotate(360deg); } }
 .ent-nucleo { position:relative; z-index:2; width:158px; height:158px; border-radius:50%; overflow:hidden;
   border:1.5px solid rgba(0,255,231,.5); box-shadow:var(--e-glow), inset 0 0 30px rgba(0,255,231,.1); background:#06101a; }
-.ent-nucleo video { width:100%; height:100%; object-fit:cover; transform:scaleX(-1); filter:saturate(.85) contrast(1.05); }
+.ent-nucleo video { width:100%; height:100%; object-fit:cover; transform:scaleX(-1); filter:saturate(.7) contrast(1.12) brightness(1.04) hue-rotate(-8deg); }
 .ent-nucleo::after { content:''; position:absolute; inset:0; pointer-events:none;
-  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,255,231,.07) 3px,rgba(0,255,231,.07) 4px); animation:entScan 4s linear infinite; }
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,231,.17) 2px,rgba(0,255,231,.17) 3px); animation:entScan 4s linear infinite; }
+/* tom ciano por cima da imagem + uma faixa de luz que desce de tempos em tempos (a "projeção") */
+.ent-nucleo::before { content:''; position:absolute; inset:0; z-index:1; pointer-events:none; mix-blend-mode:screen;
+  background:linear-gradient(180deg,rgba(0,255,231,.22),rgba(0,136,255,.07) 45%,rgba(123,47,255,.14)),
+             linear-gradient(180deg,transparent 0,transparent 42%,rgba(150,255,245,.28) 50%,transparent 58%,transparent 100%) 0 -100%/100% 200% no-repeat;
+  animation:entFaixa 3.6s ease-in-out infinite; }
+@keyframes entFaixa { 0% { background-position:0 0,0 -100%; } 100% { background-position:0 0,0 100%; } }
 @keyframes entScan { to { background-position:0 100px; } }
 .ent-nucleo.off video { opacity:0; }
 .ent-inicial { position:absolute; inset:0; display:none; align-items:center; justify-content:center; font-family:'Orbitron'; font-size:54px; color:rgba(0,255,231,.5); text-shadow:var(--e-glow); }
