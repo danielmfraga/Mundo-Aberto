@@ -794,13 +794,14 @@ body.mapa-on .palco-host { display:flex; }
 }
 .palco-host-bt:hover { background:rgba(78,211,232,0.2); }
 .palco-live { display:flex; align-items:center; gap:7px; cursor:pointer; user-select:none; }
+.palco-live[hidden], .palco-host-bt[hidden] { display:none; }
 .palco-live input { position:absolute; opacity:0; pointer-events:none; }
 .palco-sw { position:relative; width:30px; height:16px; border-radius:999px; background:rgba(255,255,255,0.12); border:1px solid var(--line-strong); transition:all .15s; }
 .palco-sw::after { content:''; position:absolute; top:2px; left:2px; width:10px; height:10px; border-radius:50%; background:var(--fg-dim); transition:all .15s; }
 .palco-live input:checked + .palco-sw { background:rgba(78,211,232,0.25); border-color:var(--holo); }
 .palco-live input:checked + .palco-sw::after { left:16px; background:var(--holo); box-shadow:0 0 8px var(--holo); }
 .palco-congelado {
-  position:absolute; z-index:6; left:calc((100% - 272px) / 2); bottom:14px; transform:translateX(-50%);
+  position:absolute; z-index:6; left:calc((100% - 272px) / 2); bottom:62px; transform:translateX(-50%);
   padding:7px 14px; border-radius:999px; background:rgba(255,138,122,0.14); border:1px solid #ff8a7a; color:#ff8a7a;
   font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; pointer-events:none;
 }
@@ -819,6 +820,30 @@ body:not(.mapa-on) .dsn-bar { display:none; }
 }
 /* mesa em pausa: ver e mover a vista pode, mexer no que o host está montando não */
 body.palco-pausado .dsn-bar { pointer-events:none; opacity:0.4; }
+.abas-bar {
+  display:none; position:absolute; z-index:6; left:10px; bottom:10px; right:calc(252px + 30px); align-items:center; gap:5px; overflow-x:auto;
+  background:rgba(11,19,32,0.92); backdrop-filter:blur(6px); border:1px solid var(--line-strong); border-radius:8px; padding:5px 6px; width:max-content; max-width:calc(100% - 292px);
+  font-family:var(--font-mono); font-size:10px; letter-spacing:0.05em;
+}
+body.mapa-on .abas-bar { display:flex; }
+.aba { display:flex; align-items:center; gap:6px; cursor:pointer; padding:5px 9px; border-radius:6px; white-space:nowrap; color:var(--fg-dim); background:rgba(255,255,255,0.04); border:1px solid var(--line); font:inherit; }
+.aba:hover { border-color:var(--holo-soft); color:var(--fg); }
+.aba.on { color:var(--holo); border-color:var(--holo); background:rgba(78,211,232,0.1); }
+.aba .aba-x { font-style:normal; opacity:0.5; padding:0 2px; }
+.aba .aba-x:hover { opacity:1; color:var(--danger); }
+.aba-mais { cursor:pointer; padding:5px 10px; border-radius:6px; font:inherit; color:var(--holo); background:none; border:1px dashed var(--holo-soft); }
+.aba-mais:hover { background:rgba(78,211,232,0.12); }
+.aba-publica { cursor:pointer; padding:5px 10px; border-radius:6px; font:inherit; letter-spacing:0.1em; text-transform:uppercase; color:#ff8a7a; background:rgba(255,110,90,0.1); border:1px solid rgba(255,110,90,0.5); }
+.aba-publica:disabled { opacity:0.4; cursor:not-allowed; }
+.aba-priv { color:var(--fg-faint); padding:0 4px; }
+.abas-menu {
+  position:absolute; z-index:40; display:flex; flex-direction:column; gap:3px; padding:6px; min-width:190px;
+  background:#0b1320; border:1px solid var(--line-strong); border-radius:8px; box-shadow:0 12px 30px rgba(0,0,0,0.6);
+}
+.abas-menu[hidden] { display:none; }
+.abas-menu button { cursor:pointer; text-align:left; padding:7px 9px; border-radius:5px; font-family:var(--font-mono); font-size:10px; color:var(--fg-dim); background:none; border:1px solid transparent; }
+.abas-menu button:hover { background:rgba(78,211,232,0.12); color:var(--fg); border-color:var(--holo-soft); }
+@media (max-width:920px) { .abas-bar { right:10px; max-width:calc(100% - 20px); bottom:10px; } }
 body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pausado .mapa-add { pointer-events:none; opacity:0.5; }
 .ferr-mapa.alguem::after { content:''; position:absolute; top:5px; right:5px; width:7px; height:7px; border-radius:50%; background:#ff8a7a; box-shadow:0 0 7px #ff8a7a; }
 @media (max-width:920px) {
@@ -1249,6 +1274,8 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
       <span class="wb-tool wb-color dsn-cor" data-color="#ffffff" style="background:#fff" title="Branco"></span>
       <label class="wb-tool wb-color wb-color-custom" id="dsnCorCustom" title="Outra cor"><input type="color" id="dsnCorInput" value="#8b5cf6"></label>
     </div>
+    <div class="abas-bar" id="abasBar"></div>
+    <div class="abas-menu" id="abasMenu" hidden></div>
     <div class="palco-congelado" id="palcoCongelado" hidden>Mesa em pausa · o host desligou o tempo real</div>
     <div class="mapa-bar">
       <span class="led"></span><span class="panel-title">Mesa</span>
@@ -2836,6 +2863,10 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
   // aparece por uma fração de segundo é a grade neutra, não uma caixa preta
   // 0×0 — o normalizador troca por cima quando a resposta de verdade chegar.
   var mapaCena = mapaCenaBrancoPadrao();
+  // mapaCena é a que está na tela (a da mesa ou a de uma aba privada); mapaCenaMesa é
+  // sempre a compartilhada, a única que vai pro Storage e pra mesa.
+  var mapaCenaMesa = mapaCena;
+  var privAtiva = null, mesaVelha = false;   // aba privada na tela (ou null = a mesa); a mesa mudou enquanto eu estava fora
   // Só grava depois de saber o que já estava salvo: gravar a cena vazia do
   // começo por cima apagaria o mapa da sala.
   var mapaPronto = false, mapaCarregando = null;
@@ -3307,6 +3338,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
   // ── cena e grade ──
   function mapaNovaCena(c) {
     mapaCena = mapaNormaliza(c);
+    if (privAtiva) privAtiva.cena = mapaCena; else mapaCenaMesa = mapaCena;
     mapaPronto = true;              // trocar de cena é decisão de quem trocou: grava por cima
     mapaFechaPops();
     mapaRender(); mapaFit();
@@ -3315,7 +3347,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
   }
   function mapaRecebeCena(p) {
     if (!p || p.by === MAPA_ME) return;
-    mapaCena = mapaNormaliza(p.cena);
+    mapaCena = mapaCenaMesa = mapaNormaliza(p.cena);
     mapaPronto = true;
     mapaFimArraste(); mapaFechaPops();
     mapaRender();
@@ -3325,7 +3357,12 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
   function mapaRecarrega() {
     return fetch(MAPA_ARQ + '?t=' + Date.now(), { headers:MAPA_HDR, cache:'no-store' })
       .then(function(r) { return r.ok ? r.json() : null; })
-      .then(function(c) { if (c) { mapaCena = mapaNormaliza(c); mapaFechaPops(); mapaRender(); } })
+      .then(function(c) {
+        if (!c) return;
+        mapaCenaMesa = mapaNormaliza(c);
+        if (privAtiva) return;     // estou numa aba: a mesa fica pra quando eu voltar
+        mapaCena = mapaCenaMesa; mapaFechaPops(); mapaRender();
+      })
       .catch(function() {});
   }
   function mapaMudaGrade(parcial) {
@@ -3628,6 +3665,136 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     if (e.key === 'Escape' && dsnTool !== 'mover' && mapaAberto() && !dsnTexto) dsnSetTool('mover');
   });
 
+  // ── Abas: a mesa e as abas privadas de cada um ──
+  // A aba "Mesa" é a cena compartilhada (a do host, ao vivo). As outras são só de
+  // quem as criou: servem pra montar outro mapa ou quadro sem ninguém ver, e ficam
+  // neste navegador. Só o host leva uma aba pra mesa ("Mostrar pra mesa").
+  var ABAS_KEY = 'mesaAbas:' + SALA, ABAS_MAX = 10;
+  var abas = [], _abasT = null;
+  var abasBar = document.getElementById('abasBar'), abasMenu = document.getElementById('abasMenu');
+  function mapaCenaQuadro() {
+    var c = mapaCenaVazia(), m = mapaSalaMedida(20, 11, 'quadrada', 70);
+    c.branco = true; c.w = m.w; c.h = m.h; c.grade = Object.assign(m.grade, { cor:'nenhuma' });
+    return c;
+  }
+  function abasCarrega() {
+    try {
+      var j = JSON.parse(localStorage.getItem(ABAS_KEY) || 'null');
+      if (j && Array.isArray(j.abas)) abas = j.abas.slice(0, ABAS_MAX).map(function(a) {
+        return { id:String(a.id || ('p' + Math.random().toString(36).slice(2, 8))), nome:String(a.nome || 'Aba').slice(0, 24), tipo:a.tipo === 'quadro' ? 'quadro' : 'mapa', cena:mapaNormaliza(a.cena) };
+      });
+    } catch (_) { abas = []; }
+  }
+  function abasSalvaLocal() {
+    try { localStorage.setItem(ABAS_KEY, JSON.stringify({ abas:abas.map(function(a) { return { id:a.id, nome:a.nome, tipo:a.tipo, cena:a.cena }; }) })); }
+    catch (_) { mapaStatus('o navegador não tem espaço pra guardar as abas'); }
+  }
+  function abaTemConteudo(a) { return !!(a.cena.tokens.length || a.cena.desenho.length || a.cena.img); }
+  var _abasSig = '';
+  function abasRender() {
+    // só refaz a faixa quando algo dela mudou: um duplo clique pra renomear não pode perder o botão no meio
+    var sig = [privAtiva && privAtiva.id, palcoCongelado, palcoSouHost, palcoLive, abas.map(function(a) { return a.id + ':' + a.nome; }).join('|')].join('#');
+    if (sig === _abasSig) return;
+    _abasSig = sig;
+    abasBar.innerHTML = '';
+    function el(tag, cls, txt, title) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (title) e.title = title; return e; }
+    var mesa = el('button', 'aba' + (privAtiva ? '' : ' on'), (palcoCongelado ? '⏸ ' : '● ') + 'Mesa', 'A cena compartilhada: o que todo mundo vê');
+    mesa.type = 'button';
+    mesa.addEventListener('click', function() { abaIr('mesa'); });
+    abasBar.appendChild(mesa);
+    abas.forEach(function(a) {
+      var b = el('button', 'aba' + (privAtiva === a ? ' on' : ''), null, 'Só você vê esta aba · duplo clique renomeia');
+      b.type = 'button';
+      b.appendChild(el('span', 'aba-priv', '🔒'));
+      b.appendChild(el('span', 'aba-nome', a.nome));
+      var x = el('i', 'aba-x', '×', 'Fechar a aba'); b.appendChild(x);
+      b.addEventListener('click', function(e) {
+        if (e.target === x) { abaFecha(a); return; }
+        abaIr(a.id);
+      });
+      b.addEventListener('dblclick', function(e) {
+        if (e.target === x) return;
+        var nome = (window.prompt('Nome da aba:', a.nome) || '').trim();
+        if (nome) { a.nome = nome.slice(0, 24); abasSalvaLocal(); abasRender(); }
+      });
+      abasBar.appendChild(b);
+    });
+    var mais = el('button', 'aba-mais', '+ aba', 'Nova aba privada'); mais.type = 'button';
+    mais.addEventListener('click', function(e) { e.stopPropagation(); abasAbreMenu(mais); });
+    abasBar.appendChild(mais);
+    if (privAtiva && palcoSouHost) {
+      var pub = el('button', 'aba-publica', 'Mostrar pra mesa', palcoLive ? 'Troca a cena da mesa por esta aba' : 'Ligue o tempo real pra mostrar');
+      pub.type = 'button'; pub.disabled = !palcoLive;
+      pub.addEventListener('click', function() { abaPublica(privAtiva); });
+      abasBar.appendChild(pub);
+    }
+  }
+  function abasAbreMenu(ancora) {
+    var pode = abas.length < ABAS_MAX;
+    abasMenu.innerHTML = '';
+    function item(txt, fn) {
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = txt; b.disabled = !pode;
+      b.addEventListener('click', function() { abasMenu.hidden = true; fn(); });
+      abasMenu.appendChild(b);
+    }
+    item('Novo mapa', function() { abaNova('mapa'); });
+    item('Novo quadro', function() { abaNova('quadro'); });
+    item('Guardar a mesa numa aba', function() { abaNova('copia'); });
+    if (!pode) { var av = document.createElement('div'); av.textContent = 'Limite de ' + ABAS_MAX + ' abas'; av.style.cssText = 'font:10px var(--font-mono);color:var(--fg-faint);padding:4px 9px'; abasMenu.appendChild(av); }
+    abasMenu.hidden = false;
+    var rp = mapaPanel.getBoundingClientRect(), rb = ancora.getBoundingClientRect();
+    abasMenu.style.left = Math.max(8, rb.left - rp.left) + 'px';
+    abasMenu.style.top = Math.max(8, rb.top - rp.top - abasMenu.offsetHeight - 6) + 'px';
+  }
+  document.addEventListener('click', function(e) { if (!e.target.closest('.abas-menu')) abasMenu.hidden = true; });
+  function abaNova(tipo) {
+    if (abas.length >= ABAS_MAX) return;
+    var cena, nome, t = tipo === 'quadro' ? 'quadro' : 'mapa';
+    if (tipo === 'copia') { cena = mapaNormaliza(JSON.parse(JSON.stringify(mapaCenaMesa))); nome = 'Mesa ' + new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }); }
+    else if (tipo === 'quadro') { cena = mapaCenaQuadro(); nome = 'Quadro ' + (abas.filter(function(a) { return a.tipo === 'quadro'; }).length + 1); }
+    else { cena = mapaCenaBrancoPadrao(); nome = 'Mapa ' + (abas.filter(function(a) { return a.tipo === 'mapa'; }).length + 1); }
+    var a = { id:'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), nome:nome, tipo:t, cena:cena };
+    abas.push(a); abasSalvaLocal();
+    abaIr(a.id);
+  }
+  function abaIr(id) {
+    var alvo = id === 'mesa' ? null : abas.filter(function(a) { return a.id === id; })[0];
+    if (id !== 'mesa' && !alvo) return;
+    if (alvo === privAtiva && (alvo || !privAtiva)) { abasRender(); return; }
+    dsnSetTool('mover'); mapaFechaPops(); mapaFimArraste();
+    if (privAtiva) abasSalvaLocal();
+    else if (_mapaSalvarT) mapaSalva(false);          // saindo da mesa: grava o que estava pendente
+    privAtiva = alvo;
+    mapaCena = alvo ? alvo.cena : mapaCenaMesa;
+    mapaRender(); mapaFit();
+    if (!alvo && mesaVelha) { mesaVelha = false; mapaRecarrega(); }   // a mesa andou enquanto eu estava numa aba
+    palcoRecalcula();
+    abasRender();
+  }
+  function abaFecha(a) {
+    if (abaTemConteudo(a) && !window.confirm('Fechar "' + a.nome + '"? O que está nela se perde.')) return;
+    var estava = privAtiva === a;
+    abas = abas.filter(function(x) { return x !== a; });
+    abasSalvaLocal();
+    if (estava) abaIr('mesa'); else abasRender();
+  }
+  // o host troca a cena da mesa pelo conteúdo da aba (a aba continua sua)
+  function abaPublica(a) {
+    if (!palcoSouHost || !palcoLive) return;
+    if (!window.confirm('Mostrar "' + a.nome + '" pra mesa? A cena da mesa agora será substituída.')) return;
+    var copia = mapaNormaliza(JSON.parse(JSON.stringify(a.cena)));
+    abaIr('mesa');
+    mapaCena = mapaCenaMesa = copia;
+    mapaPronto = true;
+    mapaRender(); mapaFit();
+    send('mapa-cena', { cena:mapaCenaMesa, by:MAPA_ME });
+    mapaAgendaSalvar();
+    mapaStatus('"' + a.nome + '" está na mesa');
+    setTimeout(function() { if (/está na mesa/.test(mapaStatusEl.textContent)) mapaStatus(''); }, 2500);
+  }
+  abasCarrega();
+  abasRender();
+
   // ── Storage ──
   function mapaCarrega() {
     mapaCarregando = fetch(MAPA_ARQ + '?t=' + Date.now(), { headers:MAPA_HDR, cache:'no-store' })
@@ -3640,7 +3807,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
         });
       })
       .then(function(c) {
-        if (!mapaPronto) { mapaCena = mapaNormaliza(c); mapaPronto = true; }   // se uma cena nova chegou antes, ela vale
+        if (!mapaPronto) { mapaCenaMesa = mapaNormaliza(c); if (!privAtiva) mapaCena = mapaCenaMesa; mapaPronto = true; }   // se uma cena nova chegou antes, ela vale
         mapaRender();
         if (mapaAberto()) mapaFit();
       })
@@ -3652,13 +3819,14 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     return mapaCarregando;
   }
   function mapaAgendaSalvar() {
+    if (privAtiva) { clearTimeout(_abasT); _abasT = setTimeout(abasSalvaLocal, 500); return; }   // aba privada: só no navegador
     if (!mapaPronto) return;
     clearTimeout(_mapaSalvarT);
     _mapaSalvarT = setTimeout(function(){ mapaSalva(false); }, 700);
   }
   function mapaSalva(saindo) {
     clearTimeout(_mapaSalvarT); _mapaSalvarT = null;
-    var req = { method:'POST', headers:Object.assign({ 'Content-Type':'application/json', 'x-upsert':'true' }, MAPA_HDR), body:JSON.stringify(mapaCena) };
+    var req = { method:'POST', headers:Object.assign({ 'Content-Type':'application/json', 'x-upsert':'true' }, MAPA_HDR), body:JSON.stringify(mapaCenaMesa) };
     if (saindo) { req.keepalive = true; fetch(MAPA_ARQ, req).catch(function(){}); return; }
     // em fila: duas gravações ao mesmo tempo podiam chegar fora de ordem
     _mapaFila = _mapaFila.then(function() {
@@ -4284,6 +4452,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     mapaPan = null; mapaPinch = null; mapaToques = {};
     mapaView.classList.remove('panning');
     dsnSetTool('mover');
+    if (privAtiva) abaIr('mesa');
     document.body.classList.remove('mapa-on');
     mapaBtn.classList.remove('open');
     document.body.classList.remove('wb-on', 'wb-right');
@@ -4343,9 +4512,11 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     // quem perde ou ganha o posto começa com o tempo real ligado
     if (palcoSouHost !== eraHost && !palcoLive) { palcoLive = true; palcoTrack(); }
     palcoCongelado = !palcoSouHost && !!h && h.live === false;
-    document.body.classList.toggle('palco-pausado', palcoCongelado && palcoDentro);
-    if (palcoCongelado) dsnSetTool('mover');
-    palcoAviso.hidden = !(palcoCongelado && palcoDentro);
+    var pausadoAqui = palcoCongelado && palcoDentro && !privAtiva;   // numa aba privada eu mexo à vontade
+    document.body.classList.toggle('palco-pausado', pausadoAqui);
+    if (pausadoAqui) dsnSetTool('mover');
+    palcoAviso.hidden = !pausadoAqui;
+    abasRender();
     palcoHostQuem.innerHTML = h ? (palcoSouHost ? '<b>Você</b> é o host' : 'Host: <b>' + esc(h.nome || 'Jogador') + '</b>') : 'Host: —';
     palcoCtrlBt.hidden = !palcoDentro || palcoSouHost;
     palcoLiveBox.hidden = !palcoSouHost;
@@ -4365,7 +4536,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     palcoLive = true; palcoLiveIn.checked = true;
     palcoTrack();
     // a mesa estava parada na tela antiga: manda a cena como está agora
-    send('mapa-cena', { cena:mapaCena, by:MAPA_ME, retoma:true });
+    send('mapa-cena', { cena:mapaCenaMesa, by:MAPA_ME, retoma:true });
     mapaSalva(false);
   }
   palcoLiveIn.addEventListener('change', function() {
@@ -5169,6 +5340,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
   var jitsiApi = null;
   function send(event, payload) {
     // host com o tempo real desligado mexe só aqui: a mesa continua vendo a última tela
+    if (privAtiva && /^mapa-(cena|grade|img|tok|dsn)$/.test(event)) return;   // aba privada: ninguém vê
     if (palcoSouHost && !palcoLive && /^mapa-(cena|grade|img|tok|dsn)$/.test(event) && !(payload && payload.retoma)) return;
     if (channel) channel.send({ type:'broadcast', event:event, payload:payload });
     else dispatch(event, payload);   // offline: mostra local
@@ -5195,6 +5367,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     else if (event === 'som-gain') { if (payload && payload.id != null) { somGain[String(payload.id)] = payload.gain; somPersistGain(); somApplyVol(payload.id); somRenderPads(); } }
     // 'mapa-open'/'mapa-close' eram "abre pra mesa toda"; agora cada um entra e sai por si (ver Host do palco)
     else if (event === 'palco-st') palcoRecebeEstado(payload);
+    else if (privAtiva && /^mapa-(cena|grade|img|tok|dsn)$/.test(event)) { if (!payload || payload.by !== MAPA_ME) mesaVelha = true; }   // a mesa anda sem mim; recarrego ao voltar
     else if (event === 'mapa-cena') { if (!palcoCongelado || (payload && payload.retoma)) mapaRecebeCena(payload); }
     else if (event === 'mapa-grade') { if (!palcoCongelado) mapaRecebeGrade(payload); }
     else if (event === 'mapa-img') { if (!palcoCongelado) mapaRecebeImg(payload); }
