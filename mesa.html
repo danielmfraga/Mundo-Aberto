@@ -4640,7 +4640,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     mapaBtn.classList.remove('open');
     document.body.classList.remove('wb-on', 'wb-right');
     jitsiTile(false);
-    palcoDentro = false; palcoClaim = 0; palcoRosto = false; rostoMeu = false;
+    palcoDentro = false; palcoClaim = 0; palcoRosto = false; rostoMeu = false; rostoDispensado = false;
     palcoTrack(); palcoRecalcula();
   }
   // Minimizar: a página volta ao normal (dados, chat, personagens) mas você continua
@@ -4738,6 +4738,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var palcoRosto = false;        // (host) levei todo mundo pra tela de rostos
   var rostoMeu = false;          // entrei por conta própria na tela de rostos (qualquer um pode)
   var _rostoForcado = false;     // o host está levando todo mundo
+  var rostoDispensado = false;   // fui levado mas saí: ninguém é obrigado a ficar (volta a valer na próxima vez que o host levar)
   var palcoSeguir = true;        // o meu interruptor, quando não sou host: ligado = espelho da tela do host
   var _palcoSeguia = false;
   var palcoHostQuem = document.getElementById('palcoHostQuem');
@@ -4750,16 +4751,18 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   // host; sem host (ele saiu ou caiu) volta sozinho. A mesa fica por baixo, intacta.
   var _rostoAplicado = false;
   // Tela de rostos: cada um pode entrar na sua (rostoMeu); o host ainda pode LEVAR TODOS (palcoRosto, no
-  // anúncio dele). Estou nela se qualquer um dos dois valer: quem já estava não sente nada quando o host leva,
-  // e quando o host solta só volta quem foi levado — quem entrou por conta própria continua até apertar.
+  // anúncio dele). Ninguém é obrigado a ficar: o "Voltar à mesa" existe pra todo mundo, levado ou não, e sair
+  // vale só pra quem saiu (rostoDispensado) — o host segue levando os outros e, se soltar e levar de novo, leva
+  // todo mundo outra vez. Quem já estava lá não sente nada quando o host leva; e quando o host solta só volta
+  // quem foi levado (quem entrou por conta própria fica até apertar).
   function palcoAplicaRosto(forcado) {
+    if (!forcado) rostoDispensado = false;          // o host soltou: a próxima vez leva de novo
     _rostoForcado = !!forcado;
-    var on = rostoMeu || _rostoForcado;
-    // sair é do próprio; quem foi levado só volta quando o host soltar (o host sempre pode)
-    document.getElementById('rostoVolta').hidden = !(on && (palcoSouHost || !_rostoForcado));
-    document.getElementById('rostoAviso').hidden = !(on && !palcoSouHost && _rostoForcado);
+    var on = rostoMeu || (_rostoForcado && !rostoDispensado);
+    document.getElementById('rostoVolta').hidden = !on;
+    document.getElementById('rostoAviso').hidden = true;
     var meu = document.getElementById('palcoRostoBt'), leva = document.getElementById('palcoLevaBt');
-    meu.textContent = rostoMeu ? 'Voltar à mesa' : 'Rosto a rosto';
+    meu.textContent = on ? 'Voltar à mesa' : 'Rosto a rosto';
     leva.textContent = palcoRosto ? 'Soltar todos' : 'Levar todos';
     meu.hidden = !palcoDentro; leva.hidden = !palcoSouHost;
     if (on === _rostoAplicado) return;
@@ -4768,7 +4771,11 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (on) { mapaFechaPops(); dsnSetTool('mover'); }
     jitsiTile(on ? true : mapaAberto());
   }
-  function palcoMeuRosto() { rostoMeu = !rostoMeu; palcoAplicaRosto(_rostoForcado); }
+  // o botão da caixa do host alterna: entra na tela de rostos, ou volta pra mesa se já estiver nela
+  function palcoMeuRosto() {
+    if (rostoMeu || (_rostoForcado && !rostoDispensado)) rostoVoltaClique();
+    else { rostoMeu = true; palcoAplicaRosto(_rostoForcado); }
+  }
   function palcoLevaTodos() {
     if (!palcoSouHost) return;
     palcoRosto = !palcoRosto;
@@ -4776,8 +4783,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   }
   function rostoVoltaClique() {
     rostoMeu = false;
-    if (palcoSouHost && palcoRosto) { palcoRosto = false; palcoTrack(); palcoRecalcula(); }
-    else palcoAplicaRosto(_rostoForcado);
+    if (palcoSouHost && palcoRosto) { palcoRosto = false; palcoTrack(); palcoRecalcula(); }   // o host que volta solta todos
+    else { if (_rostoForcado) rostoDispensado = true; palcoAplicaRosto(_rostoForcado); }       // quem foi levado sai só por si
   }
   document.getElementById('palcoRostoBt').addEventListener('click', palcoMeuRosto);
   document.getElementById('palcoLevaBt').addEventListener('click', palcoLevaTodos);
