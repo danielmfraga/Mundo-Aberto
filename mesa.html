@@ -1338,7 +1338,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     <div class="palco-host" id="palcoHost">
       <span id="palcoHostQuem">Host: —</span>
       <button class="palco-host-bt" id="palcoControlar" type="button" title="Assumir o controle da mesa" hidden>Controlar</button>
-      <button class="palco-host-bt" id="palcoRostoBt" type="button" title="Leva todo mundo pra uma tela só de rostos, como se a mesa tivesse fechado. Aperte de novo pra voltar." hidden>Rosto a rosto</button>
+      <button class="palco-host-bt" id="palcoRostoBt" type="button" title="Uma tela só de rostos, só pra você. Aperte de novo pra voltar à mesa." hidden>Rosto a rosto</button>
+      <button class="palco-host-bt" id="palcoLevaBt" type="button" title="Leva TODO MUNDO pra tela de rostos, como se a mesa tivesse fechado (quem já está nela não sente nada). Aperte de novo pra soltar." hidden>Levar todos</button>
       <label class="palco-live" id="palcoLiveBox" title="Ligado: você vê a tela do host, igual. Desligado: a mesa fica parada pra você">
         <span>Tempo real</span><input type="checkbox" id="palcoLive" checked><i class="palco-sw"></i>
       </label>
@@ -4639,7 +4640,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     mapaBtn.classList.remove('open');
     document.body.classList.remove('wb-on', 'wb-right');
     jitsiTile(false);
-    palcoDentro = false; palcoClaim = 0; palcoRosto = false;
+    palcoDentro = false; palcoClaim = 0; palcoRosto = false; rostoMeu = false;
     palcoTrack(); palcoRecalcula();
   }
   // Minimizar: a página volta ao normal (dados, chat, personagens) mas você continua
@@ -4735,6 +4736,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var palcoPres = {};            // id → o que cada conectado anunciou
   var palcoSouHost = false, palcoCongelado = false, palcoHostId = null;
   var palcoRosto = false;        // (host) levei todo mundo pra tela de rostos
+  var rostoMeu = false;          // entrei por conta própria na tela de rostos (qualquer um pode)
+  var _rostoForcado = false;     // o host está levando todo mundo
   var palcoSeguir = true;        // o meu interruptor, quando não sou host: ligado = espelho da tela do host
   var _palcoSeguia = false;
   var palcoHostQuem = document.getElementById('palcoHostQuem');
@@ -4746,22 +4749,39 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   // Rosto a rosto: vale pra todo mundo que está na sala, no palco ou fora dele. O estado mora no anúncio do
   // host; sem host (ele saiu ou caiu) volta sozinho. A mesa fica por baixo, intacta.
   var _rostoAplicado = false;
-  function palcoAplicaRosto(on) {
-    document.getElementById('rostoVolta').hidden = !(on && palcoSouHost);
-    document.getElementById('rostoAviso').hidden = !(on && !palcoSouHost);
+  // Tela de rostos: cada um pode entrar na sua (rostoMeu); o host ainda pode LEVAR TODOS (palcoRosto, no
+  // anúncio dele). Estou nela se qualquer um dos dois valer: quem já estava não sente nada quando o host leva,
+  // e quando o host solta só volta quem foi levado — quem entrou por conta própria continua até apertar.
+  function palcoAplicaRosto(forcado) {
+    _rostoForcado = !!forcado;
+    var on = rostoMeu || _rostoForcado;
+    // sair é do próprio; quem foi levado só volta quando o host soltar (o host sempre pode)
+    document.getElementById('rostoVolta').hidden = !(on && (palcoSouHost || !_rostoForcado));
+    document.getElementById('rostoAviso').hidden = !(on && !palcoSouHost && _rostoForcado);
+    var meu = document.getElementById('palcoRostoBt'), leva = document.getElementById('palcoLevaBt');
+    meu.textContent = rostoMeu ? 'Voltar à mesa' : 'Rosto a rosto';
+    leva.textContent = palcoRosto ? 'Soltar todos' : 'Levar todos';
+    meu.hidden = !palcoDentro; leva.hidden = !palcoSouHost;
     if (on === _rostoAplicado) return;
     _rostoAplicado = on;
     document.body.classList.toggle('rosto-a-rosto', on);
     if (on) { mapaFechaPops(); dsnSetTool('mover'); }
     jitsiTile(on ? true : mapaAberto());
   }
-  function palcoAlternaRosto() {
+  function palcoMeuRosto() { rostoMeu = !rostoMeu; palcoAplicaRosto(_rostoForcado); }
+  function palcoLevaTodos() {
     if (!palcoSouHost) return;
     palcoRosto = !palcoRosto;
     palcoTrack(); palcoRecalcula();
   }
-  document.getElementById('palcoRostoBt').addEventListener('click', palcoAlternaRosto);
-  document.getElementById('rostoVolta').addEventListener('click', palcoAlternaRosto);
+  function rostoVoltaClique() {
+    rostoMeu = false;
+    if (palcoSouHost && palcoRosto) { palcoRosto = false; palcoTrack(); palcoRecalcula(); }
+    else palcoAplicaRosto(_rostoForcado);
+  }
+  document.getElementById('palcoRostoBt').addEventListener('click', palcoMeuRosto);
+  document.getElementById('palcoLevaBt').addEventListener('click', palcoLevaTodos);
+  document.getElementById('rostoVolta').addEventListener('click', rostoVoltaClique);
 
   // O estado do palco (dentro, "Controlar", tempo real) vai por BROADCAST, não pela
   // presença: o Supabase fecha o canal inteiro de quem atualiza a presença mais
@@ -4811,7 +4831,6 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     palcoHostQuem.innerHTML = h ? (palcoSouHost ? '<b>Você</b> é o host' : 'Host: <b>' + esc(h.nome || 'Jogador') + '</b>') : 'Host: —';
     palcoCtrlBt.hidden = !palcoDentro || palcoSouHost;
     palcoLiveBox.hidden = !palcoDentro;
-    document.getElementById('palcoRostoBt').hidden = !palcoSouHost;
     palcoAplicaRosto(!!h && !!h.rosto);
     palcoLiveIn.checked = palcoSouHost ? palcoLive : palcoSeguir;
     // passou a espelhar o host (entrou, religou, voltou pra Mesa): pede a vista dele
