@@ -689,6 +689,7 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
   background: var(--quadro); border: 1px solid var(--dnd-line); display: flex; align-items: center; justify-content: center;
   transition: all 0.15s;
 }
+.inv-slot.arrastando { opacity: 0.4; }
 .modo-grade .inv-slot:hover { border-color: var(--gold); box-shadow: 0 2px 8px rgba(38,39,43,0.14); transform: translateY(-1px); }
 .modo-grade .inv-slot svg { width: 60%; height: 60%; fill: none; stroke: var(--icone); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .modo-grade .inv-slot.mestre::after {
@@ -6442,6 +6443,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       b.type = 'button';
       b.className = 'inv-slot' + (it.eq ? ' equipado' : '') + (temMaestria(it.id) ? ' mestre' : '');
       b.dataset.i = i;
+      b.draggable = !somenteLeitura;
       b.title = d.n + (d.p ? ' · ' + num(d.p) + ' kg' : '');
       b.innerHTML = svgDe(iconeDe(d)) + '<span class="nome">' + d.n + '</span>' +
         ((it.q || 1) > 1 ? '<span class="q">×' + it.q + '</span>' : '<span class="q"></span>') +
@@ -6559,6 +6561,40 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     e.preventDefault();
     abreMenu(+s.dataset.i, e.clientX, e.clientY);
   });
+  // ── Arrastar item pra mudar a posição (grade e lista) ────────────────
+  // Solta em cima de outro item: o arrastado assume o lugar dele.
+  var invArrasto = null;
+  invCorpo.addEventListener('dragstart', function(e) {
+    var s = e.target.closest && e.target.closest('.inv-slot');
+    if (!s || somenteLeitura) return;
+    invArrasto = +s.dataset.i;
+    s.classList.add('arrastando');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('application/x-ficha-item', '1');   // não é texto: a ficha não pode inserir nada
+  });
+  invCorpo.addEventListener('dragover', function(e) {
+    if (invArrasto === null) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  });
+  invCorpo.addEventListener('drop', function(e) {
+    if (invArrasto === null) return;
+    e.preventDefault();
+    var de = invArrasto;
+    invArrasto = null;
+    var s = e.target.closest && e.target.closest('.inv-slot');
+    if (!s) return;
+    var para = +s.dataset.i;
+    if (para === de) return;
+    var it = inv.itens.splice(de, 1)[0];
+    inv.itens.splice(para > de ? para - 1 : para, 0, it);
+    mexeu();
+  });
+  invCorpo.addEventListener('dragend', function() {
+    invArrasto = null;
+    invCorpo.querySelectorAll('.arrastando').forEach(function(x) { x.classList.remove('arrastando'); });
+  });
+
   document.addEventListener('click', function(e) {
     if (!e.target.closest('.inv-menu')) fechaMenu();
     if (!e.target.closest('.inv-carga-pop, #invCarregar')) invCargaPop.hidden = true;
