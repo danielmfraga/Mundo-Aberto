@@ -1250,7 +1250,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     <div class="palco-host" id="palcoHost">
       <span id="palcoHostQuem">Host: —</span>
       <button class="palco-host-bt" id="palcoControlar" type="button" title="Assumir o controle da mesa" hidden>Controlar</button>
-      <label class="palco-live" id="palcoLiveBox" title="Desligado: ninguém vê o que você faz até ligar de novo" hidden>
+      <label class="palco-live" id="palcoLiveBox" title="Ligado: você vê a tela do host, igual. Desligado: a mesa fica parada pra você">
         <span>Tempo real</span><input type="checkbox" id="palcoLive" checked><i class="palco-sw"></i>
       </label>
     </div>
@@ -3008,6 +3008,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
   function mapaAplicaVista() {
     mapaMundo.style.transform = 'translate(' + mapaVs.tx + 'px,' + mapaVs.ty + 'px) scale(' + mapaVs.s + ')';
     mapaMundo.style.setProperty('--inv', String(1 / mapaVs.s));
+    if (typeof palcoVistaAgenda === 'function') palcoVistaAgenda();
   }
   function mapaFit() {
     if (!mapaTemMapa() || !mapaCena.w || !mapaCena.h) return;
@@ -4296,7 +4297,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
       mapaSalaConta(); mapaSalaL.focus(); mapaSalaL.select();
     }
   });
-  document.getElementById('mapaFit').addEventListener('click', mapaFit);
+  document.getElementById('mapaFit').addEventListener('click', function() { if (!palcoSegue()) mapaFit(); });
   // o mapa aceita duas coisas soltas em cima: arquivo de imagem (mapa novo) e
   // personagem da mesa (token no quadrado onde soltou)
   function temPj(e) {
@@ -4372,6 +4373,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     if (e.pointerType === 'touch') mapaToques[e.pointerId] = mapaPontoView(e);
     var ks = Object.keys(mapaToques);
+    if (ks.length === 2 && palcoSegue()) return;
     if (ks.length === 2) {   // segundo dedo: vira pinça (zoom)
       var a = mapaToques[ks[0]], b = mapaToques[ks[1]];
       mapaFimArraste();
@@ -4381,6 +4383,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     }
     var tokEl = e.target.closest('.mapa-tok');
     if (tokEl) { mapaIniciaArraste(e, tokEl); return; }
+    if (palcoSegue()) return;   // espelhando o host: a vista não é minha
     mapaPan = { id:e.pointerId, x:e.clientX, y:e.clientY, tx:mapaVs.tx, ty:mapaVs.ty };
     try { mapaView.setPointerCapture(e.pointerId); } catch (_) {}
     mapaView.classList.add('panning');
@@ -4424,10 +4427,11 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
   mapaView.addEventListener('wheel', function(e) {
     if (!mapaTemMapa()) return;
     e.preventDefault();
+    if (palcoSegue()) return;
     var p = mapaPontoView(e), passo = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
     mapaZoom(Math.exp(-mapaClamp(passo, -300, 300) * 0.0015), p.x, p.y);
   }, { passive:false });
-  mapaView.addEventListener('dblclick', function(e){ if (!e.target.closest('.mapa-tok')) mapaFit(); });
+  mapaView.addEventListener('dblclick', function(e){ if (!e.target.closest('.mapa-tok') && !palcoSegue()) mapaFit(); });
 
   // ── abrir / fechar: cada um no seu palco ──
   // Abrir não puxa ninguém junto. Quem está dentro aparece na presença do canal,
@@ -4467,6 +4471,8 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
   var palcoDentro = false, palcoDesde = 0, palcoClaim = 0, palcoLive = true;
   var palcoPres = {};            // id → o que cada conectado anunciou
   var palcoSouHost = false, palcoCongelado = false, palcoHostId = null;
+  var palcoSeguir = true;        // o meu interruptor, quando não sou host: ligado = espelho da tela do host
+  var _palcoSeguia = false;
   var palcoHostQuem = document.getElementById('palcoHostQuem');
   var palcoCtrlBt = document.getElementById('palcoControlar');
   var palcoLiveBox = document.getElementById('palcoLiveBox');
@@ -4511,16 +4517,21 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     palcoSouHost = !!h && h.id === MAPA_ME;
     // quem perde ou ganha o posto começa com o tempo real ligado
     if (palcoSouHost !== eraHost && !palcoLive) { palcoLive = true; palcoTrack(); }
-    palcoCongelado = !palcoSouHost && !!h && h.live === false;
+    palcoCongelado = !palcoSouHost && !!h && (h.live === false || !palcoSeguir);
     var pausadoAqui = palcoCongelado && palcoDentro && !privAtiva;   // numa aba privada eu mexo à vontade
     document.body.classList.toggle('palco-pausado', pausadoAqui);
     if (pausadoAqui) dsnSetTool('mover');
     palcoAviso.hidden = !pausadoAqui;
+    palcoAviso.textContent = !palcoSeguir ? 'Tempo real desligado · a mesa está parada pra você' : 'Mesa em pausa · o host desligou o tempo real';
     abasRender();
     palcoHostQuem.innerHTML = h ? (palcoSouHost ? '<b>Você</b> é o host' : 'Host: <b>' + esc(h.nome || 'Jogador') + '</b>') : 'Host: —';
     palcoCtrlBt.hidden = !palcoDentro || palcoSouHost;
-    palcoLiveBox.hidden = !palcoSouHost;
-    palcoLiveIn.checked = palcoLive;
+    palcoLiveBox.hidden = !palcoDentro;
+    palcoLiveIn.checked = palcoSouHost ? palcoLive : palcoSeguir;
+    // passou a espelhar o host (entrou, religou, voltou pra Mesa): pede a vista dele
+    var segue = palcoSegue();
+    if (segue && !_palcoSeguia) send('mapa-vista-req', { by:MAPA_ME });
+    _palcoSeguia = segue;
     // a mesa voltou ao vivo (o host religou ou saiu): pega a cena como ficou, por garantia
     if (estavaPausado && !palcoCongelado) {
       setTimeout(function() { if (!palcoCongelado && !_palcoRetomou) mapaRecarrega(); _palcoRetomou = false; }, 1200);
@@ -4540,10 +4551,35 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     mapaSalva(false);
   }
   palcoLiveIn.addEventListener('change', function() {
-    if (!palcoSouHost) { palcoLiveIn.checked = palcoLive; return; }
+    if (!palcoSouHost) { palcoSeguir = palcoLiveIn.checked; palcoRecalcula(); return; }   // o meu: espelhar o host ou ficar parado
     if (palcoLiveIn.checked) palcoLigaTempoReal();
     else { palcoLive = false; palcoTrack(); }
   });
+
+  // ── Espelho: quem está com o tempo real ligado vê a MESMA tela do host ──
+  // O host transmite a vista (centro e tamanho do pedaço do mundo que ele enxerga);
+  // cada um aplica do jeito que cabe na própria janela. Enquanto espelha, zoom e
+  // arrasto próprios ficam travados — senão a tela brigaria com a do host.
+  function palcoSegue() { return palcoDentro && !palcoSouHost && !palcoCongelado && !privAtiva && !!palcoHostId; }
+  var _palcoVistaT = null;
+  function palcoVistaEnvia() {
+    clearTimeout(_palcoVistaT); _palcoVistaT = null;
+    if (!palcoSouHost || !palcoLive || privAtiva || !palcoDentro) return;
+    var r = mapaView.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    send('mapa-vista', { by:MAPA_ME, cx:dsnNum((r.width / 2 - mapaVs.tx) / mapaVs.s), cy:dsnNum((r.height / 2 - mapaVs.ty) / mapaVs.s), vw:dsnNum(r.width / mapaVs.s), vh:dsnNum(r.height / mapaVs.s) });
+  }
+  function palcoVistaAgenda() { if (palcoSouHost && !_palcoVistaT) _palcoVistaT = setTimeout(palcoVistaEnvia, 80); }
+  function palcoVistaRecebe(v) {
+    if (!v || !palcoSegue() || !(+v.vw > 0) || !(+v.vh > 0)) return;
+    var r = mapaView.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    mapaVs.s = mapaClamp(Math.min(r.width / v.vw, r.height / v.vh), 0.03, 8);   // cabe tudo que o host vê
+    mapaVs.tx = r.width / 2 - v.cx * mapaVs.s;
+    mapaVs.ty = r.height / 2 - v.cy * mapaVs.s;
+    mapaAplicaVista();
+  }
+  setInterval(function() { if (mapaAberto()) palcoVistaEnvia(); }, 3000);   // batimento: quem chegou ou perdeu uma mensagem se acerta sozinho
 
   mapaCarrega();
 
@@ -5340,8 +5376,8 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
   var jitsiApi = null;
   function send(event, payload) {
     // host com o tempo real desligado mexe só aqui: a mesa continua vendo a última tela
-    if (privAtiva && /^mapa-(cena|grade|img|tok|dsn)$/.test(event)) return;   // aba privada: ninguém vê
-    if (palcoSouHost && !palcoLive && /^mapa-(cena|grade|img|tok|dsn)$/.test(event) && !(payload && payload.retoma)) return;
+    if (privAtiva && /^mapa-(cena|grade|img|tok|dsn|vista)$/.test(event)) return;   // aba privada: ninguém vê
+    if (palcoSouHost && !palcoLive && /^mapa-(cena|grade|img|tok|dsn|vista)$/.test(event) && !(payload && payload.retoma)) return;
     if (channel) channel.send({ type:'broadcast', event:event, payload:payload });
     else dispatch(event, payload);   // offline: mostra local
   }
@@ -5367,6 +5403,8 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     else if (event === 'som-gain') { if (payload && payload.id != null) { somGain[String(payload.id)] = payload.gain; somPersistGain(); somApplyVol(payload.id); somRenderPads(); } }
     // 'mapa-open'/'mapa-close' eram "abre pra mesa toda"; agora cada um entra e sai por si (ver Host do palco)
     else if (event === 'palco-st') palcoRecebeEstado(payload);
+    else if (event === 'mapa-vista') palcoVistaRecebe(payload);
+    else if (event === 'mapa-vista-req') { if (palcoSouHost) palcoVistaEnvia(); }
     else if (privAtiva && /^mapa-(cena|grade|img|tok|dsn)$/.test(event)) { if (!payload || payload.by !== MAPA_ME) mesaVelha = true; }   // a mesa anda sem mim; recarrego ao voltar
     else if (event === 'mapa-cena') { if (!palcoCongelado || (payload && payload.retoma)) mapaRecebeCena(payload); }
     else if (event === 'mapa-grade') { if (!palcoCongelado) mapaRecebeGrade(payload); }
@@ -5396,7 +5434,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     ['som-play','som-stop','som-state','som-state-req','som-lib','som-gain'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
-    ['palco-st','mapa-cena','mapa-grade','mapa-img','mapa-tok','mapa-dsn'].forEach(function(ev){
+    ['palco-st','mapa-cena','mapa-grade','mapa-img','mapa-tok','mapa-dsn','mapa-vista','mapa-vista-req'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
     channel.subscribe(function(status){
