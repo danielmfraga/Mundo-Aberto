@@ -843,6 +843,26 @@ body.mapa-on .som-panel { border-left:0; border-right:1px solid rgba(160,130,255
   .palco-gavetas > .panel { width:min(310px, calc(100vw - 90px)); }
   body.mapa-on .som-overlay { left:0; top:0; height:100vh; }
 }
+/* Rosto a rosto: o host leva todo mundo pra uma tela só de rostos (a mesa fica por baixo, intacta) */
+body.rosto-a-rosto .mapa-panel { display:none !important; }
+body.rosto-a-rosto .video-panel,
+body.rosto-a-rosto.wb-on.wb-right .video-panel,
+body.rosto-a-rosto.mapa-on.wb-on.wb-right .video-panel {
+  position:fixed !important; inset:0 !important; width:auto !important; height:auto !important; z-index:9997 !important;
+  border:0 !important; border-radius:0 !important; margin:0 !important; grid-column:auto !important; grid-row:auto !important;
+}
+body.rosto-a-rosto .video-panel .panel-head { display:none; }
+body.rosto-a-rosto .video-panel #jitsi { border-radius:0; min-height:0; height:100%; }
+.rosto-volta, .rosto-aviso {
+  position:fixed; z-index:9999; top:14px; left:50%; transform:translateX(-50%);
+  font-family:var(--font-mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase;
+  padding:9px 16px; border-radius:999px; background:rgba(11,19,32,0.94); border:1px solid #ff8a7a; color:#ff8a7a;
+}
+.rosto-volta { cursor:pointer; box-shadow:0 0 16px rgba(255,110,90,0.3); }
+.rosto-volta:hover { background:rgba(255,110,90,0.22); }
+.rosto-volta[hidden], .rosto-aviso[hidden] { display:none; }
+.rosto-aviso { pointer-events:none; border-color:var(--line-strong); color:var(--fg-dim); }
+.palco-host-bt[hidden] { display:none; }
 .palco-pilula {
   display:none; position:fixed; z-index:9000; left:32px; bottom:32px; cursor:pointer; padding:9px 14px; border-radius:999px;
   font-family:var(--font-mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase;
@@ -1317,6 +1337,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     <div class="palco-host" id="palcoHost">
       <span id="palcoHostQuem">Host: —</span>
       <button class="palco-host-bt" id="palcoControlar" type="button" title="Assumir o controle da mesa" hidden>Controlar</button>
+      <button class="palco-host-bt" id="palcoRostoBt" type="button" title="Leva todo mundo pra uma tela só de rostos, como se a mesa tivesse fechado. Aperte de novo pra voltar." hidden>Rosto a rosto</button>
       <label class="palco-live" id="palcoLiveBox" title="Ligado: você vê a tela do host, igual. Desligado: a mesa fica parada pra você">
         <span>Tempo real</span><input type="checkbox" id="palcoLive" checked><i class="palco-sw"></i>
       </label>
@@ -1656,6 +1677,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   </div>
 </div>
 
+<button class="rosto-volta" id="rostoVolta" type="button" hidden>&#9635; Voltar à mesa</button>
+<div class="rosto-aviso" id="rostoAviso" hidden>Rosto a rosto · o host vai voltar à mesa</div>
 <button class="palco-pilula" id="palcoPilula" type="button" title="Voltar ao palco">&#9635; Voltar à mesa</button>
 
 <!-- Seleção de personagem -->
@@ -4596,7 +4619,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     mapaBtn.classList.remove('open');
     document.body.classList.remove('wb-on', 'wb-right');
     jitsiTile(false);
-    palcoDentro = false; palcoClaim = 0;
+    palcoDentro = false; palcoClaim = 0; palcoRosto = false;
     palcoTrack(); palcoRecalcula();
   }
   // Minimizar: a página volta ao normal (dados, chat, personagens) mas você continua
@@ -4691,6 +4714,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var palcoDentro = false, palcoDesde = 0, palcoClaim = 0, palcoLive = true;
   var palcoPres = {};            // id → o que cada conectado anunciou
   var palcoSouHost = false, palcoCongelado = false, palcoHostId = null;
+  var palcoRosto = false;        // (host) levei todo mundo pra tela de rostos
   var palcoSeguir = true;        // o meu interruptor, quando não sou host: ligado = espelho da tela do host
   var _palcoSeguia = false;
   var palcoHostQuem = document.getElementById('palcoHostQuem');
@@ -4699,13 +4723,32 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var palcoLiveIn = document.getElementById('palcoLive');
   var palcoAviso = document.getElementById('palcoCongelado');
   var _palcoRetomou = false;
+  // Rosto a rosto: vale pra todo mundo que está na sala, no palco ou fora dele. O estado mora no anúncio do
+  // host; sem host (ele saiu ou caiu) volta sozinho. A mesa fica por baixo, intacta.
+  var _rostoAplicado = false;
+  function palcoAplicaRosto(on) {
+    document.getElementById('rostoVolta').hidden = !(on && palcoSouHost);
+    document.getElementById('rostoAviso').hidden = !(on && !palcoSouHost);
+    if (on === _rostoAplicado) return;
+    _rostoAplicado = on;
+    document.body.classList.toggle('rosto-a-rosto', on);
+    if (on) { mapaFechaPops(); dsnSetTool('mover'); }
+    jitsiTile(on ? true : mapaAberto());
+  }
+  function palcoAlternaRosto() {
+    if (!palcoSouHost) return;
+    palcoRosto = !palcoRosto;
+    palcoTrack(); palcoRecalcula();
+  }
+  document.getElementById('palcoRostoBt').addEventListener('click', palcoAlternaRosto);
+  document.getElementById('rostoVolta').addEventListener('click', palcoAlternaRosto);
 
   // O estado do palco (dentro, "Controlar", tempo real) vai por BROADCAST, não pela
   // presença: o Supabase fecha o canal inteiro de quem atualiza a presença mais
   // de umas 5 vezes em poucos segundos (testado) — e com o canal vão os dados e o
   // chat. A presença só serve pra saber quem está conectado (um track por conexão).
   function palcoTrack() {   // anuncia o meu estado; o nome ficou, o mecanismo mudou
-    send('palco-st', { id:MAPA_ME, nome:(nome || 'Jogador'), dentro:palcoDentro, desde:palcoDesde, claim:palcoClaim, live:palcoLive });
+    send('palco-st', { id:MAPA_ME, nome:(nome || 'Jogador'), dentro:palcoDentro, desde:palcoDesde, claim:palcoClaim, live:palcoLive, rosto:palcoRosto });
   }
   function palcoRecebeEstado(m) {
     if (!m || !m.id || m.id === MAPA_ME) return;
@@ -4726,7 +4769,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   // todo mundo chega no mesmo host sem precisar de árbitro.
   function palcoEscolheHost() {
     var lista = Object.keys(palcoPres).filter(function(k) { return k !== MAPA_ME; }).map(function(k) { return palcoPres[k]; });
-    if (palcoDentro) lista.push({ id:MAPA_ME, nome:(nome || 'Jogador'), dentro:true, desde:palcoDesde, claim:palcoClaim, live:palcoLive });
+    if (palcoDentro) lista.push({ id:MAPA_ME, nome:(nome || 'Jogador'), dentro:true, desde:palcoDesde, claim:palcoClaim, live:palcoLive, rosto:palcoRosto });
     lista = lista.filter(function(m) { return m && m.dentro; });
     lista.sort(function(a, b) { return (b.claim || 0) - (a.claim || 0) || (a.desde || 0) - (b.desde || 0) || (a.id < b.id ? -1 : 1); });
     return lista[0] || null;
@@ -4737,6 +4780,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     palcoSouHost = !!h && h.id === MAPA_ME;
     // quem perde ou ganha o posto começa com o tempo real ligado
     if (palcoSouHost !== eraHost && !palcoLive) { palcoLive = true; palcoTrack(); }
+    if (!palcoSouHost && palcoRosto) { palcoRosto = false; palcoTrack(); }
     palcoCongelado = !palcoSouHost && !!h && (h.live === false || !palcoSeguir);
     var pausadoAqui = palcoCongelado && palcoDentro && !privAtiva;   // numa aba privada eu mexo à vontade
     document.body.classList.toggle('palco-pausado', pausadoAqui);
@@ -4747,6 +4791,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     palcoHostQuem.innerHTML = h ? (palcoSouHost ? '<b>Você</b> é o host' : 'Host: <b>' + esc(h.nome || 'Jogador') + '</b>') : 'Host: —';
     palcoCtrlBt.hidden = !palcoDentro || palcoSouHost;
     palcoLiveBox.hidden = !palcoDentro;
+    document.getElementById('palcoRostoBt').hidden = !palcoSouHost;
+    palcoAplicaRosto(!!h && !!h.rosto);
     palcoLiveIn.checked = palcoSouHost ? palcoLive : palcoSeguir;
     // passou a espelhar o host (entrou, religou, voltou pra Mesa): pede a vista dele
     var segue = palcoSegue();
@@ -5623,6 +5669,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     else if (event === 'som-gain') { if (payload && payload.id != null) { somGain[String(payload.id)] = payload.gain; somPersistGain(); somApplyVol(payload.id); somRenderPads(); } }
     // 'mapa-open'/'mapa-close' eram "abre pra mesa toda"; agora cada um entra e sai por si (ver Host do palco)
     else if (event === 'palco-st') palcoRecebeEstado(payload);
+    else if (event === 'palco-req') { if (payload && payload.by !== MAPA_ME && palcoDentro) palcoTrack(); }   // quem chegou pede o estado: quem está no palco responde
     else if (event === 'mapa-vista') palcoVistaRecebe(payload);
     else if (event === 'mapa-vista-req') { if (palcoSouHost) palcoVistaEnvia(); }
     else if (privAtiva && /^mapa-(cena|grade|img|tok|dsn)$/.test(event)) { if (!payload || payload.by !== MAPA_ME) mesaVelha = true; }   // a mesa anda sem mim; recarrego ao voltar
@@ -5654,12 +5701,12 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     ['som-play','som-stop','som-state','som-state-req','som-lib','som-gain'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
-    ['palco-st','mapa-cena','mapa-grade','mapa-img','mapa-tok','mapa-dsn','mapa-vista','mapa-vista-req'].forEach(function(ev){
+    ['palco-st','palco-req','mapa-cena','mapa-grade','mapa-img','mapa-tok','mapa-dsn','mapa-vista','mapa-vista-req'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
     channel.subscribe(function(status){
       document.getElementById('connDot').classList.toggle('on', status === 'SUBSCRIBED');
-      if (status === 'SUBSCRIBED') { send('chars-req', {}); send('mesa-ctx-req', {}); send('som-state-req', {}); send('timer-req', {}); channel.track({ id:MAPA_ME }); palcoTrack(); }
+      if (status === 'SUBSCRIBED') { send('chars-req', {}); send('mesa-ctx-req', {}); send('som-state-req', {}); send('timer-req', {}); channel.track({ id:MAPA_ME }); palcoTrack(); send('palco-req', { by:MAPA_ME }); }
     });
   }
 
