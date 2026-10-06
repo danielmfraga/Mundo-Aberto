@@ -1547,7 +1547,11 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     <div class="mapa-pop" id="mapaImgPop">
       <h4>Imagem de fundo</h4>
       <div class="mapa-enq-pad" id="mapaEnqPad" title="Arraste pra mover a imagem"><span class="mapa-enq-alvo" id="mapaEnqAlvo"></span></div>
-      <div class="mapa-lin"><label for="mapaEnqZoom">Zoom</label><input type="range" id="mapaEnqZoom" min="20" max="400" step="1"><span class="rot" id="mapaEnqVal">100%</span></div>
+      <div class="mapa-lin"><label for="mapaEnqZoom">Zoom</label><input type="range" id="mapaEnqZoom" min="2" max="400" step="1"><span class="rot" id="mapaEnqVal">100%</span></div>
+      <div class="mapa-seg">
+        <button class="mapa-op" type="button" id="mapaImgCabe" title="A imagem inteira dentro da sala, encostando na altura ou na largura">Caber na sala</button>
+        <button class="mapa-op" type="button" id="mapaImgCobre" title="A imagem cobre a sala toda (o que passar é cortado)">Cobrir a sala</button>
+      </div>
       <div class="mapa-seg">
         <button class="mapa-op" type="button" id="mapaImgTrocar">Trocar imagem</button>
         <button class="mapa-op perigo" type="button" id="mapaImgTira">Tirar</button>
@@ -3222,7 +3226,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     // que fica no centro. Cena antiga (de antes disso existir) não tem esses
     // campos — 100/50/50 reproduz exatamente como ela já aparecia, porque
     // w/h dela É o tamanho da imagem.
-    n.imgZoom = mapaClamp(+c.imgZoom > 0 ? +c.imgZoom : 100, 20, 400);
+    n.imgZoom = mapaClamp(+c.imgZoom > 0 ? +c.imgZoom : 100, 2, 400);
     n.imgX = c.imgX == null ? 50 : mapaClamp(+c.imgX, 0, 100);
     n.imgY = c.imgY == null ? 50 : mapaClamp(+c.imgY, 0, 100);
     var vistos = {};
@@ -3657,7 +3661,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (!p || p.by === MAPA_ME) return;
     mapaCena.img = mapaUrlOk(p.img); mapaCena.branco = !!p.branco;
     if (p.fundo) mapaCena.fundo = mapaFundoCor(p.fundo);
-    mapaCena.imgZoom = mapaClamp(+p.imgZoom || 100, 20, 400);
+    mapaCena.imgZoom = mapaClamp(+p.imgZoom || 100, 2, 400);
     mapaCena.imgX = mapaClamp(+p.imgX, 0, 100); mapaCena.imgY = mapaClamp(+p.imgY, 0, 100);
     mapaRenderFundo(); mapaSyncImgUI();
   }
@@ -4232,6 +4236,13 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   }
   // Menor zoom que cobre a sala inteira com a imagem — mesma conta da ficha
   // de D&D, só que contra o tamanho da SALA (que já existe), não da tela.
+  // A regra ao importar: a imagem INTEIRA cabe na sala, encostando nos limites de altura ou de largura (o que
+  // chegar primeiro), centralizada. O que sobrar de sala fica com a cor de fundo. Arredonda pra baixo (0,1%)
+  // pra nunca passar do limite.
+  function mapaZoomCabe(imgW, imgH) {
+    var z = 100 * Math.min(1, (mapaCena.h * imgW) / (mapaCena.w * imgH));
+    return mapaClamp(Math.floor(z * 10) / 10 || 100, 2, 400);
+  }
   function mapaZoomCobre(imgW, imgH) {
     var z = Math.ceil(100 * (mapaCena.h * imgW) / (mapaCena.w * imgH));
     return mapaClamp(z || 100, 100, 400);
@@ -4239,13 +4250,14 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   // Subir uma imagem NÃO troca de cena: a sala (tamanho, grade, tokens)
   // continua igual, a imagem só entra como fundo, cobrindo a sala inteira
   // e centralizada — dali dá pra ajustar zoom e posição no popover dela.
+  // (comentário antigo dizia 'cobrindo'; a regra agora é CABER — ver mapaZoomCabe)
   function mapaNovoArquivo(file) {
     if (!file) return;
     if (!/^image\//.test(file.type)) { alert('Isso não é uma imagem.'); return; }
     if (file.size > MAPA_MAX_MB * 1024 * 1024) { alert('Imagem muito grande (' + fmtBytes(file.size) + '). O limite do mapa é ' + MAPA_MAX_MB + ' MB.'); return; }
     mapaMede(file).then(function(dim) {
       return mapaSobe(file, 'mapa', 'enviando fundo…').then(function(url) {
-        mapaMudaImg({ img:url, branco:false, imgZoom:mapaZoomCobre(dim.w, dim.h), imgX:50, imgY:50 });
+        mapaMudaImg({ img:url, branco:false, imgZoom:mapaZoomCabe(dim.w, dim.h), imgX:50, imgY:50 });
       });
     }).catch(function(err){ mapaStatus(''); alert('Não deu pra usar essa imagem: ' + err.message); });
   }
@@ -4548,6 +4560,18 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   });
   mapaEnqZoom.addEventListener('input', function(){ mapaMudaImg({ imgZoom:+mapaEnqZoom.value }); });
   document.getElementById('mapaImgTrocar').addEventListener('click', function(){ mapaFechaPops(); mapaFile.click(); });
+  // Caber / Cobrir: refaz o ajuste a partir do tamanho da imagem (carregada da própria URL)
+  function mapaImgAjusta(cobre) {
+    if (!mapaCena.img) return;
+    var im = new Image();
+    im.onload = function() {
+      if (!im.naturalWidth) return;
+      mapaMudaImg({ imgZoom:(cobre ? mapaZoomCobre : mapaZoomCabe)(im.naturalWidth, im.naturalHeight), imgX:50, imgY:50 });
+    };
+    im.src = mapaCena.img;
+  }
+  document.getElementById('mapaImgCabe').addEventListener('click', function(){ mapaImgAjusta(false); });
+  document.getElementById('mapaImgCobre').addEventListener('click', function(){ mapaImgAjusta(true); });
   document.getElementById('mapaImgTira').addEventListener('click', function() {
     mapaMudaImg({ img:null, branco:true });
     mapaFechaPops();
