@@ -877,6 +877,10 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
   font-family:var(--font-mono); font-size:13px; line-height:1; display:flex; align-items:center; justify-content:center; transition:all .15s;
 }
 .mapa-ico:hover { color:var(--fg); border-color:var(--holo-soft); }
+.mapa-fundo { position:relative; overflow:hidden; }
+.mapa-fundo-am { width:15px; height:15px; border-radius:50%; border:2px solid rgba(255,255,255,0.35); background:#fff; }
+.mapa-fundo input { position:absolute; inset:-6px; width:200%; height:200%; padding:0; border:none; background:none; opacity:0; cursor:pointer; }
+body.palco-pausado .mapa-fundo { pointer-events:none; opacity:0.5; }
 .mapa-ico.on { color:var(--holo); border-color:var(--holo); box-shadow:0 0 8px rgba(78,211,232,0.3); }
 .mapa-x:hover { color:#fff; background:var(--danger); border-color:var(--danger); }
 .mapa-ico.mapa-limpar:hover, .mapa-ico.mapa-limpar.on { color:var(--danger); border-color:rgba(255,85,102,0.6); }
@@ -911,6 +915,9 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
 .mapa-dsn-capt { position:absolute; inset:0; z-index:20; touch-action:none; cursor:crosshair; }
 .mapa-dsn-capt[hidden] { display:none; }
 .mapa-dsn-capt.texto { cursor:text; }
+body.espaco-mao .mapa-view, body.espaco-mao .mapa-dsn-capt, body.espaco-mao .mapa-tok { cursor:grab; }
+body.espaco-mao .mapa-view.panning, body.espaco-mao .mapa-view.panning .mapa-dsn-capt { cursor:grabbing; }
+body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:var(--holo); box-shadow:0 0 8px rgba(78,211,232,0.3); }
 /* o <svg> é elemento substituído: só com inset:0 ele fica no tamanho padrão
    (300×150) em vez de cobrir o mapa — daí o width/height explícitos */
 .mapa-hex { width:100%; height:100%; display:block; }
@@ -1286,6 +1293,7 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
       <button class="mapa-ico" id="mapaTrocar" type="button" title="Trocar o mapa (começa uma cena nova)">&#128444;</button>
       <button class="mapa-ico" id="mapaSalaBtn" type="button" title="Sala em branco, por medida em metros">&#128208;</button>
       <button class="mapa-ico" id="mapaGradeBtn" type="button" title="Ajustar a grade">#</button>
+      <label class="mapa-ico mapa-fundo" title="Cor do fundo"><span class="mapa-fundo-am" id="mapaFundoAm"></span><input type="color" id="mapaFundoCor" value="#ffffff"></label>
       <button class="mapa-ico" id="mapaFit" type="button" title="Ver o mapa inteiro (ou duplo clique no mapa)">&#9974;</button>
       <button class="mapa-ico mapa-limpar" id="mapaLimparBt" type="button" title="Limpar o mapa">&#128465;</button>
       <button class="mapa-ico mapa-x" id="mapaFechar" type="button" title="Sair do palco (a mesa continua pra quem ficou)">&#10005;</button>
@@ -2858,6 +2866,7 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
   var mapaNpcPop   = document.getElementById('mapaNpcPop');
   var mapaTokPop   = document.getElementById('mapaTokPop');
   var mapaFile     = document.getElementById('mapaFile');
+  var mapaFundoAm  = document.getElementById('mapaFundoAm'), mapaFundoIn = document.getElementById('mapaFundoCor');
 
   // Nasce já em branco: se o mapa abrir antes do Storage responder (a
   // primeira vez que alguém entra na sala, ou a rede demorando), o que
@@ -2878,7 +2887,7 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
   var _mapaNpcImg = null, _mapaNpcSubindo = false, _mapaSoltando = 0;
 
   function mapaClamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
-  function mapaCenaVazia() { return { v:1, img:null, branco:false, w:0, h:0, grade:{ tipo:'quadrada', tam:70, dx:0, dy:0, cor:'escura' }, imgZoom:100, imgX:50, imgY:50, tokens:[], desenho:[] }; }
+  function mapaCenaVazia() { return { v:1, img:null, branco:false, w:0, h:0, grade:{ tipo:'quadrada', tam:70, dx:0, dy:0, cor:'escura' }, imgZoom:100, imgX:50, imgY:50, tokens:[], desenho:[], fundo:'#ffffff' }; }
   // Medida de uma sala em branco: quantas casas de largura/altura, no
   // formato escolhido, viram pixels — a mesma conta pra criar uma sala nova
   // e pro padrão que a mesa nasce com.
@@ -2899,9 +2908,17 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
   // grade neutra (18 × 12 m, do tamanho do popover de Sala em branco), e daí
   // dá pra pôr uma imagem de fundo ou medir outra sala, os dois pela barra.
   function mapaCenaBrancoPadrao() {
-    var c = mapaCenaVazia(), m = mapaSalaMedida(12, 8, 'quadrada', 70);
+    var c = mapaCenaVazia(), m = mapaSalaMedida(57, 57, 'quadrada', 70);   // ~4000 × 4000 px, branca
     c.branco = true; c.w = m.w; c.h = m.h; c.grade = m.grade;
     return c;
+  }
+  // cor do fundo: #rrggbb (o <input type=color> só entende esse formato); qualquer outra coisa vira branco
+  function mapaFundoCor(v) {
+    if (typeof v !== 'string') return '#ffffff';
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) return v.toLowerCase();
+    if (/^#[0-9a-fA-F]{3}$/.test(v)) return ('#' + v[1] + v[1] + v[2] + v[2] + v[3] + v[3]).toLowerCase();
+    if (/^#[0-9a-fA-F]{8}$/.test(v)) return v.slice(0, 7).toLowerCase();
+    return '#ffffff';
   }
   function mapaTemMapa() { return !!(mapaCena.img || mapaCena.branco); }
   function mapaUrlOk(u) { return (typeof u === 'string' && /^https?:\/\//i.test(u)) ? u : null; }
@@ -2995,6 +3012,7 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
       return true;
     }).slice(0, 200);
     n.desenho = dsnNorm(c.desenho);
+    n.fundo = mapaFundoCor(c.fundo);
     // nem imagem nem branco marcado (só deveria acontecer com um JSON salvo
     // à mão ou corrompido) — a mesa se cura sozinha, nunca fica sem nada
     if (!n.img && !n.branco) {
@@ -3015,10 +3033,30 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
     if (!mapaTemMapa() || !mapaCena.w || !mapaCena.h) return;
     var r = mapaView.getBoundingClientRect();
     if (!r.width || !r.height) return;
-    mapaVs.s = Math.min(r.width / mapaCena.w, r.height / mapaCena.h) * 0.96;
-    mapaVs.tx = (r.width - mapaCena.w * mapaVs.s) / 2;
-    mapaVs.ty = (r.height - mapaCena.h * mapaVs.s) / 2;
+    var s = Math.min(r.width / mapaCena.w, r.height / mapaCena.h) * 0.96, cx = mapaCena.w / 2, cy = mapaCena.h / 2;
+    if (!mapaCena.img && mapaCena.w * mapaCena.h > 6e6) {
+      // sala em branco enorme: enquadra o que tem nela; vazia, abre no meio em escala confortável
+      var b = mapaConteudoBox();
+      if (b) { cx = b.cx; cy = b.cy; s = mapaClamp(Math.min(r.width / (b.w * 1.15), r.height / (b.h * 1.15)), 0.2, 1.5); }
+      else s = 0.8;
+    }
+    mapaVs.s = s;
+    mapaVs.tx = r.width / 2 - cx * s;
+    mapaVs.ty = r.height / 2 - cy * s;
     mapaAplicaVista();
+  }
+  // retângulo que cobre tokens e desenho (ou null se a sala está vazia)
+  function mapaConteudoBox() {
+    var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    function pt(x, y) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+    mapaCena.tokens.forEach(function(t) { var g = mapaTokGeo(t); pt(g.x, g.y); pt(g.x + g.lado, g.y + g.lado); });
+    mapaCena.desenho.forEach(function(it) {
+      if (it.k === 't') it.p.forEach(function(q) { pt(q[0], q[1]); });
+      else if (it.k === 'f') { pt(it.a[0], it.a[1]); pt(it.a[2], it.a[3]); }
+      else { pt(it.x, it.y); pt(it.x + it.t.length * it.s * 0.6, it.y + it.s); }
+    });
+    if (x0 === Infinity) return null;
+    return { cx:(x0 + x1) / 2, cy:(y0 + y1) / 2, w:Math.max(x1 - x0, 500), h:Math.max(y1 - y0, 350) };
   }
   function mapaZoom(fator, mx, my) {
     var s = mapaClamp(mapaVs.s * fator, 0.03, 8), k = s / mapaVs.s;
@@ -3112,6 +3150,9 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
   // por causa da imagem, só a imagem se ajusta dentro dela
   function mapaRenderFundo() {
     mapaMundo.classList.toggle('branco', !!mapaCena.branco);
+    mapaMundo.style.background = mapaCena.fundo;
+    mapaFundoAm.style.background = mapaCena.fundo;
+    if (mapaFundoIn.value !== mapaCena.fundo) mapaFundoIn.value = mapaCena.fundo;
     if (mapaCena.img) {
       mapaImg.style.backgroundImage = 'url("' + mapaCena.img.replace(/"/g, '%22') + '")';
       mapaImg.style.backgroundSize = mapaCena.imgZoom + '% auto';
@@ -3387,12 +3428,13 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
     Object.assign(mapaCena, parcial);
     mapaRenderFundo(); mapaSyncImgUI();
     clearTimeout(_mapaImgT);
-    _mapaImgT = setTimeout(function(){ send('mapa-img', { img:mapaCena.img, imgZoom:mapaCena.imgZoom, imgX:mapaCena.imgX, imgY:mapaCena.imgY, branco:mapaCena.branco, by:MAPA_ME }); }, 60);
+    _mapaImgT = setTimeout(function(){ send('mapa-img', { img:mapaCena.img, imgZoom:mapaCena.imgZoom, imgX:mapaCena.imgX, imgY:mapaCena.imgY, branco:mapaCena.branco, fundo:mapaCena.fundo, by:MAPA_ME }); }, 60);
     mapaAgendaSalvar();
   }
   function mapaRecebeImg(p) {
     if (!p || p.by === MAPA_ME) return;
     mapaCena.img = mapaUrlOk(p.img); mapaCena.branco = !!p.branco;
+    if (p.fundo) mapaCena.fundo = mapaFundoCor(p.fundo);
     mapaCena.imgZoom = mapaClamp(+p.imgZoom || 100, 20, 400);
     mapaCena.imgX = mapaClamp(+p.imgX, 0, 100); mapaCena.imgY = mapaClamp(+p.imgY, 0, 100);
     mapaRenderFundo(); mapaSyncImgUI();
@@ -3557,6 +3599,7 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
     dsnPend = null;
   }
   dsnCapt.addEventListener('pointerdown', function(e) {
+    if (dsnEspaco || (e.pointerType === 'mouse' && e.button === 1)) return;   // mão: deixa subir pro mapa, que arrasta a vista
     e.stopPropagation();                          // o resto do mapa (pan, token) não entra nessa
     if (palcoCongelado || !e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
     e.preventDefault();
@@ -3636,6 +3679,22 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
     el.addEventListener('blur', function() { dsnFechaTexto(true); });
   }
 
+  // ── mão: segurar Espaço vira o modo mão (arrasta a vista) com qualquer ferramenta ──
+  var dsnEspaco = false;
+  function dsnDigitando(e) { var t = e.target; return !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable); }
+  function dsnEspacoFim() { if (!dsnEspaco) return; dsnEspaco = false; document.body.classList.remove('espaco-mao'); }
+  document.addEventListener('keydown', function(e) {
+    if (e.code !== 'Space' || !mapaAberto() || dsnDigitando(e)) return;
+    e.preventDefault();                           // sem isso o Espaço "clica" no botão que ficou com foco
+    if (!dsnEspaco) { dsnEspaco = true; document.body.classList.add('espaco-mao'); }
+  });
+  document.addEventListener('keyup', function(e) {
+    if (e.code !== 'Space') return;
+    if (dsnEspaco) e.preventDefault();
+    dsnEspacoFim();
+  });
+  window.addEventListener('blur', dsnEspacoFim);
+
   // ── paleta ──
   function dsnSetTool(t) {
     if (t !== 'mover' && palcoCongelado && palcoDentro && !privAtiva) return;   // mesa parada pra mim: nada de desenhar
@@ -3676,7 +3735,7 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
   var abas = [], _abasT = null;
   var abasBar = document.getElementById('abasBar'), abasMenu = document.getElementById('abasMenu');
   function mapaCenaQuadro() {
-    var c = mapaCenaVazia(), m = mapaSalaMedida(20, 11, 'quadrada', 70);
+    var c = mapaCenaVazia(), m = mapaSalaMedida(57, 57, 'quadrada', 70);
     c.branco = true; c.w = m.w; c.h = m.h; c.grade = Object.assign(m.grade, { cor:'nenhuma' });
     return c;
   }
@@ -3797,6 +3856,8 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
   }
   abasCarrega();
   abasRender();
+
+  mapaFundoIn.addEventListener('input', function() { mapaMudaImg({ fundo:mapaFundoCor(this.value) }); });
 
   // ── Storage ──
   function mapaCarrega() {
@@ -4372,7 +4433,8 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
   }
   mapaView.addEventListener('pointerdown', function(e) {
     if (!mapaTemMapa()) return;
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 1) return;
+    if (e.button === 1) e.preventDefault();   // sem o autoscroll do botão do meio
     if (e.pointerType === 'touch') mapaToques[e.pointerId] = mapaPontoView(e);
     var ks = Object.keys(mapaToques);
     if (ks.length === 2 && palcoSegue()) return;
@@ -4384,7 +4446,7 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
       return;
     }
     var tokEl = e.target.closest('.mapa-tok');
-    if (tokEl) { mapaIniciaArraste(e, tokEl); return; }
+    if (tokEl && e.button === 0 && !dsnEspaco) { mapaIniciaArraste(e, tokEl); return; }
     if (palcoSegue()) return;   // espelhando o host: a vista não é minha
     mapaPan = { id:e.pointerId, x:e.clientX, y:e.clientY, tx:mapaVs.tx, ty:mapaVs.ty };
     try { mapaView.setPointerCapture(e.pointerId); } catch (_) {}
