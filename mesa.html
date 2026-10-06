@@ -942,7 +942,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
    (300×150) em vez de cobrir o mapa — daí o width/height explícitos */
 .mapa-hex { width:100%; height:100%; display:block; }
 .mapa-tokens { position:absolute; inset:0; }
-.mapa-tok { position:absolute; cursor:grab; touch-action:none; }
+.mapa-tok { position:absolute; cursor:grab; touch-action:none; border-radius:50%; }   /* a área clicável é o círculo do rosto: o canto da caixa quadrada não agarra o token */
 .mapa-tok.drag { cursor:grabbing; z-index:60 !important; }
 .mapa-tok .rosto {
   position:absolute; inset:0; border-radius:50%; overflow:hidden; border-style:solid; border-color:#4ed3e8;
