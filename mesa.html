@@ -1519,9 +1519,6 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     <span class="wb-sep"></span>
     <button class="wb-tool wb-icon" id="wbClear" type="button" title="Limpar tudo">&#128465;</button>
     <span class="wb-sep"></span>
-    <button class="wb-tool wb-icon wb-layout-btn" data-layout="top" type="button" title="Caras no topo">&#9600;</button>
-    <button class="wb-tool wb-icon wb-layout-btn" data-layout="split" type="button" title="Vídeo e quadro lado a lado">&#9707;</button>
-    <button class="wb-tool wb-icon wb-layout-btn" data-layout="right" type="button" title="Caras na coluna à direita">&#9616;</button>
     <button class="wb-tool wb-icon wb-close-btn" id="wbClose" type="button" title="Fechar">&#10005;</button>
   </div>
   <div class="wb-stage" id="wbStage">
@@ -2919,30 +2916,21 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   document.getElementById('wbClose').addEventListener('click', function(){ closeWhiteboardView(); send('wb-close', {}); });
   document.getElementById('wbBtn').addEventListener('click', function(){ openWhiteboardView(); send('wb-open', {}); });
 
-  // ── Layout do quadro: caras dos jogadores junto do quadro (individual) ──
-  // O quadro continua compartilhado (wb-open/wb-close por broadcast), mas ONDE
-  // cada um vê as caras é preferência local, salva por jogador.
-  var WB_LAYOUT_KEY = 'mesaWbLayout';
-  var wbLayout = localStorage.getItem(WB_LAYOUT_KEY) || 'top';
-  if (['top','split','right'].indexOf(wbLayout) < 0) wbLayout = 'top';
+  // ── Layout do quadro: as caras ficam na coluna à direita, sempre ──
+  // Era uma escolha por jogador (topo, lado a lado, coluna); agora é fixo.
+  var wbLayout = 'right';
 
   function wbIsOpen() { return wbOverlay.classList.contains('show'); }
   function jitsiTile(on) { if (jitsiApi) { try { jitsiApi.executeCommand('setTileView', !!on); } catch (_) {} } }
 
-  function applyWbLayout(l) {
-    if (['top','split','right'].indexOf(l) < 0) l = 'top';
-    wbLayout = l;
-    localStorage.setItem(WB_LAYOUT_KEY, l);
+  function applyWbLayout() {
     document.body.classList.remove('wb-top','wb-split','wb-right');
-    document.body.classList.add('wb-' + l);
-    document.querySelectorAll('.wb-layout-btn').forEach(function(b){
-      b.classList.toggle('active', b.dataset.layout === l);
-    });
+    document.body.classList.add('wb-right');
   }
   function openWhiteboardView() {
     wbOverlay.classList.add('show');
     document.body.classList.add('wb-on');
-    applyWbLayout(wbLayout);
+    applyWbLayout();
     jitsiTile(true);   // mostra todas as caras na grade
   }
   function closeWhiteboardView() {
@@ -2951,9 +2939,6 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     document.body.classList.remove('wb-on','wb-top','wb-split','wb-right');
     jitsiTile(mapaAberto());  // volta o vídeo ao normal (com o mapa aberto, a faixa de caras continua em grade)
   }
-  document.querySelectorAll('.wb-layout-btn').forEach(function(b){
-    b.addEventListener('click', function(){ applyWbLayout(b.dataset.layout); });
-  });
 
   // ── Mapa (mesa de D20) ────────────────────────────────────────────
   // Três camadas: a imagem do mapa, a grade por cima e os tokens por cima de
