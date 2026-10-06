@@ -4905,7 +4905,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       'Dá para gastar um espaço de círculo MAIOR que o da magia — várias ficam mais fortes assim.',
       'Truques não gastam espaço: pode usar à vontade.',
       'O descanso longo devolve todos.'] },
-    magias: { t: 'Truques e Magias Preparadas', l: 'A lista do que você consegue conjurar hoje.', b: [
+    magias: { t: 'Truques e Magias', l: 'Todas as magias e truques. Adicione às conhecidas; de lá, prepare o que você consegue conjurar hoje.', b: [
       'C = concentração: só uma dessas por vez, e levar dano pede salvaguarda de Constituição para não perder.',
       'R = ritual: dá para conjurar sem gastar espaço, levando 10 minutos a mais.',
       'M = precisa do componente material na mão.'],
@@ -7016,7 +7016,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (ehCaracSubclasse(chave)) return { r: 'Anotar em Características' };
     if (/^sbc_/.test(chave)) return { r: 'Pôr em Subclasse' };
     if ((/^lin_/.test(chave) || /^tra_/.test(chave)) && AJUDA[chave] && !AJUDA[chave].lista) return { r: 'Anotar em Traços' };
-    if (/^mag_/.test(chave)) return { r: 'Pôr na lista de magias' };
+    if (/^mag_/.test(chave)) return { r: 'Pôr nas conhecidas' };
     if (CLS_CNC.indexOf(chave) >= 0) return { r: 'Anotar em Características' };
     // cls_: a classe inteira (nível 1 completo) aplica; uma característica
     // avulsa que já existe na base (Fúria, Retomar o Fôlego…) só se anota
@@ -7060,20 +7060,21 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       var alc = ((/alcance ([^·]+)/.exec(lin) || [])[1] || '').trim();
       var precisa = bs.filter(function(t) { return /^Precisa de/.test(t); }).join(' ');
 
+      // entra nas CONHECIDAS (o livro); preparar é outro passo, na aba Conhecidas
       var jaTem = false;
-      tabela.magias.querySelectorAll('.tbl-row:not(.tbl-head) [data-col="nome"]').forEach(function(c) {
+      tabela.magias_conhecidas.querySelectorAll('.tbl-row:not(.tbl-head) [data-col="nome"]').forEach(function(c) {
         if (c.textContent.trim().toLowerCase() === nome.toLowerCase()) jaTem = true;
       });
-      if (jaTem) return nome + ' já estava na lista';
+      if (jaTem) return nome + ' já estava nas conhecidas';
 
       // usa a primeira linha pautada que estiver vazia, em vez de empilhar no fim
       var linha = null;
-      tabela.magias.querySelectorAll('.tbl-row:not(.tbl-head)').forEach(function(r) {
+      tabela.magias_conhecidas.querySelectorAll('.tbl-row:not(.tbl-head)').forEach(function(r) {
         if (linha) return;
         var n = r.querySelector('[data-col="nome"]');
         if (n && !n.textContent.trim()) linha = r;
       });
-      if (!linha) { linha = novaLinha('magias'); tabela.magias.appendChild(linha); }
+      if (!linha) { linha = novaLinha('magias_conhecidas'); tabela.magias_conhecidas.appendChild(linha); }
 
       function poeCel(col, txt) { var c = linha.querySelector('[data-col="' + col + '"]'); if (c) c.textContent = txt; }
       poeCel('circ', circ ? circ[1] : '');
@@ -7086,7 +7087,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
                    (f.textContent === 'M' && /material/i.test(precisa));
         f.classList.toggle('on', !!liga);
       });
-      return nome + ' na lista de magias';
+      return nome + ' nas conhecidas';
     }
     if (/^lin_/.test(chave) || /^tra_/.test(chave)) {
       var r3 = anota('tracos_especie', nome + ' — ' + d.l);
