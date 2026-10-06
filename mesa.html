@@ -898,7 +898,7 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
 }
 .mapa-ico:hover { color:var(--fg); border-color:var(--holo-soft); }
 .mapa-fundo { position:relative; overflow:hidden; }
-.mapa-fundo-am { width:15px; height:15px; border-radius:50%; border:2px solid rgba(255,255,255,0.35); background:#fff; }
+.mapa-fundo-am { width:15px; height:15px; border-radius:50%; border:2px solid rgba(255,255,255,0.35); background:#f0f0f0; }
 .mapa-fundo input { position:absolute; inset:-6px; width:200%; height:200%; padding:0; border:none; background:none; opacity:0; cursor:pointer; }
 body.palco-pausado .mapa-fundo { pointer-events:none; opacity:0.5; }
 .mapa-ico.on { color:var(--holo); border-color:var(--holo); box-shadow:0 0 8px rgba(78,211,232,0.3); }
@@ -1317,7 +1317,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       <button class="mapa-ico" id="mapaTrocar" type="button" title="Trocar o mapa (começa uma cena nova)">&#128444;</button>
       <button class="mapa-ico" id="mapaSalaBtn" type="button" title="Sala em branco, por medida em metros">&#128208;</button>
       <button class="mapa-ico" id="mapaGradeBtn" type="button" title="Ajustar a grade">#</button>
-      <label class="mapa-ico mapa-fundo" title="Cor do fundo"><span class="mapa-fundo-am" id="mapaFundoAm"></span><input type="color" id="mapaFundoCor" value="#ffffff"></label>
+      <label class="mapa-ico mapa-fundo" title="Cor do fundo"><span class="mapa-fundo-am" id="mapaFundoAm"></span><input type="color" id="mapaFundoCor" value="#f0f0f0"></label>
       <button class="mapa-ico" id="mapaFit" type="button" title="Ver o mapa inteiro (ou duplo clique no mapa)">&#9974;</button>
       <button class="mapa-ico mapa-limpar" id="mapaLimparBt" type="button" title="Limpar o mapa">&#128465;</button>
     </div>
@@ -2912,7 +2912,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var _mapaNpcImg = null, _mapaNpcSubindo = false, _mapaSoltando = 0;
 
   function mapaClamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
-  function mapaCenaVazia() { return { v:1, img:null, branco:false, w:0, h:0, grade:{ tipo:'quadrada', tam:70, dx:0, dy:0, cor:'escura' }, imgZoom:100, imgX:50, imgY:50, tokens:[], desenho:[], fundo:'#ffffff' }; }
+  function mapaCenaVazia() { return { v:1, img:null, branco:false, w:0, h:0, grade:{ tipo:'quadrada', tam:70, dx:0, dy:0, cor:'escura' }, imgZoom:100, imgX:50, imgY:50, tokens:[], desenho:[], fundo:'#f0f0f0' }; }
   // Medida de uma sala em branco: quantas casas de largura/altura, no
   // formato escolhido, viram pixels — a mesma conta pra criar uma sala nova
   // e pro padrão que a mesa nasce com.
@@ -2937,13 +2937,13 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     c.branco = true; c.w = m.w; c.h = m.h; c.grade = m.grade;
     return c;
   }
-  // cor do fundo: #rrggbb (o <input type=color> só entende esse formato); qualquer outra coisa vira branco
+  // cor do fundo: #rrggbb (o <input type=color> só entende esse formato); qualquer outra coisa vira o off-white padrão (240,240,240)
   function mapaFundoCor(v) {
-    if (typeof v !== 'string') return '#ffffff';
+    if (typeof v !== 'string') return '#f0f0f0';
     if (/^#[0-9a-fA-F]{6}$/.test(v)) return v.toLowerCase();
     if (/^#[0-9a-fA-F]{3}$/.test(v)) return ('#' + v[1] + v[1] + v[2] + v[2] + v[3] + v[3]).toLowerCase();
     if (/^#[0-9a-fA-F]{8}$/.test(v)) return v.slice(0, 7).toLowerCase();
-    return '#ffffff';
+    return '#f0f0f0';
   }
   function mapaTemMapa() { return !!(mapaCena.img || mapaCena.branco); }
   function mapaUrlOk(u) { return (typeof u === 'string' && /^https?:\/\//i.test(u)) ? u : null; }
