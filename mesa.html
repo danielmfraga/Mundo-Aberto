@@ -806,6 +806,10 @@ body.mapa-on .palco-host { display:flex; }
   font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; pointer-events:none;
 }
 .palco-congelado[hidden] { display:none; }
+/* Sem isso, cada arrasto no mapa deixa uma seleção invisível, e o arrasto seguinte, ao começar dentro dela,
+   vira um arrastar-e-soltar nativo (cursor proibido, o mapa trava). Campos de texto seguem selecionáveis. */
+.mapa-panel { user-select:none; -webkit-user-select:none; }
+.mapa-panel input, .mapa-panel textarea { user-select:text; -webkit-user-select:text; }
 .palco-janela { display:none; position:absolute; z-index:7; top:6px; right:8px; gap:2px; }
 body.mapa-on .palco-janela { display:flex; }
 .palco-jan {
@@ -4456,7 +4460,16 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     mapaDrag = null;
     mapaDistEl.hidden = true;
   }
+  mapaPanel.addEventListener('dragstart', function(e) {
+    var t = e.target && e.target.nodeType === 1 ? e.target : (e.target && e.target.parentElement);
+    if (!t || !t.closest('.mapa-pc')) e.preventDefault();   // só os personagens da barra arrastam de verdade
+  });
+  mapaPanel.addEventListener('selectstart', function(e) {
+    var t = e.target && e.target.nodeType === 1 ? e.target : (e.target && e.target.parentElement);
+    if (!t || !t.closest('input, textarea')) e.preventDefault();
+  });
   mapaView.addEventListener('pointerdown', function(e) {
+    try { window.getSelection().removeAllRanges(); } catch (_) {}   // uma seleção velha vira arrasto nativo
     if (!mapaTemMapa()) return;
     if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 1) return;
     if (e.button === 1) e.preventDefault();   // sem o autoscroll do botão do meio
