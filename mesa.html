@@ -775,7 +775,7 @@ body.mapa-on .mapa-panel {
   display:block; position:fixed; inset:0; z-index:9990; height:auto; grid-column:auto; grid-row:auto;
   background:#05080e; border:0; border-radius:0; box-shadow:none; overflow:hidden; padding:0;
 }
-body.mapa-on .mapa-view { position:absolute; left:0; top:0; bottom:0; right:calc(252px + 20px); width:auto; height:auto; border-radius:0; }
+body.mapa-on .mapa-view { position:absolute; z-index:1; left:0; top:0; bottom:0; right:calc(252px + 20px); width:auto; height:auto; border-radius:0; }
 body.mapa-on .mapa-bar {
   position:absolute; z-index:6; top:10px; left:calc((100% - 272px) / 2); transform:translateX(-50%);
   max-width:calc(100% - 420px); flex-wrap:wrap; justify-content:center; gap:7px; box-sizing:border-box;
@@ -819,7 +819,7 @@ body:not(.mapa-on) .dsn-bar { display:none; }
   .dsn-sep { width:1px; height:18px; margin:0 2px; }
 }
 /* mesa em pausa: ver e mover a vista pode, mexer no que o host está montando não */
-body.palco-pausado .dsn-bar { pointer-events:none; opacity:0.4; }
+body.palco-pausado .dsn-tool:not([data-tool="mover"]) { pointer-events:none; opacity:0.4; }   /* a paleta segue viva; só desenhar fica travado */
 .abas-bar {
   display:none; position:absolute; z-index:6; left:10px; bottom:10px; right:calc(252px + 30px); align-items:center; gap:5px; overflow-x:auto;
   background:rgba(11,19,32,0.92); backdrop-filter:blur(6px); border:1px solid var(--line-strong); border-radius:8px; padding:5px 6px; width:max-content; max-width:calc(100% - 292px);
@@ -844,7 +844,8 @@ body.mapa-on .abas-bar { display:flex; }
 .abas-menu button { cursor:pointer; text-align:left; padding:7px 9px; border-radius:5px; font-family:var(--font-mono); font-size:10px; color:var(--fg-dim); background:none; border:1px solid transparent; }
 .abas-menu button:hover { background:rgba(78,211,232,0.12); color:var(--fg); border-color:var(--holo-soft); }
 @media (max-width:920px) { .abas-bar { right:10px; max-width:calc(100% - 20px); bottom:10px; } }
-body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pausado .mapa-add { pointer-events:none; opacity:0.5; }
+body.palco-pausado .mapa-tok, body.palco-pausado .mapa-add, body.palco-pausado #mapaNpcBtn, body.palco-pausado #mapaTrocar, body.palco-pausado #mapaSalaBtn,
+body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-events:none; opacity:0.5; }
 .ferr-mapa.alguem::after { content:''; position:absolute; top:5px; right:5px; width:7px; height:7px; border-radius:50%; background:#ff8a7a; box-shadow:0 0 7px #ff8a7a; }
 @media (max-width:920px) {
   body.mapa-on .mapa-view { right:0; top:130px; }
@@ -3637,6 +3638,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
 
   // ── paleta ──
   function dsnSetTool(t) {
+    if (t !== 'mover' && palcoCongelado && palcoDentro && !privAtiva) return;   // mesa parada pra mim: nada de desenhar
     dsnFechaTexto(true); dsnFlush();
     dsnTool = t;
     dsnCapt.hidden = t === 'mover';
