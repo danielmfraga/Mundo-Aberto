@@ -1424,7 +1424,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       </div>
       <div class="dsn-bar" id="dsnBar">
         <button class="wb-tool wb-icon dsn-tool active" data-tool="mover" type="button" title="Mover: tokens e vista (Esc)">&#9995;</button>
-        <button class="wb-tool wb-icon dsn-tool" data-tool="pincel" type="button" title="Pincel">&#9998;</button>
+        <button class="wb-tool wb-icon dsn-tool" data-tool="regua" type="button" title="Régua: arraste pra medir em quadrados e metros (todo mundo vê)">&#128207;</button>
+      <button class="wb-tool wb-icon dsn-tool" data-tool="pincel" type="button" title="Pincel">&#9998;</button>
         <button class="wb-tool wb-icon dsn-tool" data-tool="borracha" type="button" title="Borracha: apaga o traço que tocar">&#9003;</button>
         <button class="wb-tool wb-icon dsn-tool" data-tool="seta" type="button" title="Seta">&#8599;</button>
         <button class="wb-tool wb-icon dsn-tool" data-tool="retangulo" type="button" title="Retângulo">&#9645;</button>
@@ -1464,6 +1465,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
         <div class="mapa-grade" id="mapaGrade"></div>
         <svg class="mapa-grade mapa-hex" id="mapaHex" style="display:none" aria-hidden="true"></svg>
         <svg class="mapa-dsn" id="mapaDsn" aria-hidden="true"></svg>
+        <svg class="mapa-dsn" id="mapaRegua" aria-hidden="true"></svg>
         <div class="mapa-tokens" id="mapaTokens"></div>
       </div>
       <div class="mapa-dsn-capt" id="mapaDsnCapt" hidden></div>
@@ -3232,6 +3234,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     mapaMundo.style.transform = 'translate(' + mapaVs.tx + 'px,' + mapaVs.ty + 'px) scale(' + mapaVs.s + ')';
     mapaMundo.style.setProperty('--inv', String(1 / mapaVs.s));
     if (typeof palcoVistaAgenda === 'function') palcoVistaAgenda();
+    if (typeof reguaPinta === 'function' && Object.keys(reguas || {}).length) reguaPinta();
   }
   function mapaFit() {
     if (!mapaTemMapa() || !mapaCena.w || !mapaCena.h) return;
@@ -3378,6 +3381,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     mapaSyncGradeUI();
     mapaSyncImgUI();
     dsnRenderTudo();
+    reguas = {}; reguaPinta();
   }
   function mapaRenderGrade() {
     var g = mapaCena.grade, cor = MAPA_GCOR[g.cor];
@@ -3811,6 +3815,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (dsnTool === 'texto') { dsnAbreTexto(e, p); return; }
     dsnFechaTexto(true);
     try { dsnCapt.setPointerCapture(e.pointerId); } catch (_) {}
+    if (dsnTool === 'regua') { reguaComeca(p); return; }
     if (dsnTool === 'pincel') {
       dsnPen = { id:dsnId(), c:dsnColor, w:dsnLargura(), last:p };
       dsnAplica({ op:'pen', id:dsnPen.id, c:dsnPen.c, w:dsnPen.w, pts:[[p.x, p.y]] });
@@ -3824,6 +3829,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     }
   });
   dsnCapt.addEventListener('pointermove', function(e) {
+    if (reguaMinha) { reguaMove(dsnPonto(e)); return; }
     if (!dsnPen && !dsnForma && !dsnBorr) return;
     var p = dsnPonto(e);
     if (dsnPen) {
@@ -3844,6 +3850,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     }
   });
   function dsnSolta() {
+    reguaSolta();
     if (dsnPen) { dsnFlush(); dsnPen = null; mapaAgendaSalvar(); }
     if (dsnBorr) dsnBorr = false;
     if (dsnForma) {
@@ -3898,6 +3905,74 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     dsnEspacoFim();
   });
   window.addEventListener('blur', dsnEspacoFim);
+
+  // ── Régua: arrastar mede em quadrados (ou hexágonos) e metros ──
+  // Um vetor de centro de casa a centro de casa, com a distância pela regra do D&D 2024 (diagonal conta 1,
+  // 1 casa = 1,5 m). Todo mundo vê enquanto se arrasta; some uns segundos depois de soltar. Não entra na cena.
+  var reguaSvg = document.getElementById('mapaRegua');
+  var REGUA_FICA_MS = 3500;
+  var reguas = {};            // quem → { a, b, n, quem, cor, t }
+  var reguaMinha = null, reguaEnvT = 0;
+  function reguaMede(a, b) {
+    var ca = mapaCasaEm(a.x, a.y), cb = mapaCasaEm(b.x, b.y);
+    return { a:mapaCasaCentro(ca.col, ca.row), b:mapaCasaCentro(cb.col, cb.row), n:mapaCasasEntre(ca, cb) };
+  }
+  function reguaTexto(n) { return n + ' ' + mapaNomeCasa(n) + ' · ' + String(n * MAPA_M).replace('.', ',') + ' m'; }
+  function reguaPinta() {
+    reguaSvg.innerHTML = '';
+    var k = 1 / mapaVs.s;                       // tudo com o tamanho da tela, em qualquer zoom
+    Object.keys(reguas).forEach(function(id) {
+      var r = reguas[id];
+      if (!r.a || !r.b || (r.a.x === r.b.x && r.a.y === r.b.y)) return;
+      var cor = r.cor, g = dsnSvg('g', {});
+      g.appendChild(dsnSvg('line', { x1:r.a.x, y1:r.a.y, x2:r.b.x, y2:r.b.y, stroke:cor, 'stroke-width':2.6 * k, 'stroke-linecap':'round', 'stroke-dasharray':(7 * k) + ' ' + (5 * k) }));
+      var ang = Math.atan2(r.b.y - r.a.y, r.b.x - r.a.x), t = 13 * k, f = Math.PI / 7;
+      g.appendChild(dsnSvg('polygon', { fill:cor, points:r.b.x + ',' + r.b.y + ' ' + (r.b.x - t * Math.cos(ang - f)) + ',' + (r.b.y - t * Math.sin(ang - f)) + ' ' + (r.b.x - t * Math.cos(ang + f)) + ',' + (r.b.y - t * Math.sin(ang + f)) }));
+      g.appendChild(dsnSvg('circle', { cx:r.a.x, cy:r.a.y, r:5 * k, fill:cor }));
+      var txt = (r.quem ? r.quem + ' · ' : '') + reguaTexto(r.n), w = (txt.length * 7.4 + 16) * k, h = 22 * k;
+      var mx = (r.a.x + r.b.x) / 2, my = (r.a.y + r.b.y) / 2 - 16 * k;
+      g.appendChild(dsnSvg('rect', { x:mx - w / 2, y:my - h / 2, width:w, height:h, rx:11 * k, fill:'rgba(4,8,16,0.92)', stroke:cor, 'stroke-width':1.2 * k }));
+      var tx = dsnSvg('text', { x:mx, y:my, 'text-anchor':'middle', 'dominant-baseline':'central', fill:'#fff', 'font-size':12.5 * k, 'font-family':"'JetBrains Mono', monospace", 'font-weight':'600' });
+      tx.textContent = txt; g.appendChild(tx);
+      reguaSvg.appendChild(g);
+    });
+  }
+  function reguaSome(id) { clearTimeout(reguas[id] && reguas[id].t); delete reguas[id]; reguaPinta(); }
+  function reguaFim(id) { if (!reguas[id]) return; clearTimeout(reguas[id].t); reguas[id].t = setTimeout(function() { reguaSome(id); }, REGUA_FICA_MS); }
+  function reguaEnvia(fim) {
+    if (!reguaMinha) return;
+    send('mapa-regua', { by:MAPA_ME, quem:(nome || ''), a:reguaMinha.a, b:reguaMinha.b, n:reguaMinha.n, fim:!!fim });
+  }
+  function reguaRecebe(p) {
+    if (!p || !p.a || !p.b) return;
+    var id = String(p.by);
+    clearTimeout(reguas[id] && reguas[id].t);
+    reguas[id] = { a:{ x:+p.a.x || 0, y:+p.a.y || 0 }, b:{ x:+p.b.x || 0, y:+p.b.y || 0 }, n:Math.max(0, Math.round(+p.n || 0)), quem:String(p.quem || '').slice(0, 24), cor:'#ff8a7a', t:0 };
+    reguaPinta();
+    if (p.fim) reguaFim(id);
+  }
+  function reguaComeca(p) {
+    reguaSome(MAPA_ME);
+    var m = reguaMede(p, p);
+    reguaMinha = { a:m.a, b:m.a, n:0 };
+    reguas[MAPA_ME] = { a:m.a, b:m.a, n:0, quem:'', cor:'#00ffe7', t:0 };
+  }
+  function reguaMove(p) {
+    if (!reguaMinha) return;
+    var m = reguaMede(reguaMinha.a, p);
+    if (m.b.x === reguaMinha.b.x && m.b.y === reguaMinha.b.y) return;     // ainda na mesma casa
+    reguaMinha.b = m.b; reguaMinha.n = m.n;
+    reguas[MAPA_ME] = { a:reguaMinha.a, b:m.b, n:m.n, quem:'', cor:'#00ffe7', t:0 };
+    reguaPinta();
+    var agora = Date.now();
+    if (agora - reguaEnvT > 45) { reguaEnvT = agora; reguaEnvia(false); }
+  }
+  function reguaSolta() {
+    if (!reguaMinha) return;
+    reguaEnvia(true);
+    reguaFim(MAPA_ME);
+    reguaMinha = null;
+  }
 
   // ── paleta ──
   function dsnSetTool(t) {
@@ -5787,8 +5862,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var jitsiApi = null;
   function send(event, payload) {
     // host com o tempo real desligado mexe só aqui: a mesa continua vendo a última tela
-    if (privAtiva && /^mapa-(cena|grade|img|tok|dsn|vista)$/.test(event)) return;   // aba privada: ninguém vê
-    if (palcoSouHost && !palcoLive && /^mapa-(cena|grade|img|tok|dsn|vista)$/.test(event) && !(payload && payload.retoma)) return;
+    if (privAtiva && /^mapa-(cena|grade|img|tok|dsn|vista|regua)$/.test(event)) return;   // aba privada: ninguém vê
+    if (palcoSouHost && !palcoLive && /^mapa-(cena|grade|img|tok|dsn|vista|regua)$/.test(event) && !(payload && payload.retoma)) return;
     if (channel) channel.send({ type:'broadcast', event:event, payload:payload });
     else dispatch(event, payload);   // offline: mostra local
   }
@@ -5816,6 +5891,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     else if (event === 'palco-st') palcoRecebeEstado(payload);
     else if (event === 'palco-req') { if (payload && payload.by !== MAPA_ME && palcoDentro) palcoTrack(); }   // quem chegou pede o estado: quem está no palco responde
     else if (event === 'mapa-vista') palcoVistaRecebe(payload);
+    else if (event === 'mapa-regua') { if (!palcoCongelado && !privAtiva && payload && payload.by !== MAPA_ME) reguaRecebe(payload); }
     else if (event === 'mapa-vista-req') { if (palcoSouHost) palcoVistaEnvia(); }
     else if (privAtiva && /^mapa-(cena|grade|img|tok|dsn)$/.test(event)) { if (!payload || payload.by !== MAPA_ME) mesaVelha = true; }   // a mesa anda sem mim; recarrego ao voltar
     else if (event === 'mapa-cena') { if (!palcoCongelado || (payload && payload.retoma)) mapaRecebeCena(payload); }
@@ -5846,7 +5922,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     ['som-play','som-stop','som-state','som-state-req','som-lib','som-gain'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
-    ['palco-st','palco-req','mapa-cena','mapa-grade','mapa-img','mapa-tok','mapa-dsn','mapa-vista','mapa-vista-req'].forEach(function(ev){
+    ['palco-st','palco-req','mapa-cena','mapa-grade','mapa-img','mapa-tok','mapa-dsn','mapa-vista','mapa-vista-req','mapa-regua'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
     channel.subscribe(function(status){
