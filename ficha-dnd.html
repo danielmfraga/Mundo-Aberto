@@ -5618,7 +5618,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       if (!row || !row.draggable) return;
       arrastando = row; row.classList.add('arrastando');
       e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', 'magia');   // o Firefox só arrasta com algum dado
+      // o Firefox só arrasta com algum dado; não pode ser texto, senão a célula editável o insere
+      e.dataTransfer.setData('application/x-ficha-magia', '1');
     });
     tbl.addEventListener('dragover', function(e) {
       if (!arrastando || arrastando.parentNode !== tbl) return;
