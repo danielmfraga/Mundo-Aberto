@@ -6847,11 +6847,19 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   // verbetes cnc_ que já explicavam uma característica de classe por fora
   // (criados só pra referência) e agora também dá pra soltar na ficha
   var CLS_CNC = ['cnc_estilo_luta', 'cnc_ataque_furtivo', 'cnc_especialista', 'cnc_defesa_sem_armadura'];
+  // sbc_ que é característica de uma subclasse, e não a subclasse em si.
+  // A chave começa com a de outra subclasse seguida de "_": sbc_abjurador_
+  // protecao_arcana vem de sbc_abjurador, que é a raiz
+  function ehCaracSubclasse(chave) {
+    if (!/^sbc_/.test(chave)) return false;
+    return Object.keys(AJUDA).some(function(o) { return /^sbc_/.test(o) && o !== chave && chave.indexOf(o + '_') === 0; });
+  }
   function destinoDe(chave) {
     if (/^per_/.test(chave)) return { r: 'Marcar proficiência' };
     if (/^tal_/.test(chave) || /^est_/.test(chave)) return { r: 'Anotar em Talentos' };
     if (/^ferr_/.test(chave)) return { r: 'Anotar em Ferramentas' };
     if (/^item_/.test(chave) && ITEM_DO_TERMO[chave]) return { r: 'Pôr no inventário' };
+    if (ehCaracSubclasse(chave)) return { r: 'Anotar em Características' };
     if (/^sbc_/.test(chave)) return { r: 'Pôr em Subclasse' };
     if ((/^lin_/.test(chave) || /^tra_/.test(chave)) && AJUDA[chave] && !AJUDA[chave].lista) return { r: 'Anotar em Traços' };
     if (/^mag_/.test(chave)) return { r: 'Pôr na lista de magias' };
@@ -6929,6 +6937,12 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (/^lin_/.test(chave) || /^tra_/.test(chave)) {
       var r3 = anota('tracos_especie', nome + ' — ' + d.l);
       return r3 === 'repetido' ? nome + ' já estava nos Traços' : nome + ' nos Traços de Espécie';
+    }
+    if (ehCaracSubclasse(chave)) {
+      // característica de uma subclasse (ex.: Proteção Arcana): vai pras
+      // Características, não troca a subclasse
+      var rS = anota('caracteristicas_classe', nome + ' — ' + d.l);
+      return rS === 'repetido' ? nome + ' já estava nas Características' : nome + ' nas Características de Classe';
     }
     if (/^sbc_/.test(chave)) {
       var cs = campo('subclasse');
