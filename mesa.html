@@ -1249,11 +1249,17 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 @keyframes entFaixa { 0% { background-position:0 0,0 -100%; } 100% { background-position:0 0,0 100%; } }
 @keyframes entScan { to { background-position:0 100px; } }
 .ent-nucleo.off video { opacity:0; }
+/* foto: aparece quando a câmera está desligada, com o mesmo tratamento holo da câmera */
+.ent-foto { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:none; filter:saturate(.7) contrast(1.12) brightness(1.04) hue-rotate(-8deg); }
+.ent-nucleo.off .ent-foto:not([hidden]) { display:block; }
+.ent-nucleo.off.com-foto .ent-inicial { display:none; }
+.ent-x { margin-left:4px; padding:0 4px; font-weight:400; font-size:14px; line-height:1; color:inherit; opacity:.65; }
+.ent-x:hover { opacity:1; color:var(--e-orange); }
 .ent-inicial { position:absolute; inset:0; display:none; align-items:center; justify-content:center; font-family:'Orbitron'; font-size:54px; color:rgba(0,255,231,.5); text-shadow:var(--e-glow); }
 .ent-nucleo.off .ent-inicial { display:flex; }
 .ent-medidor { position:absolute; z-index:3; bottom:30px; left:50%; transform:translateX(-50%); display:flex; gap:3px; align-items:flex-end; height:14px; opacity:.9; }
 .ent-medidor i { width:3px; height:3px; background:var(--e-holo); box-shadow:0 0 6px var(--e-holo); border-radius:1px; transition:height .08s linear; }
-.ent-caixa { display:flex; flex-direction:column; align-items:center; gap:16px; width:min(380px,92vw); }
+.ent-caixa { display:flex; flex-direction:column; align-items:center; gap:16px; width:min(440px,92vw); }
 .ent-nick { width:100%; text-align:center; }
 .ent-nick label { font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:.4em; color:rgba(0,255,231,.5); text-transform:uppercase; display:block; margin-bottom:6px; }
 .ent-nick input { width:100%; background:transparent; border:0; border-bottom:1px solid rgba(0,255,231,.35); color:#e8fffb; text-align:center;
@@ -1262,7 +1268,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 .ent-nick.erro input { border-bottom-color:var(--e-orange); animation:entTrem .35s; }
 @keyframes entTrem { 20%,60% { transform:translateX(-5px); } 40%,80% { transform:translateX(5px); } }
 .ent-chaves { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
-.ent-chave { display:flex; align-items:center; gap:9px; cursor:pointer; padding:8px 14px; border-radius:6px; font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase;
+.ent-chave { display:flex; align-items:center; gap:9px; cursor:pointer; padding:8px 12px; border-radius:6px; font-family:'Share Tech Mono',monospace; font-size:10.5px; letter-spacing:.13em; text-transform:uppercase;
   color:var(--e-holo); background:rgba(0,255,231,.05); border:1px solid rgba(0,255,231,.35); transition:all .2s; }
 .ent-chave:hover { background:rgba(0,255,231,.12); box-shadow:var(--e-glow); }
 .ent-chave i { width:7px; height:7px; border-radius:50%; background:var(--e-holo); box-shadow:0 0 8px var(--e-holo); }
@@ -1804,7 +1810,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     <div class="ent-linha"></div>
     <div class="ent-proj">
       <div class="ent-anel ent-a1"></div><div class="ent-anel ent-a2"></div><div class="ent-anel ent-a3"></div>
-      <div class="ent-nucleo" id="entNucleo"><video id="entVideo" autoplay playsinline muted></video><div class="ent-inicial" id="entInicial">?</div></div>
+      <div class="ent-nucleo" id="entNucleo"><video id="entVideo" autoplay playsinline muted></video><img class="ent-foto" id="entFotoImg" alt="" hidden><div class="ent-inicial" id="entInicial">?</div></div>
       <div class="ent-medidor" id="entMedidor"><i></i><i></i><i></i><i></i><i></i></div>
     </div>
     <div class="ent-caixa">
@@ -1812,6 +1818,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       <div class="ent-chaves">
         <button type="button" class="ent-chave" id="entMic"><i></i><span>Microfone · ligado</span></button>
         <button type="button" class="ent-chave" id="entCam"><i></i><span>Câmera · ligada</span></button>
+        <button type="button" class="ent-chave off" id="entFoto" title="Uma foto sua pra aparecer quando a câmera estiver desligada, aqui e na chamada"><i></i><span>Foto · escolher</span><b class="ent-x" id="entFotoX" title="Tirar a foto" hidden>×</b></button>
+        <input type="file" id="entFotoIn" accept="image/*" hidden>
       </div>
       <div class="ent-disp">
         <label>Câmera <select id="entSelCam" aria-label="Câmera"></select></label>
@@ -5979,6 +5987,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
         jwt: data.token,
         parentNode: document.getElementById('jitsi'),
         width:'100%', height:'100%',
+        userInfo:(function() { return ENT_FOTO.url ? { avatarUrl: ENT_FOTO.url } : {}; })(),
         devices:(function() { var d = {}; if (ENT_ESCOLHA.camLabel) d.videoInput = ENT_ESCOLHA.camLabel; if (ENT_ESCOLHA.micLabel) d.audioInput = ENT_ESCOLHA.micLabel; return d; })(),
         configOverwrite: {
           // A pré-entrada do Jitsi fica DESLIGADA: quem faz esse papel é a tela de entrada da mesa (nick, câmera,
@@ -5991,6 +6000,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       });
       setupTrxWatchdog();
       jitsiLigaTile();
+      jitsiApi.addListener('videoConferenceJoined', function() { if (ENT_FOTO.url) { try { jitsiApi.executeCommand('avatarUrl', ENT_FOTO.url); } catch (_) {} } });   // a foto vira o avatar na chamada
       jitsiApi.addListener('readyToClose', function() { location.reload(); });   // desligou a chamada: volta pra tela de entrada
       setupResvBreakout();   // ouvintes do reservado (breakout) no vídeo principal
       // se o palco já estiver aberto quando o vídeo terminar de carregar, alinha o tile view
@@ -6242,6 +6252,10 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   // Sempre abre com a câmera DESLIGADA e o microfone LIGADO (as chaves não se lembram da última vez; os dispositivos sim)
   var ENT = { mic: true, cam: false, micId: entLs('mesaMicId') || '', camId: entLs('mesaCamId') || '', stream: null, ctx: null, raf: 0, seq: 0 };
   var _entReq = Promise.resolve();
+  // foto: aparece no núcleo (câmera desligada) e como avatar na chamada. Reduzida a 256 px e guardada no Storage
+  // (mesa/avatares/, fora do alcance da limpeza do chat), uma por navegador, sempre no mesmo arquivo.
+  var ENT_FOTO = { url: entLs('mesaFotoUrl') || '', local: '', id: entLs('mesaAvatarId') || '' };
+  if (!ENT_FOTO.id) { ENT_FOTO.id = Math.random().toString(36).slice(2, 10); entLs('mesaAvatarId', ENT_FOTO.id); }
   var ENT_ESCOLHA = { micLabel: '', camLabel: '' };   // o Jitsi escolhe dispositivo pelo rótulo
 
   function entPara() {
@@ -6252,11 +6266,53 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     entVideo.srcObject = null;
     entMedidor.querySelectorAll('i').forEach(function(b) { b.style.height = '3px'; });
   }
+  function entFotoPinta() {
+    var img = document.getElementById('entFotoImg'), src = ENT_FOTO.local || ENT_FOTO.url, bt = document.getElementById('entFoto');
+    img.hidden = !src;
+    if (src && img.getAttribute('src') !== src) img.src = src;
+    entNucleo.classList.toggle('com-foto', !!src);
+    bt.classList.toggle('off', !src);
+    bt.querySelector('span').textContent = src ? 'Foto · trocar' : 'Foto · escolher';
+    document.getElementById('entFotoX').hidden = !src;
+  }
+  function entFotoEscolhe(arq) {
+    entAviso.textContent = 'Preparando a foto…';
+    var img = new Image(), u = URL.createObjectURL(arq);
+    img.onerror = function() { URL.revokeObjectURL(u); entAviso.textContent = 'Não consegui ler essa imagem — tente outra.'; };
+    img.onload = function() {
+      var N = 256, c = document.createElement('canvas'), m = Math.min(img.width, img.height);
+      c.width = c.height = N;
+      c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, N, N);   // corta o quadrado do meio
+      URL.revokeObjectURL(u);
+      c.toBlob(function(blob) {
+        if (!blob) { entAviso.textContent = 'Não consegui preparar essa imagem.'; return; }
+        if (ENT_FOTO.local) URL.revokeObjectURL(ENT_FOTO.local);
+        ENT_FOTO.local = URL.createObjectURL(blob);
+        entFotoPinta(); entPintaChaves();
+        entAviso.textContent = 'Enviando a foto…';
+        var caminho = 'mesa/avatares/' + ENT_FOTO.id + '.jpg';
+        fetch(SB_URL + '/storage/v1/object/personagens/' + caminho, {
+          method: 'POST', body: blob,
+          headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'image/jpeg', 'x-upsert': 'true' }
+        }).then(function(r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          ENT_FOTO.url = SB_URL + '/storage/v1/object/public/personagens/' + caminho + '?v=' + Date.now();   // ?v: o arquivo é o mesmo, a foto muda
+          entLs('mesaFotoUrl', ENT_FOTO.url);
+          entAviso.textContent = '';
+        }).catch(function() {
+          ENT_FOTO.url = ''; entLs('mesaFotoUrl', '');
+          entAviso.textContent = 'A foto não subiu — ela aparece só pra você. Tente de novo mais tarde.';
+        });
+      }, 'image/jpeg', 0.86);
+    };
+    img.src = u;
+  }
   function entPintaChaves() {
     entMic.classList.toggle('off', !ENT.mic); entMic.lastChild.textContent = 'Microfone · ' + (ENT.mic ? 'ligado' : 'desligado');
     entCam.classList.toggle('off', !ENT.cam); entCam.lastChild.textContent = 'Câmera · ' + (ENT.cam ? 'ligada' : 'desligada');
     entNucleo.classList.toggle('off', !ENT.cam || !ENT.stream || !ENT.stream.getVideoTracks().length);
     entInicial.textContent = (entNick.value.trim()[0] || '?').toUpperCase();
+    entFotoPinta();
   }
   function entDispositivos() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return Promise.resolve();
@@ -6329,6 +6385,18 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   entSelCam.addEventListener('change', function() { ENT.camId = entSelCam.value; entLs('mesaCamId', ENT.camId); entPreview(); });
   entSelMic.addEventListener('change', function() { ENT.micId = entSelMic.value; entLs('mesaMicId', ENT.micId); entPreview(); });
   entNick.addEventListener('input', entPintaChaves);
+  document.getElementById('entFoto').addEventListener('click', function(e) {
+    if (e.target.id === 'entFotoX') {
+      if (ENT_FOTO.local) URL.revokeObjectURL(ENT_FOTO.local);
+      ENT_FOTO.local = ''; ENT_FOTO.url = ''; entLs('mesaFotoUrl', '');
+      entFotoPinta(); entPintaChaves(); return;
+    }
+    document.getElementById('entFotoIn').click();
+  });
+  document.getElementById('entFotoIn').addEventListener('change', function() {
+    var arq = this.files && this.files[0]; this.value = '';
+    if (arq) entFotoEscolhe(arq);
+  });
 
   function entrar() {
     var n = entNick.value.trim().slice(0, 32);
