@@ -3038,13 +3038,19 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     _tileQuer = !!on;
     if (jitsiApi) { try { jitsiApi.executeCommand('setTileView', !!on); } catch (_) {} }
   }
+  // A visão PADRÃO do vídeo é a grade (todo mundo lado a lado, grande), dentro e fora do palco. Ao entrar na
+  // chamada ela é ligada; no palco e no Rosto a rosto é ainda mais firme (reafirmada quando o Jitsi sai dela
+  // sozinho). Fora deles a pessoa pode trocar à vontade pelo botão do Jitsi, e o app não briga.
+  function jitsiTileFirme() { return mapaAberto() || document.body.classList.contains('rosto-a-rosto'); }
   function jitsiTileReafirma(emGrade) {
-    if (_tileQuer !== true || emGrade === true || Date.now() - _tileTs < 800) return;
+    if (!jitsiTileFirme() || emGrade === true || Date.now() - _tileTs < 800) return;
     _tileTs = Date.now();
     try { jitsiApi.executeCommand('setTileView', true); } catch (_) {}
   }
   function jitsiLigaTile() {
-    ['videoConferenceJoined', 'participantJoined', 'participantLeft'].forEach(function(ev) {
+    // entrou na chamada: grade por padrão (vale também quando volta do Reservado)
+    jitsiApi.addListener('videoConferenceJoined', function() { setTimeout(function() { jitsiTile(true); }, 600); });
+    ['participantJoined', 'participantLeft'].forEach(function(ev) {
       jitsiApi.addListener(ev, function() { setTimeout(function() { _tileTs = 0; jitsiTileReafirma(false); }, 600); });
     });
     jitsiApi.addListener('tileViewChanged', function(e) { jitsiTileReafirma(!!(e && e.enabled)); });
@@ -4851,7 +4857,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     document.body.classList.remove('mapa-on', 'palco-min');
     mapaBtn.classList.remove('open');
     document.body.classList.remove('wb-on', 'wb-right');
-    jitsiTile(false);
+    jitsiTile(true);   // a grade é o padrão, também fora do palco
     palcoDentro = false; palcoClaim = 0; palcoRosto = false; rostoMeu = false; rostoDispensado = false;
     palcoTrack(); palcoRecalcula();
   }
@@ -4864,7 +4870,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     palcoGuardaGavetas();
     document.body.classList.remove('mapa-on', 'wb-on', 'wb-right');
     document.body.classList.add('palco-min');
-    jitsiTile(false);
+    jitsiTile(true);   // a grade é o padrão, também fora do palco
   }
   function restauraMapa() {
     if (!palcoMinimizado()) return;
@@ -4981,7 +4987,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     _rostoAplicado = on;
     document.body.classList.toggle('rosto-a-rosto', on);
     if (on) { mapaFechaPops(); dsnSetTool('mover'); }
-    jitsiTile(on ? true : mapaAberto());
+    jitsiTile(true);
   }
   // o botão da caixa do host alterna: entra na tela de rostos, ou volta pra mesa se já estiver nela
   function palcoMeuRosto() {
@@ -6028,7 +6034,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       jitsiApi.addListener('readyToClose', function() { location.reload(); });   // desligou a chamada: volta pra tela de entrada
       setupResvBreakout();   // ouvintes do reservado (breakout) no vídeo principal
       // se o palco já estiver aberto quando o vídeo terminar de carregar, alinha o tile view
-      if (mapaAberto()) jitsiTile(true);
+      jitsiTile(true);
     } catch (e) {
       jitsiMsg('Vídeo indisponível<br><span style="color:var(--fg-faint);font-size:10px;">' + esc(String(e && e.message || e)) + '</span>');
     }
