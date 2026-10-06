@@ -815,6 +815,34 @@ body.mapa-on .palco-host { display:flex; }
   background:rgba(11,19,32,0.92); backdrop-filter:blur(6px); border:1px solid var(--line-strong); border-radius:8px; padding:7px 8px;
 }
 body.mapa-on .palco-janela { display:flex; }
+/* menu de painéis: fica sob o — e ✕; cada botão abre o painel de verdade (o mesmo da coluna) numa gaveta flutuante */
+.palco-menu {
+  display:none; position:absolute; z-index:7; top:58px; right:calc(252px + 30px); flex-direction:column; gap:6px;
+  background:rgba(11,19,32,0.92); backdrop-filter:blur(6px); border:1px solid var(--line-strong); border-radius:8px; padding:7px 8px;
+}
+body.mapa-on .palco-menu { display:flex; }
+.palco-menu .mapa-ico { position:relative; }
+.palco-menu .mapa-ico.novo::after { content:''; position:absolute; top:3px; right:3px; width:7px; height:7px; border-radius:50%; background:#ff8a7a; box-shadow:0 0 7px #ff8a7a; }
+.palco-gavetas {
+  position:absolute; z-index:7; top:58px; right:calc(252px + 30px + 64px); display:flex; flex-direction:row-reverse; align-items:flex-start; gap:8px;
+  pointer-events:none; max-width:calc(100% - 420px);
+}
+.palco-gavetas > .panel {
+  pointer-events:auto; flex:0 0 auto; width:310px; max-height:calc(100vh - 80px); overflow:auto;
+  background:rgba(11,19,32,0.97); border-color:rgba(78,211,232,0.38); box-shadow:0 12px 30px rgba(0,0,0,0.55);
+}
+.palco-gavetas > .chat-panel { height:min(520px, calc(100vh - 90px)); }
+.palco-gavetas .panel-head .dobra-seta { display:none; }   /* na gaveta o painel é sempre aberto */
+/* Mesa de Som: no palco a gaveta abre pela ESQUERDA (ao lado da paleta de desenho), onde não cobre o menu nem as gavetas */
+body.mapa-on .som-overlay { right:auto; left:64px; top:76px; height:calc(100vh - 150px); }
+body.mapa-on .som-overlay:not(.show) { transform:translateX(calc(-100% - 100px)); }
+body.mapa-on .som-panel { border-left:0; border-right:1px solid rgba(160,130,255,0.4); border-radius:8px; }
+@media (max-width:920px) {
+  .palco-menu { top:180px; right:10px; }
+  .palco-gavetas { top:180px; right:64px; max-width:calc(100% - 80px); }
+  .palco-gavetas > .panel { width:min(310px, calc(100vw - 90px)); }
+  body.mapa-on .som-overlay { left:0; top:0; height:100vh; }
+}
 .palco-pilula {
   display:none; position:fixed; z-index:9000; left:32px; bottom:32px; cursor:pointer; padding:9px 14px; border-radius:999px;
   font-family:var(--font-mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase;
@@ -1278,6 +1306,14 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       <button class="mapa-ico" id="mapaMinimiza" type="button" title="Minimizar: a página volta ao normal e você continua no palco">&#8212;</button>
       <button class="mapa-ico mapa-x" id="mapaFechar" type="button" title="Fechar: sair do palco (a mesa continua pra quem ficou)">&#10005;</button>
     </div>
+    <div class="palco-menu" id="palcoMenu">
+      <button class="mapa-ico" type="button" data-menu="personagens" title="Personagens"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="6.5" r="2.8"/><path d="M1.8 15.5c0-3 2.3-4.8 5.2-4.8s5.2 1.8 5.2 4.8"/><circle cx="13.2" cy="5.5" r="2"/><path d="M13.6 10.2c2 .2 3.6 1.7 3.6 4"/></svg></button>
+      <button class="mapa-ico" type="button" data-menu="dados" title="Dados"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="12" height="12" rx="2.8"/><circle cx="6.8" cy="6.8" r=".9" fill="currentColor"/><circle cx="9" cy="9" r=".9" fill="currentColor"/><circle cx="11.2" cy="11.2" r=".9" fill="currentColor"/></svg></button>
+      <button class="mapa-ico" type="button" data-menu="chat" title="Chat"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4h13v8.5H8.2L5 15.5v-3H2.5z"/></svg></button>
+      <button class="mapa-ico" type="button" data-menu="som" title="Mesa de Som"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 13.2V4.2l7-1.6v8.9"/><circle cx="5.2" cy="13.3" r="1.9"/><circle cx="12.2" cy="11.7" r="1.9"/></svg></button>
+      <button class="mapa-ico" type="button" data-menu="diario" title="Diário da Mesa"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2.8h9.2a1 1 0 0 1 1 1v11.4H5a1 1 0 0 1-1-1z"/><path d="M7 6.5h4.5M7 9.5h4.5"/></svg></button>
+    </div>
+    <div class="palco-gavetas" id="palcoGavetas"></div>
     <div class="palco-host" id="palcoHost">
       <span id="palcoHostQuem">Host: —</span>
       <button class="palco-host-bt" id="palcoControlar" type="button" title="Assumir o controle da mesa" hidden>Controlar</button>
@@ -2151,6 +2187,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (chave !== chatUltimoDia) { chatMsgs.appendChild(chatDiaEl(p.ts)); chatUltimoDia = chave; }
     chatMsgs.appendChild(chatMsgEl(p));
     chatMsgs.scrollTop = chatMsgs.scrollHeight;
+    if (typeof palcoChatNovo === 'function') palcoChatNovo(p);
   }
   function chatGuarda(p) {
     // melhor esforço: se falhar, a mensagem já foi pro vivo; só não fica no histórico
@@ -4550,6 +4587,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     // host saindo com o tempo real desligado: religa e publica, pra mesa não ficar com a tela velha
     if (palcoSouHost && !palcoLive) palcoLigaTempoReal();
     mapaFechaPops(); mapaFimArraste();
+    palcoGuardaGavetas();
     mapaPan = null; mapaPinch = null; mapaToques = {};
     mapaView.classList.remove('panning');
     dsnSetTool('mover');
@@ -4567,6 +4605,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   function minimizaMapa() {
     if (!mapaAberto()) return;
     dsnSetTool('mover'); mapaFechaPops(); mapaFimArraste();
+    palcoGuardaGavetas();
     document.body.classList.remove('mapa-on', 'wb-on', 'wb-right');
     document.body.classList.add('palco-min');
     jitsiTile(false);
@@ -4583,6 +4622,61 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       palcoRecalcula();
     });
   }
+  // ── Menu de painéis do palco: Personagens, Dados e Chat viram gavetas flutuantes ──
+  // É o painel de verdade da coluna (ids e botões intactos), só que levado pra gaveta enquanto
+  // aberto e devolvido ao lugar ao fechar, minimizar ou sair do palco. Som e Diário já são
+  // janelas por cima da página: o botão só liga e desliga elas.
+  var palcoMenu = document.getElementById('palcoMenu'), palcoGavetas = document.getElementById('palcoGavetas');
+  var palcoSomEl = document.getElementById('somOverlay'), palcoDiarioEl = document.getElementById('diarioOverlay');   // (os var somOverlay/diarioOverlay só nascem mais abaixo)
+  var PALCO_PAINEL = { personagens:document.querySelector('.chars-panel'), dados:document.querySelector('.dice-panel'), chat:document.querySelector('.chat-panel') };
+  var palcoGav = {};   // nome → { ph:marcador onde o painel morava, dobrado:estava recolhido }
+  function palcoGavAbre(n) {
+    var painel = PALCO_PAINEL[n];
+    if (!painel || palcoGav[n]) return;
+    var ph = document.createComment('gaveta-' + n);
+    palcoGav[n] = { ph:ph, dobrado:painel.classList.contains('dobrado') };
+    painel.classList.remove('dobrado');       // na gaveta abre inteiro; a preferência dele volta ao devolver
+    painel.parentNode.replaceChild(ph, painel);
+    palcoGavetas.appendChild(painel);
+    if (n === 'chat') { var m = document.getElementById('chatMsgs'); m.scrollTop = m.scrollHeight; }
+  }
+  function palcoGavFecha(n) {
+    var g = palcoGav[n], painel = PALCO_PAINEL[n];
+    if (!g || !painel) return;
+    g.ph.parentNode.replaceChild(painel, g.ph);
+    if (g.dobrado) painel.classList.add('dobrado');
+    delete palcoGav[n];
+  }
+  function palcoGuardaGavetas() { Object.keys(palcoGav).forEach(palcoGavFecha); palcoMenuSync(); }
+  function palcoMenuSync() {
+    var on = {
+      personagens:!!palcoGav.personagens, dados:!!palcoGav.dados, chat:!!palcoGav.chat,
+      som:palcoSomEl.classList.contains('show'), diario:palcoDiarioEl.classList.contains('show')
+    };
+    palcoMenu.querySelectorAll('[data-menu]').forEach(function(b) {
+      b.classList.toggle('on', !!on[b.dataset.menu]);
+      if (b.dataset.menu === 'chat' && on.chat) b.classList.remove('novo');
+    });
+  }
+  palcoMenu.addEventListener('click', function(e) {
+    var b = e.target.closest('[data-menu]');
+    if (!b) return;
+    var n = b.dataset.menu;
+    if (n === 'som') toggleSom();
+    else if (n === 'diario') { if (palcoDiarioEl.classList.contains('show')) closeDiario(); else openDiario(); }
+    else if (palcoGav[n]) palcoGavFecha(n);
+    else palcoGavAbre(n);
+    palcoMenuSync();
+  });
+  // Som e Diário também abrem/fecham por outros caminhos (Esc, o botão deles): o menu acompanha
+  [palcoSomEl, palcoDiarioEl].forEach(function(el) { new MutationObserver(palcoMenuSync).observe(el, { attributes:true, attributeFilter:['class'] }); });
+  // mensagem nova com a gaveta do chat fechada: o botão acende
+  function palcoChatNovo(p) {
+    if (!mapaAberto() || palcoGav.chat || !p || p.autor === nome || (p.ts && Date.now() - p.ts > 20000)) return;
+    var b = palcoMenu.querySelector('[data-menu="chat"]');
+    if (b) b.classList.add('novo');
+  }
+
   // o botão da mesa: abre; com o palco aberto minimiza; minimizado, restaura
   mapaBtn.addEventListener('click', function() {
     if (palcoMinimizado()) restauraMapa();
