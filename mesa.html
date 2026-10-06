@@ -508,7 +508,7 @@ body {
 .ferr:first-child::after { left:0; transform:none; }
 .ferr:last-child::after { left:auto; right:0; transform:none; }
 /* cada ferramenta guarda a cor que já tinha no botão largo */
-.ferr-mapa { color:#ff8a7a; background:rgba(255,110,90,0.08); border-color:rgba(255,110,90,0.45); }
+.ferr-mapa { position:relative; color:#ff8a7a; background:rgba(255,110,90,0.08); border-color:rgba(255,110,90,0.45); }
 .ferr-mapa:hover { background:rgba(255,110,90,0.18); box-shadow:0 0 14px rgba(255,110,90,0.28); }
 .ferr-mapa.open { background:rgba(255,110,90,0.24); border-color:#ff8a7a; }
 .ferr-som { color:#c3a6ff; background:rgba(160,130,255,0.08); border-color:rgba(160,130,255,0.45); }
@@ -795,22 +795,50 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   body.mapa-on .video-panel #jitsi { height:24vh; }
   body.mapa-on .mapa-panel { height:72vh; }
 }
-/* Abre como o quadro: tela cheia, caras na coluna à direita (body.wb-on.wb-right) */
+/* Palco: tela cheia. O mapa ocupa tudo (menos a coluna das caras, à direita) e os
+   menus flutuam por cima dele. Caras pelo mesmo layout do quadro (body.wb-on.wb-right). */
 body.mapa-on .mapa-panel {
-  display:flex; position:fixed; inset:0; z-index:9990; height:auto; grid-column:auto; grid-row:auto;
-  background:rgba(0,0,0,0.82); border:0; border-radius:0; box-shadow:none;
-  flex-direction:column; align-items:center; justify-content:center; gap:12px;
-  padding:18px calc(252px + 28px) 18px 18px; overflow:auto;
+  display:block; position:fixed; inset:0; z-index:9990; height:auto; grid-column:auto; grid-row:auto;
+  background:#05080e; border:0; border-radius:0; box-shadow:none; overflow:hidden; padding:0;
 }
+body.mapa-on .mapa-view { position:absolute; left:0; top:0; bottom:0; right:calc(252px + 20px); width:auto; height:auto; border-radius:0; }
 body.mapa-on .mapa-bar {
-  flex:0 0 auto; justify-content:center; flex-wrap:wrap; gap:7px; max-width:calc(100vw - 300px); box-sizing:border-box;
-  background:#0b1320; border:1px solid var(--line-strong); border-radius:8px; padding:7px 10px;
+  position:absolute; z-index:6; top:10px; left:calc((100% - 272px) / 2); transform:translateX(-50%);
+  max-width:calc(100% - 420px); flex-wrap:wrap; justify-content:center; gap:7px; box-sizing:border-box;
+  background:rgba(11,19,32,0.92); backdrop-filter:blur(6px); border:1px solid var(--line-strong); border-radius:8px; padding:7px 10px;
 }
-body.mapa-on .mapa-view { flex:0 0 auto; width:calc(100vw - 300px); height:76vh; border-radius:8px; }
+.palco-host {
+  display:none; position:absolute; z-index:6; left:10px; top:10px; align-items:center; gap:8px; max-width:200px; flex-wrap:wrap;
+  background:rgba(11,19,32,0.92); backdrop-filter:blur(6px); border:1px solid var(--line-strong); border-radius:8px; padding:7px 10px;
+  font-family:var(--font-mono); font-size:9.5px; letter-spacing:0.06em; color:var(--fg-dim);
+}
+body.mapa-on .palco-host { display:flex; }
+.palco-host b { color:var(--holo); font-weight:600; }
+.palco-host-bt {
+  cursor:pointer; padding:4px 9px; border-radius:5px; font-family:inherit; font-size:9px; letter-spacing:0.12em; text-transform:uppercase;
+  color:var(--holo); background:rgba(78,211,232,0.08); border:1px solid var(--holo-soft);
+}
+.palco-host-bt:hover { background:rgba(78,211,232,0.2); }
+.palco-live { display:flex; align-items:center; gap:7px; cursor:pointer; user-select:none; }
+.palco-live input { position:absolute; opacity:0; pointer-events:none; }
+.palco-sw { position:relative; width:30px; height:16px; border-radius:999px; background:rgba(255,255,255,0.12); border:1px solid var(--line-strong); transition:all .15s; }
+.palco-sw::after { content:''; position:absolute; top:2px; left:2px; width:10px; height:10px; border-radius:50%; background:var(--fg-dim); transition:all .15s; }
+.palco-live input:checked + .palco-sw { background:rgba(78,211,232,0.25); border-color:var(--holo); }
+.palco-live input:checked + .palco-sw::after { left:16px; background:var(--holo); box-shadow:0 0 8px var(--holo); }
+.palco-congelado {
+  position:absolute; z-index:6; left:calc((100% - 272px) / 2); bottom:14px; transform:translateX(-50%);
+  padding:7px 14px; border-radius:999px; background:rgba(255,138,122,0.14); border:1px solid #ff8a7a; color:#ff8a7a;
+  font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; pointer-events:none;
+}
+.palco-congelado[hidden] { display:none; }
+/* mesa em pausa: ver e mover a vista pode, mexer no que o host está montando não */
+body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pausado .mapa-add { pointer-events:none; opacity:0.5; }
+.ferr-mapa.alguem::after { content:''; position:absolute; top:5px; right:5px; width:7px; height:7px; border-radius:50%; background:#ff8a7a; box-shadow:0 0 7px #ff8a7a; }
 @media (max-width:920px) {
-  body.mapa-on .mapa-panel { padding:140px 12px 12px; }
-  body.mapa-on .mapa-bar { max-width:94vw; }
-  body.mapa-on .mapa-view { width:94vw; height:calc(100vh - 250px); }
+  body.mapa-on .mapa-view { right:0; top:130px; }
+  body.mapa-on .mapa-bar { top:136px; left:50%; max-width:94vw; }
+  .palco-host { top:auto; bottom:10px; }
+  .palco-congelado { left:50%; bottom:60px; }
 }
 .mapa-bar { display:flex; align-items:center; gap:8px; padding:7px 10px; border-bottom:1px solid var(--line); flex:0 0 auto; min-width:0; }
 .mapa-bar .led { width:6px; height:6px; border-radius:50%; background:#ff8a7a; box-shadow:0 0 7px #ff8a7a; flex:0 0 auto; }
@@ -1203,6 +1231,14 @@ body.mapa-on .mapa-view { flex:0 0 auto; width:calc(100vw - 300px); height:76vh;
   <!-- Mapa (mesa de D20): imagem › grade › tokens. Vem antes do rail pra, no
        celular (uma coluna só), ficar logo abaixo das caras. -->
   <div class="panel mapa-panel" id="mapaPanel">
+    <div class="palco-host" id="palcoHost">
+      <span id="palcoHostQuem">Host: —</span>
+      <button class="palco-host-bt" id="palcoControlar" type="button" title="Assumir o controle da mesa" hidden>Controlar</button>
+      <label class="palco-live" id="palcoLiveBox" title="Desligado: ninguém vê o que você faz até ligar de novo" hidden>
+        <span>Tempo real</span><input type="checkbox" id="palcoLive" checked><i class="palco-sw"></i>
+      </label>
+    </div>
+    <div class="palco-congelado" id="palcoCongelado" hidden>Mesa em pausa · o host desligou o tempo real</div>
     <div class="mapa-bar">
       <span class="led"></span><span class="panel-title">Mapa</span>
       <div class="mapa-add" id="mapaAdd"></div>
@@ -1213,7 +1249,7 @@ body.mapa-on .mapa-view { flex:0 0 auto; width:calc(100vw - 300px); height:76vh;
       <button class="mapa-ico" id="mapaGradeBtn" type="button" title="Ajustar a grade">#</button>
       <button class="mapa-ico" id="mapaFit" type="button" title="Ver o mapa inteiro (ou duplo clique no mapa)">&#9974;</button>
       <button class="mapa-ico mapa-limpar" id="mapaLimparBt" type="button" title="Limpar o mapa">&#128465;</button>
-      <button class="mapa-ico mapa-x" id="mapaFechar" type="button" title="Fechar o mapa (fecha pra mesa toda)">&#10005;</button>
+      <button class="mapa-ico mapa-x" id="mapaFechar" type="button" title="Sair do palco (a mesa continua pra quem ficou)">&#10005;</button>
     </div>
     <div class="mapa-view" id="mapaView">
       <div class="mapa-mundo" id="mapaMundo">
@@ -3482,7 +3518,15 @@ body.mapa-on .mapa-view { flex:0 0 auto; width:calc(100vw - 300px); height:76vh;
     mapaCena = mapaNormaliza(p.cena);
     mapaPronto = true;
     mapaFimArraste(); mapaFechaPops();
-    mapaRender(); mapaFit();
+    mapaRender();
+    if (p.retoma) _palcoRetomou = true; else mapaFit();   // religar o tempo real não desfaz o zoom de quem está olhando
+  }
+  // pega a cena de novo do Storage (quando a mesa volta ao vivo e a cena que chegou, se chegou, pode ter ficado pra trás)
+  function mapaRecarrega() {
+    return fetch(MAPA_ARQ + '?t=' + Date.now(), { headers:MAPA_HDR, cache:'no-store' })
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(c) { if (c) { mapaCena = mapaNormaliza(c); mapaFechaPops(); mapaRender(); } })
+      .catch(function() {});
   }
   function mapaMudaGrade(parcial) {
     mapaCena.grade = mapaGradeNorm(Object.assign({}, mapaCena.grade, parcial), mapaCena.grade);
@@ -4144,31 +4188,115 @@ body.mapa-on .mapa-view { flex:0 0 auto; width:calc(100vw - 300px); height:76vh;
   }, { passive:false });
   mapaView.addEventListener('dblclick', function(e){ if (!e.target.closest('.mapa-tok')) mapaFit(); });
 
-  // ── abrir / fechar (pra mesa toda) ──
+  // ── abrir / fechar: cada um no seu palco ──
+  // Abrir não puxa ninguém junto. Quem está dentro aparece na presença do canal,
+  // e é dela que sai o host: o primeiro a entrar, ou quem apertou "Controlar".
   function mapaAberto() { return document.body.classList.contains('mapa-on'); }
   function openMapa() {
     if (mapaAberto()) return;
     document.body.classList.add('mapa-on', 'wb-on', 'wb-right');   // mesmo jeito do quadro: caras na coluna à direita
     mapaBtn.classList.add('open');
-    jitsiTile(true);   // a faixa de cima mostra todas as caras
+    jitsiTile(true);   // a coluna das caras mostra todo mundo
     if (!mapaPronto && !mapaCarregando) mapaCarrega();
     mapaRender();
     requestAnimationFrame(mapaFit);   // mede depois que a página mudou de forma
+    palcoDentro = true; palcoDesde = Date.now(); palcoClaim = 0; palcoLive = true;
+    palcoTrack(); palcoRecalcula();
   }
   function closeMapa() {
     if (!mapaAberto()) return;
+    // host saindo com o tempo real desligado: religa e publica, pra mesa não ficar com a tela velha
+    if (palcoSouHost && !palcoLive) palcoLigaTempoReal();
     mapaFechaPops(); mapaFimArraste();
     mapaPan = null; mapaPinch = null; mapaToques = {};
     mapaView.classList.remove('panning');
     document.body.classList.remove('mapa-on');
     mapaBtn.classList.remove('open');
     if (!wbIsOpen()) { document.body.classList.remove('wb-on', 'wb-right'); jitsiTile(false); }
+    palcoDentro = false; palcoClaim = 0;
+    palcoTrack(); palcoRecalcula();
   }
-  mapaBtn.addEventListener('click', function() {
-    if (mapaAberto()) { closeMapa(); send('mapa-close', {}); }
-    else { openMapa(); send('mapa-open', {}); }
+  mapaBtn.addEventListener('click', function() { if (mapaAberto()) closeMapa(); else openMapa(); });
+  document.getElementById('mapaFechar').addEventListener('click', closeMapa);
+
+  // ── Host do palco ──
+  var palcoDentro = false, palcoDesde = 0, palcoClaim = 0, palcoLive = true;
+  var palcoPres = {};            // id → o que cada conectado anunciou
+  var palcoSouHost = false, palcoCongelado = false, palcoHostId = null;
+  var palcoHostQuem = document.getElementById('palcoHostQuem');
+  var palcoCtrlBt = document.getElementById('palcoControlar');
+  var palcoLiveBox = document.getElementById('palcoLiveBox');
+  var palcoLiveIn = document.getElementById('palcoLive');
+  var palcoAviso = document.getElementById('palcoCongelado');
+  var _palcoRetomou = false;
+
+  // O estado do palco (dentro, "Controlar", tempo real) vai por BROADCAST, não pela
+  // presença: o Supabase fecha o canal inteiro de quem atualiza a presença mais
+  // de umas 5 vezes em poucos segundos (testado) — e com o canal vão os dados e o
+  // chat. A presença só serve pra saber quem está conectado (um track por conexão).
+  function palcoTrack() {   // anuncia o meu estado; o nome ficou, o mecanismo mudou
+    send('palco-st', { id:MAPA_ME, nome:(nome || 'Jogador'), dentro:palcoDentro, desde:palcoDesde, claim:palcoClaim, live:palcoLive });
+  }
+  function palcoRecebeEstado(m) {
+    if (!m || !m.id || m.id === MAPA_ME) return;
+    if (m.dentro) palcoPres[m.id] = m; else delete palcoPres[m.id];
+    palcoRecalcula();
+  }
+  // quem desconectou sai da conta na hora (aba fechada, rede caída, host sumindo)
+  function palcoLePresenca() {
+    var st = (channel && channel.presenceState) ? channel.presenceState() : null;
+    if (!st || !Object.keys(st).length) return;   // ainda sem estado: não apaga ninguém
+    Object.keys(palcoPres).forEach(function(k) { if (!st[k]) delete palcoPres[k]; });
+    palcoRecalcula();
+  }
+  // gente nova no canal: se estou no palco, conto como estou (ela não viu meus avisos antigos)
+  function palcoNovoNoCanal() { if (palcoDentro) palcoTrack(); }
+  // Host = de quem está no palco, o que apertou "Controlar" por último; sem ninguém
+  // que tenha apertado, o que entrou primeiro. Todo mundo faz a mesma conta, então
+  // todo mundo chega no mesmo host sem precisar de árbitro.
+  function palcoEscolheHost() {
+    var lista = Object.keys(palcoPres).filter(function(k) { return k !== MAPA_ME; }).map(function(k) { return palcoPres[k]; });
+    if (palcoDentro) lista.push({ id:MAPA_ME, nome:(nome || 'Jogador'), dentro:true, desde:palcoDesde, claim:palcoClaim, live:palcoLive });
+    lista = lista.filter(function(m) { return m && m.dentro; });
+    lista.sort(function(a, b) { return (b.claim || 0) - (a.claim || 0) || (a.desde || 0) - (b.desde || 0) || (a.id < b.id ? -1 : 1); });
+    return lista[0] || null;
+  }
+  function palcoRecalcula() {
+    var h = palcoEscolheHost(), eraHost = palcoSouHost, estavaPausado = palcoCongelado;
+    palcoHostId = h ? h.id : null;
+    palcoSouHost = !!h && h.id === MAPA_ME;
+    // quem perde ou ganha o posto começa com o tempo real ligado
+    if (palcoSouHost !== eraHost && !palcoLive) { palcoLive = true; palcoTrack(); }
+    palcoCongelado = !palcoSouHost && !!h && h.live === false;
+    document.body.classList.toggle('palco-pausado', palcoCongelado && palcoDentro);
+    palcoAviso.hidden = !(palcoCongelado && palcoDentro);
+    palcoHostQuem.innerHTML = h ? (palcoSouHost ? '<b>Você</b> é o host' : 'Host: <b>' + esc(h.nome || 'Jogador') + '</b>') : 'Host: —';
+    palcoCtrlBt.hidden = !palcoDentro || palcoSouHost;
+    palcoLiveBox.hidden = !palcoSouHost;
+    palcoLiveIn.checked = palcoLive;
+    // a mesa voltou ao vivo (o host religou ou saiu): pega a cena como ficou, por garantia
+    if (estavaPausado && !palcoCongelado) {
+      setTimeout(function() { if (!palcoCongelado && !_palcoRetomou) mapaRecarrega(); _palcoRetomou = false; }, 1200);
+    }
+    // marca no botão que tem gente no palco (e quem é o host)
+    var alguem = false;
+    Object.keys(palcoPres).forEach(function(k) { if (k !== MAPA_ME && palcoPres[k] && palcoPres[k].dentro) alguem = true; });
+    mapaBtn.classList.toggle('alguem', alguem && !palcoDentro);
+    mapaBtn.dataset.dica = alguem && h ? 'Mapa · ' + (h.nome || 'alguém') + ' está no palco' : 'Mapa';
+  }
+  palcoCtrlBt.addEventListener('click', function() { palcoClaim = Date.now(); palcoTrack(); palcoRecalcula(); });
+  function palcoLigaTempoReal() {
+    palcoLive = true; palcoLiveIn.checked = true;
+    palcoTrack();
+    // a mesa estava parada na tela antiga: manda a cena como está agora
+    send('mapa-cena', { cena:mapaCena, by:MAPA_ME, retoma:true });
+    mapaSalva(false);
+  }
+  palcoLiveIn.addEventListener('change', function() {
+    if (!palcoSouHost) { palcoLiveIn.checked = palcoLive; return; }
+    if (palcoLiveIn.checked) palcoLigaTempoReal();
+    else { palcoLive = false; palcoTrack(); }
   });
-  document.getElementById('mapaFechar').addEventListener('click', function(){ closeMapa(); send('mapa-close', {}); });
 
   mapaCarrega();
 
@@ -4964,6 +5092,8 @@ body.mapa-on .mapa-view { flex:0 0 auto; width:calc(100vw - 300px); height:76vh;
   var sbRealtimeClient = null;   // client reaproveitado pelo canal secreto do reservado
   var jitsiApi = null;
   function send(event, payload) {
+    // host com o tempo real desligado mexe só aqui: a mesa continua vendo a última tela
+    if (palcoSouHost && !palcoLive && /^mapa-(cena|grade|img|tok)$/.test(event) && !(payload && payload.retoma)) return;
     if (channel) channel.send({ type:'broadcast', event:event, payload:payload });
     else dispatch(event, payload);   // offline: mostra local
   }
@@ -4993,20 +5123,21 @@ body.mapa-on .mapa-view { flex:0 0 auto; width:calc(100vw - 300px); height:76vh;
     else if (event === 'som-state-req') { var snap = somStateSnapshot(); if (snap.length) send('som-state', { playing:snap }); }
     else if (event === 'som-lib') { if (somLoaded) somLoad(function(){ somRefreshUI(); }); }
     else if (event === 'som-gain') { if (payload && payload.id != null) { somGain[String(payload.id)] = payload.gain; somPersistGain(); somApplyVol(payload.id); somRenderPads(); } }
-    else if (event === 'mapa-open') openMapa();
-    else if (event === 'mapa-close') closeMapa();
-    else if (event === 'mapa-req') { if (mapaAberto()) send('mapa-open', {}); }
-    else if (event === 'mapa-cena') mapaRecebeCena(payload);
-    else if (event === 'mapa-grade') mapaRecebeGrade(payload);
-    else if (event === 'mapa-img') mapaRecebeImg(payload);
-    else if (event === 'mapa-tok') mapaRecebeTok(payload);
+    // 'mapa-open'/'mapa-close' eram "abre pra mesa toda"; agora cada um entra e sai por si (ver Host do palco)
+    else if (event === 'palco-st') palcoRecebeEstado(payload);
+    else if (event === 'mapa-cena') { if (!palcoCongelado || (payload && payload.retoma)) mapaRecebeCena(payload); }
+    else if (event === 'mapa-grade') { if (!palcoCongelado) mapaRecebeGrade(payload); }
+    else if (event === 'mapa-img') { if (!palcoCongelado) mapaRecebeImg(payload); }
+    else if (event === 'mapa-tok') { if (!palcoCongelado) mapaRecebeTok(payload); }
   }
   function initRealtime() {
     chatCarregaHistorico();
     if (!window.supabase || !window.supabase.createClient) return;
     var client = sbClient || window.supabase.createClient(SB_URL, SB_KEY);
     sbRealtimeClient = client;
-    channel = client.channel('mesa:' + SALA, { config:{ broadcast:{ self:true } } });
+    channel = client.channel('mesa:' + SALA, { config:{ broadcast:{ self:true }, presence:{ key:MAPA_ME } } });
+    channel.on('presence', { event:'sync' }, palcoLePresenca);
+    channel.on('presence', { event:'join' }, function(m) { if (m && m.key !== MAPA_ME) palcoNovoNoCanal(); });
     channel.on('broadcast', { event:'roll' }, function(m){ dispatch('roll', m.payload); });
     channel.on('broadcast', { event:'chat' }, function(m){ dispatch('chat', m.payload); });
     channel.on('broadcast', { event:'chars' }, function(m){ dispatch('chars', m.payload); });
@@ -5021,12 +5152,12 @@ body.mapa-on .mapa-view { flex:0 0 auto; width:calc(100vw - 300px); height:76vh;
     ['som-play','som-stop','som-state','som-state-req','som-lib','som-gain'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
-    ['mapa-open','mapa-close','mapa-req','mapa-cena','mapa-grade','mapa-img','mapa-tok'].forEach(function(ev){
+    ['palco-st','mapa-cena','mapa-grade','mapa-img','mapa-tok'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
     channel.subscribe(function(status){
       document.getElementById('connDot').classList.toggle('on', status === 'SUBSCRIBED');
-      if (status === 'SUBSCRIBED') { send('chars-req', {}); send('mesa-ctx-req', {}); send('som-state-req', {}); send('timer-req', {}); send('mapa-req', {}); }
+      if (status === 'SUBSCRIBED') { send('chars-req', {}); send('mesa-ctx-req', {}); send('som-state-req', {}); send('timer-req', {}); channel.track({ id:MAPA_ME }); palcoTrack(); }
     });
   }
 
