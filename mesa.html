@@ -2909,7 +2909,26 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   });
   tmPinta();
 
-  function jitsiTile(on) { if (jitsiApi) { try { jitsiApi.executeCommand('setTileView', !!on); } catch (_) {} } }
+  // A coluna das caras no palco é sempre a visão em grade (um rosto embaixo do outro). O comando se perde se
+  // chegar antes da chamada começar, e o Jitsi às vezes sai da grade sozinho (gente entrando, etc.): por isso
+  // o que se QUER fica guardado e é reafirmado quando a chamada começa, quando alguém entra e quando a grade
+  // é desligada. Fora do palco não se briga com ninguém: só se reafirma o "ligado".
+  var _tileQuer = null, _tileTs = 0;
+  function jitsiTile(on) {
+    _tileQuer = !!on;
+    if (jitsiApi) { try { jitsiApi.executeCommand('setTileView', !!on); } catch (_) {} }
+  }
+  function jitsiTileReafirma(emGrade) {
+    if (_tileQuer !== true || emGrade === true || Date.now() - _tileTs < 800) return;
+    _tileTs = Date.now();
+    try { jitsiApi.executeCommand('setTileView', true); } catch (_) {}
+  }
+  function jitsiLigaTile() {
+    ['videoConferenceJoined', 'participantJoined', 'participantLeft'].forEach(function(ev) {
+      jitsiApi.addListener(ev, function() { setTimeout(function() { _tileTs = 0; jitsiTileReafirma(false); }, 600); });
+    });
+    jitsiApi.addListener('tileViewChanged', function(e) { jitsiTileReafirma(!!(e && e.enabled)); });
+  }
 
   // ── Mapa (mesa de D20) ────────────────────────────────────────────
   // Três camadas: a imagem do mapa, a grade por cima e os tokens por cima de
@@ -5754,12 +5773,13 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
         parentNode: document.getElementById('jitsi'),
         width:'100%', height:'100%',
         configOverwrite: {
-          prejoinPageEnabled:false, disableDeepLinking:true,
+          prejoinPageEnabled:false, prejoinConfig:{ enabled:false }, disableDeepLinking:true,   // as duas: o Jitsi novo só lê prejoinConfig
           transcription: { useAppLanguage:false, preferredLanguage:'pt-BR' }
         },
         interfaceConfigOverwrite: { MOBILE_APP_PROMO:false, SHOW_JITSI_WATERMARK:false, SHOW_WATERMARK_FOR_GUESTS:false }
       });
       setupTrxWatchdog();
+      jitsiLigaTile();
       setupResvBreakout();   // ouvintes do reservado (breakout) no vídeo principal
       // se o palco já estiver aberto quando o vídeo terminar de carregar, alinha o tile view
       if (mapaAberto()) jitsiTile(true);
