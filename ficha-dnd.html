@@ -517,11 +517,6 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 /* tabelas (armas, magias) */
 .tbl { display: flex; flex-direction: column; margin-top: 6px; }
 .magias-abas { display: flex; justify-content: center; gap: 4px; margin: 4px 0 2px; }
-.alca {
-  position: absolute; left: -12px; top: 50%; transform: translateY(-50%); cursor: grab; user-select: none;
-  font-size: 10px; line-height: 1; color: var(--fg-faint); opacity: 0; transition: opacity 0.15s;
-}
-.tbl-row:hover .alca { opacity: 0.8; }
 .tbl-row.arrastando { opacity: 0.4; }
 .prep {
   position: absolute; right: 22px; bottom: 5px; font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.04em;
@@ -892,7 +887,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
   body::after, .fundo, #backBtn, .preview-flag, .fundo-ctrl, .volta-local,
-  .dobra-bt, .tbl-add, .tbl-del, .alca, .prep, #fileInput, #fundoFile, .balao,
+  .dobra-bt, .tbl-add, .tbl-del, .prep, #fileInput, #fundoFile, .balao,
   .inv-bts, .inv-menu, .inv-carga-pop, .cat-ov, .aviso { display: none !important; }
   /* no papel o inventário sai em lista, que é o que se lê */
   .inv-corpo.modo-grade { display: flex !important; flex-direction: column !important; }
@@ -5540,11 +5535,6 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       d.contentEditable = 'true'; d.spellcheck = false; d.dataset.col = cel.k;
       row.appendChild(d);
     });
-    if (tipo === 'magias' || tipo === 'magias_conhecidas') {
-      var alca = document.createElement('span');
-      alca.className = 'alca'; alca.title = 'Arrastar pra mudar a ordem'; alca.textContent = '⋮⋮';
-      row.appendChild(alca);
-    }
     if (tipo === 'magias_conhecidas') {
       var prep = document.createElement('button');
       prep.type = 'button'; prep.className = 'prep'; prep.textContent = 'preparar';
@@ -5604,43 +5594,45 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     calcula(); marca(); avisa(nome + ' nas preparadas');
   }
 
-  // ── Arrastar magias pra mudar a ordem (pela alça ⋮⋮ de cada linha) ───
-  // Só reordena dentro da mesma tabela: Preparadas e Conhecidas são listas separadas.
-  var arrastando = null;
+  // ── Arrastar magias pra mudar a ordem: clica na linha, segura e arrasta ──
+  // Só dentro da própria tabela (Preparadas ou Conhecidas). Não usa o arrastar
+  // do navegador: ele selecionaria o texto das células, que são editáveis.
+  var magiaArr = null;   // { row, tbl, y0, ativo }
   function ligaArrasto(tbl) {
-    tbl.addEventListener('mousedown', function(e) {
-      var al = e.target.closest && e.target.closest('.alca');
-      if (!al) return;
-      var row = al.closest('.tbl-row');
-      if (row) row.draggable = true;
-    });
-    tbl.addEventListener('dragstart', function(e) {
-      var row = e.target.closest && e.target.closest('.tbl-row:not(.tbl-head)');
-      if (!row || !row.draggable) return;
-      arrastando = row; row.classList.add('arrastando');
-      e.dataTransfer.effectAllowed = 'move';
-      // o Firefox só arrasta com algum dado; não pode ser texto, senão a célula editável o insere
-      e.dataTransfer.setData('application/x-ficha-magia', '1');
-    });
-    tbl.addEventListener('dragover', function(e) {
-      if (!arrastando || arrastando.parentNode !== tbl) return;
-      e.preventDefault();
-      var alvo = e.target.closest && e.target.closest('.tbl-row:not(.tbl-head)');
-      if (!alvo || alvo === arrastando) return;
-      var r = alvo.getBoundingClientRect();
-      tbl.insertBefore(arrastando, e.clientY > r.top + r.height / 2 ? alvo.nextSibling : alvo);
-    });
-    tbl.addEventListener('drop', function(e) { e.preventDefault(); });
-    tbl.addEventListener('dragend', function() {
-      if (arrastando) { arrastando.classList.remove('arrastando'); arrastando.draggable = false; }
-      arrastando = null;
+    tbl.addEventListener('pointerdown', function(e) {
+      if (e.button !== 0 || somenteLeitura) return;
+      if (e.target.closest('.tbl-del, .prep, .tbl-head')) return;
+      var row = e.target.closest('.tbl-row:not(.tbl-head)');
+      if (row) magiaArr = { row: row, tbl: tbl, y0: e.clientY, ativo: false };
     });
   }
+  document.addEventListener('pointermove', function(e) {
+    var a = magiaArr;
+    if (!a) return;
+    if (!a.ativo) {
+      if (Math.abs(e.clientY - a.y0) < 6) return;   // um clique não é arrasto
+      a.ativo = true;
+      a.row.classList.add('arrastando');
+      document.body.style.userSelect = 'none';
+      window.getSelection().removeAllRanges();
+    }
+    e.preventDefault();
+    var outras = Array.prototype.filter.call(a.tbl.querySelectorAll('.tbl-row:not(.tbl-head)'), function(r) { return r !== a.row; });
+    var antes = outras.find(function(r) { var b = r.getBoundingClientRect(); return e.clientY < b.top + b.height / 2; });
+    a.tbl.insertBefore(a.row, antes || null);   // sem alvo abaixo: vai pro fim
+  });
+  function soltaMagia() {
+    var a = magiaArr;
+    magiaArr = null;
+    document.body.style.userSelect = '';
+    if (!a || !a.ativo) return;
+    a.row.classList.remove('arrastando');
+    marca();
+  }
+  document.addEventListener('pointerup', soltaMagia);
+  document.addEventListener('pointercancel', soltaMagia);
   ligaArrasto(tabela.magias);
   ligaArrasto(tabela.magias_conhecidas);
-  document.addEventListener('mouseup', function() {
-    document.querySelectorAll('.tbl-row[draggable="true"]').forEach(function(r) { if (r !== arrastando) r.draggable = false; });
-  });
 
   // ── Campos numéricos: Enter não quebra linha ────────────────────────
   document.addEventListener('keydown', function(e) {
