@@ -1813,7 +1813,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       </div>
       <div class="ent-aviso" id="entAviso"></div>
       <button type="button" class="ent-entrar" id="entradaBtn">Entrar na mesa</button>
-      <div class="ent-dica"><kbd>Enter</kbd> entra &nbsp;·&nbsp; nome e escolhas ficam salvos</div>
+      <div class="ent-dica"><kbd>Enter</kbd> entra &nbsp;·&nbsp; nome e dispositivos ficam salvos</div>
     </div>
   </div>
 </div>
@@ -6233,7 +6233,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var entSelCam = document.getElementById('entSelCam'), entSelMic = document.getElementById('entSelMic');
   var entAviso = document.getElementById('entAviso'), entMedidor = document.getElementById('entMedidor');
   function entLs(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (_) {} return null; }
-  var ENT = { mic: entLs('mesaMicOn') !== '0', cam: entLs('mesaCamOn') !== '0', micId: entLs('mesaMicId') || '', camId: entLs('mesaCamId') || '', stream: null, ctx: null, raf: 0, seq: 0 };
+  // Sempre abre com a câmera DESLIGADA e o microfone LIGADO (as chaves não se lembram da última vez; os dispositivos sim)
+  var ENT = { mic: true, cam: false, micId: entLs('mesaMicId') || '', camId: entLs('mesaCamId') || '', stream: null, ctx: null, raf: 0, seq: 0 };
   var _entReq = Promise.resolve();
   var ENT_ESCOLHA = { micLabel: '', camLabel: '' };   // o Jitsi escolhe dispositivo pelo rótulo
 
@@ -6317,8 +6318,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       })();
     } catch (_) {}
   }
-  entMic.addEventListener('click', function() { ENT.mic = !ENT.mic; entLs('mesaMicOn', ENT.mic ? '1' : '0'); entPreview(); });
-  entCam.addEventListener('click', function() { ENT.cam = !ENT.cam; entLs('mesaCamOn', ENT.cam ? '1' : '0'); entPreview(); });
+  entMic.addEventListener('click', function() { ENT.mic = !ENT.mic; entPreview(); });
+  entCam.addEventListener('click', function() { ENT.cam = !ENT.cam; entPreview(); });
   entSelCam.addEventListener('change', function() { ENT.camId = entSelCam.value; entLs('mesaCamId', ENT.camId); entPreview(); });
   entSelMic.addEventListener('change', function() { ENT.micId = entSelMic.value; entLs('mesaMicId', ENT.micId); entPreview(); });
   entNick.addEventListener('input', entPintaChaves);
