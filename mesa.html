@@ -782,8 +782,10 @@ body.mapa-on .mapa-bar {
   max-width:calc(100% - 420px); flex-wrap:wrap; justify-content:center; gap:7px; box-sizing:border-box;
   background:rgba(11,19,32,0.92); backdrop-filter:blur(6px); border:1px solid var(--line-strong); border-radius:8px; padding:7px 10px;
 }
+.palco-esq { display:none; position:absolute; z-index:6; left:10px; top:10px; flex-direction:column; align-items:flex-start; gap:10px; max-height:calc(100% - 70px); overflow-y:auto; scrollbar-width:thin; }
+body.mapa-on .palco-esq { display:flex; }
 .palco-host {
-  display:none; position:absolute; z-index:6; left:10px; top:10px; align-items:center; gap:8px; max-width:200px; flex-wrap:wrap;
+  display:none; position:relative; flex:0 0 auto; align-items:center; gap:8px; max-width:200px; flex-wrap:wrap;
   background:rgba(11,19,32,0.92); backdrop-filter:blur(6px); border:1px solid var(--line-strong); border-radius:8px; padding:7px 10px;
   font-family:var(--font-mono); font-size:9.5px; letter-spacing:0.06em; color:var(--fg-dim);
 }
@@ -874,7 +876,7 @@ body.palco-min .palco-pilula { display:block; }
 body.palco-min .mapa-panel { display:none !important; }
 .ferr-mapa.open { position:relative; }
 .dsn-bar {
-  position:absolute; z-index:6; left:10px; top:84px; display:flex; flex-direction:column; align-items:center; gap:5px;
+  position:relative; flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:5px;
   background:rgba(11,19,32,0.92); backdrop-filter:blur(6px); border:1px solid var(--line-strong); border-radius:8px; padding:7px 6px;
 }
 body:not(.mapa-on) .dsn-bar { display:none; }
@@ -882,7 +884,8 @@ body:not(.mapa-on) .dsn-bar { display:none; }
 .dsn-esp i { display:block; border-radius:50%; background:currentColor; }
 .dsn-esp.active { color:var(--holo); border-color:var(--holo); box-shadow:0 0 8px rgba(78,211,232,0.3); }
 @media (max-width:920px) {
-  .dsn-bar { flex-direction:row; flex-wrap:wrap; justify-content:center; top:auto; bottom:52px; left:50%; transform:translateX(-50%); max-width:94vw; }
+  .palco-esq { display:contents; }   /* no celular cada um volta pro seu canto */
+  .dsn-bar { position:absolute; z-index:6; flex-direction:row; flex-wrap:wrap; justify-content:center; top:auto; bottom:52px; left:50%; transform:translateX(-50%); max-width:94vw; }
   .dsn-sep { width:1px; height:18px; margin:0 2px; }
 }
 /* mesa em pausa: ver e mover a vista pode, mexer no que o host está montando não */
@@ -918,7 +921,7 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
   body.mapa-on .mapa-view { right:0; top:164px; }
   body.mapa-on .mapa-bar { top:170px; left:50%; max-width:94vw; }
   .palco-janela { top:132px; right:10px; }
-  .palco-host { top:auto; bottom:10px; }
+  .palco-host { position:absolute; z-index:6; left:10px; top:auto; bottom:10px; }
   .palco-congelado { left:50%; bottom:60px; }
 }
 .mapa-bar { display:flex; align-items:center; gap:8px; padding:7px 10px; border-bottom:1px solid var(--line); flex:0 0 auto; min-width:0; }
@@ -1335,34 +1338,37 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       <button class="mapa-ico" type="button" data-menu="diario" title="Diário da Mesa"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2.8h9.2a1 1 0 0 1 1 1v11.4H5a1 1 0 0 1-1-1z"/><path d="M7 6.5h4.5M7 9.5h4.5"/></svg></button>
     </div>
     <div class="palco-gavetas" id="palcoGavetas"></div>
-    <div class="palco-host" id="palcoHost">
-      <span id="palcoHostQuem">Host: —</span>
-      <button class="palco-host-bt" id="palcoControlar" type="button" title="Assumir o controle da mesa" hidden>Controlar</button>
-      <button class="palco-host-bt" id="palcoRostoBt" type="button" title="Uma tela só de rostos, só pra você. Aperte de novo pra voltar à mesa." hidden>Rosto a rosto</button>
-      <button class="palco-host-bt" id="palcoLevaBt" type="button" title="Leva TODO MUNDO pra tela de rostos, como se a mesa tivesse fechado (quem já está nela não sente nada). Aperte de novo pra soltar." hidden>Levar todos</button>
-      <label class="palco-live" id="palcoLiveBox" title="Ligado: você vê a tela do host, igual. Desligado: a mesa fica parada pra você">
-        <span>Tempo real</span><input type="checkbox" id="palcoLive" checked><i class="palco-sw"></i>
-      </label>
-    </div>
-    <div class="dsn-bar" id="dsnBar">
-      <button class="wb-tool wb-icon dsn-tool active" data-tool="mover" type="button" title="Mover: tokens e vista (Esc)">&#9995;</button>
-      <button class="wb-tool wb-icon dsn-tool" data-tool="pincel" type="button" title="Pincel">&#9998;</button>
-      <button class="wb-tool wb-icon dsn-tool" data-tool="borracha" type="button" title="Borracha: apaga o traço que tocar">&#9003;</button>
-      <button class="wb-tool wb-icon dsn-tool" data-tool="seta" type="button" title="Seta">&#8599;</button>
-      <button class="wb-tool wb-icon dsn-tool" data-tool="retangulo" type="button" title="Retângulo">&#9645;</button>
-      <button class="wb-tool wb-icon dsn-tool" data-tool="circulo" type="button" title="Círculo">&#9711;</button>
-      <button class="wb-tool wb-icon dsn-tool" data-tool="texto" type="button" title="Texto (clique e digite)">T</button>
-      <span class="dsn-sep"></span>
-      <button class="wb-tool wb-icon dsn-esp" data-esp="3" type="button" title="Fino"><i style="width:3px;height:3px"></i></button>
-      <button class="wb-tool wb-icon dsn-esp" data-esp="7" type="button" title="Médio"><i style="width:7px;height:7px"></i></button>
-      <button class="wb-tool wb-icon dsn-esp" data-esp="14" type="button" title="Grosso"><i style="width:13px;height:13px"></i></button>
-      <span class="dsn-sep"></span>
-      <span class="wb-tool wb-color dsn-cor active" data-color="#111111" style="background:#111" title="Preto"></span>
-      <span class="wb-tool wb-color dsn-cor" data-color="#e0473a" style="background:#e0473a" title="Vermelho"></span>
-      <span class="wb-tool wb-color dsn-cor" data-color="#2f7bff" style="background:#2f7bff" title="Azul"></span>
-      <span class="wb-tool wb-color dsn-cor" data-color="#22b455" style="background:#22b455" title="Verde"></span>
-      <span class="wb-tool wb-color dsn-cor" data-color="#ffffff" style="background:#fff" title="Branco"></span>
-      <label class="wb-tool wb-color wb-color-custom" id="dsnCorCustom" title="Outra cor"><input type="color" id="dsnCorInput" value="#8b5cf6"></label>
+    <!-- coluna da esquerda: a caixa do host e a paleta de desenho, uma embaixo da outra (nunca se sobrepõem, não importa quantos botões a caixa do host tenha) -->
+    <div class="palco-esq">
+      <div class="palco-host" id="palcoHost">
+        <span id="palcoHostQuem">Host: —</span>
+        <button class="palco-host-bt" id="palcoControlar" type="button" title="Assumir o controle da mesa" hidden>Controlar</button>
+        <button class="palco-host-bt" id="palcoRostoBt" type="button" title="Uma tela só de rostos, só pra você. Aperte de novo pra voltar à mesa." hidden>Rosto a rosto</button>
+        <button class="palco-host-bt" id="palcoLevaBt" type="button" title="Leva TODO MUNDO pra tela de rostos, como se a mesa tivesse fechado (quem já está nela não sente nada). Aperte de novo pra soltar." hidden>Levar todos</button>
+        <label class="palco-live" id="palcoLiveBox" title="Ligado: você vê a tela do host, igual. Desligado: a mesa fica parada pra você">
+          <span>Tempo real</span><input type="checkbox" id="palcoLive" checked><i class="palco-sw"></i>
+        </label>
+      </div>
+      <div class="dsn-bar" id="dsnBar">
+        <button class="wb-tool wb-icon dsn-tool active" data-tool="mover" type="button" title="Mover: tokens e vista (Esc)">&#9995;</button>
+        <button class="wb-tool wb-icon dsn-tool" data-tool="pincel" type="button" title="Pincel">&#9998;</button>
+        <button class="wb-tool wb-icon dsn-tool" data-tool="borracha" type="button" title="Borracha: apaga o traço que tocar">&#9003;</button>
+        <button class="wb-tool wb-icon dsn-tool" data-tool="seta" type="button" title="Seta">&#8599;</button>
+        <button class="wb-tool wb-icon dsn-tool" data-tool="retangulo" type="button" title="Retângulo">&#9645;</button>
+        <button class="wb-tool wb-icon dsn-tool" data-tool="circulo" type="button" title="Círculo">&#9711;</button>
+        <button class="wb-tool wb-icon dsn-tool" data-tool="texto" type="button" title="Texto (clique e digite)">T</button>
+        <span class="dsn-sep"></span>
+        <button class="wb-tool wb-icon dsn-esp" data-esp="3" type="button" title="Fino"><i style="width:3px;height:3px"></i></button>
+        <button class="wb-tool wb-icon dsn-esp" data-esp="7" type="button" title="Médio"><i style="width:7px;height:7px"></i></button>
+        <button class="wb-tool wb-icon dsn-esp" data-esp="14" type="button" title="Grosso"><i style="width:13px;height:13px"></i></button>
+        <span class="dsn-sep"></span>
+        <span class="wb-tool wb-color dsn-cor active" data-color="#111111" style="background:#111" title="Preto"></span>
+        <span class="wb-tool wb-color dsn-cor" data-color="#e0473a" style="background:#e0473a" title="Vermelho"></span>
+        <span class="wb-tool wb-color dsn-cor" data-color="#2f7bff" style="background:#2f7bff" title="Azul"></span>
+        <span class="wb-tool wb-color dsn-cor" data-color="#22b455" style="background:#22b455" title="Verde"></span>
+        <span class="wb-tool wb-color dsn-cor" data-color="#ffffff" style="background:#fff" title="Branco"></span>
+        <label class="wb-tool wb-color wb-color-custom" id="dsnCorCustom" title="Outra cor"><input type="color" id="dsnCorInput" value="#8b5cf6"></label>
+      </div>
     </div>
     <div class="abas-bar" id="abasBar"></div>
     <div class="abas-menu" id="abasMenu" hidden></div>
