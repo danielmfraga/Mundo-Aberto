@@ -525,9 +525,6 @@ body {
   content:''; position:absolute; top:5px; right:5px; width:6px; height:6px; border-radius:50%;
   background:#06210f; animation:somPulse 1.2s infinite;
 }
-.wb-overlay { position:fixed; inset:0; z-index:9990; background:rgba(0,0,0,0.82); display:none; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:18px; overflow:auto; }
-.wb-overlay.show { display:flex; }
-.wb-toolbar { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:7px; max-width:94vw; background:#0b1320; border:1px solid var(--line-strong); border-radius:8px; padding:8px 12px; }
 .wb-tool { width:25px; height:25px; cursor:pointer; padding:0; transition:transform .1s, border-color .15s, box-shadow .15s; }
 .wb-color { border-radius:50%; border:2px solid rgba(255,255,255,0.18); display:inline-block; }
 .wb-color.active { border-color:#fff; transform:scale(1.15); box-shadow:0 0 10px rgba(255,255,255,0.5); }
@@ -541,14 +538,6 @@ body {
 /* swatch "outra cor": o <input type=color> fica invisível por cima da bolinha */
 .wb-color-custom { position:relative; overflow:hidden; background:#8b5cf6; }
 .wb-color-custom input { position:absolute; inset:-6px; width:200%; height:200%; padding:0; border:none; background:none; opacity:0; cursor:pointer; }
-/* o stage embrulha o canvas: serve de âncora pro canvas de prévia e pro campo de texto */
-/* coluna igual ao overlay de antes: com o eixo principal na altura, o canvas
-   continua encolhendo mantendo a proporção quando o max-height é que limita */
-.wb-stage { position:relative; display:inline-flex; flex-direction:column; align-items:center; max-width:100%; min-height:0; }
-#wbCanvas { background:#fff; border-radius:8px; max-width:92vw; max-height:78vh; box-shadow:0 0 40px rgba(0,0,0,0.6); cursor:crosshair; touch-action:none; }
-#wbCanvas.wb-cursor-text { cursor:text; }
-/* prévia das formas enquanto arrasta — camada separada pra não apagar traço que chega de outro jogador */
-#wbPreview { position:absolute; left:0; top:0; width:100%; height:100%; border-radius:8px; pointer-events:none; }
 .wb-text-inline {
   position:absolute; z-index:5; font-family:'Segoe UI', system-ui, sans-serif; line-height:1.15;
   background:transparent; border:1px dashed rgba(0,0,0,0.45); border-radius:4px; padding:0 3px; outline:none; min-width:70px;
@@ -753,29 +742,14 @@ body.wb-on .video-panel {
 body.wb-on .video-panel .panel-head { display:none; }      /* mais área pras caras */
 body.wb-on .video-panel #jitsi { min-height:0; border-radius:8px; }
 
-/* layout: tira no topo */
-body.wb-on.wb-top   .video-panel { top:10px; left:10px; right:10px; bottom:auto; width:auto; height:132px; }
-body.wb-top   .wb-overlay { padding:150px 18px 18px; }
-body.wb-top   #wbCanvas { max-width:92vw; max-height:calc(100vh - 224px); }
-
-/* layout: lado a lado (vídeo à esquerda) */
-body.wb-on.wb-split .video-panel { top:10px; left:10px; right:auto; bottom:10px; width:46vw; height:auto; }
-body.wb-split .wb-overlay { padding:18px 18px 18px calc(46vw + 28px); }
-body.wb-split #wbCanvas { max-width:calc(54vw - 46px); max-height:82vh; }
-
-/* layout: coluna à direita */
+/* layout: coluna à direita (o do palco) */
 body.wb-on.wb-right .video-panel { top:10px; right:10px; left:auto; bottom:10px; width:252px; height:auto; }
-body.wb-right .wb-overlay { padding:18px calc(252px + 28px) 18px 18px; }
-body.wb-right #wbCanvas { max-width:calc(100vw - 300px); max-height:82vh; }
 
-/* botões de layout na barra do quadro */
+/* separador da paleta */
 .wb-sep { width:1px; height:18px; background:var(--line-strong); margin:0 2px; flex:0 0 auto; }
 @media (max-width:920px) {
-  /* no mobile o grid empilha; mantém o quadro cheio e o vídeo como tira no topo */
-  body.wb-on.wb-split .video-panel, body.wb-on.wb-right .video-panel { top:10px; left:10px; right:10px; bottom:auto; width:auto; height:120px; }
-  body.wb-split .wb-overlay, body.wb-right .wb-overlay { padding:140px 12px 12px; }
-  body.wb-split #wbCanvas, body.wb-right #wbCanvas { max-width:94vw; max-height:calc(100vh - 250px); }
-  body.wb-top #wbCanvas { max-height:calc(100vh - 300px); }   /* a barra de ferramentas quebra em 2-3 linhas no estreito */
+  /* no mobile o vídeo vira uma tira no topo */
+  body.wb-on.wb-right .video-panel { top:10px; left:10px; right:10px; bottom:auto; width:auto; height:120px; }
 }
 
 /* ── Mapa (mesa de D20): imagem › grade › tokens ──
@@ -831,7 +805,20 @@ body.mapa-on .palco-host { display:flex; }
   font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; pointer-events:none;
 }
 .palco-congelado[hidden] { display:none; }
+.dsn-bar {
+  position:absolute; z-index:6; left:10px; top:84px; display:flex; flex-direction:column; align-items:center; gap:5px;
+  background:rgba(11,19,32,0.92); backdrop-filter:blur(6px); border:1px solid var(--line-strong); border-radius:8px; padding:7px 6px;
+}
+body:not(.mapa-on) .dsn-bar { display:none; }
+.dsn-sep { width:18px; height:1px; background:var(--line-strong); margin:2px 0; }
+.dsn-esp i { display:block; border-radius:50%; background:currentColor; }
+.dsn-esp.active { color:var(--holo); border-color:var(--holo); box-shadow:0 0 8px rgba(78,211,232,0.3); }
+@media (max-width:920px) {
+  .dsn-bar { flex-direction:row; flex-wrap:wrap; justify-content:center; top:auto; bottom:52px; left:50%; transform:translateX(-50%); max-width:94vw; }
+  .dsn-sep { width:1px; height:18px; margin:0 2px; }
+}
 /* mesa em pausa: ver e mover a vista pode, mexer no que o host está montando não */
+body.palco-pausado .dsn-bar { pointer-events:none; opacity:0.4; }
 body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pausado .mapa-add { pointer-events:none; opacity:0.5; }
 .ferr-mapa.alguem::after { content:''; position:absolute; top:5px; right:5px; width:7px; height:7px; border-radius:50%; background:#ff8a7a; box-shadow:0 0 7px #ff8a7a; }
 @media (max-width:920px) {
@@ -894,6 +881,10 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
   border:2px solid #ff8a7a; background:rgba(255,110,90,0.3); box-shadow:0 0 0 1px rgba(0,0,0,0.65), 0 0 8px rgba(255,110,90,0.5);
 }
 .mapa-grade { position:absolute; inset:0; pointer-events:none; }
+.mapa-dsn { position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none; overflow:hidden; }
+.mapa-dsn-capt { position:absolute; inset:0; z-index:20; touch-action:none; cursor:crosshair; }
+.mapa-dsn-capt[hidden] { display:none; }
+.mapa-dsn-capt.texto { cursor:text; }
 /* o <svg> é elemento substituído: só com inset:0 ele fica no tamanho padrão
    (300×150) em vez de cobrir o mapa — daí o width/height explícitos */
 .mapa-hex { width:100%; height:100%; display:block; }
@@ -1238,9 +1229,29 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
         <span>Tempo real</span><input type="checkbox" id="palcoLive" checked><i class="palco-sw"></i>
       </label>
     </div>
+    <div class="dsn-bar" id="dsnBar">
+      <button class="wb-tool wb-icon dsn-tool active" data-tool="mover" type="button" title="Mover: tokens e vista (Esc)">&#9995;</button>
+      <button class="wb-tool wb-icon dsn-tool" data-tool="pincel" type="button" title="Pincel">&#9998;</button>
+      <button class="wb-tool wb-icon dsn-tool" data-tool="borracha" type="button" title="Borracha: apaga o traço que tocar">&#9003;</button>
+      <button class="wb-tool wb-icon dsn-tool" data-tool="seta" type="button" title="Seta">&#8599;</button>
+      <button class="wb-tool wb-icon dsn-tool" data-tool="retangulo" type="button" title="Retângulo">&#9645;</button>
+      <button class="wb-tool wb-icon dsn-tool" data-tool="circulo" type="button" title="Círculo">&#9711;</button>
+      <button class="wb-tool wb-icon dsn-tool" data-tool="texto" type="button" title="Texto (clique e digite)">T</button>
+      <span class="dsn-sep"></span>
+      <button class="wb-tool wb-icon dsn-esp" data-esp="3" type="button" title="Fino"><i style="width:3px;height:3px"></i></button>
+      <button class="wb-tool wb-icon dsn-esp" data-esp="7" type="button" title="Médio"><i style="width:7px;height:7px"></i></button>
+      <button class="wb-tool wb-icon dsn-esp" data-esp="14" type="button" title="Grosso"><i style="width:13px;height:13px"></i></button>
+      <span class="dsn-sep"></span>
+      <span class="wb-tool wb-color dsn-cor active" data-color="#111111" style="background:#111" title="Preto"></span>
+      <span class="wb-tool wb-color dsn-cor" data-color="#e0473a" style="background:#e0473a" title="Vermelho"></span>
+      <span class="wb-tool wb-color dsn-cor" data-color="#2f7bff" style="background:#2f7bff" title="Azul"></span>
+      <span class="wb-tool wb-color dsn-cor" data-color="#22b455" style="background:#22b455" title="Verde"></span>
+      <span class="wb-tool wb-color dsn-cor" data-color="#ffffff" style="background:#fff" title="Branco"></span>
+      <label class="wb-tool wb-color wb-color-custom" id="dsnCorCustom" title="Outra cor"><input type="color" id="dsnCorInput" value="#8b5cf6"></label>
+    </div>
     <div class="palco-congelado" id="palcoCongelado" hidden>Mesa em pausa · o host desligou o tempo real</div>
     <div class="mapa-bar">
-      <span class="led"></span><span class="panel-title">Mapa</span>
+      <span class="led"></span><span class="panel-title">Mesa</span>
       <div class="mapa-add" id="mapaAdd"></div>
       <button class="mapa-npc-btn" id="mapaNpcBtn" type="button" title="Colocar NPC ou monstro no mapa">+ NPC</button>
       <span class="mapa-sp"></span>
@@ -1256,8 +1267,10 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
         <div class="mapa-img" id="mapaImg"></div>
         <div class="mapa-grade" id="mapaGrade"></div>
         <svg class="mapa-grade mapa-hex" id="mapaHex" style="display:none" aria-hidden="true"></svg>
+        <svg class="mapa-dsn" id="mapaDsn" aria-hidden="true"></svg>
         <div class="mapa-tokens" id="mapaTokens"></div>
       </div>
+      <div class="mapa-dsn-capt" id="mapaDsnCapt" hidden></div>
       <div class="mapa-dist" id="mapaDist" hidden></div>
       <div class="mapa-status" id="mapaStatus"></div>
     </div>
@@ -1336,7 +1349,8 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
       <h4>Limpar o mapa?</h4>
       <div class="mapa-dica" id="mapaLimparTxt"></div>
       <button type="button" class="mapa-op" id="mapaLimparToks"><span>Só os tokens</span><span class="q" id="mapaLimparQtd"></span></button>
-      <button type="button" class="mapa-op perigo" id="mapaLimparTudo"><span>Tudo: mapa e tokens</span></button>
+      <button type="button" class="mapa-op" id="mapaLimparDsn"><span>Só o desenho</span><span class="q" id="mapaLimparDsnQtd"></span></button>
+      <button type="button" class="mapa-op perigo" id="mapaLimparTudo"><span>Tudo: mapa, tokens e desenho</span></button>
       <button type="button" class="mapa-op" id="mapaLimparNao"><span>Deixa quieto</span></button>
     </div>
 
@@ -1393,13 +1407,9 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
          rótulo: o nome aparece ao passar o mouse. Os glifos são os vetores
          que o colega entregou, recoloridos pelo currentColor. -->
     <div class="ferramentas">
-      <button class="ferr" id="wbBtn" type="button" data-dica="Quadro Branco">
-        <svg viewBox="0 0 56.21 55.89" aria-hidden="true"><path d="M21.95,30.05l7.28-7.29,4.06,4.06-7.29,7.28c-.33.33-.73.56-1.17.69l-3.76,1.11c-.26.08-.55,0-.74-.19-.19-.2-.27-.48-.19-.74l1.11-3.76c.13-.44.37-.84.69-1.17h.01ZM34.28,20.54l1.23,1.23c.78.78.78,2.05,0,2.83l-1.51,1.51-4.06-4.06,1.51-1.51c.78-.78,2.05-.78,2.83,0h0Z"/></svg>
-        <span class="sr">Quadro Branco</span>
-      </button>
-      <button class="ferr ferr-mapa" id="mapaBtn" type="button" data-dica="Mapa">
+      <button class="ferr ferr-mapa" id="mapaBtn" type="button" data-dica="Mesa e Quadro">
         <svg viewBox="0 0 56.21 55.89" aria-hidden="true"><path d="M18.96,22.23c0-1.26,1.02-2.29,2.29-2.29h13.71c1.26,0,2.29,1.02,2.29,2.29v11.43c0,1.26-1.02,2.29-2.29,2.29h-13.71c-1.26,0-2.29-1.02-2.29-2.29v-11.43ZM24.68,21.09h-3.43c-.63,0-1.14.51-1.14,1.14v2.29h4.57v-3.43ZM20.11,25.66v4.57h4.57v-4.57h-4.57ZM20.11,31.37v2.29c0,.63.51,1.14,1.14,1.14h3.43v-3.43s-4.57,0-4.57,0ZM30.39,21.09h-4.57v3.43h4.57v-3.43ZM25.82,30.23h4.57v-4.57h-4.57v4.57ZM25.82,34.8h4.57v-3.43h-4.57v3.43ZM31.53,21.09v3.43h4.57v-2.29c0-.63-.51-1.14-1.14-1.14h-3.43ZM36.11,30.23v-4.57h-4.57v4.57h4.57ZM31.53,34.8h3.43c.63,0,1.14-.51,1.14-1.14v-2.29h-4.57s0,3.43,0,3.43Z"/></svg>
-        <span class="sr">Mapa</span>
+        <span class="sr">Mesa e Quadro</span>
       </button>
       <button class="ferr ferr-som" id="somBtn" type="button" data-dica="Mesa de Som">
         <svg viewBox="0 0 56.21 55.89" aria-hidden="true"><path d="M35.7,20.14c.25.19.4.49.4.8v10.5c0,1.38-1.34,2.5-3,2.5s-3-1.12-3-2.5,1.34-2.5,3-2.5c.35,0,.69.05,1,.14v-4.55l-8,2.4v6.51c0,1.38-1.34,2.5-3,2.5s-3-1.12-3-2.5,1.34-2.5,3-2.5c.35,0,.69.05,1,.14v-7.14c0-.44.29-.83.71-.96l10-3c.3-.09.63-.04.88.16h0Z"/></svg>
@@ -1549,34 +1559,6 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
       <button class="diario-addpg" id="diarioAdd" type="button" title="Nova página">+ página</button>
     </div>
     <div class="diario-submenu" id="diarioSubmenu"></div>
-  </div>
-</div>
-
-<!-- Quadro branco compartilhado -->
-<div class="wb-overlay" id="wbOverlay">
-  <div class="wb-toolbar">
-    <button class="wb-tool wb-icon wb-tool-btn active" data-tool="pen" type="button" title="Pincel">&#9998;</button>
-    <button class="wb-tool wb-icon wb-tool-btn" data-tool="eraser" type="button" title="Borracha">&#9003;</button>
-    <button class="wb-tool wb-icon wb-tool-btn" data-tool="arrow" type="button" title="Seta">&#8599;</button>
-    <button class="wb-tool wb-icon wb-tool-btn" data-tool="rect" type="button" title="Retângulo">&#9645;</button>
-    <button class="wb-tool wb-icon wb-tool-btn" data-tool="circle" type="button" title="Círculo">&#9711;</button>
-    <button class="wb-tool wb-icon wb-tool-btn" data-tool="text" type="button" title="Texto (clique no quadro e digite)">T</button>
-    <span class="wb-sep"></span>
-    <input class="wb-size" id="wbSize" type="range" min="2" max="20" step="1" value="3" title="Espessura do traço / tamanho do texto">
-    <span class="wb-sep"></span>
-    <span class="wb-tool wb-color active" data-color="#111111" style="background:#111" title="Preto"></span>
-    <span class="wb-tool wb-color" data-color="#e0473a" style="background:#e0473a" title="Vermelho"></span>
-    <span class="wb-tool wb-color" data-color="#2f7bff" style="background:#2f7bff" title="Azul"></span>
-    <span class="wb-tool wb-color" data-color="#22b455" style="background:#22b455" title="Verde"></span>
-    <label class="wb-tool wb-color wb-color-custom" id="wbColorCustom" title="Outra cor"><input type="color" id="wbColorInput" value="#8b5cf6"></label>
-    <span class="wb-sep"></span>
-    <button class="wb-tool wb-icon" id="wbClear" type="button" title="Limpar tudo">&#128465;</button>
-    <span class="wb-sep"></span>
-    <button class="wb-tool wb-icon wb-close-btn" id="wbClose" type="button" title="Fechar">&#10005;</button>
-  </div>
-  <div class="wb-stage" id="wbStage">
-    <canvas id="wbCanvas" width="1280" height="720"></canvas>
-    <canvas id="wbPreview" width="1280" height="720"></canvas>
   </div>
 </div>
 
@@ -2806,199 +2788,15 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
   });
   tmPinta();
 
-  // ── Quadro branco (compartilhado) ─────────────────────────────────
-  // Ferramentas: pincel, borracha, seta, retângulo, círculo e texto — todas
-  // transmitidas pros outros jogadores. Coordenadas vão sempre normalizadas
-  // (0..1) e são convertidas pro canvas fixo de 1280x720 em cada cliente.
-  var wbOverlay = document.getElementById('wbOverlay');
-  var wbStage  = document.getElementById('wbStage');
-  var wbCanvas = document.getElementById('wbCanvas');
-  var wbCtx = wbCanvas.getContext('2d');
-  var wbPre = document.getElementById('wbPreview');
-  var wbPreCtx = wbPre.getContext('2d');
-  var WB_W = 1280, WB_H = 720;
-  var WB_SHAPES = ['arrow','rect','circle'];              // desenham arrastando, com prévia ao vivo
-  var WB_ME = Math.random().toString(36).slice(2);        // o canal é self:true — ignora o eco do próprio traço
-  var wbTool = 'pen', wbColor = '#111111', wbSize = 3;
-  var wbDrawing = false, wbLast = null, wbStart = null, wbText = null;
-
-  function wbClearLocal() { wbCtx.fillStyle = '#ffffff'; wbCtx.fillRect(0, 0, WB_W, WB_H); }
-  wbClearLocal();   // fundo branco inicial
-  function wbTextPx() { return 16 + wbSize * 2; }         // o texto acompanha a espessura escolhida (3 → 22px)
-
-  function wbDrawSeg(s, ctx) {
-    if (!s) return;
-    ctx = ctx || wbCtx;
-    var w = s.size || 3;
-    ctx.strokeStyle = s.erase ? '#ffffff' : (s.color || '#111');
-    ctx.lineWidth = s.erase ? Math.min(90, w * 8) : w;    // a borracha é bem mais grossa que o traço (com teto)
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    ctx.beginPath();
-    ctx.moveTo(s.x0 * WB_W, s.y0 * WB_H);
-    ctx.lineTo(s.x1 * WB_W, s.y1 * WB_H);
-    ctx.stroke();
-  }
-  function wbDrawShape(s, ctx) {
-    if (!s) return;
-    ctx = ctx || wbCtx;
-    var x0 = s.x0 * WB_W, y0 = s.y0 * WB_H, x1 = s.x1 * WB_W, y1 = s.y1 * WB_H, w = s.size || 3;
-    ctx.strokeStyle = ctx.fillStyle = s.color || '#111';
-    ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    if (s.tool === 'rect') {
-      ctx.strokeRect(Math.min(x0,x1), Math.min(y0,y1), Math.abs(x1-x0), Math.abs(y1-y0));
-    } else if (s.tool === 'circle') {
-      ctx.beginPath();
-      ctx.ellipse((x0+x1)/2, (y0+y1)/2, Math.abs(x1-x0)/2, Math.abs(y1-y0)/2, 0, 0, Math.PI*2);
-      ctx.stroke();
-    } else {                                              // seta: linha + ponta preenchida
-      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
-      var ang = Math.atan2(y1 - y0, x1 - x0), t = 10 + w * 2;
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x1 - t * Math.cos(ang - Math.PI/7), y1 - t * Math.sin(ang - Math.PI/7));
-      ctx.lineTo(x1 - t * Math.cos(ang + Math.PI/7), y1 - t * Math.sin(ang + Math.PI/7));
-      ctx.closePath(); ctx.fill();
-    }
-  }
-  function wbDrawText(s, ctx) {
-    if (!s || !s.text) return;
-    ctx = ctx || wbCtx;
-    ctx.fillStyle = s.color || '#111';
-    ctx.font = (s.font || 22) + "px 'Segoe UI', system-ui, sans-serif";
-    ctx.textBaseline = 'top';
-    ctx.fillText(String(s.text), s.x * WB_W, s.y * WB_H);
-  }
-  function wbPoint(e) {
-    var r = wbCanvas.getBoundingClientRect();
-    return { x:(e.clientX - r.left) / r.width, y:(e.clientY - r.top) / r.height };
-  }
-
-  // texto: abre um campo de verdade em cima do canvas, no ponto clicado
-  function wbCommitText(commit) {
-    if (!wbText) return;
-    var el = wbText.el, p = wbText.p, px = wbText.px;
-    wbText = null;                    // zera antes do remove(): o blur do remove não pode reentrar aqui
-    var v = el.value.trim();
-    el.remove();
-    if (commit && v) {
-      var t = { x:p.x, y:p.y, text:v, color:wbColor, font:px, by:WB_ME };
-      wbDrawText(t); send('wb-text', t);
-    }
-  }
-  function wbOpenText(e) {
-    wbCommitText(true);               // comita um texto pendente antes de abrir o próximo
-    var p = wbPoint(e), r = wbStage.getBoundingClientRect(), px = wbTextPx();
-    var el = document.createElement('input');
-    el.type = 'text'; el.className = 'wb-text-inline'; el.maxLength = 90;
-    el.style.left = (e.clientX - r.left) + 'px';
-    el.style.top  = (e.clientY - r.top) + 'px';
-    el.style.color = wbColor;
-    el.style.fontSize = (px * (r.width / WB_W)) + 'px';   // o campo acompanha a escala do canvas na tela
-    wbStage.appendChild(el);
-    wbText = { el:el, p:p, px:px };
-    el.focus();
-    el.addEventListener('keydown', function(ev){
-      ev.stopPropagation();           // Enter/Esc aqui não são do resto da mesa
-      if (ev.key === 'Enter')  { ev.preventDefault(); wbCommitText(true); }
-      if (ev.key === 'Escape') { ev.preventDefault(); wbCommitText(false); }
-    });
-    el.addEventListener('blur', function(){ wbCommitText(true); });
-  }
-
-  wbCanvas.addEventListener('pointerdown', function(e){
-    // sem o preventDefault o navegador rouba o foco logo depois do campo de texto abrir
-    e.preventDefault();
-    if (wbTool === 'text') { wbOpenText(e); return; }
-    wbCommitText(true);
-    wbDrawing = true;
-    wbStart = wbLast = wbPoint(e);
-    try { wbCanvas.setPointerCapture(e.pointerId); } catch (_) {}
-  });
-  wbCanvas.addEventListener('pointermove', function(e){
-    if (!wbDrawing) return;
-    var p = wbPoint(e);
-    if (WB_SHAPES.indexOf(wbTool) >= 0) {
-      // prévia na camada de cima: não toca no desenho já feito nem no que chega dos outros
-      wbPreCtx.clearRect(0, 0, WB_W, WB_H);
-      wbDrawShape({ tool:wbTool, x0:wbStart.x, y0:wbStart.y, x1:p.x, y1:p.y, color:wbColor, size:wbSize }, wbPreCtx);
-      wbLast = p;
-      return;
-    }
-    var seg = { x0:wbLast.x, y0:wbLast.y, x1:p.x, y1:p.y, color:wbColor, size:wbSize, erase:(wbTool === 'eraser'), by:WB_ME };
-    wbDrawSeg(seg); send('wb-draw', seg); wbLast = p;
-  });
-  function wbEnd(){
-    if (!wbDrawing) return;
-    wbDrawing = false;
-    if (WB_SHAPES.indexOf(wbTool) < 0) return;
-    wbPreCtx.clearRect(0, 0, WB_W, WB_H);
-    // clique sem arrastar não vira forma (evitaria um borrão de 1px)
-    if (Math.abs(wbLast.x - wbStart.x) + Math.abs(wbLast.y - wbStart.y) < 0.005) return;
-    var sh = { tool:wbTool, x0:wbStart.x, y0:wbStart.y, x1:wbLast.x, y1:wbLast.y, color:wbColor, size:wbSize, by:WB_ME };
-    wbDrawShape(sh); send('wb-shape', sh);
-  }
-  wbCanvas.addEventListener('pointerup', wbEnd);
-  wbCanvas.addEventListener('pointercancel', wbEnd);
-
-  var wbToolBtns = document.querySelectorAll('.wb-tool-btn');
-  function wbSetTool(name) {
-    wbCommitText(true);
-    wbTool = name;
-    wbToolBtns.forEach(function(b){ b.classList.toggle('active', b.dataset.tool === name); });
-    wbCanvas.classList.toggle('wb-cursor-text', name === 'text');
-  }
-  wbToolBtns.forEach(function(b){ b.addEventListener('click', function(){ wbSetTool(b.dataset.tool); }); });
-
-  document.getElementById('wbSize').addEventListener('input', function(){ wbSize = +this.value; });
-
-  var wbColorCustom = document.getElementById('wbColorCustom');
-  function wbSetColor(c, el) {
-    wbColor = c;
-    document.querySelectorAll('.wb-color').forEach(function(t){ t.classList.toggle('active', t === el); });
-    if (wbTool === 'eraser') wbSetTool('pen');   // escolher cor sai da borracha
-  }
-  document.querySelectorAll('.wb-color[data-color]').forEach(function(sw){
-    sw.addEventListener('click', function(){ wbSetColor(sw.dataset.color, sw); });
-  });
-  document.getElementById('wbColorInput').addEventListener('input', function(){
-    wbColorCustom.style.background = this.value;
-    wbSetColor(this.value, wbColorCustom);
-  });
-
-  document.getElementById('wbClear').addEventListener('click', function(){ wbCommitText(false); wbClearLocal(); send('wb-clear', {}); });
-  document.getElementById('wbClose').addEventListener('click', function(){ closeWhiteboardView(); send('wb-close', {}); });
-  document.getElementById('wbBtn').addEventListener('click', function(){ openWhiteboardView(); send('wb-open', {}); });
-
-  // ── Layout do quadro: as caras ficam na coluna à direita, sempre ──
-  // Era uma escolha por jogador (topo, lado a lado, coluna); agora é fixo.
-  var wbLayout = 'right';
-
-  function wbIsOpen() { return wbOverlay.classList.contains('show'); }
   function jitsiTile(on) { if (jitsiApi) { try { jitsiApi.executeCommand('setTileView', !!on); } catch (_) {} } }
-
-  function applyWbLayout() {
-    document.body.classList.remove('wb-top','wb-split','wb-right');
-    document.body.classList.add('wb-right');
-  }
-  function openWhiteboardView() {
-    wbOverlay.classList.add('show');
-    document.body.classList.add('wb-on');
-    applyWbLayout();
-    jitsiTile(true);   // mostra todas as caras na grade
-  }
-  function closeWhiteboardView() {
-    wbCommitText(false);              // descarta texto que ficou sendo digitado
-    wbOverlay.classList.remove('show');
-    if (!mapaAberto()) document.body.classList.remove('wb-on','wb-top','wb-split','wb-right');   // o mapa usa o mesmo layout
-    jitsiTile(mapaAberto());  // volta o vídeo ao normal (com o mapa aberto, a faixa de caras continua em grade)
-  }
 
   // ── Mapa (mesa de D20) ────────────────────────────────────────────
   // Três camadas: a imagem do mapa, a grade por cima e os tokens por cima de
   // tudo. Medidas do D&D 2024: 1 quadrado = 1,5 m, diagonal conta 1 quadrado,
   // e a criatura ocupa ½ (Miúdo), 1 (Pequeno/Médio), 2×2, 3×3 ou 4×4.
-  // Abrir e fechar vale pra mesa toda (igual o quadro); zoom e arrasto da vista
-  // são de cada um. Qualquer um mexe em tudo, como numa mesa de verdade.
+  // Cada um entra e sai do palco por si; zoom e arrasto da vista são de cada um.
+  // Qualquer um mexe em tudo, como numa mesa de verdade (enquanto o tempo real
+  // do host estiver ligado). O quadro é uma camada de desenho dentro da cena.
   // A cena mora num JSON no Storage, um por sala — sem tabela nem setup.
   var MAPA_ME = Math.random().toString(36).slice(2);   // o canal é self:true — ignora o próprio eco
   var MAPA_TAMS = [
@@ -3048,7 +2846,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
   var _mapaNpcImg = null, _mapaNpcSubindo = false, _mapaSoltando = 0;
 
   function mapaClamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
-  function mapaCenaVazia() { return { v:1, img:null, branco:false, w:0, h:0, grade:{ tipo:'quadrada', tam:70, dx:0, dy:0, cor:'escura' }, imgZoom:100, imgX:50, imgY:50, tokens:[] }; }
+  function mapaCenaVazia() { return { v:1, img:null, branco:false, w:0, h:0, grade:{ tipo:'quadrada', tam:70, dx:0, dy:0, cor:'escura' }, imgZoom:100, imgX:50, imgY:50, tokens:[], desenho:[] }; }
   // Medida de uma sala em branco: quantas casas de largura/altura, no
   // formato escolhido, viram pixels — a mesma conta pra criar uma sala nova
   // e pro padrão que a mesa nasce com.
@@ -3164,6 +2962,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
       vistos[t.id] = 1;
       return true;
     }).slice(0, 200);
+    n.desenho = dsnNorm(c.desenho);
     // nem imagem nem branco marcado (só deveria acontecer com um JSON salvo
     // à mão ou corrompido) — a mesa se cura sozinha, nunca fica sem nada
     if (!n.img && !n.branco) {
@@ -3300,6 +3099,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     mapaRenderRoster();
     mapaSyncGradeUI();
     mapaSyncImgUI();
+    dsnRenderTudo();
   }
   function mapaRenderGrade() {
     var g = mapaCena.grade, cor = MAPA_GCOR[g.cor];
@@ -3558,6 +3358,275 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     mapaCena.imgX = mapaClamp(+p.imgX, 0, 100); mapaCena.imgY = mapaClamp(+p.imgY, 0, 100);
     mapaRenderFundo(); mapaSyncImgUI();
   }
+
+  // ── Desenho: o quadro agora é uma camada da cena ──
+  // Vetorial (SVG), em coordenadas do mundo da cena: acompanha o zoom, fica salvo
+  // junto do mapa (cena.desenho) e vai pra mesa por 'mapa-dsn'. Cada traço tem id,
+  // então a borracha apaga o traço que tocar, não pinta de branco por cima.
+  var DSN_NS = 'http://www.w3.org/2000/svg';
+  var DSN_MAX = 2500, DSN_PTS = 3000;
+  var mapaDsn = document.getElementById('mapaDsn'), dsnCapt = document.getElementById('mapaDsnCapt');
+  var dsnTool = 'mover', dsnColor = '#111111', dsnEsp = 3;
+  var dsnEls = {};                         // id → elemento svg
+  var dsnPen = null, dsnForma = null, dsnBorr = false, dsnTexto = null, dsnPend = null, dsnPendT = null;
+  function dsnNum(v) { v = +v; return isFinite(v) ? Math.round(v * 10) / 10 : 0; }
+  function dsnCor(c) { return (typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c)) ? c : '#111111'; }
+  function dsnId() { return MAPA_ME.slice(0, 4) + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
+  function dsnItemNorm(it) {
+    if (!it || typeof it.id !== 'string' || !it.id || it.id.length > 40) return null;
+    var o = { id:it.id, k:it.k, c:dsnCor(it.c) };
+    if (it.k === 't') {
+      o.w = mapaClamp(dsnNum(it.w) || 2, 0.3, 80);
+      o.p = (Array.isArray(it.p) ? it.p : []).slice(0, DSN_PTS).filter(Array.isArray).map(function(q) { return [dsnNum(q[0]), dsnNum(q[1])]; });
+      return o.p.length ? o : null;
+    }
+    if (it.k === 'f') {
+      o.f = ['rect', 'circle', 'arrow'].indexOf(it.f) >= 0 ? it.f : 'rect';
+      o.w = mapaClamp(dsnNum(it.w) || 2, 0.3, 80);
+      var a = Array.isArray(it.a) ? it.a : [];
+      o.a = [dsnNum(a[0]), dsnNum(a[1]), dsnNum(a[2]), dsnNum(a[3])];
+      return o;
+    }
+    if (it.k === 'x') {
+      o.x = dsnNum(it.x); o.y = dsnNum(it.y);
+      o.s = mapaClamp(dsnNum(it.s) || 20, 4, 400);
+      o.t = String(it.t == null ? '' : it.t).slice(0, 120);
+      return o.t ? o : null;
+    }
+    return null;
+  }
+  function dsnNorm(arr) {
+    var vistos = {};
+    return (Array.isArray(arr) ? arr : []).map(dsnItemNorm).filter(function(it) {
+      if (!it || vistos[it.id]) return false;
+      vistos[it.id] = 1;
+      return true;
+    }).slice(0, DSN_MAX);
+  }
+  function dsnSvg(tag, attrs) {
+    var e = document.createElementNS(DSN_NS, tag);
+    Object.keys(attrs).forEach(function(k) { e.setAttribute(k, attrs[k]); });
+    return e;
+  }
+  function dsnPts(p) {
+    var q = p.length === 1 ? [p[0], [p[0][0] + 0.01, p[0][1]]] : p;   // um clique só vira um ponto
+    return q.map(function(pt) { return pt[0] + ',' + pt[1]; }).join(' ');
+  }
+  function dsnPinta(it) {
+    var e;
+    if (it.k === 't') {
+      e = dsnSvg('polyline', { points:dsnPts(it.p), fill:'none', stroke:it.c, 'stroke-width':it.w, 'stroke-linecap':'round', 'stroke-linejoin':'round' });
+    } else if (it.k === 'f') {
+      var x0 = it.a[0], y0 = it.a[1], x1 = it.a[2], y1 = it.a[3], base = { fill:'none', stroke:it.c, 'stroke-width':it.w, 'stroke-linecap':'round', 'stroke-linejoin':'round' };
+      if (it.f === 'rect') {
+        e = dsnSvg('rect', Object.assign({ x:Math.min(x0, x1), y:Math.min(y0, y1), width:Math.abs(x1 - x0), height:Math.abs(y1 - y0) }, base));
+      } else if (it.f === 'circle') {
+        e = dsnSvg('ellipse', Object.assign({ cx:(x0 + x1) / 2, cy:(y0 + y1) / 2, rx:Math.abs(x1 - x0) / 2, ry:Math.abs(y1 - y0) / 2 }, base));
+      } else {   // seta: linha e ponta preenchida
+        e = dsnSvg('g', {});
+        e.appendChild(dsnSvg('line', Object.assign({ x1:x0, y1:y0, x2:x1, y2:y1 }, base)));
+        var ang = Math.atan2(y1 - y0, x1 - x0), t = 8 + it.w * 2.2, f = Math.PI / 7;
+        e.appendChild(dsnSvg('polygon', { fill:it.c, points:x1 + ',' + y1 + ' ' + (x1 - t * Math.cos(ang - f)) + ',' + (y1 - t * Math.sin(ang - f)) + ' ' + (x1 - t * Math.cos(ang + f)) + ',' + (y1 - t * Math.sin(ang + f)) }));
+      }
+    } else {
+      e = dsnSvg('text', { x:it.x, y:it.y, fill:it.c, 'font-size':it.s, 'dominant-baseline':'hanging', 'font-family':"'Segoe UI', system-ui, sans-serif" });
+      e.textContent = it.t;
+    }
+    e.dataset.id = it.id;
+    return e;
+  }
+  function dsnPoeEl(it) { var e = dsnPinta(it); dsnEls[it.id] = e; mapaDsn.appendChild(e); }
+  function dsnRenderTudo() {
+    mapaDsn.innerHTML = ''; dsnEls = {};
+    mapaCena.desenho.forEach(dsnPoeEl);
+  }
+  function dsnAchar(id) { for (var i = 0; i < mapaCena.desenho.length; i++) if (mapaCena.desenho[i].id === id) return mapaCena.desenho[i]; return null; }
+
+  // a única porta de mudança: igual pra quem desenhou e pra quem recebeu
+  function dsnAplica(op) {
+    if (!op) return;
+    var d = mapaCena.desenho;
+    if (op.op === 'pen') {
+      var it = dsnAchar(op.id);
+      if (!it) {
+        if (d.length >= DSN_MAX) return;
+        it = dsnItemNorm({ id:op.id, k:'t', c:op.c, w:op.w, p:op.pts });
+        if (!it) return;
+        d.push(it); dsnPoeEl(it);
+      } else {
+        (Array.isArray(op.pts) ? op.pts : []).forEach(function(q) { if (Array.isArray(q) && it.p.length < DSN_PTS) it.p.push([dsnNum(q[0]), dsnNum(q[1])]); });
+        if (dsnEls[it.id]) dsnEls[it.id].setAttribute('points', dsnPts(it.p));
+      }
+    } else if (op.op === 'add') {
+      var n = dsnItemNorm(op.it);
+      if (n && !dsnAchar(n.id) && d.length < DSN_MAX) { d.push(n); dsnPoeEl(n); }
+    } else if (op.op === 'del') {
+      var ids = Array.isArray(op.ids) ? op.ids : [];
+      mapaCena.desenho = d.filter(function(x) { return ids.indexOf(x.id) < 0; });
+      ids.forEach(function(id) { if (dsnEls[id]) { dsnEls[id].remove(); delete dsnEls[id]; } });
+    } else if (op.op === 'limpa') {
+      mapaCena.desenho = [];
+      dsnRenderTudo();
+    }
+  }
+  function dsnFaz(op) {            // mudança feita aqui: aplica, conta pra mesa e grava
+    dsnAplica(op);
+    op.by = MAPA_ME;
+    send('mapa-dsn', op);
+    mapaAgendaSalvar();
+  }
+
+  // ── borracha: distância do toque até cada traço, em unidades do mundo ──
+  function dsnDistSeg(x, y, a, b) {
+    var dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy;
+    var t = l2 ? mapaClamp(((x - a[0]) * dx + (y - a[1]) * dy) / l2, 0, 1) : 0;
+    return Math.hypot(x - (a[0] + t * dx), y - (a[1] + t * dy));
+  }
+  function dsnDist(it, x, y) {
+    if (it.k === 't') {
+      var m = Infinity;
+      if (it.p.length === 1) return Math.hypot(x - it.p[0][0], y - it.p[0][1]) - it.w / 2;
+      for (var i = 1; i < it.p.length; i++) m = Math.min(m, dsnDistSeg(x, y, it.p[i - 1], it.p[i]));
+      return m - it.w / 2;
+    }
+    if (it.k === 'f') {
+      var x0 = it.a[0], y0 = it.a[1], x1 = it.a[2], y1 = it.a[3];
+      if (it.f === 'arrow') return dsnDistSeg(x, y, [x0, y0], [x1, y1]) - it.w / 2;
+      var cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, hw = Math.abs(x1 - x0) / 2, hh = Math.abs(y1 - y0) / 2;
+      if (it.f === 'circle') {
+        if (hw < 0.5 || hh < 0.5) return Math.hypot(x - cx, y - cy);
+        return Math.abs(Math.hypot((x - cx) / hw, (y - cy) / hh) - 1) * Math.min(hw, hh) - it.w / 2;
+      }
+      var ddx = Math.abs(x - cx) - hw, ddy = Math.abs(y - cy) - hh;
+      return Math.abs(Math.hypot(Math.max(ddx, 0), Math.max(ddy, 0)) + Math.min(Math.max(ddx, ddy), 0)) - it.w / 2;
+    }
+    var w = it.t.length * it.s * 0.6, ex = Math.max(it.x - x, 0, x - (it.x + w)), ey = Math.max(it.y - y, 0, y - (it.y + it.s));
+    return Math.hypot(ex, ey);
+  }
+  function dsnApaga(p) {
+    var tol = Math.max(8, dsnEsp * 2) / mapaVs.s, achou = [];
+    mapaCena.desenho.forEach(function(it) { if (dsnDist(it, p.x, p.y) <= tol) achou.push(it.id); });
+    if (achou.length) dsnFaz({ op:'del', ids:achou });
+  }
+
+  // ── ponteiro: só existe com uma ferramenta de desenho escolhida ──
+  function dsnPonto(e) { var w = mapaTelaParaMundo(e.clientX, e.clientY); return { x:dsnNum(w.x), y:dsnNum(w.y) }; }
+  function dsnLargura() { return dsnNum(Math.max(0.6, dsnEsp / mapaVs.s)); }
+  function dsnFlush() {
+    clearTimeout(dsnPendT); dsnPendT = null;
+    if (dsnPend && dsnPend.pts.length) { dsnPend.op = 'pen'; dsnPend.by = MAPA_ME; send('mapa-dsn', dsnPend); }
+    dsnPend = null;
+  }
+  dsnCapt.addEventListener('pointerdown', function(e) {
+    e.stopPropagation();                          // o resto do mapa (pan, token) não entra nessa
+    if (palcoCongelado || !e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    e.preventDefault();
+    var p = dsnPonto(e);
+    if (dsnTool === 'texto') { dsnAbreTexto(e, p); return; }
+    dsnFechaTexto(true);
+    try { dsnCapt.setPointerCapture(e.pointerId); } catch (_) {}
+    if (dsnTool === 'pincel') {
+      dsnPen = { id:dsnId(), c:dsnColor, w:dsnLargura(), last:p };
+      dsnAplica({ op:'pen', id:dsnPen.id, c:dsnPen.c, w:dsnPen.w, pts:[[p.x, p.y]] });
+      dsnPend = { id:dsnPen.id, c:dsnPen.c, w:dsnPen.w, pts:[[p.x, p.y]] };
+      dsnPendT = setTimeout(dsnFlush, 50);
+    } else if (dsnTool === 'borracha') {
+      dsnBorr = true; dsnApaga(p);
+    } else {
+      var f = { seta:'arrow', retangulo:'rect', circulo:'circle' }[dsnTool];
+      dsnForma = { f:f, a:p, b:p, c:dsnColor, w:dsnLargura(), pre:null };
+    }
+  });
+  dsnCapt.addEventListener('pointermove', function(e) {
+    if (!dsnPen && !dsnForma && !dsnBorr) return;
+    var p = dsnPonto(e);
+    if (dsnPen) {
+      if (Math.hypot(p.x - dsnPen.last.x, p.y - dsnPen.last.y) * mapaVs.s < 1.5) return;   // ponto colado no outro só pesa
+      dsnPen.last = p;
+      dsnAplica({ op:'pen', id:dsnPen.id, pts:[[p.x, p.y]] });
+      if (!dsnPend) dsnPend = { id:dsnPen.id, c:dsnPen.c, w:dsnPen.w, pts:[] };
+      dsnPend.pts.push([p.x, p.y]);
+      if (!dsnPendT) dsnPendT = setTimeout(dsnFlush, 50);
+    } else if (dsnBorr) {
+      dsnApaga(p);
+    } else {
+      dsnForma.b = p;
+      var it = { id:'pre', k:'f', f:dsnForma.f, c:dsnForma.c, w:dsnForma.w, a:[dsnForma.a.x, dsnForma.a.y, p.x, p.y] };
+      if (dsnForma.pre) dsnForma.pre.remove();
+      dsnForma.pre = dsnPinta(it); dsnForma.pre.style.opacity = '0.7';
+      mapaDsn.appendChild(dsnForma.pre);
+    }
+  });
+  function dsnSolta() {
+    if (dsnPen) { dsnFlush(); dsnPen = null; mapaAgendaSalvar(); }
+    if (dsnBorr) dsnBorr = false;
+    if (dsnForma) {
+      var f = dsnForma; dsnForma = null;
+      if (f.pre) f.pre.remove();
+      // clique sem arrastar não vira forma (seria um borrão)
+      if (Math.hypot(f.b.x - f.a.x, f.b.y - f.a.y) * mapaVs.s >= 4) dsnFaz({ op:'add', it:{ id:dsnId(), k:'f', f:f.f, c:f.c, w:f.w, a:[f.a.x, f.a.y, f.b.x, f.b.y] } });
+    }
+  }
+  dsnCapt.addEventListener('pointerup', dsnSolta);
+  dsnCapt.addEventListener('pointercancel', dsnSolta);
+  dsnCapt.addEventListener('dblclick', function(e) { e.stopPropagation(); });   // duplo clique desenhando não reenquadra o mapa
+
+  // texto: um campo de verdade em cima do ponto clicado
+  function dsnFechaTexto(grava) {
+    if (!dsnTexto) return;
+    var t = dsnTexto; dsnTexto = null;
+    var v = t.el.value.trim();
+    t.el.remove();                       // antes de gravar: o blur do remove não pode reentrar
+    if (grava && v) dsnFaz({ op:'add', it:{ id:dsnId(), k:'x', c:t.c, x:t.p.x, y:t.p.y, s:dsnNum(t.px / mapaVs.s), t:v } });
+  }
+  function dsnAbreTexto(e, p) {
+    dsnFechaTexto(true);
+    var r = mapaView.getBoundingClientRect(), px = 16 + dsnEsp * 2;
+    var el = document.createElement('input');
+    el.type = 'text'; el.className = 'wb-text-inline'; el.maxLength = 90;
+    el.style.left = (e.clientX - r.left) + 'px'; el.style.top = (e.clientY - r.top) + 'px';
+    el.style.color = dsnColor; el.style.fontSize = px + 'px';
+    mapaView.appendChild(el);
+    dsnTexto = { el:el, p:p, px:px, c:dsnColor };
+    setTimeout(function() { el.focus(); }, 0);
+    el.addEventListener('keydown', function(ev) {
+      ev.stopPropagation();
+      if (ev.key === 'Enter') { ev.preventDefault(); dsnFechaTexto(true); }
+      if (ev.key === 'Escape') { ev.preventDefault(); dsnFechaTexto(false); }
+    });
+    el.addEventListener('blur', function() { dsnFechaTexto(true); });
+  }
+
+  // ── paleta ──
+  function dsnSetTool(t) {
+    dsnFechaTexto(true); dsnFlush();
+    dsnTool = t;
+    dsnCapt.hidden = t === 'mover';
+    dsnCapt.classList.toggle('texto', t === 'texto');
+    document.querySelectorAll('.dsn-tool').forEach(function(b) { b.classList.toggle('active', b.dataset.tool === t); });
+  }
+  function dsnSetCor(c, el) {
+    dsnColor = c;
+    document.querySelectorAll('#dsnBar .wb-color').forEach(function(x) { x.classList.toggle('active', x === el); });
+    if (dsnTool === 'mover' || dsnTool === 'borracha') dsnSetTool('pincel');   // escolher cor é querer desenhar
+  }
+  document.querySelectorAll('.dsn-tool').forEach(function(b) { b.addEventListener('click', function() { dsnSetTool(b.dataset.tool); }); });
+  document.querySelectorAll('.dsn-esp').forEach(function(b) {
+    b.addEventListener('click', function() {
+      dsnEsp = +b.dataset.esp;
+      document.querySelectorAll('.dsn-esp').forEach(function(x) { x.classList.toggle('active', x === b); });
+    });
+  });
+  document.querySelector('.dsn-esp').classList.add('active');
+  document.querySelectorAll('.dsn-cor').forEach(function(sw) { sw.addEventListener('click', function() { dsnSetCor(sw.dataset.color, sw); }); });
+  document.getElementById('dsnCorInput').addEventListener('input', function() {
+    var el = document.getElementById('dsnCorCustom');
+    el.style.background = this.value;
+    dsnSetCor(this.value, el);
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && dsnTool !== 'mover' && mapaAberto() && !dsnTexto) dsnSetTool('mover');
+  });
 
   // ── Storage ──
   function mapaCarrega() {
@@ -3972,11 +4041,15 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     var n = mapaCena.tokens.length;
     document.getElementById('mapaLimparQtd').textContent = n ? (n === 1 ? '1 no mapa' : n + ' no mapa') : 'nenhum';
     mapaLimparToks.disabled = !n;
+    var nd = mapaCena.desenho.length;
+    document.getElementById('mapaLimparDsnQtd').textContent = nd ? nd + (nd === 1 ? ' traço' : ' traços') : 'nenhum';
+    document.getElementById('mapaLimparDsn').disabled = !nd;
     document.getElementById('mapaLimparTxt').textContent = 'Vale pra mesa toda e não dá pra desfazer.';
     mapaAbrePopEm(mapaLimparPop, mapaLimparBt, 'dir');
   });
   mapaLimparToks.addEventListener('click', function(){ mapaLimpa(false); });
   document.getElementById('mapaLimparTudo').addEventListener('click', function(){ mapaLimpa(true); });
+  document.getElementById('mapaLimparDsn').addEventListener('click', function(){ mapaFechaPops(); dsnFaz({ op:'limpa' }); });
   document.getElementById('mapaLimparNao').addEventListener('click', mapaFechaPops);
 
   // NPC
@@ -4210,9 +4283,11 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     mapaFechaPops(); mapaFimArraste();
     mapaPan = null; mapaPinch = null; mapaToques = {};
     mapaView.classList.remove('panning');
+    dsnSetTool('mover');
     document.body.classList.remove('mapa-on');
     mapaBtn.classList.remove('open');
-    if (!wbIsOpen()) { document.body.classList.remove('wb-on', 'wb-right'); jitsiTile(false); }
+    document.body.classList.remove('wb-on', 'wb-right');
+    jitsiTile(false);
     palcoDentro = false; palcoClaim = 0;
     palcoTrack(); palcoRecalcula();
   }
@@ -4269,6 +4344,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     if (palcoSouHost !== eraHost && !palcoLive) { palcoLive = true; palcoTrack(); }
     palcoCongelado = !palcoSouHost && !!h && h.live === false;
     document.body.classList.toggle('palco-pausado', palcoCongelado && palcoDentro);
+    if (palcoCongelado) dsnSetTool('mover');
     palcoAviso.hidden = !(palcoCongelado && palcoDentro);
     palcoHostQuem.innerHTML = h ? (palcoSouHost ? '<b>Você</b> é o host' : 'Host: <b>' + esc(h.nome || 'Jogador') + '</b>') : 'Host: —';
     palcoCtrlBt.hidden = !palcoDentro || palcoSouHost;
@@ -4282,7 +4358,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     var alguem = false;
     Object.keys(palcoPres).forEach(function(k) { if (k !== MAPA_ME && palcoPres[k] && palcoPres[k].dentro) alguem = true; });
     mapaBtn.classList.toggle('alguem', alguem && !palcoDentro);
-    mapaBtn.dataset.dica = alguem && h ? 'Mapa · ' + (h.nome || 'alguém') + ' está no palco' : 'Mapa';
+    mapaBtn.dataset.dica = alguem && h ? 'Mesa e Quadro · ' + (h.nome || 'alguém') + ' está no palco' : 'Mesa e Quadro';
   }
   palcoCtrlBt.addEventListener('click', function() { palcoClaim = Date.now(); palcoTrack(); palcoRecalcula(); });
   function palcoLigaTempoReal() {
@@ -5093,7 +5169,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
   var jitsiApi = null;
   function send(event, payload) {
     // host com o tempo real desligado mexe só aqui: a mesa continua vendo a última tela
-    if (palcoSouHost && !palcoLive && /^mapa-(cena|grade|img|tok)$/.test(event) && !(payload && payload.retoma)) return;
+    if (palcoSouHost && !palcoLive && /^mapa-(cena|grade|img|tok|dsn)$/.test(event) && !(payload && payload.retoma)) return;
     if (channel) channel.send({ type:'broadcast', event:event, payload:payload });
     else dispatch(event, payload);   // offline: mostra local
   }
@@ -5103,16 +5179,10 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     else if (event === 'chars') applyChars(payload);
     else if (event === 'chars-req') { if (mesaChars.length) send('chars', mesaChars); }
     // o canal é self:true, então o próprio traço volta como eco — quem desenhou já pintou local
-    else if (event === 'wb-draw')  { if (!payload || payload.by !== WB_ME) wbDrawSeg(payload); }
-    else if (event === 'wb-shape') { if (!payload || payload.by !== WB_ME) wbDrawShape(payload); }
-    else if (event === 'wb-text')  { if (!payload || payload.by !== WB_ME) wbDrawText(payload); }
     else if (event === 'bau-aberto') { bauRevelar(payload); if (bauOverlay.classList.contains('show')) bauCarregar(); }
     else if (event === 'bau-novo') { if (bauOverlay.classList.contains('show')) bauCarregar(); }
     else if (event === 'timer') tmAplica(payload);
     else if (event === 'timer-req') { if (tmRodando || tmResta > 0) send('timer', { restaMs:tmRestante(), rodando:tmRodando, autor:tmAutor }); }
-    else if (event === 'wb-clear') wbClearLocal();
-    else if (event === 'wb-open') openWhiteboardView();
-    else if (event === 'wb-close') closeWhiteboardView();
     else if (event === 'mesa-ctx') { applyContexto(payload.text); }
     else if (event === 'mesa-ctx-req') { var ctx = localStorage.getItem(CONTEXTO_KEY); if (ctx) send('mesa-ctx', { text:ctx }); }
     else if (event === 'diario-pg') applyDiarioPg(payload);
@@ -5129,6 +5199,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     else if (event === 'mapa-grade') { if (!palcoCongelado) mapaRecebeGrade(payload); }
     else if (event === 'mapa-img') { if (!palcoCongelado) mapaRecebeImg(payload); }
     else if (event === 'mapa-tok') { if (!palcoCongelado) mapaRecebeTok(payload); }
+    else if (event === 'mapa-dsn') { if (!palcoCongelado && payload && payload.by !== MAPA_ME) dsnAplica(payload); }
   }
   function initRealtime() {
     chatCarregaHistorico();
@@ -5142,7 +5213,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     channel.on('broadcast', { event:'chat' }, function(m){ dispatch('chat', m.payload); });
     channel.on('broadcast', { event:'chars' }, function(m){ dispatch('chars', m.payload); });
     channel.on('broadcast', { event:'chars-req' }, function(m){ dispatch('chars-req', m.payload); });
-    ['bau-aberto','bau-novo','timer','timer-req','wb-draw','wb-shape','wb-text','wb-clear','wb-open','wb-close'].forEach(function(ev){
+    ['bau-aberto','bau-novo','timer','timer-req'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
     channel.on('broadcast', { event:'mesa-ctx' }, function(m){ dispatch('mesa-ctx', m.payload); });
@@ -5152,7 +5223,7 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
     ['som-play','som-stop','som-state','som-state-req','som-lib','som-gain'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
-    ['palco-st','mapa-cena','mapa-grade','mapa-img','mapa-tok'].forEach(function(ev){
+    ['palco-st','mapa-cena','mapa-grade','mapa-img','mapa-tok','mapa-dsn'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
     channel.subscribe(function(status){
@@ -5211,8 +5282,8 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-bar button, body.palco-pa
       });
       setupTrxWatchdog();
       setupResvBreakout();   // ouvintes do reservado (breakout) no vídeo principal
-      // se o quadro já estiver aberto quando o vídeo terminar de carregar, alinha o tile view
-      if (wbIsOpen()) jitsiTile(true);
+      // se o palco já estiver aberto quando o vídeo terminar de carregar, alinha o tile view
+      if (mapaAberto()) jitsiTile(true);
     } catch (e) {
       jitsiMsg('Vídeo indisponível<br><span style="color:var(--fg-faint);font-size:10px;">' + esc(String(e && e.message || e)) + '</span>');
     }
