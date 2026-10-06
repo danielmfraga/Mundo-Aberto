@@ -1225,7 +1225,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 .ent-sub { font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:.5em; color:rgba(0,255,231,.55); text-transform:uppercase; text-align:center; }
 .ent-led { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--e-orange); box-shadow:0 0 8px var(--e-orange); margin-right:8px; animation:entPisca 1.6s ease-in-out infinite; }
 @keyframes entPisca { 50% { opacity:.25; } }
-.ent-titulo { font-family:'Orbitron',monospace; font-size:clamp(30px,5.4vw,64px); font-weight:900; letter-spacing:.16em; text-transform:uppercase; text-align:center;
+.ent-titulo { max-width:94vw; overflow-wrap:anywhere; font-family:'Orbitron',monospace; font-size:clamp(28px,5vw,60px); font-weight:900; letter-spacing:.16em; text-transform:uppercase; text-align:center;
   text-shadow:0 0 20px #00ffe7bb,0 0 60px #00ffe755,0 0 120px #00ffe722; animation:entFlick 9s ease-in-out infinite; line-height:1; }
 @keyframes entFlick { 0%,93%,97%,100%{opacity:1} 95%{opacity:.82} }
 .ent-linha { width:100px; height:1px; background:linear-gradient(90deg,transparent,var(--e-orange),transparent); box-shadow:var(--e-glow-o); margin:2px 0 4px; }
@@ -1793,8 +1793,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 <div class="entrada" id="entradaOv">
   <div class="ent-corner ent-tl"></div><div class="ent-corner ent-tr"></div><div class="ent-corner ent-bl"></div><div class="ent-corner ent-br"></div>
   <div class="ent-main">
-    <div class="ent-sub"><span class="ent-led"></span><span id="entSala">Mesa</span></div>
-    <h1 class="ent-titulo">Mundo Aberto</h1>
+    <div class="ent-sub"><span class="ent-led"></span><span>Mesa · Mundo Aberto</span></div>
+    <h1 class="ent-titulo" id="entTitulo">Sala Principal</h1>
     <div class="ent-linha"></div>
     <div class="ent-proj">
       <div class="ent-anel ent-a1"></div><div class="ent-anel ent-a2"></div><div class="ent-anel ent-a3"></div>
@@ -6383,7 +6383,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   renderTray();
   renderChars();
   // a tela de entrada sempre abre: nick lembrado, um clique e está dentro
-  document.getElementById('entSala').textContent = 'Mesa · sala ' + SALA;
+  // o título grande é o nome da sala, vindo do endereço (o estilo já põe em maiúsculas): 'principal' → SALA PRINCIPAL, 'sexta-noite' → SALA SEXTA NOITE
+  document.getElementById('entTitulo').textContent = 'Sala ' + SALA.replace(/[-_]+/g, ' ');
   entNick.value = nome;
   entNick.focus();
   entPreview();
