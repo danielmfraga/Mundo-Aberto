@@ -244,7 +244,8 @@ body {
 
 /* ── Canvas dos dados 3D (dice-box) ── */
 /* visibility (não display) p/ o WebGL inicializar com tamanho correto */
-#dice3d { position:fixed; inset:0; z-index:8500; pointer-events:none; visibility:hidden; }
+/* acima do palco (9990), do vídeo (9995) e do Rosto a rosto (9997): os dados rolam POR CIMA da mesa */
+#dice3d { position:fixed; inset:0; z-index:9998; pointer-events:none; visibility:hidden; }
 #dice3d.show { visibility:visible; }
 #dice3d canvas { width:100% !important; height:100% !important; }
 
@@ -269,7 +270,7 @@ body {
 
 /* ── Animação de rolagem (silhuetas dos dados girando + freando) ── */
 .roll-anim-ov {
-  position:fixed; inset:0; z-index:9000; display:flex; flex-direction:column;
+  position:fixed; inset:0; z-index:9998; display:flex; flex-direction:column;
   align-items:center; justify-content:center; gap:24px; pointer-events:none;
   background:radial-gradient(ellipse at center, rgba(0,0,0,0.58), rgba(0,0,0,0.24) 55%, transparent);
   animation:ovfade .2s ease;
