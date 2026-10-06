@@ -806,6 +806,25 @@ body.mapa-on .palco-host { display:flex; }
   font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; pointer-events:none;
 }
 .palco-congelado[hidden] { display:none; }
+.palco-janela { display:none; position:absolute; z-index:7; top:6px; right:8px; gap:2px; }
+body.mapa-on .palco-janela { display:flex; }
+.palco-jan {
+  width:38px; height:28px; padding:0; cursor:pointer; border:0; border-radius:5px; background:none; color:var(--fg-dim);
+  font-family:var(--font-mono); font-size:14px; line-height:1; transition:background .12s, color .12s;
+}
+.palco-jan:hover { background:rgba(255,255,255,0.12); color:var(--fg); }
+.palco-jan-x:hover { background:var(--danger); color:#fff; }
+/* no palco as caras descem um pouco, pros botões de janela caberem em cima */
+body.mapa-on.wb-on.wb-right .video-panel { top:42px; }
+.palco-pilula {
+  display:none; position:fixed; z-index:9000; left:32px; bottom:32px; cursor:pointer; padding:9px 14px; border-radius:999px;
+  font-family:var(--font-mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase;
+  color:#ff8a7a; background:rgba(11,19,32,0.94); border:1px solid #ff8a7a; box-shadow:0 0 16px rgba(255,110,90,0.3);
+}
+.palco-pilula:hover { background:rgba(255,110,90,0.2); }
+body.palco-min .palco-pilula { display:block; }
+body.palco-min .mapa-panel { display:none !important; }
+.ferr-mapa.open { position:relative; }
 .dsn-bar {
   position:absolute; z-index:6; left:10px; top:84px; display:flex; flex-direction:column; align-items:center; gap:5px;
   background:rgba(11,19,32,0.92); backdrop-filter:blur(6px); border:1px solid var(--line-strong); border-radius:8px; padding:7px 6px;
@@ -848,8 +867,9 @@ body.palco-pausado .mapa-tok, body.palco-pausado .mapa-add, body.palco-pausado #
 body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-events:none; opacity:0.5; }
 .ferr-mapa.alguem::after { content:''; position:absolute; top:5px; right:5px; width:7px; height:7px; border-radius:50%; background:#ff8a7a; box-shadow:0 0 7px #ff8a7a; }
 @media (max-width:920px) {
-  body.mapa-on .mapa-view { right:0; top:130px; }
-  body.mapa-on .mapa-bar { top:136px; left:50%; max-width:94vw; }
+  body.mapa-on .mapa-view { right:0; top:164px; }
+  body.mapa-on .mapa-bar { top:170px; left:50%; max-width:94vw; }
+  body.mapa-on.wb-on.wb-right .video-panel { top:42px; }
   .palco-host { top:auto; bottom:10px; }
   .palco-congelado { left:50%; bottom:60px; }
 }
@@ -1255,6 +1275,10 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   <!-- Mapa (mesa de D20): imagem › grade › tokens. Vem antes do rail pra, no
        celular (uma coluna só), ficar logo abaixo das caras. -->
   <div class="panel mapa-panel" id="mapaPanel">
+    <div class="palco-janela">
+      <button class="palco-jan" id="mapaMinimiza" type="button" title="Minimizar: a página volta ao normal e você continua no palco">&#8212;</button>
+      <button class="palco-jan palco-jan-x" id="mapaFechar" type="button" title="Fechar: sair do palco (a mesa continua pra quem ficou)">&#10005;</button>
+    </div>
     <div class="palco-host" id="palcoHost">
       <span id="palcoHostQuem">Host: —</span>
       <button class="palco-host-bt" id="palcoControlar" type="button" title="Assumir o controle da mesa" hidden>Controlar</button>
@@ -1296,7 +1320,6 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       <label class="mapa-ico mapa-fundo" title="Cor do fundo"><span class="mapa-fundo-am" id="mapaFundoAm"></span><input type="color" id="mapaFundoCor" value="#ffffff"></label>
       <button class="mapa-ico" id="mapaFit" type="button" title="Ver o mapa inteiro (ou duplo clique no mapa)">&#9974;</button>
       <button class="mapa-ico mapa-limpar" id="mapaLimparBt" type="button" title="Limpar o mapa">&#128465;</button>
-      <button class="mapa-ico mapa-x" id="mapaFechar" type="button" title="Sair do palco (a mesa continua pra quem ficou)">&#10005;</button>
     </div>
     <div class="mapa-view" id="mapaView">
       <div class="mapa-mundo" id="mapaMundo">
@@ -1597,6 +1620,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     <div class="diario-submenu" id="diarioSubmenu"></div>
   </div>
 </div>
+
+<button class="palco-pilula" id="palcoPilula" type="button" title="Voltar ao palco">&#9635; Voltar à mesa</button>
 
 <!-- Seleção de personagem -->
 <div class="char-picker" id="charPicker">
@@ -4521,14 +4546,43 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     mapaView.classList.remove('panning');
     dsnSetTool('mover');
     if (privAtiva) abaIr('mesa');
-    document.body.classList.remove('mapa-on');
+    document.body.classList.remove('mapa-on', 'palco-min');
     mapaBtn.classList.remove('open');
     document.body.classList.remove('wb-on', 'wb-right');
     jitsiTile(false);
     palcoDentro = false; palcoClaim = 0;
     palcoTrack(); palcoRecalcula();
   }
-  mapaBtn.addEventListener('click', function() { if (mapaAberto()) closeMapa(); else openMapa(); });
+  // Minimizar: a página volta ao normal (dados, chat, personagens) mas você continua
+  // no palco — mantém o posto de host e a mesa segue chegando. Fechar é sair de vez.
+  function palcoMinimizado() { return document.body.classList.contains('palco-min'); }
+  function minimizaMapa() {
+    if (!mapaAberto()) return;
+    dsnSetTool('mover'); mapaFechaPops(); mapaFimArraste();
+    document.body.classList.remove('mapa-on', 'wb-on', 'wb-right');
+    document.body.classList.add('palco-min');
+    jitsiTile(false);
+  }
+  function restauraMapa() {
+    if (!palcoMinimizado()) return;
+    document.body.classList.remove('palco-min');
+    document.body.classList.add('mapa-on', 'wb-on', 'wb-right');
+    jitsiTile(true);
+    mapaRender();
+    requestAnimationFrame(function() {
+      mapaAplicaVista();
+      _palcoSeguia = false;       // volta espelhando: pede a vista do host de novo
+      palcoRecalcula();
+    });
+  }
+  // o botão da mesa: abre; com o palco aberto minimiza; minimizado, restaura
+  mapaBtn.addEventListener('click', function() {
+    if (palcoMinimizado()) restauraMapa();
+    else if (mapaAberto()) minimizaMapa();
+    else openMapa();
+  });
+  document.getElementById('mapaMinimiza').addEventListener('click', minimizaMapa);
+  document.getElementById('palcoPilula').addEventListener('click', restauraMapa);
   document.getElementById('mapaFechar').addEventListener('click', closeMapa);
 
   // ── Host do palco ──
