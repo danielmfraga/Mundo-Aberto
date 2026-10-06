@@ -795,6 +795,23 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   body.mapa-on .video-panel #jitsi { height:24vh; }
   body.mapa-on .mapa-panel { height:72vh; }
 }
+/* Abre como o quadro: tela cheia, caras na coluna à direita (body.wb-on.wb-right) */
+body.mapa-on .mapa-panel {
+  display:flex; position:fixed; inset:0; z-index:9990; height:auto; grid-column:auto; grid-row:auto;
+  background:rgba(0,0,0,0.82); border:0; border-radius:0; box-shadow:none;
+  flex-direction:column; align-items:center; justify-content:center; gap:12px;
+  padding:18px calc(252px + 28px) 18px 18px; overflow:auto;
+}
+body.mapa-on .mapa-bar {
+  flex:0 0 auto; justify-content:center; flex-wrap:wrap; gap:7px; max-width:calc(100vw - 300px); box-sizing:border-box;
+  background:#0b1320; border:1px solid var(--line-strong); border-radius:8px; padding:7px 10px;
+}
+body.mapa-on .mapa-view { flex:0 0 auto; width:calc(100vw - 300px); height:76vh; border-radius:8px; }
+@media (max-width:920px) {
+  body.mapa-on .mapa-panel { padding:140px 12px 12px; }
+  body.mapa-on .mapa-bar { max-width:94vw; }
+  body.mapa-on .mapa-view { width:94vw; height:calc(100vh - 250px); }
+}
 .mapa-bar { display:flex; align-items:center; gap:8px; padding:7px 10px; border-bottom:1px solid var(--line); flex:0 0 auto; min-width:0; }
 .mapa-bar .led { width:6px; height:6px; border-radius:50%; background:#ff8a7a; box-shadow:0 0 7px #ff8a7a; flex:0 0 auto; }
 .mapa-add { display:flex; align-items:center; gap:6px; min-width:0; overflow-x:auto; flex:0 1 auto; padding:2px 1px; margin-left:4px; }
@@ -2936,7 +2953,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   function closeWhiteboardView() {
     wbCommitText(false);              // descarta texto que ficou sendo digitado
     wbOverlay.classList.remove('show');
-    document.body.classList.remove('wb-on','wb-top','wb-split','wb-right');
+    if (!mapaAberto()) document.body.classList.remove('wb-on','wb-top','wb-split','wb-right');   // o mapa usa o mesmo layout
     jitsiTile(mapaAberto());  // volta o vídeo ao normal (com o mapa aberto, a faixa de caras continua em grade)
   }
 
@@ -4131,7 +4148,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
   function mapaAberto() { return document.body.classList.contains('mapa-on'); }
   function openMapa() {
     if (mapaAberto()) return;
-    document.body.classList.add('mapa-on');
+    document.body.classList.add('mapa-on', 'wb-on', 'wb-right');   // mesmo jeito do quadro: caras na coluna à direita
     mapaBtn.classList.add('open');
     jitsiTile(true);   // a faixa de cima mostra todas as caras
     if (!mapaPronto && !mapaCarregando) mapaCarrega();
@@ -4145,7 +4162,7 @@ body.mapa-on .mapa-panel { display:flex; grid-column:1; grid-row:2; }
     mapaView.classList.remove('panning');
     document.body.classList.remove('mapa-on');
     mapaBtn.classList.remove('open');
-    if (!wbIsOpen()) jitsiTile(false);
+    if (!wbIsOpen()) { document.body.classList.remove('wb-on', 'wb-right'); jitsiTile(false); }
   }
   mapaBtn.addEventListener('click', function() {
     if (mapaAberto()) { closeMapa(); send('mapa-close', {}); }
