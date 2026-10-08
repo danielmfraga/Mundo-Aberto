@@ -1171,6 +1171,32 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   pointer-events:none;   /* senão o overlay rouba o dragleave e ele fica piscando */
 }
 .chat-msgs { flex:1; overflow-y:auto; padding:12px 13px; display:flex; flex-direction:column; gap:10px; }
+.chat-msgs[hidden] { display:none; }
+/* conversas: "Todos" + uma aba por pessoa com quem se fala em particular */
+.chat-conv { flex:0 0 auto; position:relative; display:flex; gap:4px; align-items:center; overflow-x:auto; scrollbar-width:none; padding:6px 9px; border-bottom:1px solid var(--line); }
+.chat-conv::-webkit-scrollbar { display:none; }
+.chat-conv .cv {
+  flex:0 0 auto; display:flex; align-items:center; gap:5px; cursor:pointer; padding:4px 9px; border-radius:6px; white-space:nowrap;
+  font-family:var(--font-mono); font-size:9.5px; letter-spacing:0.06em; color:var(--fg-dim); background:rgba(255,255,255,0.04); border:1px solid var(--line);
+}
+.chat-conv .cv:hover { border-color:var(--holo-soft); color:var(--fg); }
+.chat-conv .cv.on { color:var(--holo); border-color:var(--holo); background:rgba(78,211,232,0.1); }
+.chat-conv .cv.priv.on { color:#ff8a7a; border-color:#ff8a7a; background:rgba(255,138,122,0.12); }
+.chat-conv .cv .pt { width:7px; height:7px; border-radius:50%; background:#ff8a7a; box-shadow:0 0 7px #ff8a7a; }
+.chat-conv .cv .x { opacity:0.5; font-style:normal; padding:0 1px; }
+.chat-conv .cv .x:hover { opacity:1; color:var(--danger); }
+.chat-conv .cv.mais { color:var(--holo); border-style:dashed; border-color:var(--holo-soft); background:none; }
+.chat-conv-menu {
+  position:absolute; z-index:30; left:8px; top:34px; min-width:150px; max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:3px; padding:5px;
+  background:rgba(11,19,32,0.98); border:1px solid var(--line-strong); border-radius:8px; box-shadow:0 10px 24px rgba(0,0,0,0.55);
+}
+.chat-conv-menu button { text-align:left; cursor:pointer; padding:6px 9px; border-radius:5px; font-family:var(--font-mono); font-size:10px; color:var(--fg); background:none; border:1px solid transparent; }
+.chat-conv-menu button:hover { border-color:var(--holo-soft); background:rgba(78,211,232,0.1); }
+.chat-conv-menu .vazio { padding:6px 9px; font-family:var(--font-mono); font-size:9.5px; color:var(--fg-faint); }
+.chat-msgs.chat-priv { background:rgba(255,138,122,0.045); }
+.chat-msgs.chat-priv .msg-head .who-b { color:#ff8a7a; }
+.chat-panel.privado .chat-input { border-color:rgba(255,138,122,0.55); }
+.msg-aviso.priv { color:#ff8a7a; opacity:0.85; }
 .msg { font-size:13px; line-height:1.5; }
 .msg-head { font-family:var(--font-mono); font-size:9px; letter-spacing:0.1em; color:var(--fg-faint); margin-bottom:2px; }
 .msg-head .who-b { color:var(--accent); }
@@ -1694,6 +1720,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 
     <div class="panel chat-panel">
       <div class="panel-head"><span class="led"></span><span class="panel-title">Chat</span></div>
+      <div class="chat-conv" id="chatConv"></div>
       <div class="chat-msgs" id="chatMsgs"></div>
       <div class="chat-upload" id="chatUpload" hidden>
         <span class="nm" id="chatUploadName"></span>
@@ -2316,6 +2343,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 
   // ── Chat ──────────────────────────────────────────────────────────
   var chatMsgs = document.getElementById('chatMsgs');
+  var chatPainelEl = document.querySelector('.chat-panel');
   var chatInput = document.getElementById('chatInput');
   // Tipo do anexo a partir do mime (com o nome do arquivo como desempate)
   function fileKind(mime, nomeArq) {
@@ -2445,7 +2473,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var lbScale = 1, lbX = 0, lbY = 0, lbDragging = false, lbStart = null, lbIdx = 0;
   function lbApply() { imgLbImg.style.transform = 'translate(' + lbX + 'px,' + lbY + 'px) scale(' + lbScale + ')'; }
   function lbReset() { lbScale = 1; lbX = 0; lbY = 0; lbApply(); }
-  function lbGallery() { return Array.prototype.slice.call(chatMsgs.querySelectorAll('.msg-img')); }
+  function lbGallery() { return Array.prototype.slice.call(chatPainelEl.querySelectorAll('.chat-msgs:not([hidden]) .msg-img')); }   // só da conversa aberta
   function lbGo(i) {
     var all = lbGallery();
     if (!all.length) { closeLightbox(); return; }
@@ -2462,7 +2490,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   function openLightbox(i) { imgLightbox.classList.add('show'); lbGo(i); }
   function closeLightbox() { imgLightbox.classList.remove('show'); imgLbImg.src = ''; }
 
-  chatMsgs.addEventListener('click', function(e) {
+  chatPainelEl.addEventListener('click', function(e) {
     var img = e.target.closest('.msg-img');
     if (!img || !img.src) return;
     e.preventDefault();
@@ -2495,11 +2523,163 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   imgLbImg.addEventListener('pointercancel', lbEnd);
   imgLbImg.addEventListener('dblclick', lbReset);
 
+  // ── Conversas privadas ──
+  // Uma faixa de abas no topo do chat: "Todos" (o chat da mesa, com histórico de 15 dias) e uma aba por pessoa com
+  // quem se fala em particular. A mensagem privada leva `para` (o nome de quem deve ler); quem não é nem o autor
+  // nem o destinatário a ignora. Ela NÃO vai pra tabela do histórico da mesa: cada um guarda as suas conversas só
+  // no próprio navegador (15 dias). Chegou mensagem privada: a aba ganha um ponto e o botão do chat no palco acende.
+  // (É educação, não cofre: o canal da mesa é um só, então quem abrir o inspetor do navegador veria o tráfego.)
+  var chatFio = 'todos';            // conversa aberta: 'todos' ou a chave (nome em minúsculas) da pessoa
+  var chatFios = {};                // chave → { nome, el, novo, ultimoDia }  (só as abas abertas)
+  var dmMsgs = [];                  // TODAS as mensagens privadas (também as de abas fechadas): é o que vai pro armazenamento local
+  var chatConvEl = document.getElementById('chatConv');
+  var chatConvMenu = null;
+  function dmKey(n) { return String(n == null ? '' : n).trim().toLowerCase(); }
+  function dmArmazem() { return 'mesaDM:' + SALA + ':' + dmKey(nome); }
+  function chatAlvo() { return chatFio !== 'todos' && chatFios[chatFio] ? chatFios[chatFio].nome : null; }
+  function dmSalva() {
+    try {
+      var corte = Date.now() - CHAT_DIAS * 86400000;
+      dmMsgs = dmMsgs.filter(function(p) { return p.ts >= corte; }).sort(function(a, b) { return a.ts - b.ts; }).slice(-400);
+      localStorage.setItem(dmArmazem(), JSON.stringify(dmMsgs));
+    } catch (_) {}
+  }
+  function chatFioGet(n) {
+    var k = dmKey(n);
+    if (!k) return null;
+    if (chatFios[k]) return chatFios[k];
+    var el = document.createElement('div');
+    el.className = 'chat-msgs chat-priv'; el.hidden = true;
+    var av = document.createElement('div');
+    av.className = 'msg-aviso priv';
+    av.textContent = '🔒 Só você e ' + n + ' veem esta conversa · ela fica só neste navegador por ' + CHAT_DIAS + ' dias';
+    el.appendChild(av);
+    chatMsgs.parentNode.insertBefore(el, chatMsgs.nextSibling);
+    var f = chatFios[k] = { nome:n, el:el, novo:0, ultimoDia:null };
+    dmMsgs.forEach(function(p) { if (dmKey(p.autor) === k || dmKey(p.para) === k) dmDesenha(f, p); });   // a conversa de antes volta junto com a aba
+    return f;
+  }
+  function chatConvRender() {
+    chatConvEl.innerHTML = '';
+    function aba(cls, txt, fn) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'cv ' + cls; b.textContent = txt;
+      b.addEventListener('click', fn); chatConvEl.appendChild(b); return b;
+    }
+    aba('todos' + (chatFio === 'todos' ? ' on' : ''), 'Todos', function() { chatFioMostra('todos'); });
+    Object.keys(chatFios).forEach(function(k) {
+      var f = chatFios[k];
+      var b = aba('priv' + (chatFio === k ? ' on' : ''), '🔒 ' + f.nome, function(e) {
+        if (e.target.classList.contains('x')) { chatFioFecha(k); return; }
+        chatFioMostra(k);
+      });
+      b.dataset.fio = k;
+      if (f.novo) { var pt = document.createElement('i'); pt.className = 'pt'; pt.title = f.novo + ' nova(s)'; b.appendChild(pt); }
+      var x = document.createElement('i'); x.className = 'x'; x.textContent = '×'; x.title = 'Fechar a aba (a conversa fica guardada)'; b.appendChild(x);
+    });
+    aba('mais', '＋ Privado', function(e) { e.stopPropagation(); chatConvAbreMenu(); });
+    chatConvPonto();
+  }
+  function chatFioMostra(k) {
+    if (k !== 'todos' && !chatFios[k]) return;
+    chatFio = k;
+    chatMsgs.hidden = k !== 'todos';
+    Object.keys(chatFios).forEach(function(c) { chatFios[c].el.hidden = c !== k; });
+    var f = chatFios[k];
+    if (f) f.novo = 0;
+    chatPainelEl.classList.toggle('privado', !!f);
+    chatInput.placeholder = f ? 'Em particular para ' + f.nome + '…' : 'Mensagem, link…';
+    chatConvRender();
+    var ativo = f ? f.el : chatMsgs; ativo.scrollTop = ativo.scrollHeight;
+  }
+  // abriu o chat com conversa privada não lida: já cai nela (foi isso que acendeu o botão)
+  function chatAbreNaoLida() {
+    var k = Object.keys(chatFios).filter(function(c) { return chatFios[c].novo > 0; })[0];
+    if (k) chatFioMostra(k);
+  }
+  function chatConvPonto() { if (typeof palcoChatPonto === 'function') palcoChatPonto(); }
+  function chatFioFecha(k) {
+    var f = chatFios[k]; if (!f) return;
+    f.el.remove(); delete chatFios[k];       // só fecha a aba: a conversa segue guardada e volta quando a aba for reaberta
+    if (chatFio === k) chatFioMostra('todos'); else chatConvRender();
+  }
+  function chatPresentes() {
+    var st = (channel && channel.presenceState) ? channel.presenceState() : {}, vistos = {}, lista = [];
+    Object.keys(st).forEach(function(id) {
+      (st[id] || []).forEach(function(m) {
+        var n = m && m.nome, k = dmKey(n);
+        if (!k || k === dmKey(nome) || vistos[k]) return;
+        vistos[k] = 1; lista.push(String(n));
+      });
+    });
+    return lista.sort(function(a, b) { return a.localeCompare(b, 'pt-BR'); });
+  }
+  function chatConvAbreMenu() {
+    chatConvFechaMenu();
+    var m = document.createElement('div'); m.className = 'chat-conv-menu';
+    var lista = chatPresentes();
+    if (!lista.length) { var v = document.createElement('div'); v.className = 'vazio'; v.textContent = 'Ninguém mais na mesa agora'; m.appendChild(v); }
+    lista.forEach(function(n) {
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = n;
+      b.addEventListener('click', function() {
+        chatConvFechaMenu();
+        var f = chatFioGet(n); chatFioMostra(dmKey(f.nome)); chatInput.focus();
+      });
+      m.appendChild(b);
+    });
+    chatConvEl.appendChild(m); chatConvMenu = m;
+    m.style.left = Math.max(4, chatConvEl.querySelector('.mais').offsetLeft - chatConvEl.scrollLeft) + 'px';
+  }
+  function chatConvFechaMenu() { if (chatConvMenu) { chatConvMenu.remove(); chatConvMenu = null; } }
+  document.addEventListener('click', function(e) { if (chatConvMenu && !e.target.closest('.chat-conv-menu')) chatConvFechaMenu(); });
+  function dmDesenha(f, p) {
+    var chave = chatDiaChave(p.ts);
+    if (chave !== f.ultimoDia) { f.el.appendChild(chatDiaEl(p.ts)); f.ultimoDia = chave; }
+    f.el.appendChild(chatMsgEl(p));
+    f.el.scrollTop = f.el.scrollHeight;
+  }
+  // mensagem privada que chegou (do canal) ou foi lida do armazenamento local
+  function dmRecebe(p) {
+    var eu = dmKey(nome), de = dmKey(p.autor), pa = dmKey(p.para);
+    if (!eu || de === pa) return;
+    var outro = pa === eu ? p.autor : (de === eu ? p.para : null);
+    if (!outro) return;                                  // não é pra mim
+    if (p.mid) { if (chatVistos[p.mid]) return; chatVistos[p.mid] = 1; }
+    var f = chatFioGet(outro);               // (se a aba estava fechada, ela volta já com a conversa de antes)
+    dmMsgs.push(p); dmDesenha(f, p);
+    var minha = de === eu;
+    if (!minha && chatFio !== dmKey(outro)) f.novo++;
+    chatConvRender();
+    if (!minha) palcoChatNovo(p);
+    dmSalva();
+  }
+  function dmCarrega() {
+    try {
+      var j = JSON.parse(localStorage.getItem(dmArmazem()) || '[]'), corte = Date.now() - CHAT_DIAS * 86400000, eu = dmKey(nome), outros = {};
+      dmMsgs = (Array.isArray(j) ? j : []).filter(function(p) { return p && p.ts >= corte && p.autor && p.para && (dmKey(p.autor) === eu || dmKey(p.para) === eu); });
+      dmMsgs.forEach(function(p) { if (p.mid) chatVistos[p.mid] = 1; var o = dmKey(p.autor) === eu ? p.para : p.autor; outros[dmKey(o)] = o; });
+      Object.keys(outros).forEach(function(k) { chatFioGet(outros[k]); });   // uma aba por pessoa com conversa guardada
+      chatConvRender();
+    } catch (_) {}
+  }
+  chatConvRender();
+  // a pessoa não está mais na mesa: a mensagem não chegaria — avisa em vez de fingir que foi
+  function dmAvisaAusente(f) {
+    var k = dmKey(f.nome), aqui = chatPresentes().some(function(n) { return dmKey(n) === k; });
+    if (aqui) return;
+    var av = document.createElement('div'); av.className = 'msg-aviso priv';
+    av.textContent = f.nome + ' não está na mesa agora — não vai receber esta mensagem';
+    f.el.appendChild(av); f.el.scrollTop = f.el.scrollHeight;
+  }
   function sendChat() {
     var t = chatInput.value.trim();
     if (!t) return;
     chatInput.value = '';
-    var msg = { mid:chatMid(), autor:nome, ts:Date.now(), text:t };
+    var msg = { mid:chatMid(), autor:nome, ts:Date.now(), text:t }, alvo = chatAlvo();
+    if (alvo) {
+      msg.para = alvo; send('chat', msg);
+      var f = chatFioGet(alvo); if (f) dmAvisaAusente(f);
+      return;                                            // privada: nunca vai pro histórico da mesa
+    }
     send('chat', msg);
     chatGuarda(msg);
   }
@@ -2524,6 +2704,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   // Sobe UM arquivo. A promise resolve sempre (inclusive em erro) pra fila seguir.
   function chatSobeArquivo(file) {
    return new Promise(function(pronto) {
+    var alvoArq = chatAlvo();                         // pra quem vai: decidido agora, mesmo que a pessoa troque de aba durante o envio
     var kind = fileKind(file.type, file.name);
     var maxMB = CHAT_MAX_MB[kind] || 25;
     if (file.size > maxMB * 1024 * 1024) {
@@ -2559,8 +2740,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
         url: SB_URL + '/storage/v1/object/public/personagens/' + path,
         kind: kind, nome: file.name, mime: file.type, tam: file.size
       }};
-      send('chat', msgArq);
-      chatGuarda(msgArq);
+      if (alvoArq) { msgArq.para = alvoArq; send('chat', msgArq); }   // privado: não vai pro histórico da mesa
+      else { send('chat', msgArq); chatGuarda(msgArq); }
       pronto();
     });
     xhr.addEventListener('error', function(){ chatUpHide(); alert('Falha ao enviar ' + CHAT_ROTULO[kind] + ': erro de rede.'); pronto(); });
@@ -5100,6 +5281,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     requestAnimationFrame(mapaFit);   // mede depois que a página mudou de forma
     palcoDentro = true; palcoDesde = Date.now(); palcoClaim = 0; palcoLive = true;
     palcoTrack(); palcoRecalcula();
+    palcoChatPonto();
   }
   function closeMapa() {
     if (!mapaAberto()) return;
@@ -5184,11 +5366,17 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (n === 'som') toggleSom();
     else if (n === 'diario') { if (palcoDiarioEl.classList.contains('show')) closeDiario(); else openDiario(); }
     else if (palcoGav[n]) palcoGavFecha(n);
-    else palcoGavAbre(n);
+    else { palcoGavAbre(n); if (n === 'chat') chatAbreNaoLida(); }
     palcoMenuSync();
   });
   // Som e Diário também abrem/fecham por outros caminhos (Esc, o botão deles): o menu acompanha
   [palcoSomEl, palcoDiarioEl].forEach(function(el) { new MutationObserver(palcoMenuSync).observe(el, { attributes:true, attributeFilter:['class'] }); });
+  // há conversa privada não lida e a gaveta do chat está fechada: o botão fica aceso (também ao abrir o palco depois)
+  function palcoChatPonto() {
+    if (!palcoMenu || !document.body.classList.contains('mapa-on') || palcoGav.chat) return;
+    var b = palcoMenu.querySelector('[data-menu="chat"]');
+    if (b && Object.keys(chatFios).some(function(k) { return chatFios[k].novo > 0; })) b.classList.add('novo');
+  }
   // mensagem nova com a gaveta do chat fechada: o botão acende
   function palcoChatNovo(p) {
     if (!mapaAberto() || palcoGav.chat || !p || p.autor === nome || (p.ts && Date.now() - p.ts > 20000)) return;
@@ -6173,7 +6361,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   }
   function dispatch(event, payload) {
     if (event === 'roll') enqueueRoll(payload);
-    else if (event === 'chat') renderChat(payload);
+    else if (event === 'chat') { if (payload && payload.para) dmRecebe(payload); else renderChat(payload); }
     else if (event === 'chars') applyChars(payload);
     else if (event === 'chars-req') { if (mesaChars.length) send('chars', mesaChars); }
     // o canal é self:true, então o próprio traço volta como eco — quem desenhou já pintou local
@@ -6207,6 +6395,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   }
   function initRealtime() {
     chatCarregaHistorico();
+    dmCarrega();
     if (!window.supabase || !window.supabase.createClient) return;
     var client = sbClient || window.supabase.createClient(SB_URL, SB_KEY);
     sbRealtimeClient = client;
@@ -6232,7 +6421,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     });
     channel.subscribe(function(status){
       document.getElementById('connDot').classList.toggle('on', status === 'SUBSCRIBED');
-      if (status === 'SUBSCRIBED') { send('chars-req', {}); send('mesa-ctx-req', {}); send('som-state-req', {}); send('timer-req', {}); channel.track({ id:MAPA_ME }); palcoTrack(); send('palco-req', { by:MAPA_ME }); }
+      if (status === 'SUBSCRIBED') { send('chars-req', {}); send('mesa-ctx-req', {}); send('som-state-req', {}); send('timer-req', {}); channel.track({ id:MAPA_ME, nome:nome }); palcoTrack(); send('palco-req', { by:MAPA_ME }); }
     });
   }
 
