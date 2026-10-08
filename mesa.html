@@ -1016,6 +1016,12 @@ body.palco-pausado .mapa-fundo { pointer-events:none; opacity:0.5; }
 .mapa-dsn-capt { position:absolute; inset:0; z-index:20; touch-action:none; cursor:crosshair; }
 .mapa-dsn-capt[hidden] { display:none; }
 .mapa-dsn-capt.texto { cursor:text; }
+.mapa-dsn-capt.borr { cursor:none; }
+.dsn-borr-cur {
+  position:absolute; z-index:21; pointer-events:none; transform:translate(-50%,-50%); border-radius:50%;
+  border:1.5px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(0,0,0,0.35); background:rgba(255,255,255,0.08);
+}
+.dsn-borr-cur[hidden] { display:none; }
 body.espaco-mao .mapa-view, body.espaco-mao .mapa-dsn-capt, body.espaco-mao .mapa-tok { cursor:grab; }
 body.espaco-mao .mapa-view.panning, body.espaco-mao .mapa-view.panning .mapa-dsn-capt { cursor:grabbing; }
 body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:var(--holo); box-shadow:0 0 8px rgba(78,211,232,0.3); }
@@ -1526,7 +1532,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
         <button class="wb-tool wb-icon dsn-tool active" data-tool="mover" type="button" title="Mover: tokens e vista (Esc)">&#9995;</button>
         <button class="wb-tool wb-icon dsn-tool" data-tool="regua" type="button" title="Régua: arraste pra medir em quadrados e metros (todo mundo vê)">&#128207;</button>
       <button class="wb-tool wb-icon dsn-tool" data-tool="pincel" type="button" title="Pincel">&#9998;</button>
-        <button class="wb-tool wb-icon dsn-tool" data-tool="borracha" type="button" title="Borracha: apaga o traço que tocar">&#9003;</button>
+        <button class="wb-tool wb-icon dsn-tool" data-tool="borracha" type="button" title="Borracha: apaga só por onde você passa. O tamanho vem dos mesmos botões do lápis (fino, médio, grosso)"><svg viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.4 3.3l5.3 5.3a1.3 1.3 0 0 1 0 1.8l-5.6 5.6H7.6l-4.3-4.3a1.3 1.3 0 0 1 0-1.8l6.3-6.6a1.3 1.3 0 0 1 1.8 0z"/><path d="M7.2 7.6l5.2 5.2"/><path d="M7.6 16h9.4"/></svg></button>
         <button class="wb-tool wb-icon dsn-tool" data-tool="seta" type="button" title="Seta">&#8599;</button>
         <button class="wb-tool wb-icon dsn-tool" data-tool="retangulo" type="button" title="Retângulo">&#9645;</button>
         <button class="wb-tool wb-icon dsn-tool" data-tool="circulo" type="button" title="Círculo">&#9711;</button>
@@ -1570,6 +1576,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
         <div class="mapa-tokens" id="mapaTokens"></div>
       </div>
       <div class="mapa-dsn-capt" id="mapaDsnCapt" hidden></div>
+      <div class="dsn-borr-cur" id="dsnBorrCur" hidden></div>
       <div class="mapa-dist" id="mapaDist" hidden></div>
       <div class="mapa-status" id="mapaStatus"></div>
     </div>
@@ -4189,6 +4196,24 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     } else if (op.op === 'limpa') {
       mapaCena.desenho = [];
       dsnRenderTudo();
+    } else if (op.op === 'sub') {
+      // a borracha cortou traços: cada um é trocado, NA MESMA POSIÇÃO da pilha (senão o pedaço de um traço preto
+      // pulava pra cima de um traço branco desenhado depois), pelos pedaços que sobraram — nenhum, se foi tudo
+      (Array.isArray(op.rep) ? op.rep : []).forEach(function(r) {
+        if (!r || typeof r.id !== 'string') return;
+        var lista = mapaCena.desenho, idx = -1, i;
+        for (i = 0; i < lista.length; i++) if (lista[i].id === r.id) { idx = i; break; }
+        if (idx < 0) return;
+        var novos = (Array.isArray(r.por) ? r.por : []).map(dsnItemNorm).filter(function(n) { return n && !dsnAchar(n.id); });
+        if (lista.length - 1 + novos.length > DSN_MAX) novos = novos.slice(0, Math.max(0, DSN_MAX - lista.length + 1));
+        var velho = dsnEls[r.id];
+        lista.splice.apply(lista, [idx, 1].concat(novos));
+        novos.forEach(function(n) {
+          var e = dsnPinta(n); dsnEls[n.id] = e;
+          if (velho && velho.parentNode) velho.parentNode.insertBefore(e, velho); else mapaDsn.appendChild(e);
+        });
+        if (velho) { velho.remove(); delete dsnEls[r.id]; }
+      });
     }
   }
   function dsnFaz(op) {            // mudança feita aqui: aplica, conta pra mesa e grava
@@ -4225,10 +4250,98 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     var w = it.t.length * it.s * 0.6, ex = Math.max(it.x - x, 0, x - (it.x + w)), ey = Math.max(it.y - y, 0, y - (it.y + it.s));
     return Math.hypot(ex, ey);
   }
-  function dsnApaga(p) {
-    var tol = Math.max(8, dsnEsp * 2) / mapaVs.s, achou = [];
-    mapaCena.desenho.forEach(function(it) { if (dsnDist(it, p.x, p.y) <= tol) achou.push(it.id); });
-    if (achou.length) dsnFaz({ op:'del', ids:achou });
+  // Como a borracha do Photoshop: apaga SÓ o que ela cobre. O traço é cortado onde a borracha passou (e fica em dois
+  // pedaços se ela passou no meio). A borracha é um círculo que ARRASTA, então o que vale é a "cápsula" entre a
+  // posição anterior e a atual — assim um movimento rápido não deixa buraco no caminho. Retângulo e círculo viram
+  // traços de contorno quando tocados; seta e texto (que não se cortam) saem inteiros.
+  var dsnBorrUlt = null, dsnSeq = 0;
+  function dsnBorrRaio() { return dsnEsp * 3 / mapaVs.s; }       // o mesmo botão de espessura do lápis: 3 → 9 px, 7 → 21 px, 14 → 42 px de raio
+  // trecho (em t, de 0 a 1) do segmento a→b que está a menos de R do círculo de centro c
+  function dsnIntCirc(a, b, c, R) {
+    var dx = b[0] - a[0], dy = b[1] - a[1], fx = a[0] - c[0], fy = a[1] - c[1];
+    var A = dx * dx + dy * dy, B = 2 * (fx * dx + fy * dy), C = fx * fx + fy * fy - R * R;
+    if (A < 1e-9) return C <= 0 ? [0, 1] : null;
+    var D = B * B - 4 * A * C;
+    if (D < 0) return null;
+    var q = Math.sqrt(D);
+    return [(-B - q) / (2 * A), (-B + q) / (2 * A)];
+  }
+  // idem pra cápsula p0→p1 de raio R (convexa: a interseção com um segmento é um trecho só)
+  function dsnIntCapsula(a, b, p0, p1, R) {
+    var lista = [dsnIntCirc(a, b, p0, R), dsnIntCirc(a, b, p1, R)];
+    var ux = p1[0] - p0[0], uy = p1[1] - p0[1], L = Math.hypot(ux, uy);
+    if (L > 1e-6) {
+      ux /= L; uy /= L;
+      var dx = b[0] - a[0], dy = b[1] - a[1], fx = a[0] - p0[0], fy = a[1] - p0[1];
+      var lo = -Infinity, hi = Infinity, ok = true;
+      [[fx * ux + fy * uy, dx * ux + dy * uy, 0, L], [-fx * uy + fy * ux, -dx * uy + dy * ux, -R, R]].forEach(function(k) {
+        var x0 = k[0], d = k[1];
+        if (Math.abs(d) < 1e-9) { if (x0 < k[2] || x0 > k[3]) ok = false; return; }
+        var t1 = (k[2] - x0) / d, t2 = (k[3] - x0) / d;
+        if (t1 > t2) { var tmp = t1; t1 = t2; t2 = tmp; }
+        lo = Math.max(lo, t1); hi = Math.min(hi, t2);
+      });
+      if (ok && lo <= hi) lista.push([lo, hi]);
+    }
+    var s = Infinity, e = -Infinity;
+    lista.forEach(function(iv) { if (iv) { s = Math.min(s, iv[0]); e = Math.max(e, iv[1]); } });
+    s = Math.max(0, s); e = Math.min(1, e);
+    return s <= e ? [s, e] : null;
+  }
+  // corta a poligonal pts pela cápsula: devolve os pedaços que sobram (lista, talvez vazia) ou null se nada foi tocado
+  function dsnCorta(pts, p0, p1, R) {
+    function ponto(a, b, t) { return [dsnNum(a[0] + (b[0] - a[0]) * t), dsnNum(a[1] + (b[1] - a[1]) * t)]; }
+    var pecas = [], cur = [], tocou = false, i;
+    if (pts.length === 1) return dsnDistSeg(pts[0][0], pts[0][1], p0, p1) <= R ? [] : null;
+    if (dsnDistSeg(pts[0][0], pts[0][1], p0, p1) <= R) tocou = true; else cur = [pts[0]];
+    for (i = 1; i < pts.length; i++) {
+      var a = pts[i - 1], b = pts[i], iv = dsnIntCapsula(a, b, p0, p1, R);
+      if (!iv) { if (cur.length) cur.push(b); continue; }
+      tocou = true;
+      if (iv[0] > 1e-9 && cur.length) cur.push(ponto(a, b, iv[0]));        // entrou na borracha no meio do segmento
+      if (cur.length > 1) pecas.push(cur);
+      cur = [];
+      if (iv[1] < 1 - 1e-9) cur = [ponto(a, b, iv[1]), b];                 // saiu dela no meio do segmento: recomeça aqui
+    }
+    if (cur.length > 1) pecas.push(cur);
+    return tocou ? pecas : null;
+  }
+  function dsnContorno(it) {             // retângulo/círculo como poligonal, pra poder cortar
+    var x0 = Math.min(it.a[0], it.a[2]), x1 = Math.max(it.a[0], it.a[2]), y0 = Math.min(it.a[1], it.a[3]), y1 = Math.max(it.a[1], it.a[3]);
+    if (it.f === 'rect') return [[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]];
+    var cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, rx = (x1 - x0) / 2, ry = (y1 - y0) / 2, pts = [], N = 72;
+    for (var i = 0; i <= N; i++) pts.push([dsnNum(cx + rx * Math.cos(2 * Math.PI * i / N)), dsnNum(cy + ry * Math.sin(2 * Math.PI * i / N))]);
+    return pts;
+  }
+  function dsnToca(it, p0, p1, r) {      // seta e texto: a borracha chegou perto o bastante ao longo do movimento?
+    var d = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]), n = Math.max(1, Math.ceil(d / Math.max(1, r / 2)));
+    for (var i = 0; i <= n; i++) if (dsnDist(it, p0[0] + (p1[0] - p0[0]) * i / n, p0[1] + (p1[1] - p0[1]) * i / n) <= r) return true;
+    return false;
+  }
+  function dsnBorraVai(p) {
+    var a = dsnBorrUlt ? [dsnBorrUlt.x, dsnBorrUlt.y] : [p.x, p.y], b = [p.x, p.y], r = dsnBorrRaio(), rep = [];
+    dsnBorrUlt = p;
+    function pedacos(it, pecas) {
+      return pecas.map(function(pc) { return { id:dsnId() + (dsnSeq++).toString(36), k:'t', c:it.c, w:it.w, p:pc }; });
+    }
+    mapaCena.desenho.forEach(function(it) {
+      var por = null, pecas;
+      if (it.k === 't') { pecas = dsnCorta(it.p, a, b, r + it.w / 2); if (pecas) por = pedacos(it, pecas); }
+      else if (it.k === 'f' && it.f !== 'arrow') { pecas = dsnCorta(dsnContorno(it), a, b, r + it.w / 2); if (pecas) por = pedacos(it, pecas); }
+      else if (dsnToca(it, a, b, r)) por = [];
+      if (por) rep.push({ id:it.id, por:por });
+    });
+    if (rep.length) dsnFaz({ op:'sub', rep:rep });
+  }
+  // o círculo que mostra o tamanho da borracha, seguindo o mouse
+  var dsnBorrCurEl = document.getElementById('dsnBorrCur'), dsnBorrPos = null;
+  function dsnBorrCursor(e) {
+    if (e) dsnBorrPos = mapaPontoView(e);
+    if (!dsnBorrPos || dsnTool !== 'borracha') { dsnBorrCurEl.hidden = true; return; }
+    var d = dsnEsp * 6;
+    dsnBorrCurEl.style.width = dsnBorrCurEl.style.height = d + 'px';
+    dsnBorrCurEl.style.left = dsnBorrPos.x + 'px'; dsnBorrCurEl.style.top = dsnBorrPos.y + 'px';
+    dsnBorrCurEl.hidden = false;
   }
 
   // ── Névoa de guerra (Modo Mestre) ──
@@ -4448,7 +4561,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       dsnPend = { id:dsnPen.id, c:dsnPen.c, w:dsnPen.w, pts:[[p.x, p.y]] };
       dsnPendT = setTimeout(dsnFlush, 50);
     } else if (dsnTool === 'borracha') {
-      dsnBorr = true; dsnApaga(p);
+      dsnBorr = true; dsnBorrUlt = null; dsnBorraVai(p);
     } else {
       var f = { seta:'arrow', retangulo:'rect', circulo:'circle' }[dsnTool];
       dsnForma = { f:f, a:p, b:p, c:dsnColor, w:dsnLargura(), pre:null };
@@ -4457,6 +4570,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   dsnCapt.addEventListener('pointermove', function(e) {
     if (reguaMinha) { reguaMove(dsnPonto(e)); return; }
     if (nevDrag) { nevMove(dsnPonto(e)); return; }
+    if (dsnTool === 'borracha') dsnBorrCursor(e);
     if (!dsnPen && !dsnForma && !dsnBorr) return;
     var p = dsnPonto(e);
     if (dsnPen) {
@@ -4467,7 +4581,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       dsnPend.pts.push([p.x, p.y]);
       if (!dsnPendT) dsnPendT = setTimeout(dsnFlush, 50);
     } else if (dsnBorr) {
-      dsnApaga(p);
+      dsnBorraVai(p);
     } else {
       dsnForma.b = p;
       var it = { id:'pre', k:'f', f:dsnForma.f, c:dsnForma.c, w:dsnForma.w, a:[dsnForma.a.x, dsnForma.a.y, p.x, p.y] };
@@ -4480,7 +4594,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     reguaSolta();
     nevSolta();
     if (dsnPen) { dsnFlush(); dsnPen = null; mapaAgendaSalvar(); }
-    if (dsnBorr) dsnBorr = false;
+    if (dsnBorr) { dsnBorr = false; dsnBorrUlt = null; mapaAgendaSalvar(); }
     if (dsnForma) {
       var f = dsnForma; dsnForma = null;
       if (f.pre) f.pre.remove();
@@ -4488,6 +4602,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       if (Math.hypot(f.b.x - f.a.x, f.b.y - f.a.y) * mapaVs.s >= 4) dsnFaz({ op:'add', it:{ id:dsnId(), k:'f', f:f.f, c:f.c, w:f.w, a:[f.a.x, f.a.y, f.b.x, f.b.y] } });
     }
   }
+  dsnCapt.addEventListener('pointerleave', function() { dsnBorrPos = null; dsnBorrCursor(null); });
   dsnCapt.addEventListener('pointerup', dsnSolta);
   dsnCapt.addEventListener('pointercancel', dsnSolta);
   dsnCapt.addEventListener('dblclick', function(e) { e.stopPropagation(); });   // duplo clique desenhando não reenquadra o mapa
@@ -4609,6 +4724,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     dsnTool = t;
     dsnCapt.hidden = t === 'mover';
     dsnCapt.classList.toggle('texto', t === 'texto');
+    dsnCapt.classList.toggle('borr', t === 'borracha');
+    dsnBorrCursor(null);
     document.querySelectorAll('.dsn-tool').forEach(function(b) { b.classList.toggle('active', b.dataset.tool === t); });
   }
   function dsnSetCor(c, el) {
@@ -4621,6 +4738,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     b.addEventListener('click', function() {
       dsnEsp = +b.dataset.esp;
       document.querySelectorAll('.dsn-esp').forEach(function(x) { x.classList.toggle('active', x === b); });
+      dsnBorrCursor(null);
     });
   });
   document.querySelector('.dsn-esp').classList.add('active');
