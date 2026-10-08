@@ -1197,6 +1197,14 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 .chat-msgs.chat-priv .msg-head .who-b { color:#ff8a7a; }
 .chat-panel.privado .chat-input { border-color:rgba(255,138,122,0.55); }
 .msg-aviso.priv { color:#ff8a7a; opacity:0.85; }
+.sus-btn { touch-action:none; user-select:none; -webkit-user-select:none; }
+.sus-btn[hidden], .chat-sus[hidden] { display:none; }
+.sus-btn.on { color:#fff; background:rgba(255,138,122,0.5); border-color:#ff8a7a; box-shadow:0 0 12px rgba(255,138,122,0.7); }
+.chat-sus {
+  flex:0 0 auto; padding:7px 12px; border-top:1px solid rgba(255,138,122,0.4); background:rgba(255,138,122,0.1); color:#ff8a7a;
+  font-family:var(--font-mono); font-size:10px; letter-spacing:0.06em; animation:susPulsa 1.2s ease-in-out infinite;
+}
+@keyframes susPulsa { 50% { background:rgba(255,138,122,0.2); } }
 .msg { font-size:13px; line-height:1.5; }
 .msg-head { font-family:var(--font-mono); font-size:9px; letter-spacing:0.1em; color:var(--fg-faint); margin-bottom:2px; }
 .msg-head .who-b { color:var(--accent); }
@@ -1722,6 +1730,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       <div class="panel-head"><span class="led"></span><span class="panel-title">Chat</span></div>
       <div class="chat-conv" id="chatConv"></div>
       <div class="chat-msgs" id="chatMsgs"></div>
+      <div class="chat-sus" id="susEstado" hidden></div>
       <div class="chat-upload" id="chatUpload" hidden>
         <span class="nm" id="chatUploadName"></span>
         <span class="bar"><i id="chatUploadBar"></i></span>
@@ -1730,6 +1739,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
         <input type="file" id="imgInput" multiple accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm,video/quicktime,audio/mpeg,audio/mp4,audio/ogg,audio/wav,application/pdf" hidden>
         <button class="icon-btn" id="imgBtn" title="Enviar arquivo (imagem, vídeo, áudio ou PDF)">&#128206;</button>
         <input class="chat-input" id="chatInput" placeholder="Mensagem, link…" maxlength="2000">
+        <button class="icon-btn sus-btn" id="susBtn" type="button" hidden title="Segure para sussurrar: só esta pessoa te ouve, a mesa não">&#127908;</button>
         <button class="icon-btn" id="sendBtn" title="Enviar">&#10148;</button>
       </div>
     </div>
@@ -2588,6 +2598,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (f) f.novo = 0;
     chatPainelEl.classList.toggle('privado', !!f);
     chatInput.placeholder = f ? 'Em particular para ' + f.nome + '…' : 'Mensagem, link…';
+    document.getElementById('susBtn').hidden = !f;
     chatConvRender();
     var ativo = f ? f.el : chatMsgs; ativo.scrollTop = ativo.scrollHeight;
   }
@@ -2670,6 +2681,161 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     av.textContent = f.nome + ' não está na mesa agora — não vai receber esta mensagem';
     f.el.appendChild(av); f.el.scrollTop = f.el.scrollHeight;
   }
+  // ── Sussurro de voz ──
+  // Segurando o botão 🎙 numa conversa privada, a voz vai SÓ pra essa pessoa e a mesa não te ouve: o microfone da
+  // chamada principal fica mudo enquanto segura (e volta como estava ao soltar). A voz não vai pela chamada nem por
+  // conexão direta (que falha em muita rede): vai por um canal de tempo real que só o destinatário assina, em blocos
+  // de áudio de 16 kHz. Quem recebe ouve na hora, e a aba da conversa mostra quem está sussurrando.
+  var SUS_HZ = 16000, SUS_MAX_MS = 90000;
+  var jitsiMudo = false;            // o meu microfone no vídeo está mudo? (o Jitsi avisa quando muda)
+  var susEnv = null;                // o sussurro que estou fazendo agora
+  var susRx = {};                   // de quem estou ouvindo: chave → { nome, prox, timer }
+  var susCtx = null, susCanalIn = null;
+  var susEstadoEl = document.getElementById('susEstado'), susBtn = document.getElementById('susBtn');
+  var SUS_WORKLET = 'class C extends AudioWorkletProcessor{constructor(){super();this.b=new Float32Array(4096);this.n=0;}' +
+    'process(i){var c=i[0]&&i[0][0];if(!c)return true;for(var k=0;k<c.length;k++){this.b[this.n++]=c[k];if(this.n===4096){this.port.postMessage(this.b.slice(0));this.n=0;}}return true;}}' +
+    'registerProcessor("sus-cap",C);';
+  function susStatus() {
+    var quem = Object.keys(susRx).map(function(k) { return susRx[k].nome; });
+    if (susEnv) { susEstadoEl.textContent = '🎙 Sussurrando para ' + susEnv.alvo + ' — a mesa não te ouve'; susEstadoEl.hidden = false; }
+    else if (quem.length) { susEstadoEl.textContent = '🔊 ' + quem.join(', ') + (quem.length > 1 ? ' estão sussurrando' : ' está sussurrando') + ' para você'; susEstadoEl.hidden = false; }
+    else susEstadoEl.hidden = true;
+  }
+  function susB64(i16) {
+    var u8 = new Uint8Array(i16.buffer, i16.byteOffset, i16.byteLength), s = '';
+    for (var i = 0; i < u8.length; i += 0x2000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x2000));
+    return btoa(s);
+  }
+  function susEnviaPacote(env, msg) { try { env.canal.send({ type:'broadcast', event:'sus', payload:msg }); } catch (_) {} }
+  function susEnviaBloco(env, f32) {
+    if (env.parou) return;
+    var r = env.ctx.sampleRate / SUS_HZ, n = Math.floor(f32.length / r), out = new Int16Array(n);
+    for (var j = 0; j < n; j++) {
+      var a = Math.floor(j * r), b = Math.max(a + 1, Math.min(f32.length, Math.floor((j + 1) * r))), soma = 0;
+      for (var k = a; k < b; k++) soma += f32[k];
+      var v = soma / (b - a);
+      out[j] = Math.max(-1, Math.min(1, v)) * 32767;
+    }
+    var msg = { de:nome, seq:env.seq++, d:susB64(out) };
+    if (env.pronto) susEnviaPacote(env, msg);
+    else if (env.fila.length < 40) env.fila.push(msg);     // o canal ainda está abrindo: guarda o começo da fala
+  }
+  function susLimpa(env) {
+    try { if (env.node) { env.node.port.onmessage = null; env.node.disconnect(); } } catch (_) {}
+    try { if (env.stream) env.stream.getTracks().forEach(function(tr) { tr.stop(); }); } catch (_) {}
+    try { if (env.ctx) env.ctx.close(); } catch (_) {}
+  }
+  async function susDeviceMic() {
+    try {
+      if (!ENT_ESCOLHA.micLabel) return null;
+      var ds = await navigator.mediaDevices.enumerateDevices();
+      var d = ds.filter(function(x) { return x.kind === 'audioinput' && x.label === ENT_ESCOLHA.micLabel; })[0];
+      return d ? d.deviceId : null;
+    } catch (_) { return null; }
+  }
+  async function susAbreMic(env) {
+    var did = await susDeviceMic();
+    var stream = await navigator.mediaDevices.getUserMedia({ audio:Object.assign({ echoCancellation:true, noiseSuppression:true, autoGainControl:true }, did ? { deviceId:{ exact:did } } : {}) });
+    env.stream = stream;
+    if (env.parou) { susLimpa(env); return; }
+    var ctx = env.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    await ctx.resume();
+    await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([SUS_WORKLET], { type:'text/javascript' })));
+    if (env.parou) { susLimpa(env); return; }
+    var src = ctx.createMediaStreamSource(stream), node = env.node = new AudioWorkletNode(ctx, 'sus-cap'), mudo = ctx.createGain();
+    mudo.gain.value = 0;                                    // o nó só roda se estiver ligado na saída; sem som nenhum aqui
+    src.connect(node); node.connect(mudo); mudo.connect(ctx.destination);
+    node.port.onmessage = function(e) { susEnviaBloco(env, e.data); };
+  }
+  function susComeca() {
+    var alvo = chatAlvo();
+    if (!alvo || susEnv) return;
+    var f = chatFioGet(alvo);
+    if (!chatPresentes().some(function(n) { return dmKey(n) === dmKey(alvo); })) { dmAvisaAusente(f); return; }
+    if (!sbRealtimeClient || !navigator.mediaDevices || !window.AudioWorkletNode) {
+      var av = document.createElement('div'); av.className = 'msg-aviso priv'; av.textContent = 'Este navegador não consegue sussurrar por voz';
+      f.el.appendChild(av); return;
+    }
+    var env = susEnv = { alvo:alvo, fila:[], pronto:false, seq:0, parou:false, desmutar:false, fimPendente:false, canal:null, ctx:null, stream:null, node:null, timer:null };
+    if (jitsiApi && !jitsiMudo) { try { jitsiApi.executeCommand('toggleAudio'); env.desmutar = true; jitsiMudo = true; } catch (_) {} }   // a mesa para de te ouvir
+    env.canal = sbRealtimeClient.channel('mesa:' + SALA + ':sus:' + dmKey(alvo), { config:{ broadcast:{ self:false } } });
+    env.canal.subscribe(function(st) {
+      if (st !== 'SUBSCRIBED' || env.pronto) return;
+      env.pronto = true;
+      env.fila.forEach(function(m) { susEnviaPacote(env, m); }); env.fila = [];
+      if (env.fimPendente) { susEnviaPacote(env, { de:nome, fim:true }); setTimeout(function() { try { env.canal.unsubscribe(); } catch (_) {} }, 600); }
+    });
+    env.timer = setTimeout(susPara, SUS_MAX_MS);            // botão que ficou preso não deixa o microfone aberto pra sempre
+    susBtn.classList.add('on'); susStatus();
+    susAbreMic(env).catch(function(e) {
+      if (window.console) console.warn('[sussurro] microfone:', e && e.message);
+      if (susEnv === env) susPara();
+      var av = document.createElement('div'); av.className = 'msg-aviso priv'; av.textContent = 'Não consegui abrir o microfone para sussurrar';
+      f.el.appendChild(av); f.el.scrollTop = f.el.scrollHeight;
+    });
+  }
+  function susPara() {
+    var env = susEnv;
+    if (!env) return;
+    susEnv = null; env.parou = true; clearTimeout(env.timer);
+    if (env.pronto) { susEnviaPacote(env, { de:nome, fim:true }); setTimeout(function() { try { env.canal.unsubscribe(); } catch (_) {} }, 600); }
+    else env.fimPendente = true;                            // soltou antes de o canal abrir: manda o fim assim que abrir
+    susLimpa(env);
+    if (env.desmutar && jitsiApi && jitsiMudo) { try { jitsiApi.executeCommand('toggleAudio'); jitsiMudo = false; } catch (_) {} }   // o microfone da chamada volta como estava
+    susBtn.classList.remove('on'); susStatus();
+  }
+  susBtn.addEventListener('pointerdown', function(e) {
+    e.preventDefault();
+    try { susBtn.setPointerCapture(e.pointerId); } catch (_) {}
+    susComeca();
+  });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function(ev) { susBtn.addEventListener(ev, susPara); });
+  susBtn.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+  window.addEventListener('blur', susPara);
+  document.addEventListener('visibilitychange', function() { if (document.hidden) susPara(); });
+
+  function susFimRx(k) {
+    var r = susRx[k]; if (!r) return;
+    clearTimeout(r.timer); delete susRx[k]; susStatus();
+  }
+  function susRecebe(p) {
+    if (!p || typeof p.de !== 'string' || dmKey(p.de) === dmKey(nome)) return;
+    var k = dmKey(p.de), r = susRx[k];
+    if (p.fim) { susFimRx(k); return; }
+    if (typeof p.d !== 'string' || !p.d || p.d.length > 60000) return;
+    if (!r) {                                               // começou a sussurrar pra mim
+      r = susRx[k] = { nome:p.de, prox:0, timer:null };
+      var f = chatFioGet(p.de);
+      if (chatFio !== k) { f.novo++; chatConvRender(); }
+      palcoChatNovo({ autor:p.de, ts:Date.now() });
+    }
+    var bin = atob(p.d), n = bin.length >> 1;
+    if (!n) return;
+    var u8 = new Uint8Array(n * 2), i;
+    for (i = 0; i < n * 2; i++) u8[i] = bin.charCodeAt(i);
+    var i16 = new Int16Array(u8.buffer, 0, n), f32 = new Float32Array(n), q = 0;
+    for (i = 0; i < n; i++) { f32[i] = i16[i] / 32768; q += f32[i] * f32[i]; }
+    var rms = Math.sqrt(q / n);
+    window.__susRx = { chunks:((window.__susRx && window.__susRx.chunks) || 0) + 1, rms:Math.max((window.__susRx && window.__susRx.rms) || 0, rms), de:p.de };
+    try {
+      if (!susCtx) susCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (susCtx.state === 'suspended') susCtx.resume();
+      var buf = susCtx.createBuffer(1, n, SUS_HZ); buf.copyToChannel(f32, 0);
+      var src = susCtx.createBufferSource(); src.buffer = buf; src.connect(susCtx.destination);
+      var agora = susCtx.currentTime, quando = Math.max(r.prox, agora + 0.15);   // um respiro pra a rede oscilar sem picotar
+      if (quando - agora > 0.8) quando = agora + 0.15;                           // atraso acumulou: recomeça em vez de ir ficando pra trás
+      src.start(quando); r.prox = quando + buf.duration;
+    } catch (_) {}
+    clearTimeout(r.timer); r.timer = setTimeout(function() { susFimRx(k); }, 1500);   // parou de chegar: some o aviso
+    susStatus();
+  }
+  function susOuve() {
+    if (susCanalIn || !sbRealtimeClient || !dmKey(nome)) return;
+    susCanalIn = sbRealtimeClient.channel('mesa:' + SALA + ':sus:' + dmKey(nome), { config:{ broadcast:{ self:false } } });
+    susCanalIn.on('broadcast', { event:'sus' }, function(m) { susRecebe(m.payload); });
+    susCanalIn.subscribe();
+  }
+
   function sendChat() {
     var t = chatInput.value.trim();
     if (!t) return;
@@ -6421,7 +6587,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     });
     channel.subscribe(function(status){
       document.getElementById('connDot').classList.toggle('on', status === 'SUBSCRIBED');
-      if (status === 'SUBSCRIBED') { send('chars-req', {}); send('mesa-ctx-req', {}); send('som-state-req', {}); send('timer-req', {}); channel.track({ id:MAPA_ME, nome:nome }); palcoTrack(); send('palco-req', { by:MAPA_ME }); }
+      if (status === 'SUBSCRIBED') { susOuve(); send('chars-req', {}); send('mesa-ctx-req', {}); send('som-state-req', {}); send('timer-req', {}); channel.track({ id:MAPA_ME, nome:nome }); palcoTrack(); send('palco-req', { by:MAPA_ME }); }
     });
   }
 
@@ -6480,6 +6646,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       });
       setupTrxWatchdog();
       jitsiLigaTile();
+      jitsiMudo = !ENT.mic;                                  // começa mudo se a entrada pediu microfone desligado
+      jitsiApi.addListener('audioMuteStatusChanged', function(e) { jitsiMudo = !!(e && e.muted); });
       jitsiApi.addListener('videoConferenceJoined', function() { if (ENT_FOTO.url) { try { jitsiApi.executeCommand('avatarUrl', ENT_FOTO.url); } catch (_) {} } });   // a foto vira o avatar na chamada
       jitsiApi.addListener('readyToClose', function() { location.reload(); });   // desligou a chamada: volta pra tela de entrada
       setupResvBreakout();   // ouvintes do reservado (breakout) no vídeo principal
