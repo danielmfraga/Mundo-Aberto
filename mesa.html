@@ -3515,7 +3515,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     var geo = mapaTokGeo(t), rosto = el.firstChild;
     el.classList.toggle('npc', !t.pc);
     var cen = mapaTokCentro(t);
-    el.classList.toggle('na-nevoa', !t.pc && !nevAberto(cen.x, cen.y));   // monstro na névoa: escondido dos jogadores
+    el.classList.toggle('na-nevoa', !t.pc && nevMeVeNevoa() && !nevAberto(cen.x, cen.y));   // monstro na névoa: escondido dos jogadores
     el.style.left = geo.x + 'px';
     el.style.top = geo.y + 'px';
     el.style.width = el.style.height = geo.lado + 'px';
@@ -3936,6 +3936,9 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     N.ops.forEach(function(o) { if (nevDentro(o, x, y)) aberto = o.m === 'a'; });
     return aberto;
   }
+  // O host fora do Modo Mestre vê o mapa limpo (a névoa é pros jogadores); no Modo Mestre vê a névoa
+  // translúcida pra poder editar. Jogador sempre vê a névoa.
+  function nevMeVeNevoa() { return !palcoSouHost || nevMestreOn; }
   function nevForma(o, cor) {
     if (o.k === 't') return dsnSvg('polyline', { points:dsnPts(o.p), fill:'none', stroke:cor, 'stroke-width':o.w, 'stroke-linecap':'round', 'stroke-linejoin':'round' });
     var x0 = Math.min(o.a[0], o.a[2]), y0 = Math.min(o.a[1], o.a[3]), w = Math.abs(o.a[2] - o.a[0]), h = Math.abs(o.a[3] - o.a[1]);
@@ -3945,7 +3948,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   function nevRender() {
     var N = mapaCena.nevoa || { on:false, ops:[] };
     mapaNev.innerHTML = ''; nevPreEl = null;
-    mapaNev.style.display = N.on ? '' : 'none';
+    mapaNev.style.display = N.on && nevMeVeNevoa() ? '' : 'none';
     mapaNev.classList.toggle('mestre', nevMestreOn);
     if (!N.on) return;
     var W = mapaCena.w, H = mapaCena.h;
@@ -5311,6 +5314,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     palcoCtrlBt.hidden = !palcoDentro || palcoSouHost;
     palcoMestreBt.hidden = !palcoDentro || !palcoSouHost;
     if (nevMestreOn && (!palcoDentro || !palcoSouHost)) nevMestre(false);   // perdeu o posto de host: o Modo Mestre acaba
+    if (palcoSouHost !== eraHost) { nevRender(); mapaRenderTokens(); }       // virou (ou deixou de ser) host: muda o que vê da névoa
     palcoLiveBox.hidden = !palcoDentro;
     palcoAplicaRosto(!!h && !!h.rosto);
     palcoLiveIn.checked = palcoSouHost ? palcoLive : palcoSeguir;
