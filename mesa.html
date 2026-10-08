@@ -784,6 +784,9 @@ body.mapa-on .mapa-bar {
 }
 .palco-esq { display:none; position:absolute; z-index:6; left:10px; top:10px; flex-direction:column; align-items:flex-start; gap:10px; max-height:calc(100% - 70px); overflow-y:auto; scrollbar-width:thin; }
 body.mapa-on .palco-esq { display:flex; }
+.palco-esq { pointer-events:none; scrollbar-color:rgba(78,211,232,0.35) transparent; }   /* o espaço vazio ao lado dos painéis estreitos não pode engolir cliques do mapa */
+@media (max-height:860px) { .nev-dica { display:none; } }
+.palco-esq > * { pointer-events:auto; }
 .palco-host {
   display:none; position:relative; flex:0 0 auto; align-items:center; gap:8px; max-width:200px; flex-wrap:wrap;
   background:rgba(11,19,32,0.92); backdrop-filter:blur(6px); border:1px solid var(--line-strong); border-radius:8px; padding:7px 10px;
@@ -890,6 +893,33 @@ body:not(.mapa-on) .dsn-bar { display:none; }
 }
 /* mesa em pausa: ver e mover a vista pode, mexer no que o host está montando não */
 body.palco-pausado .dsn-tool:not([data-tool="mover"]) { pointer-events:none; opacity:0.4; }   /* a paleta segue viva; só desenhar fica travado */
+/* Modo Mestre (só o host): névoa de guerra. Os jogadores veem a névoa sólida; o Mestre, com o modo ligado, vê através dela */
+.palco-host-bt.on { color:#ff8a7a; border-color:#ff8a7a; background:rgba(255,138,122,0.16); box-shadow:0 0 10px rgba(255,138,122,0.3); }
+.nev-bar {
+  display:none; position:relative; flex:0 0 auto; flex-direction:column; align-items:stretch; gap:7px; width:152px; box-sizing:border-box;
+  background:rgba(11,19,32,0.92); backdrop-filter:blur(6px); border:1px solid #ff8a7a66; border-radius:8px; padding:8px 9px;
+  font-family:var(--font-mono); font-size:9.5px; letter-spacing:0.06em; color:var(--fg-dim);
+}
+body.mapa-on.mestre-on .nev-bar { display:flex; }
+.nev-bar[hidden] { display:none !important; }
+.nev-tit { color:#ff8a7a; letter-spacing:0.14em; text-transform:uppercase; font-size:9px; }
+.nev-seg { display:flex; gap:4px; }
+.nev-seg button, .nev-acoes button {
+  flex:1; cursor:pointer; padding:5px 4px; border-radius:5px; font:inherit; font-size:9px; letter-spacing:0.06em; text-transform:uppercase;
+  color:var(--fg-dim); background:rgba(255,255,255,0.04); border:1px solid var(--line);
+}
+.nev-seg button:hover, .nev-acoes button:hover:not(:disabled) { border-color:var(--holo-soft); color:var(--fg); }
+.nev-seg button.on { color:var(--holo); border-color:var(--holo); background:rgba(78,211,232,0.1); }
+.nev-acoes { display:flex; flex-direction:column; gap:4px; }
+.nev-acoes button:disabled { opacity:0.4; cursor:default; }
+.nev-ferr { display:flex; gap:4px; justify-content:space-between; }
+.nev-dica { font-size:8.5px; line-height:1.5; letter-spacing:0.03em; color:var(--fg-faint); }
+.mapa-nev { position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none; overflow:hidden; }
+.mapa-nev .nev-cobre { transition:opacity .2s; }
+.mapa-nev.mestre .nev-cobre { opacity:0.5; }
+/* monstro dentro da névoa: some pros jogadores, e o Mestre o vê esmaecido. Personagens dos jogadores nunca somem */
+.mapa-tok.na-nevoa { opacity:0; pointer-events:none; }
+body.mestre-on .mapa-tok.na-nevoa { opacity:0.42; pointer-events:auto; }
 .abas-bar {
   display:none; position:absolute; z-index:6; left:10px; bottom:10px; right:calc(252px + 30px); align-items:center; gap:5px; overflow-x:auto;
   background:rgba(11,19,32,0.92); backdrop-filter:blur(6px); border:1px solid var(--line-strong); border-radius:8px; padding:5px 6px; width:max-content; max-width:calc(100% - 292px);
@@ -1430,9 +1460,33 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
         <button class="palco-host-bt" id="palcoControlar" type="button" title="Assumir o controle da mesa" hidden>Controlar</button>
         <button class="palco-host-bt" id="palcoRostoBt" type="button" title="Uma tela só de rostos, só pra você. Aperte de novo pra voltar à mesa." hidden>Rosto a rosto</button>
         <button class="palco-host-bt" id="palcoLevaBt" type="button" title="Leva TODO MUNDO pra tela de rostos, como se a mesa tivesse fechado (quem já está nela não sente nada). Aperte de novo pra soltar." hidden>Levar todos</button>
+        <button class="palco-host-bt" id="palcoMestreBt" type="button" title="Modo Mestre: ferramentas só suas (névoa que esconde partes do mapa dos jogadores)" hidden>Mestre</button>
         <label class="palco-live" id="palcoLiveBox" title="Ligado: você vê a tela do host, igual. Desligado: a mesa fica parada pra você">
           <span>Tempo real</span><input type="checkbox" id="palcoLive" checked><i class="palco-sw"></i>
         </label>
+      </div>
+      <div class="nev-bar" id="nevBar" hidden>
+        <div class="nev-tit">Mestre · Névoa</div>
+        <label class="palco-live" title="Ligada: os jogadores só veem o que você revelou. Desligada: veem o mapa inteiro (o que você revelou fica guardado)">
+          <span>Névoa</span><input type="checkbox" id="nevOn"><i class="palco-sw"></i>
+        </label>
+        <div class="nev-seg" id="nevModo">
+          <button type="button" data-m="a" class="on" title="Tira a névoa do que você marcar">Revelar</button>
+          <button type="button" data-m="c" title="Põe a névoa de volta no que você marcar">Cobrir</button>
+        </div>
+        <div class="nev-ferr">
+          <button class="wb-tool wb-icon dsn-tool" data-tool="nv-r" type="button" title="Retângulo: arraste. Um clique só atua na casa clicada">&#9645;</button>
+          <button class="wb-tool wb-icon dsn-tool" data-tool="nv-o" type="button" title="Círculo/oval: arraste. Um clique só atua na casa clicada">&#9711;</button>
+          <button class="wb-tool wb-icon dsn-tool" data-tool="nv-t" type="button" title="Pincel: pinte o corredor por onde os jogadores avançam">&#9998;</button>
+        </div>
+        <div class="nev-seg" id="nevPincel" title="Espessura do pincel, em casas">
+          <button type="button" data-n="1">1</button><button type="button" data-n="2" class="on">2</button><button type="button" data-n="4">4</button>
+        </div>
+        <div class="nev-acoes">
+          <button type="button" id="nevDesfaz" title="Desfaz a última marcação">&#8630; Desfazer</button>
+          <button type="button" id="nevTudo" title="Cobre o mapa inteiro de novo (apaga o que foi revelado)">Cobrir tudo</button>
+        </div>
+        <div class="nev-dica">Você vê através da névoa; os jogadores não. Monstros na névoa ficam escondidos deles.</div>
       </div>
       <div class="dsn-bar" id="dsnBar">
         <button class="wb-tool wb-icon dsn-tool active" data-tool="mover" type="button" title="Mover: tokens e vista (Esc)">&#9995;</button>
@@ -1477,6 +1531,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
         <div class="mapa-grade" id="mapaGrade"></div>
         <svg class="mapa-grade mapa-hex" id="mapaHex" style="display:none" aria-hidden="true"></svg>
         <svg class="mapa-dsn" id="mapaDsn" aria-hidden="true"></svg>
+        <svg class="mapa-nev" id="mapaNev" aria-hidden="true" style="display:none"></svg>
         <svg class="mapa-dsn" id="mapaRegua" aria-hidden="true"></svg>
         <div class="mapa-tokens" id="mapaTokens"></div>
       </div>
@@ -3117,7 +3172,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var _mapaNpcImg = null, _mapaNpcSubindo = false, _mapaSoltando = 0;
 
   function mapaClamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
-  function mapaCenaVazia() { return { v:1, img:null, branco:false, w:0, h:0, grade:{ tipo:'quadrada', tam:70, dx:0, dy:0, cor:'escura' }, imgZoom:100, imgX:50, imgY:50, tokens:[], desenho:[], fundo:'#f0f0f0' }; }
+  function mapaCenaVazia() { return { v:1, img:null, branco:false, w:0, h:0, grade:{ tipo:'quadrada', tam:70, dx:0, dy:0, cor:'escura' }, imgZoom:100, imgX:50, imgY:50, tokens:[], desenho:[], fundo:'#f0f0f0', nevoa:{ on:false, ops:[] } }; }
   // Medida de uma sala em branco: quantas casas de largura/altura, no
   // formato escolhido, viram pixels — a mesma conta pra criar uma sala nova
   // e pro padrão que a mesa nasce com.
@@ -3242,6 +3297,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       return true;
     }).slice(0, 200);
     n.desenho = dsnNorm(c.desenho);
+    n.nevoa = nevNorm(c.nevoa);
     n.fundo = mapaFundoCor(c.fundo);
     // nem imagem nem branco marcado (só deveria acontecer com um JSON salvo
     // à mão ou corrompido) — a mesa se cura sozinha, nunca fica sem nada
@@ -3405,6 +3461,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     mapaSyncGradeUI();
     mapaSyncImgUI();
     dsnRenderTudo();
+    nevRender();
     reguas = {}; reguaPinta();
   }
   function mapaRenderGrade() {
@@ -3457,6 +3514,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   function mapaPintaTok(el, t) {
     var geo = mapaTokGeo(t), rosto = el.firstChild;
     el.classList.toggle('npc', !t.pc);
+    var cen = mapaTokCentro(t);
+    el.classList.toggle('na-nevoa', !t.pc && !nevAberto(cen.x, cen.y));   // monstro na névoa: escondido dos jogadores
     el.style.left = geo.x + 'px';
     el.style.top = geo.y + 'px';
     el.style.width = el.style.height = geo.lado + 'px';
@@ -3682,6 +3741,9 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var dsnTool = 'mover', dsnColor = '#111111', dsnEsp = 3;
   var dsnEls = {};                         // id → elemento svg
   var dsnPen = null, dsnForma = null, dsnBorr = false, dsnTexto = null, dsnPend = null, dsnPendT = null;
+  var NEV_MAX = 600, NEV_PTS = 500;
+  var mapaNev = document.getElementById('mapaNev');
+  var nevMestreOn = false, nevModo = 'a', nevCasas = 2, nevDrag = null, nevPreEl = null;
   function dsnNum(v) { v = +v; return isFinite(v) ? Math.round(v * 10) / 10 : 0; }
   function dsnCor(c) { return (typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c)) ? c : '#111111'; }
   function dsnId() { return MAPA_ME.slice(0, 4) + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
@@ -3822,6 +3884,195 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (achou.length) dsnFaz({ op:'del', ids:achou });
   }
 
+  // ── Névoa de guerra (Modo Mestre) ──
+  // A cena inteira fica coberta por uma névoa e o Mestre vai abrindo o que os jogadores já descobriram (uma
+  // masmorra, por exemplo). É uma lista de marcações em ordem — "revelar" (m:'a') ou "cobrir" (m:'c'), cada uma
+  // um retângulo (r), oval (o) ou traço de pincel (t) — e a última que cobre um ponto vale: assim dá pra
+  // revelar uma sala e cobrir um pedaço dela de novo. Vai junto da cena (cena.nevoa), é salva com ela e
+  // viaja por 'mapa-nev'. Monstros (tokens que não são de jogador) dentro da névoa somem pros jogadores.
+  function nevItemNorm(it) {
+    if (!it || typeof it.id !== 'string' || !it.id || it.id.length > 40) return null;
+    var k = ['r', 'o', 't'].indexOf(it.k) >= 0 ? it.k : null;
+    if (!k) return null;
+    var o = { id:it.id, m:it.m === 'c' ? 'c' : 'a', k:k };
+    if (k === 't') {
+      o.w = mapaClamp(dsnNum(it.w) || 20, 2, 2000);
+      o.p = (Array.isArray(it.p) ? it.p : []).slice(0, NEV_PTS).filter(Array.isArray).map(function(q) { return [dsnNum(q[0]), dsnNum(q[1])]; });
+      return o.p.length ? o : null;
+    }
+    var a = Array.isArray(it.a) ? it.a : [];
+    o.a = [dsnNum(a[0]), dsnNum(a[1]), dsnNum(a[2]), dsnNum(a[3])];
+    return o;
+  }
+  function nevNorm(n) {
+    n = n || {};
+    var vistos = {};
+    return {
+      on: !!n.on,
+      ops: (Array.isArray(n.ops) ? n.ops : []).map(nevItemNorm).filter(function(it) {
+        if (!it || vistos[it.id]) return false;
+        vistos[it.id] = 1;
+        return true;
+      }).slice(0, NEV_MAX)
+    };
+  }
+  function nevDentro(o, x, y) {
+    if (o.k === 't') {
+      if (o.p.length === 1) return Math.hypot(x - o.p[0][0], y - o.p[0][1]) <= o.w / 2;
+      for (var i = 1; i < o.p.length; i++) if (dsnDistSeg(x, y, o.p[i - 1], o.p[i]) <= o.w / 2) return true;
+      return false;
+    }
+    var x0 = Math.min(o.a[0], o.a[2]), x1 = Math.max(o.a[0], o.a[2]), y0 = Math.min(o.a[1], o.a[3]), y1 = Math.max(o.a[1], o.a[3]);
+    if (o.k === 'r') return x >= x0 && x <= x1 && y >= y0 && y <= y1;
+    var hw = (x1 - x0) / 2, hh = (y1 - y0) / 2;
+    if (hw < 0.5 || hh < 0.5) return false;
+    return Math.pow((x - (x0 + x1) / 2) / hw, 2) + Math.pow((y - (y0 + y1) / 2) / hh, 2) <= 1;
+  }
+  // o ponto está visível (sem névoa)? Sem névoa ligada, tudo está.
+  function nevAberto(x, y) {
+    var N = mapaCena.nevoa;
+    if (!N || !N.on) return true;
+    var aberto = false;
+    N.ops.forEach(function(o) { if (nevDentro(o, x, y)) aberto = o.m === 'a'; });
+    return aberto;
+  }
+  function nevForma(o, cor) {
+    if (o.k === 't') return dsnSvg('polyline', { points:dsnPts(o.p), fill:'none', stroke:cor, 'stroke-width':o.w, 'stroke-linecap':'round', 'stroke-linejoin':'round' });
+    var x0 = Math.min(o.a[0], o.a[2]), y0 = Math.min(o.a[1], o.a[3]), w = Math.abs(o.a[2] - o.a[0]), h = Math.abs(o.a[3] - o.a[1]);
+    if (o.k === 'r') return dsnSvg('rect', { x:x0, y:y0, width:w, height:h, fill:cor });
+    return dsnSvg('ellipse', { cx:x0 + w / 2, cy:y0 + h / 2, rx:w / 2, ry:h / 2, fill:cor });
+  }
+  function nevRender() {
+    var N = mapaCena.nevoa || { on:false, ops:[] };
+    mapaNev.innerHTML = ''; nevPreEl = null;
+    mapaNev.style.display = N.on ? '' : 'none';
+    mapaNev.classList.toggle('mestre', nevMestreOn);
+    if (!N.on) return;
+    var W = mapaCena.w, H = mapaCena.h;
+    var defs = dsnSvg('defs', {}), mask = dsnSvg('mask', { id:'nevMask', maskUnits:'userSpaceOnUse', x:0, y:0, width:W, height:H });
+    mask.appendChild(dsnSvg('rect', { x:0, y:0, width:W, height:H, fill:'#fff' }));
+    N.ops.forEach(function(o) { mask.appendChild(nevForma(o, o.m === 'a' ? '#000' : '#fff')); });
+    defs.appendChild(mask); mapaNev.appendChild(defs);
+    mapaNev.appendChild(dsnSvg('rect', { x:0, y:0, width:W, height:H, fill:'#04070d', mask:'url(#nevMask)', 'class':'nev-cobre' }));
+  }
+  function nevAplica(op) {
+    if (!op) return;
+    var N = mapaCena.nevoa;
+    if (op.op === 'add') {
+      var it = nevItemNorm(op.it);
+      if (it && N.ops.length < NEV_MAX && !N.ops.some(function(x) { return x.id === it.id; })) N.ops.push(it);
+    } else if (op.op === 'del') {
+      var ids = Array.isArray(op.ids) ? op.ids : [];
+      N.ops = N.ops.filter(function(x) { return ids.indexOf(x.id) < 0; });
+    } else if (op.op === 'cfg') {
+      N.on = !!op.on;
+    } else if (op.op === 'cobre') {
+      N.on = true; N.ops = [];
+    } else return;
+    nevRender(); mapaRenderTokens(); nevSyncUI();
+  }
+  function nevFaz(op) {            // mudança feita aqui: aplica, conta pra mesa e grava
+    nevAplica(op);
+    op.by = MAPA_ME;
+    send('mapa-nev', op);
+    mapaAgendaSalvar();
+  }
+  // ── o que o Mestre faz com o ponteiro ──
+  function nevPreview() {
+    if (!nevDrag) return;
+    if (nevPreEl) nevPreEl.remove();
+    var d = nevDrag, k = 1 / mapaVs.s, cor = d.m === 'a' ? '#00ffe7' : '#ff8a7a';
+    var o = { k:d.k, a:d.a, p:d.p, w:d.w }, g;
+    if (d.k === 't') {
+      g = nevForma(o, cor); g.setAttribute('opacity', '0.45');
+    } else {
+      g = nevForma(o, cor); g.setAttribute('fill-opacity', '0.22'); g.setAttribute('stroke', cor); g.setAttribute('stroke-width', 2 * k); g.setAttribute('stroke-dasharray', (7 * k) + ' ' + (5 * k));
+    }
+    nevPreEl = g;
+    (mapaNev.style.display === 'none' ? mapaDsn : mapaNev).appendChild(g);
+  }
+  function nevComeca(p) {
+    if (!nevMestreOn) return;
+    var k = { 'nv-r':'r', 'nv-o':'o', 'nv-t':'t' }[dsnTool];
+    if (!k) return;
+    if (!mapaCena.nevoa.on) nevFaz({ op:'cfg', on:true });   // marcar a névoa com ela desligada liga: tudo coberto, menos o que for revelado
+    nevDrag = { k:k, m:nevModo, a:[p.x, p.y, p.x, p.y], p:[[p.x, p.y]], w:nevCasas * mapaCena.grade.tam, ini:p };
+    nevPreview();
+  }
+  function nevMove(p) {
+    if (!nevDrag) return;
+    var d = nevDrag;
+    if (d.k === 't') {
+      var u = d.p[d.p.length - 1];
+      if (Math.hypot(p.x - u[0], p.y - u[1]) * mapaVs.s < 4 || d.p.length >= NEV_PTS) return;
+      d.p.push([p.x, p.y]);
+    } else { d.a[2] = p.x; d.a[3] = p.y; }
+    nevPreview();
+  }
+  function nevSolta() {
+    if (!nevDrag) return;
+    var d = nevDrag; nevDrag = null;
+    if (nevPreEl) { nevPreEl.remove(); nevPreEl = null; }
+    var arrastou = Math.hypot(d.a[2] - d.a[0], d.a[3] - d.a[1]) * mapaVs.s >= 4;
+    var it = { id:dsnId(), m:d.m, k:d.k };
+    if (d.k === 't') { it.w = d.w; it.p = d.p; }
+    else if (arrastou) { it.a = d.a; }
+    else {
+      // um clique sem arrastar atua só na casa clicada (hexágono: um círculo do tamanho da casa)
+      var c = mapaCasaEm(d.ini.x, d.ini.y), ct = mapaCasaCentro(c.col, c.row), g = mapaCena.grade;
+      it.k = g.tipo === 'hex' ? 'o' : 'r';
+      it.a = [ct.x - g.tam / 2, ct.y - g.tam / 2, ct.x + g.tam / 2, ct.y + g.tam / 2];
+    }
+    nevFaz({ op:'add', it:it });
+  }
+  // ── painel do Mestre ──
+  var nevBar = document.getElementById('nevBar'), nevOnIn = document.getElementById('nevOn');
+  var nevDesfazBt = document.getElementById('nevDesfaz'), nevTudoBt = document.getElementById('nevTudo');
+  var palcoMestreBt = document.getElementById('palcoMestreBt');
+  function nevSyncUI() {
+    var N = mapaCena.nevoa || { on:false, ops:[] };
+    nevOnIn.checked = !!N.on;
+    nevDesfazBt.disabled = !N.ops.length;
+    nevTudoBt.disabled = !N.ops.length && N.on;
+  }
+  function nevMestre(on) {
+    on = !!on && palcoSouHost && palcoDentro;
+    if (on === nevMestreOn) return;
+    nevMestreOn = on;
+    document.body.classList.toggle('mestre-on', on);
+    nevBar.hidden = !on;
+    palcoMestreBt.classList.toggle('on', on);
+    if (!on && dsnTool.indexOf('nv-') === 0) dsnSetTool('mover');
+    nevRender(); mapaRenderTokens(); nevSyncUI();
+  }
+  palcoMestreBt.addEventListener('click', function() { nevMestre(!nevMestreOn); });
+  nevOnIn.addEventListener('change', function() {
+    if (!nevMestreOn) return;
+    // ligar a névoa pela primeira vez cobre tudo: os jogadores só veem o que for revelado depois
+    nevFaz({ op:'cfg', on:nevOnIn.checked });
+  });
+  document.querySelectorAll('#nevModo button').forEach(function(b) {
+    b.addEventListener('click', function() {
+      nevModo = b.dataset.m;
+      document.querySelectorAll('#nevModo button').forEach(function(x) { x.classList.toggle('on', x === b); });
+    });
+  });
+  document.querySelectorAll('#nevPincel button').forEach(function(b) {
+    b.addEventListener('click', function() {
+      nevCasas = +b.dataset.n;
+      document.querySelectorAll('#nevPincel button').forEach(function(x) { x.classList.toggle('on', x === b); });
+    });
+  });
+  nevDesfazBt.addEventListener('click', function() {
+    var ops = mapaCena.nevoa.ops;
+    if (nevMestreOn && ops.length) nevFaz({ op:'del', ids:[ops[ops.length - 1].id] });
+  });
+  nevTudoBt.addEventListener('click', function() {
+    if (!nevMestreOn) return;
+    if (mapaCena.nevoa.ops.length && !window.confirm('Cobrir o mapa inteiro de novo? O que foi revelado até agora volta a ficar escondido.')) return;
+    nevFaz({ op:'cobre' });
+  });
+
   // ── ponteiro: só existe com uma ferramenta de desenho escolhida ──
   function dsnPonto(e) { var w = mapaTelaParaMundo(e.clientX, e.clientY); return { x:dsnNum(w.x), y:dsnNum(w.y) }; }
   function dsnLargura() { return dsnNum(Math.max(0.6, dsnEsp / mapaVs.s)); }
@@ -3840,6 +4091,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     dsnFechaTexto(true);
     try { dsnCapt.setPointerCapture(e.pointerId); } catch (_) {}
     if (dsnTool === 'regua') { reguaComeca(p); return; }
+    if (dsnTool.indexOf('nv-') === 0) { nevComeca(p); return; }
     if (dsnTool === 'pincel') {
       dsnPen = { id:dsnId(), c:dsnColor, w:dsnLargura(), last:p };
       dsnAplica({ op:'pen', id:dsnPen.id, c:dsnPen.c, w:dsnPen.w, pts:[[p.x, p.y]] });
@@ -3854,6 +4106,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   });
   dsnCapt.addEventListener('pointermove', function(e) {
     if (reguaMinha) { reguaMove(dsnPonto(e)); return; }
+    if (nevDrag) { nevMove(dsnPonto(e)); return; }
     if (!dsnPen && !dsnForma && !dsnBorr) return;
     var p = dsnPonto(e);
     if (dsnPen) {
@@ -3875,6 +4128,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   });
   function dsnSolta() {
     reguaSolta();
+    nevSolta();
     if (dsnPen) { dsnFlush(); dsnPen = null; mapaAgendaSalvar(); }
     if (dsnBorr) dsnBorr = false;
     if (dsnForma) {
@@ -5055,6 +5309,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     abasRender();
     palcoHostQuem.innerHTML = h ? (palcoSouHost ? '<b>Você</b> é o host' : 'Host: <b>' + esc(h.nome || 'Jogador') + '</b>') : 'Host: —';
     palcoCtrlBt.hidden = !palcoDentro || palcoSouHost;
+    palcoMestreBt.hidden = !palcoDentro || !palcoSouHost;
+    if (nevMestreOn && (!palcoDentro || !palcoSouHost)) nevMestre(false);   // perdeu o posto de host: o Modo Mestre acaba
     palcoLiveBox.hidden = !palcoDentro;
     palcoAplicaRosto(!!h && !!h.rosto);
     palcoLiveIn.checked = palcoSouHost ? palcoLive : palcoSeguir;
@@ -5906,8 +6162,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var jitsiApi = null;
   function send(event, payload) {
     // host com o tempo real desligado mexe só aqui: a mesa continua vendo a última tela
-    if (privAtiva && /^mapa-(cena|grade|img|tok|dsn|vista|regua)$/.test(event)) return;   // aba privada: ninguém vê
-    if (palcoSouHost && !palcoLive && /^mapa-(cena|grade|img|tok|dsn|vista|regua)$/.test(event) && !(payload && payload.retoma)) return;
+    if (privAtiva && /^mapa-(cena|grade|img|tok|dsn|nev|vista|regua)$/.test(event)) return;   // aba privada: ninguém vê
+    if (palcoSouHost && !palcoLive && /^mapa-(cena|grade|img|tok|dsn|nev|vista|regua)$/.test(event) && !(payload && payload.retoma)) return;
     if (channel) channel.send({ type:'broadcast', event:event, payload:payload });
     else dispatch(event, payload);   // offline: mostra local
   }
@@ -5937,12 +6193,13 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     else if (event === 'mapa-vista') palcoVistaRecebe(payload);
     else if (event === 'mapa-regua') { if (!palcoCongelado && !privAtiva && payload && payload.by !== MAPA_ME) reguaRecebe(payload); }
     else if (event === 'mapa-vista-req') { if (palcoSouHost) palcoVistaEnvia(); }
-    else if (privAtiva && /^mapa-(cena|grade|img|tok|dsn)$/.test(event)) { if (!payload || payload.by !== MAPA_ME) mesaVelha = true; }   // a mesa anda sem mim; recarrego ao voltar
+    else if (privAtiva && /^mapa-(cena|grade|img|tok|dsn|nev)$/.test(event)) { if (!payload || payload.by !== MAPA_ME) mesaVelha = true; }   // a mesa anda sem mim; recarrego ao voltar
     else if (event === 'mapa-cena') { if (!palcoCongelado || (payload && payload.retoma)) mapaRecebeCena(payload); }
     else if (event === 'mapa-grade') { if (!palcoCongelado) mapaRecebeGrade(payload); }
     else if (event === 'mapa-img') { if (!palcoCongelado) mapaRecebeImg(payload); }
     else if (event === 'mapa-tok') { if (!palcoCongelado) mapaRecebeTok(payload); }
     else if (event === 'mapa-dsn') { if (!palcoCongelado && payload && payload.by !== MAPA_ME) dsnAplica(payload); }
+    else if (event === 'mapa-nev') { if (!palcoCongelado && payload && payload.by !== MAPA_ME) nevAplica(payload); }
   }
   function initRealtime() {
     chatCarregaHistorico();
@@ -5966,7 +6223,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     ['som-play','som-stop','som-state','som-state-req','som-lib','som-gain'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
-    ['palco-st','palco-req','mapa-cena','mapa-grade','mapa-img','mapa-tok','mapa-dsn','mapa-vista','mapa-vista-req','mapa-regua'].forEach(function(ev){
+    ['palco-st','palco-req','mapa-cena','mapa-grade','mapa-img','mapa-tok','mapa-dsn','mapa-nev','mapa-vista','mapa-vista-req','mapa-regua'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
     channel.subscribe(function(status){
