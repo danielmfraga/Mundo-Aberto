@@ -1192,13 +1192,17 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 .chat-conv .cv .x { opacity:0.5; font-style:normal; padding:0 1px; }
 .chat-conv .cv .x:hover { opacity:1; color:var(--danger); }
 .chat-conv .cv.mais { color:var(--holo); border-style:dashed; border-color:var(--holo-soft); background:none; }
+/* A lista de pessoas NÃO mora dentro da faixa das abas (ela rola na horizontal, e por isso cortava tudo o que passava da
+   sua altura: só um nome aparecia). Vai solta no <body>, por cima de tudo, e o JS a põe ao lado do botão "＋ Privado". */
 .chat-conv-menu {
-  position:absolute; z-index:30; left:8px; top:34px; min-width:150px; max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:3px; padding:5px;
-  background:rgba(11,19,32,0.98); border:1px solid var(--line-strong); border-radius:8px; box-shadow:0 10px 24px rgba(0,0,0,0.55);
+  position:fixed; z-index:9500; left:8px; top:8px; min-width:200px; max-width:calc(100vw - 16px); max-height:320px; overflow-y:auto; overscroll-behavior:contain;
+  display:flex; flex-direction:column; gap:3px; padding:7px;
+  background:rgba(11,19,32,0.98); border:1px solid var(--line-strong); border-radius:10px; box-shadow:0 14px 34px rgba(0,0,0,0.65);
 }
-.chat-conv-menu button { text-align:left; cursor:pointer; padding:6px 9px; border-radius:5px; font-family:var(--font-mono); font-size:10px; color:var(--fg); background:none; border:1px solid transparent; }
+.chat-conv-menu .titulo { padding:3px 8px 6px; font-family:var(--font-mono); font-size:9px; letter-spacing:0.16em; text-transform:uppercase; color:var(--fg-faint); }
+.chat-conv-menu button { text-align:left; cursor:pointer; padding:10px 12px; border-radius:6px; font-family:var(--font-mono); font-size:12px; color:var(--fg); background:none; border:1px solid transparent; }
 .chat-conv-menu button:hover { border-color:var(--holo-soft); background:rgba(78,211,232,0.1); }
-.chat-conv-menu .vazio { padding:6px 9px; font-family:var(--font-mono); font-size:9.5px; color:var(--fg-faint); }
+.chat-conv-menu .vazio { padding:8px 10px; font-family:var(--font-mono); font-size:10.5px; color:var(--fg-faint); }
 .chat-msgs.chat-priv { background:rgba(255,138,122,0.045); }
 .chat-msgs.chat-priv .msg-head .who-b { color:#ff8a7a; }
 .chat-panel.privado .chat-input { border-color:rgba(255,138,122,0.55); }
@@ -2632,8 +2636,9 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     return lista.sort(function(a, b) { return a.localeCompare(b, 'pt-BR'); });
   }
   function chatConvAbreMenu() {
-    chatConvFechaMenu();
+    if (chatConvMenu) { chatConvFechaMenu(); return; }   // clicar de novo no botão fecha
     var m = document.createElement('div'); m.className = 'chat-conv-menu';
+    var tit = document.createElement('div'); tit.className = 'titulo'; tit.textContent = 'Conversar em particular com'; m.appendChild(tit);
     var lista = chatPresentes();
     if (!lista.length) { var v = document.createElement('div'); v.className = 'vazio'; v.textContent = 'Ninguém mais na mesa agora'; m.appendChild(v); }
     lista.forEach(function(n) {
@@ -2644,11 +2649,32 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       });
       m.appendChild(b);
     });
-    chatConvEl.appendChild(m); chatConvMenu = m;
-    m.style.left = Math.max(4, chatConvEl.querySelector('.mais').offsetLeft - chatConvEl.scrollLeft) + 'px';
+    // solta no <body> (fora da janela do chat, que corta o que passa das bordas) e posiciona ao lado do botão "＋ Privado"
+    document.body.appendChild(m); chatConvMenu = m;
+    chatConvPosicionaMenu();
+  }
+  function chatConvPosicionaMenu() {
+    var m = chatConvMenu, mais = chatConvEl.querySelector('.mais');
+    if (!m || !mais) return;
+    var bt = mais.getBoundingClientRect();
+    var vw = document.documentElement.clientWidth, vh = window.innerHeight, MARGEM = 8, TETO = 320;
+    var abaixo = vh - bt.bottom - MARGEM, acima = bt.top - MARGEM;
+    m.style.maxHeight = Math.min(TETO, Math.max(abaixo, acima) - 6) + 'px';
+    var h = m.offsetHeight, w = m.offsetWidth;
+    // desce por baixo do botão; só sobe se embaixo não couber e em cima houver mais espaço
+    var desce = h + 6 <= abaixo || abaixo >= acima;
+    if (desce) m.style.maxHeight = Math.min(TETO, abaixo - 6) + 'px';
+    h = m.offsetHeight;
+    m.style.top = Math.max(MARGEM, desce ? bt.bottom + 6 : bt.top - 6 - h) + 'px';
+    m.style.left = Math.min(Math.max(MARGEM, bt.left), Math.max(MARGEM, vw - w - MARGEM)) + 'px';
   }
   function chatConvFechaMenu() { if (chatConvMenu) { chatConvMenu.remove(); chatConvMenu = null; } }
   document.addEventListener('click', function(e) { if (chatConvMenu && !e.target.closest('.chat-conv-menu')) chatConvFechaMenu(); });
+  // a lista fica solta no <body>, então não acompanha o chat sozinha: se a tela mudar (girar o celular, o teclado subir
+  // ou descer), ela se reposiciona em vez de fechar -- fechar tiraria a lista na cara de quem acabou de tocar nela
+  window.addEventListener('resize', chatConvPosicionaMenu);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', chatConvPosicionaMenu);
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && chatConvMenu) chatConvFechaMenu(); });
   function dmDesenha(f, p) {
     var chave = chatDiaChave(p.ts);
     if (chave !== f.ultimoDia) { f.el.appendChild(chatDiaEl(p.ts)); f.ultimoDia = chave; }
