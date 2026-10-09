@@ -393,6 +393,15 @@ body {
   border-radius:6px; padding:7px 11px; transition:all .15s;
 }
 .tb-bau:hover { background:rgba(232,196,106,0.16); box-shadow:0 0 12px rgba(232,196,106,0.28); }
+/* bolinha vermelha pulsante: há conversa privada (ou sussurro) que você ainda não leu */
+.tb-dm { flex:0 0 auto; cursor:pointer; padding:8px; background:none; border:0; display:flex; align-items:center; justify-content:center; }
+.tb-dm[hidden] { display:flex; visibility:hidden; pointer-events:none; }   /* o espaço fica reservado: a barra do topo não pula quando a bolinha aparece */
+.tb-dm i { display:block; width:11px; height:11px; border-radius:50%; background:#ff3b3b; box-shadow:0 0 0 0 rgba(255,59,59,0.7); animation:tbDmPulsa 1.3s ease-out infinite; }
+@keyframes tbDmPulsa {
+  0% { box-shadow:0 0 0 0 rgba(255,59,59,0.75); transform:scale(0.92); }
+  70% { box-shadow:0 0 0 9px rgba(255,59,59,0); transform:scale(1.08); }
+  100% { box-shadow:0 0 0 0 rgba(255,59,59,0); transform:scale(0.92); }
+}
 /* controles completos num popover, pra barra ficar enxuta */
 .timer-pop {
   position:absolute; top:calc(100% + 9px); left:0; z-index:9996; display:none;
@@ -1464,6 +1473,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     </div>
 
     <button class="tb-bau" id="bauBtn" type="button" title="Vault: guardar uma palavra lacrada pra revelar depois"><span class="tb-bau-ico"><svg viewBox="9.9 6.6 10.4 10.4" fill="currentColor"><path d="M12.41,10.6v-.94c0-1.55,1.26-2.81,2.81-2.81s2.81,1.26,2.81,2.81v.94h.31c.69,0,1.25.56,1.25,1.25v3.75c0,.69-.56,1.25-1.25,1.25h-6.25c-.69,0-1.25-.56-1.25-1.25v-3.75c0-.69.56-1.25,1.25-1.25h.32ZM13.66,9.67v.94h3.12v-.94c0-.86-.7-1.56-1.56-1.56s-1.56.7-1.56,1.56Z"/></svg></span><span class="tb-bau-txt">Vault</span></button>
+    <button class="tb-dm" id="tbDm" type="button" hidden title="Mensagem privada não lida"><i></i></button>
   </div>
 
   <div class="who">
@@ -2554,6 +2564,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var chatFios = {};                // chave → { nome, el, novo, ultimoDia }  (só as abas abertas)
   var dmMsgs = [];                  // TODAS as mensagens privadas (também as de abas fechadas): é o que vai pro armazenamento local
   var chatConvEl = document.getElementById('chatConv');
+  var tbDmEl = document.getElementById('tbDm');
   var chatConvMenu = null;
   function dmKey(n) { return String(n == null ? '' : n).trim().toLowerCase(); }
   function dmArmazem() { return 'mesaDM:' + SALA + ':' + dmKey(nome); }
@@ -2599,7 +2610,35 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     });
     aba('mais', '＋ Privado', function(e) { e.stopPropagation(); chatConvAbreMenu(); });
     chatConvPonto();
+    chatBolinha();
   }
+  // o chat está mesmo à vista de quem usa a mesa? (aba do navegador oculta, coluna recolhida ou palco aberto sem a gaveta do chat = não)
+  function chatPainelVisivel() {
+    if (document.hidden) return false;
+    if (document.body.classList.contains('mapa-on')) return !!palcoGav.chat;
+    var g = document.querySelector('.mesa-grid');
+    return !(g && g.classList.contains('rail-collapsed'));
+  }
+  // chegou mensagem (ou sussurro) nessa conversa: conta como não lida se ela não é a aberta ou se o chat não está à vista
+  function chatContaNovo(f, k) { if (chatFio !== k || !chatPainelVisivel()) f.novo++; }
+  function chatNaoLidas() { return Object.keys(chatFios).reduce(function(n, k) { return n + chatFios[k].novo; }, 0); }
+  function chatBolinha() {
+    var n = chatNaoLidas();
+    tbDmEl.hidden = !n;
+    tbDmEl.title = n ? (n === 1 ? '1 mensagem privada não lida' : n + ' mensagens privadas não lidas') + ' — clique para abrir' : '';
+  }
+  tbDmEl.addEventListener('click', function() {
+    var g = document.querySelector('.mesa-grid');
+    if (g && g.classList.contains('rail-collapsed')) document.getElementById('railToggle').click();   // coluna recolhida: abre
+    chatAbreNaoLida();
+    chatPainelEl.scrollIntoView({ block:'nearest' });
+    chatInput.focus();
+  });
+  // mexeu no chat com a conversa aberta: o que chegou nela enquanto ele estava escondido conta como lido
+  function chatLeuAberta() { var f = chatFios[chatFio]; if (f && f.novo && chatPainelVisivel()) { f.novo = 0; chatConvRender(); } }
+  chatPainelEl.addEventListener('pointerdown', chatLeuAberta);
+  chatPainelEl.addEventListener('focusin', chatLeuAberta);
+  document.addEventListener('visibilitychange', function() { if (!document.hidden) setTimeout(chatLeuAberta, 1500); });
   function chatFioMostra(k) {
     if (k !== 'todos' && !chatFios[k]) return;
     chatFio = k;
@@ -2615,7 +2654,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   }
   // abriu o chat com conversa privada não lida: já cai nela (foi isso que acendeu o botão)
   function chatAbreNaoLida() {
-    var k = Object.keys(chatFios).filter(function(c) { return chatFios[c].novo > 0; })[0];
+    var k = chatFios[chatFio] && chatFios[chatFio].novo > 0 ? chatFio : Object.keys(chatFios).filter(function(c) { return chatFios[c].novo > 0; })[0];
     if (k) chatFioMostra(k);
   }
   function chatConvPonto() { if (typeof palcoChatPonto === 'function') palcoChatPonto(); }
@@ -2691,7 +2730,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     var f = chatFioGet(outro);               // (se a aba estava fechada, ela volta já com a conversa de antes)
     dmMsgs.push(p); dmDesenha(f, p);
     var minha = de === eu;
-    if (!minha && chatFio !== dmKey(outro)) f.novo++;
+    if (!minha) chatContaNovo(f, dmKey(outro));
     chatConvRender();
     if (!minha) palcoChatNovo(p);
     dmSalva();
@@ -2839,7 +2878,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (!r) {                                               // começou a sussurrar pra mim
       r = susRx[k] = { nome:p.de, prox:0, timer:null };
       var f = chatFioGet(p.de);
-      if (chatFio !== k) { f.novo++; chatConvRender(); }
+      chatContaNovo(f, k); chatConvRender();
       palcoChatNovo({ autor:p.de, ts:Date.now() });
     }
     var bin = atob(p.d), n = bin.length >> 1;
