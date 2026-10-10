@@ -30,6 +30,10 @@
   .cor { width:24px; height:24px; padding:0; border:2px solid #0006; }
   .cor.on { border-color:#fff; box-shadow:0 0 0 2px var(--fundo), 0 0 0 4px var(--realce); }
   .sp { flex:1; }
+  .grupo[hidden] { display:none; }
+  .val { min-width:1.6em; text-align:center; font-size:15px; }
+  .suave { color:var(--suave); }
+  .tex.on { background:var(--realce); color:#241c05; border-color:var(--realce); font-weight:700; }
   #cena { position:relative; flex:1; min-height:0; display:grid; place-items:center; overflow:hidden; background:var(--fundo); }
   #cena canvas { display:block; image-rendering:pixelated; image-rendering:crisp-edges; touch-action:none; cursor:crosshair; }
   .rodape { display:flex; flex-wrap:wrap; gap:4px 18px; padding:6px 12px; background:var(--painel);
@@ -53,6 +57,15 @@
       <button class="ferr" data-t="apagar" title="Apagar (4)">✕ Apagar</button>
     </div>
     <div class="cores" id="cores"></div>
+    <div class="grupo" id="opMuro" hidden>
+      <label>Altura</label>
+      <button id="altMenos" title="Muro mais baixo ([)">−</button>
+      <b id="altVal" class="val">2</b>
+      <button id="altMais" title="Muro mais alto (])">+</button>
+      <span id="altM" class="suave"></span>
+      <label style="margin-left:8px">Textura</label>
+      <div class="grupo" id="texs"></div>
+    </div>
     <div class="sp"></div>
     <div class="grupo">
       <label for="pixel">Pixel</label>

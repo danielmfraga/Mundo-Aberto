@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { Mesa, CORES, NOMES_CORES, ALT, caminho, linhaEixo } from './modelo.js';
+import { Mesa, CORES, NOMES_CORES, ALT, H_MIN, H_MAX, TEXTURAS, NOMES_TEXTURAS, caminho, linhaEixo } from './modelo.js';
 
 const $ = (id) => document.getElementById(id);
 const CHAVE_SALVA = 'mesa3d:v1';
@@ -9,6 +9,8 @@ const CHAVE_SALVA = 'mesa3d:v1';
 const mesa = new Mesa(20);
 let ferramenta = 'terreno';
 const corPor = { terreno: 0, muro: 1, criatura: 6 };
+let alturaMuro = 2;                   // altura dos próximos muros, em células
+let texMuro = 'pedra';                // textura dos próximos muros
 let escala = 4;                       // cada pixel do desenho vira escala×escala pixels da tela
 const desfazer = [];                  // fotos (JSON) do tabuleiro antes de cada ação
 let golpe = null;                     // a ação em andamento (um arrasto)
@@ -82,6 +84,60 @@ function mat(cor, tom = 0, fantasma = false) {
   }
   return matCache.get(k);
 }
+/* texturas de muro: cada uma vira um ladrilho pequeno (1 célula de largura × 2 de altura), amostrado sem suavizar */
+const TEX_W = 32, TEX_H = 64;
+const TEX_CEL_W = 2, TEX_CEL_H = 4;   // o ladrilho cobre 2 células de largura × 4 de altura (as pedras ficam do tamanho de uma casa)
+const texCache = new Map();
+function textura(nome) {
+  if (!TEXTURAS[nome]) return null;
+  if (texCache.has(nome)) return texCache.get(nome);
+  const c = document.createElement('canvas');
+  c.width = TEX_W; c.height = TEX_H;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#6b6a58'; ctx.fillRect(0, 0, TEX_W, TEX_H);          // cor provisória até a imagem chegar
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter;
+  t.generateMipmaps = false; t.colorSpace = THREE.SRGBColorSpace;
+  const img = new Image();
+  img.onload = () => { ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high'; ctx.drawImage(img, 0, 0, TEX_W, TEX_H); t.needsUpdate = true; t.userData.pronta = true; };
+  img.src = TEXTURAS[nome];
+  texCache.set(nome, t);
+  return t;
+}
+const geoMuroCache = new Map();
+/** caixa 0.98 × h × 0.98. A textura segue as coordenadas do MUNDO (x%2, z%2), então muros vizinhos emendam sem salto */
+function geoMuro(h, x, z) {
+  const key = h + '/' + (x % 2) + '/' + (z % 2);
+  if (!geoMuroCache.has(key)) {
+    const g = new THREE.BoxGeometry(0.98, h, 0.98);
+    const uv = g.attributes.uv;
+    const x0 = x % 2, z0 = z % 2;
+    for (let i = 0; i < uv.count; i++) {
+      const face = Math.floor(i / 4), u = uv.getX(i), v = uv.getY(i);
+      if (face > 1 && face < 4) continue;                                   // topo e fundo: sem textura
+      let U;
+      if (face === 4) U = x0 + 0.01 + 0.98 * u;                             // +z: u cresce para +x
+      else if (face === 5) U = x0 + 0.99 - 0.98 * u;                        // -z: u cresce para -x
+      else if (face === 0) U = z0 + 0.99 - 0.98 * u;                        // +x: u cresce para -z
+      else U = z0 + 0.01 + 0.98 * u;                                        // -x: u cresce para +z
+      uv.setXY(i, U / TEX_CEL_W, v * h / TEX_CEL_H);
+    }
+    geoMuroCache.set(key, g);
+  }
+  return geoMuroCache.get(key);
+}
+function matMuro(cor, tex, fant) {     // lados com a textura (se houver), topo e fundo na cor
+  const t = textura(tex);
+  if (!t) return mat(cor, 0, fant);
+  const k = 'muro/' + tex + '/' + cor + '/' + fant;
+  if (!matCache.has(k)) {
+    const lado = new THREE.MeshLambertMaterial({ map: t, color: new THREE.Color(1.5, 1.5, 1.5) });   // realça: o lado sem sol fica escuro demais
+    if (fant) { lado.transparent = true; lado.opacity = 0.55; lado.depthWrite = false; }
+    matCache.set(k, [lado, lado, mat(cor, 0.1, fant), mat(cor, 0, fant), lado, lado]);
+  }
+  return matCache.get(k);
+}
 const matOlho = new THREE.MeshBasicMaterial({ color: 0x14111f });
 const matApaga = new THREE.MeshBasicMaterial({ color: 0xff3b30, transparent: true, opacity: 0.5, depthWrite: false });
 const matApagaVazio = new THREE.MeshBasicMaterial({ color: 0xff3b30, transparent: true, opacity: 0.22, depthWrite: false });
@@ -96,7 +152,8 @@ function pedaco(geo, material, fant) {
 }
 
 /** monta o desenho de um item. `fant` = versão translúcida (prévia), que não pode ser clicada */
-function constroi(tipo, x, z, cor, fant = false) {
+function constroi(item, fant = false) {
+  const { tipo, x, z, cor } = item;
   const g = new THREE.Group();
   g.position.set(cx(x), 0, cz(z));
   if (tipo === 'terreno') {
@@ -104,10 +161,11 @@ function constroi(tipo, x, z, cor, fant = false) {
     a.scale.set(0.995, ALT.terreno, 0.995); a.position.y = ALT.terreno / 2;
     g.add(a);
   } else if (tipo === 'muro') {
-    const corpo = pedaco(geoBloco, mat(cor, 0, fant), fant);
-    corpo.scale.set(0.98, 0.92, 0.98); corpo.position.y = 0.46;
+    const h = item.h || 1, hc = h - 0.08;
+    const corpo = pedaco(geoMuro(hc, x, z), matMuro(cor, item.tex, fant), fant);
+    corpo.position.y = hc / 2;
     const topo = pedaco(geoBloco, mat(cor, 0.22, fant), fant);        // coroa mais clara no alto
-    topo.scale.set(1, 0.08, 1); topo.position.y = 0.96;
+    topo.scale.set(1, 0.08, 1); topo.position.y = h - 0.04;
     g.add(corpo, topo);
   } else {
     const y0 = mesa.topo(x, z) + ALT.criatura;
@@ -177,8 +235,8 @@ function redesenha(x, z) {
   }
   const { base, criatura } = mesa.get(x, z);
   const novo = { base: null, cria: null };
-  if (base) { novo.base = constroi(base.tipo, x, z, base.cor); novo.base.userData.cel = { x, z }; itens.add(novo.base); }
-  if (criatura) { novo.cria = constroi('criatura', x, z, criatura.cor); novo.cria.userData.cel = { x, z }; itens.add(novo.cria); criaturasVivas.add(novo.cria); }
+  if (base) { novo.base = constroi(base); novo.base.userData.cel = { x, z }; itens.add(novo.base); }
+  if (criatura) { novo.cria = constroi(criatura); novo.cria.userData.cel = { x, z }; itens.add(novo.cria); criaturasVivas.add(novo.cria); }
   celulas.set(k(x, z), novo);
 }
 
@@ -212,7 +270,7 @@ function previa() {
   const cor = corPor[ferramenta];
   let celulasPrev = [alvo];
   if (golpe && ferramenta === 'muro' && golpe.ini) celulasPrev = linhaEixo(golpe.ini, alvo);
-  for (const c of celulasPrev) fantasmas.add(constroi(ferramenta, c.x, c.z, cor, true));
+  for (const c of celulasPrev) fantasmas.add(constroi({ tipo: ferramenta, x: c.x, z: c.z, cor, h: alturaMuro, tex: texMuro }, true));
 }
 
 /* ───────── escolher a célula com o mouse ───────── */
@@ -239,7 +297,7 @@ function aplica(c) {
   if (!c) return false;
   let mudou;
   if (ferramenta === 'apagar') mudou = mesa.tira(c.x, c.z) !== null;
-  else mudou = mesa.poe(ferramenta, c.x, c.z, corPor[ferramenta]);
+  else mudou = mesa.poe(ferramenta, c.x, c.z, corPor[ferramenta], { h: alturaMuro, tex: texMuro });
   if (mudou) { redesenha(c.x, c.z); if (golpe) golpe.mudou = true; }
   return mudou;
 }
@@ -324,6 +382,7 @@ function hud() {
 
 function selecionaFerramenta(t) {
   ferramenta = t;
+  $('opMuro').hidden = t !== 'muro';
   document.querySelectorAll('.ferr').forEach((b) => b.classList.toggle('on', b.dataset.t === t));
   desenhaCores();
   previa();
@@ -345,6 +404,25 @@ function desenhaCores() {
 }
 
 document.querySelectorAll('.ferr').forEach((b) => b.addEventListener('click', () => selecionaFerramenta(b.dataset.t)));
+
+/* altura e textura dos próximos muros */
+function desenhaOpcoesMuro() {
+  $('altVal').textContent = alturaMuro;
+  $('altM').textContent = `(${(alturaMuro * 1.5).toString().replace('.', ',')} m)`;
+  $('altMenos').disabled = alturaMuro <= H_MIN;
+  $('altMais').disabled = alturaMuro >= H_MAX;
+  document.querySelectorAll('.tex').forEach((b) => b.classList.toggle('on', b.dataset.tex === texMuro));
+}
+function mudaAltura(d) { alturaMuro = Math.max(H_MIN, Math.min(H_MAX, alturaMuro + d)); desenhaOpcoesMuro(); previa(); }
+$('altMenos').addEventListener('click', () => mudaAltura(-1));
+$('altMais').addEventListener('click', () => mudaAltura(1));
+for (const nome of Object.keys(TEXTURAS)) {
+  const b = document.createElement('button');
+  b.className = 'tex'; b.dataset.tex = nome; b.textContent = NOMES_TEXTURAS[nome] || nome;
+  b.addEventListener('click', () => { texMuro = nome; desenhaOpcoesMuro(); previa(); });
+  $('texs').appendChild(b);
+}
+desenhaOpcoesMuro();
 $('desfazerBt').addEventListener('click', desfaz);
 $('limparBt').addEventListener('click', () => {
   if (mesa.bases.size + mesa.criaturas.size === 0) return;
@@ -390,6 +468,8 @@ function aviso(t, erro) {
 addEventListener('keydown', (e) => {
   if (e.target.matches && e.target.matches('input, select, textarea')) return;
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); desfaz(); return; }
+  if (e.key === '[') { mudaAltura(-1); return; }
+  if (e.key === ']') { mudaAltura(1); return; }
   const t = { 1: 'terreno', 2: 'muro', 3: 'criatura', 4: 'apagar' }[e.key];
   if (t) selecionaFerramenta(t);
 });
@@ -428,6 +508,9 @@ window.mesa3d = {
   canvas: () => ({ w: cv.width, h: cv.height }),
   ferramenta: () => ferramenta,
   azimute: () => controles.getAzimuthalAngle(),
+  alturaMuro: () => alturaMuro,
+  y0Criatura: (x, z) => { const c = celulas.get(k(x, z)); return c && c.cria ? c.cria.userData.y0 : null; },
+  texturaPronta: (n) => !!(texCache.get(n) && texCache.get(n).userData.pronta),
   /** onde, na tela (px da janela), fica o centro da célula (x,z) à altura y */
   tela: (x, z, y = 0) => {
     const v = new THREE.Vector3(cx(x), y, cz(z)).project(cam);

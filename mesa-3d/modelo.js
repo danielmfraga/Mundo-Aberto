@@ -14,7 +14,11 @@ export const CORES = [
 export const NOMES_CORES = ['Grama', 'Pedra', 'Areia', 'Água', 'Tijolo', 'Madeira', 'Roxo', 'Osso'];
 
 // altura do topo de cada coisa (em células) e quanto a criatura flutua acima do topo da base
-export const ALT = { terreno: 0.1, muro: 1, criatura: 0.7 };
+export const ALT = { terreno: 0.1, criatura: 0.7 };
+export const H_MIN = 1, H_MAX = 8;   // altura do muro, em células (1 célula = 1,5 m na mesa)
+// texturas de muro: nome → arquivo (null = liso, só a cor). Para ganhar outra, ponha a imagem em texturas/ e liste aqui.
+export const TEXTURAS = { liso: null, pedra: 'texturas/muro-pedra.png' };
+export const NOMES_TEXTURAS = { liso: 'Liso', pedra: 'Pedra' };
 export const TIPOS = ['terreno', 'muro', 'criatura'];
 export const N_MIN = 6, N_MAX = 48;
 
@@ -23,7 +27,7 @@ const chave = (x, z) => x + ',' + z;
 export class Mesa {
   constructor(n = 20) {
     this.n = n;
-    this.bases = new Map();      // chave → {tipo:'terreno'|'muro', x, z, cor}
+    this.bases = new Map();      // chave → {tipo:'terreno'|'muro', x, z, cor, h, tex} (h e tex só no muro)
     this.criaturas = new Map();  // chave → {tipo:'criatura', x, z, cor}
   }
 
@@ -33,15 +37,20 @@ export class Mesa {
   get(x, z) { const k = chave(x, z); return { base: this.bases.get(k) || null, criatura: this.criaturas.get(k) || null }; }
 
   /** altura do topo da base (onde a criatura se apoia) */
-  topo(x, z) { const b = this.bases.get(chave(x, z)); return b ? ALT[b.tipo] : 0; }
+  topo(x, z) { const b = this.bases.get(chave(x, z)); return b ? (b.tipo === 'muro' ? b.h : ALT.terreno) : 0; }
 
   /** coloca; devolve true se algo mudou */
-  poe(tipo, x, z, cor) {
+  poe(tipo, x, z, cor, extra = {}) {
     if (!TIPOS.includes(tipo) || !this.dentro(x, z)) return false;
     const mapa = tipo === 'criatura' ? this.criaturas : this.bases;
     const k = chave(x, z), atual = mapa.get(k);
-    if (atual && atual.tipo === tipo && atual.cor === cor) return false;
-    mapa.set(k, { tipo, x, z, cor });
+    const novo = { tipo, x, z, cor };
+    if (tipo === 'muro') {
+      novo.h = Number.isInteger(extra.h) ? Math.max(H_MIN, Math.min(H_MAX, extra.h)) : 1;
+      novo.tex = Object.hasOwn(TEXTURAS, extra.tex) ? extra.tex : 'liso';
+    }
+    if (atual && atual.tipo === tipo && atual.cor === cor && atual.h === novo.h && atual.tex === novo.tex) return false;
+    mapa.set(k, novo);
     return true;
   }
 
@@ -72,7 +81,11 @@ export class Mesa {
 
   paraJSON() {
     const itens = [];
-    for (const i of this.bases.values()) itens.push({ tipo: i.tipo, x: i.x, z: i.z, cor: i.cor });
+    for (const i of this.bases.values()) {
+      const o = { tipo: i.tipo, x: i.x, z: i.z, cor: i.cor };
+      if (i.tipo === 'muro') { o.h = i.h; o.tex = i.tex; }
+      itens.push(o);
+    }
     for (const i of this.criaturas.values()) itens.push({ tipo: i.tipo, x: i.x, z: i.z, cor: i.cor });
     return { v: 1, n: this.n, itens };
   }
@@ -88,7 +101,7 @@ export class Mesa {
       if (!i || !TIPOS.includes(i.tipo)) throw new Error('tipo de item desconhecido');
       if (!tmp.dentro(i.x, i.z)) throw new Error('item fora do tabuleiro');
       const cor = Number.isInteger(i.cor) && i.cor >= 0 && i.cor < CORES.length ? i.cor : 0;
-      tmp.poe(i.tipo, i.x, i.z, cor);
+      tmp.poe(i.tipo, i.x, i.z, cor, { h: i.h, tex: i.tex });
     }
     this.n = tmp.n; this.bases = tmp.bases; this.criaturas = tmp.criaturas;
   }
