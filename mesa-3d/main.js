@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { Mesa, CORES, NOMES_CORES, ALT, H_MIN, H_MAX, TEXTURAS, NOMES_TEXTURAS, caminho, linhaEixo } from './modelo.js';
+import { Mesa, CORES, NOMES_CORES, ALT, H_MIN, H_MAX, TEXTURAS, NOMES_TEXTURAS, SPRITES, S_MIN, S_MAX, caminho, linhaEixo } from './modelo.js';
 
 const $ = (id) => document.getElementById(id);
 const CHAVE_SALVA = 'mesa3d:v1';
@@ -11,7 +11,9 @@ let ferramenta = 'terreno';
 const corPor = { terreno: 0, muro: 1, criatura: 6 };
 let alturaMuro = 2;                   // altura dos próximos muros, em células
 let texMuro = 'pedra';                // textura dos próximos muros
-let escala = 4;                       // cada pixel do desenho vira escala×escala pixels da tela
+let spriteCria = null;                // forma das próximas criaturas: null = losango, ou o nome de um sprite
+let tamCria = 1.5;                    // largura do sprite, em células
+let escala = 3;                       // cada pixel do desenho vira escala×escala pixels da tela
 const desfazer = [];                  // fotos (JSON) do tabuleiro antes de cada ação
 let golpe = null;                     // a ação em andamento (um arrasto)
 const ponteiros = new Set();
@@ -138,6 +140,31 @@ function matMuro(cor, tex, fant) {     // lados com a textura (se houver), topo 
   }
   return matCache.get(k);
 }
+/* sprites: desenhos 2D que ficam em pé e viram sempre para a câmera. Sem o arquivo, a forma some da lista. */
+const spriteCache = new Map();
+function spriteTex(nome) {
+  if (!spriteCache.has(nome)) {
+    const t = new THREE.TextureLoader().load(SPRITES[nome].arq, () => { t.userData.pronta = true; montaFormas(); }, undefined, () => { t.userData.falhou = true; montaFormas(); });
+    t.magFilter = THREE.NearestFilter;
+    t.minFilter = THREE.LinearMipmapLinearFilter;      // ao encolher, mistura (sem falhar pixels); ao ampliar, fica seco
+    t.colorSpace = THREE.SRGBColorSpace;
+    spriteCache.set(nome, t);
+  }
+  return spriteCache.get(nome);
+}
+function matSprite(nome, fant) {
+  const k = 'sprite/' + nome + '/' + fant;
+  if (!matCache.has(k)) {
+    const m = new THREE.MeshBasicMaterial({ map: spriteTex(nome), transparent: true, alphaTest: 0.5, side: THREE.DoubleSide });
+    if (fant) { m.opacity = 0.6; m.depthWrite = false; }
+    matCache.set(k, m);
+  }
+  return matCache.get(k);
+}
+const geoPlano = new THREE.PlaneGeometry(1, 1);
+const geoSombra = new THREE.CircleGeometry(0.5, 14);
+const matSombra = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35, depthWrite: false });
+const matSondaOculta = new THREE.MeshBasicMaterial({ visible: false });
 const matOlho = new THREE.MeshBasicMaterial({ color: 0x14111f });
 const matApaga = new THREE.MeshBasicMaterial({ color: 0xff3b30, transparent: true, opacity: 0.5, depthWrite: false });
 const matApagaVazio = new THREE.MeshBasicMaterial({ color: 0xff3b30, transparent: true, opacity: 0.22, depthWrite: false });
@@ -167,6 +194,25 @@ function constroi(item, fant = false) {
     const topo = pedaco(geoBloco, mat(cor, 0.22, fant), fant);        // coroa mais clara no alto
     topo.scale.set(1, 0.08, 1); topo.position.y = h - 0.04;
     g.add(corpo, topo);
+  } else if (item.sprite) {
+    const def = SPRITES[item.sprite], s = item.s || def.larg;
+    g.position.y = mesa.topo(x, z);
+    const pivo = new THREE.Group();                                       // gira para a câmera; os pés ficam na origem
+    pivo.position.y = def.voo;
+    const plano = new THREE.Mesh(geoPlano, matSprite(item.sprite, fant));
+    plano.scale.set(s, s, 1); plano.position.y = s / 2; plano.raycast = () => {};
+    pivo.add(plano);
+    const sombra = new THREE.Mesh(geoSombra, matSombra);
+    sombra.rotation.x = -Math.PI / 2; sombra.position.y = 0.03; sombra.scale.set(s * 0.7, s * 0.7, 1); sombra.raycast = () => {};
+    g.add(pivo, sombra);
+    if (!fant) {                                                          // área clicável: a coluna da célula, do chão à cabeça
+      const alt = def.voo + s * 0.85;
+      const sonda = new THREE.Mesh(geoBloco, matSondaOculta);
+      sonda.scale.set(0.8, alt, 0.8); sonda.position.y = alt / 2;
+      g.add(sonda);
+    }
+    g.userData.pivo = pivo; g.userData.voo = def.voo; g.userData.fase = (x * 7 + z * 13) % 6.28;
+    pivo.quaternion.copy(cam.quaternion);
   } else {
     const y0 = mesa.topo(x, z) + ALT.criatura;
     const corpo = new THREE.Group();
@@ -270,7 +316,7 @@ function previa() {
   const cor = corPor[ferramenta];
   let celulasPrev = [alvo];
   if (golpe && ferramenta === 'muro' && golpe.ini) celulasPrev = linhaEixo(golpe.ini, alvo);
-  for (const c of celulasPrev) fantasmas.add(constroi({ tipo: ferramenta, x: c.x, z: c.z, cor, h: alturaMuro, tex: texMuro }, true));
+  for (const c of celulasPrev) fantasmas.add(constroi({ tipo: ferramenta, x: c.x, z: c.z, cor, h: alturaMuro, tex: texMuro, sprite: ferramenta === 'criatura' ? spriteCria : null, s: tamCria }, true));
 }
 
 /* ───────── escolher a célula com o mouse ───────── */
@@ -297,7 +343,7 @@ function aplica(c) {
   if (!c) return false;
   let mudou;
   if (ferramenta === 'apagar') mudou = mesa.tira(c.x, c.z) !== null;
-  else mudou = mesa.poe(ferramenta, c.x, c.z, corPor[ferramenta], { h: alturaMuro, tex: texMuro });
+  else mudou = mesa.poe(ferramenta, c.x, c.z, corPor[ferramenta], { h: alturaMuro, tex: texMuro, sprite: spriteCria, s: tamCria });
   if (mudou) { redesenha(c.x, c.z); if (golpe) golpe.mudou = true; }
   return mudou;
 }
@@ -383,6 +429,7 @@ function hud() {
 function selecionaFerramenta(t) {
   ferramenta = t;
   $('opMuro').hidden = t !== 'muro';
+  $('opCria').hidden = t !== 'criatura';
   document.querySelectorAll('.ferr').forEach((b) => b.classList.toggle('on', b.dataset.t === t));
   desenhaCores();
   previa();
@@ -423,6 +470,43 @@ for (const nome of Object.keys(TEXTURAS)) {
   $('texs').appendChild(b);
 }
 desenhaOpcoesMuro();
+
+/* forma e tamanho da próxima criatura */
+function montaFormas() {
+  const box = $('formas');
+  if (!box) return;
+  box.innerHTML = '';
+  const novo = (rotulo, nome, titulo) => {
+    const b = document.createElement('button');
+    b.className = 'forma' + (spriteCria === nome ? ' on' : '');
+    b.title = titulo; b.dataset.forma = nome || '';
+    if (rotulo instanceof Node) b.appendChild(rotulo); else b.textContent = rotulo;
+    b.addEventListener('click', () => {
+      spriteCria = nome;
+      if (nome) tamCria = SPRITES[nome].larg;
+      montaFormas(); desenhaTamCria(); previa();
+    });
+    box.appendChild(b);
+  };
+  novo('◆', null, 'Losango flutuante');
+  for (const [nome, def] of Object.entries(SPRITES)) {
+    const t = spriteCache.get(nome);
+    if (!t || !t.userData.pronta) continue;                               // arquivo ausente (ou ainda chegando): sem botão
+    const img = document.createElement('img');
+    img.src = def.arq; img.alt = def.nome; img.className = 'mini';
+    novo(img, nome, def.nome);
+  }
+}
+function desenhaTamCria() {
+  $('tamVal').textContent = String(tamCria).replace('.', ',');
+  $('tamMenos').disabled = !spriteCria || tamCria <= S_MIN;
+  $('tamMais').disabled = !spriteCria || tamCria >= S_MAX;
+}
+function mudaTamCria(d) { if (!spriteCria) return; tamCria = Math.max(S_MIN, Math.min(S_MAX, tamCria + d)); desenhaTamCria(); previa(); }
+$('tamMenos').addEventListener('click', () => mudaTamCria(-0.5));
+$('tamMais').addEventListener('click', () => mudaTamCria(0.5));
+for (const nome of Object.keys(SPRITES)) spriteTex(nome);                // começa a carregar já (e descobre quais existem)
+montaFormas(); desenhaTamCria();
 $('desfazerBt').addEventListener('click', desfaz);
 $('limparBt').addEventListener('click', () => {
   if (mesa.bases.size + mesa.criaturas.size === 0) return;
@@ -492,11 +576,20 @@ function passoEncaixe() {
 }
 
 /* ───────── laço de desenho ───────── */
+function orientaSprite(g, s) {         // vira para a câmera; quem voa balança
+  const p = g.userData.pivo;
+  p.quaternion.copy(cam.quaternion);
+  if (g.userData.voo > 0) p.position.y = g.userData.voo + Math.sin(s * 2.2 + g.userData.fase) * 0.06;
+}
 function quadro(t) {
   passoEncaixe();
   controles.update();
   const s = t / 1000;
-  for (const g of criaturasVivas) g.position.y = g.userData.y0 + Math.sin(s * 2.2 + g.userData.fase) * 0.07;
+  for (const g of criaturasVivas) {
+    if (g.userData.pivo) { orientaSprite(g, s); continue; }
+    g.position.y = g.userData.y0 + Math.sin(s * 2.2 + g.userData.fase) * 0.07;
+  }
+  for (const g of fantasmas.children) if (g.userData.pivo) orientaSprite(g, s);
   renderer.render(scene, cam);
   requestAnimationFrame(quadro);
 }
@@ -509,6 +602,8 @@ window.mesa3d = {
   ferramenta: () => ferramenta,
   azimute: () => controles.getAzimuthalAngle(),
   alturaMuro: () => alturaMuro,
+  sprites: () => Object.fromEntries([...spriteCache].map(([n, t]) => [n, !!t.userData.pronta])),
+  tamCria: () => tamCria,
   y0Criatura: (x, z) => { const c = celulas.get(k(x, z)); return c && c.cria ? c.cria.userData.y0 : null; },
   texturaPronta: (n) => !!(texCache.get(n) && texCache.get(n).userData.pronta),
   /** onde, na tela (px da janela), fica o centro da célula (x,z) à altura y */

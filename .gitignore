@@ -6,3 +6,6 @@ backups/
 
 # deps
 node_modules/
+
+# sprites de terceiros em teste (licença proíbe redistribuir os arquivos; repo é público) — NUNCA commitar
+mesa-3d/sprites/

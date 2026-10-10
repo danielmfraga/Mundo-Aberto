@@ -19,6 +19,19 @@ export const H_MIN = 1, H_MAX = 8;   // altura do muro, em células (1 célula =
 // texturas de muro: nome → arquivo (null = liso, só a cor). Para ganhar outra, ponha a imagem em texturas/ e liste aqui.
 export const TEXTURAS = { liso: null, pedra: 'texturas/muro-pedra.png' };
 export const NOMES_TEXTURAS = { liso: 'Liso', pedra: 'Pedra' };
+// criaturas desenhadas (sprites que ficam em pé e sempre viram pra câmera). larg = largura em células; voo = quanto flutua.
+// Os arquivos ficam em sprites/ (fora do git: licença de terceiros). Sem o arquivo, o botão some e a criatura é o losango.
+export const SPRITES = {
+  knight:   { nome: 'Cavaleiro', arq: 'sprites/knight.png',   larg: 1.5, voo: 0 },
+  paladin:  { nome: 'Paladino',  arq: 'sprites/paladin.png',  larg: 1.5, voo: 0 },
+  rogue:    { nome: 'Ladino',    arq: 'sprites/rogue.png',    larg: 1.5, voo: 0 },
+  wizard:   { nome: 'Mago',      arq: 'sprites/wizard.png',   larg: 1.5, voo: 0 },
+  skeleton: { nome: 'Esqueleto', arq: 'sprites/skeleton.png', larg: 1.5, voo: 0 },
+  slime:    { nome: 'Gosma',     arq: 'sprites/slime.png',    larg: 1.2, voo: 0 },
+  beholder: { nome: 'Beholder',  arq: 'sprites/beholder.png', larg: 2,   voo: 0.6 },
+  dragon:   { nome: 'Dragão',    arq: 'sprites/dragon.png',   larg: 3.5, voo: 0.3 }
+};
+export const S_MIN = 0.5, S_MAX = 6;
 export const TIPOS = ['terreno', 'muro', 'criatura'];
 export const N_MIN = 6, N_MAX = 48;
 
@@ -28,7 +41,7 @@ export class Mesa {
   constructor(n = 20) {
     this.n = n;
     this.bases = new Map();      // chave → {tipo:'terreno'|'muro', x, z, cor, h, tex} (h e tex só no muro)
-    this.criaturas = new Map();  // chave → {tipo:'criatura', x, z, cor}
+    this.criaturas = new Map();  // chave → {tipo:'criatura', x, z, cor, sprite?, s?} (sem sprite = o losango)
   }
 
   dentro(x, z) { return Number.isInteger(x) && Number.isInteger(z) && x >= 0 && z >= 0 && x < this.n && z < this.n; }
@@ -49,7 +62,12 @@ export class Mesa {
       novo.h = Number.isInteger(extra.h) ? Math.max(H_MIN, Math.min(H_MAX, extra.h)) : 1;
       novo.tex = Object.hasOwn(TEXTURAS, extra.tex) ? extra.tex : 'liso';
     }
-    if (atual && atual.tipo === tipo && atual.cor === cor && atual.h === novo.h && atual.tex === novo.tex) return false;
+    if (tipo === 'criatura' && Object.hasOwn(SPRITES, extra.sprite)) {
+      novo.sprite = extra.sprite;
+      novo.s = Number.isFinite(extra.s) ? Math.max(S_MIN, Math.min(S_MAX, Math.round(extra.s * 2) / 2)) : SPRITES[extra.sprite].larg;
+    }
+    if (atual && atual.tipo === tipo && atual.cor === cor && atual.h === novo.h && atual.tex === novo.tex
+        && atual.sprite === novo.sprite && atual.s === novo.s) return false;
     mapa.set(k, novo);
     return true;
   }
@@ -86,7 +104,11 @@ export class Mesa {
       if (i.tipo === 'muro') { o.h = i.h; o.tex = i.tex; }
       itens.push(o);
     }
-    for (const i of this.criaturas.values()) itens.push({ tipo: i.tipo, x: i.x, z: i.z, cor: i.cor });
+    for (const i of this.criaturas.values()) {
+      const o = { tipo: i.tipo, x: i.x, z: i.z, cor: i.cor };
+      if (i.sprite) { o.sprite = i.sprite; o.s = i.s; }
+      itens.push(o);
+    }
     return { v: 1, n: this.n, itens };
   }
 
@@ -101,7 +123,7 @@ export class Mesa {
       if (!i || !TIPOS.includes(i.tipo)) throw new Error('tipo de item desconhecido');
       if (!tmp.dentro(i.x, i.z)) throw new Error('item fora do tabuleiro');
       const cor = Number.isInteger(i.cor) && i.cor >= 0 && i.cor < CORES.length ? i.cor : 0;
-      tmp.poe(i.tipo, i.x, i.z, cor, { h: i.h, tex: i.tex });
+      tmp.poe(i.tipo, i.x, i.z, cor, { h: i.h, tex: i.tex, sprite: i.sprite, s: i.s });
     }
     this.n = tmp.n; this.bases = tmp.bases; this.criaturas = tmp.criaturas;
   }

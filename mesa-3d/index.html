@@ -33,6 +33,9 @@
   .grupo[hidden] { display:none; }
   .val { min-width:1.6em; text-align:center; font-size:15px; }
   .suave { color:var(--suave); }
+  .forma { padding:2px 4px; min-width:30px; }
+  .forma .mini { width:28px; height:28px; image-rendering:pixelated; display:block; }
+  .forma.on { background:var(--realce); border-color:var(--realce); color:#241c05; }
   .tex.on { background:var(--realce); color:#241c05; border-color:var(--realce); font-weight:700; }
   #cena { position:relative; flex:1; min-height:0; display:grid; place-items:center; overflow:hidden; background:var(--fundo); }
   #cena canvas { display:block; image-rendering:pixelated; image-rendering:crisp-edges; touch-action:none; cursor:crosshair; }
@@ -57,6 +60,15 @@
       <button class="ferr" data-t="apagar" title="Apagar (4)">✕ Apagar</button>
     </div>
     <div class="cores" id="cores"></div>
+    <div class="grupo" id="opCria" hidden>
+      <label>Forma</label>
+      <div class="grupo" id="formas"></div>
+      <label style="margin-left:8px">Largura</label>
+      <button id="tamMenos" title="Menor">−</button>
+      <b id="tamVal" class="val">1,5</b>
+      <button id="tamMais" title="Maior">+</button>
+      <span class="suave">casas</span>
+    </div>
     <div class="grupo" id="opMuro" hidden>
       <label>Altura</label>
       <button id="altMenos" title="Muro mais baixo ([)">−</button>
@@ -70,8 +82,8 @@
     <div class="grupo">
       <label for="pixel">Pixel</label>
       <select id="pixel">
-        <option value="2">2×</option><option value="3">3×</option>
-        <option value="4" selected>4×</option><option value="6">6×</option><option value="8">8×</option>
+        <option value="2">2×</option><option value="3" selected>3×</option>
+        <option value="4">4×</option><option value="6">6×</option><option value="8">8×</option>
       </select>
     </div>
     <div class="grupo">
