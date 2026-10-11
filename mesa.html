@@ -1128,6 +1128,17 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 .mapa-pop .mapa-pv input.zero { color:var(--danger); }
 .mapa-pop .mapa-pv input.tem { color:var(--temp); }   /* enquanto há PV temporário, o valor atual fica verde */
 .mapa-lin > label.tmp { color:var(--temp); }
+/* cargas no balão do token: uma linha por habilidade (Sorte, Surto de Ação…), 5 bolinhas no fim */
+.mapa-cargas { display:flex; flex-direction:column; gap:6px; border-top:1px solid var(--line); padding-top:8px; }
+.mapa-cargas > .rot { font-size:9.5px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:#ff8a7a; }
+.mapa-carga { display:flex; align-items:center; gap:6px; }
+.mapa-pop .mapa-carga .carga-nome { flex:1 1 auto; min-width:0; padding:5px 7px; font-size:11px; }
+.mapa-carga .bolas { display:flex; gap:4px; flex:0 0 auto; }
+.mapa-bola { width:15px; height:15px; flex:0 0 auto; padding:0; border-radius:50%; cursor:pointer; border:1.5px solid rgba(255,110,90,0.65); background:transparent; transition:background .1s, box-shadow .1s; }
+.mapa-bola:hover { background:rgba(255,110,90,0.25); }
+.mapa-bola.on { background:#ff8a7a; box-shadow:0 0 6px rgba(255,110,90,0.55); }
+.carga-x { flex:0 0 auto; width:20px; height:20px; padding:0; border:0; background:transparent; color:var(--fg-faint); font-size:16px; line-height:1; cursor:pointer; border-radius:4px; }
+.carga-x:hover { color:#fff; background:var(--danger); }
 .mapa-pop input.mapa-pv-temp.tem { color:var(--temp); font-weight:700; }
 /* o máximo vem por último, menor e mais apagado, com a legenda "máx" */
 .mapa-pv-maxw { display:flex; align-items:center; gap:4px; margin-left:4px; cursor:text; }
@@ -3728,6 +3739,59 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     return isFinite(v) && v > 0 ? Math.min(v, 9999) : null;
   }
   // O que chega do Storage ou de outro jogador passa por aqui antes de valer.
+  // Cargas: habilidades com usos (Sorte, Surto de Ação…). Cada linha tem nome e 5 bolinhas; as marcadas à esquerda são as que
+  // a pessoa tem — o número é decidido à mão. k = código curto da linha (várias pessoas mexem sem se atropelar).
+  function mapaCargaK() { return Math.random().toString(36).slice(2, 8); }
+  function mapaCargasNorm(a) {
+    if (!Array.isArray(a)) return [];
+    var vistos = {};
+    return a.slice(0, 12).map(function(c) {
+      c = c || {};
+      var k = /^[a-z0-9]{3,12}$/.test(String(c.k || '')) ? String(c.k) : mapaCargaK();
+      if (vistos[k]) k = mapaCargaK();
+      vistos[k] = 1;
+      return { k:k, nome:String(c.nome == null ? '' : c.nome).slice(0, 30), q:mapaClamp(Math.round(+c.q || 0), 0, 5) };
+    });
+  }
+  function mapaCargaAplica(t, op) {
+    t.cargas = t.cargas || [];
+    var c = t.cargas.filter(function(x) { return x.k === op.k; })[0];
+    if (op.a === 'add') {
+      if (!c && t.cargas.length < 12 && /^[a-z0-9]{3,12}$/.test(String(op.k || ''))) t.cargas.push({ k:String(op.k), nome:String(op.nome == null ? '' : op.nome).slice(0, 30), q:0 });
+    } else if (!c) {
+      return;
+    } else if (op.a === 'q') {
+      c.q = mapaClamp(Math.round(+op.q || 0), 0, 5);
+    } else if (op.a === 'nome') {
+      c.nome = String(op.nome == null ? '' : op.nome).slice(0, 30);
+    } else if (op.a === 'del') {
+      t.cargas = t.cargas.filter(function(x) { return x.k !== op.k; });
+    }
+  }
+  function mapaCargasHtml(t) {
+    var h = '<div class="mapa-cargas"><span class="rot">Cargas</span>';
+    (t.cargas || []).forEach(function(c) {
+      h += '<div class="mapa-carga" data-k="' + esc(c.k) + '"><input type="text" class="carga-nome" maxlength="30" autocomplete="off" placeholder="Nome (ex.: Sorte)" value="' + esc(c.nome) + '"><span class="bolas">';
+      for (var i = 1; i <= 5; i++) h += '<button type="button" class="mapa-bola' + (i <= c.q ? ' on' : '') + '" data-i="' + i + '" title="Marcar até aqui"></button>';
+      h += '</span><button type="button" class="carga-x" title="Tirar esta linha">&#215;</button></div>';
+    });
+    if ((t.cargas || []).length < 12) h += '<button type="button" class="mapa-op" data-acao="carga+"><span>+ Nova linha de cargas</span></button>';
+    return h + '</div>';
+  }
+  // refaz só a parte das cargas do balão aberto (sem fechar nem tirar o foco de quem está digitando um nome)
+  function mapaCargaRender(foco) {
+    var id = mapaTokPop.dataset.id, tk = mapaAchaTok(id), el = mapaTokPop.querySelector('.mapa-cargas');
+    if (!tk || !el) return;
+    var a = document.activeElement;
+    if (!foco && a && el.contains(a) && a.classList.contains('carga-nome')) return;
+    el.outerHTML = mapaCargasHtml(tk);
+    var tel = mapaTokEls[id];
+    if (tel) {                                           // o balão cresceu: mantém ele dentro da tela
+      var rp = mapaPanel.getBoundingClientRect(), rt = tel.getBoundingClientRect(), ph = mapaTokPop.offsetHeight;
+      mapaTokPop.style.top = mapaClamp(rt.top - rp.top, 8, Math.max(8, rp.height - ph - 8)) + 'px';
+    }
+    if (foco) { var ls = mapaTokPop.querySelectorAll('.carga-nome'); if (ls.length) ls[ls.length - 1].focus(); }
+  }
   function mapaTokNorm(t) {
     t = t || {};
     var tam = +t.tam, pvMax = mapaPvMaxNorm(t.pvMax);
@@ -3735,7 +3799,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       id: String(t.id || ('npc_' + Math.random().toString(36).slice(2, 9))).slice(0, 80),
       nome: String(t.nome == null ? '' : t.nome).slice(0, 40),
       img: mapaUrlOk(t.img),
-      foto: (typeof t.foto === 'string' && /^f_[0-9a-f]{12}$/.test(t.foto)) ? t.foto : null,   // foto de NPC: só o código; a imagem vem do navegador de quem a pôs
+      foto: (typeof t.foto === 'string' && /^f_[0-9a-f]{12}$/.test(t.foto)) ? t.foto : null,
+      cargas: mapaCargasNorm(t.cargas),   // foto de NPC: só o código; a imagem vem do navegador de quem a pôs
       tam: MAPA_TAM_OK.indexOf(tam) >= 0 ? tam : 1,
       col: Math.round(+t.col || 0),
       row: Math.round(+t.row || 0),
@@ -4214,6 +4279,10 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       t = mapaAchaTok(op.id);
       if (t) { t.pvMax = mapaPvMaxNorm(op.pvMax); t.pv = mapaPvNorm(op.pv, t.pvMax); t.pvTemp = mapaPvTempNorm(op.pvTemp); }
       if (mapaTokPop.dataset.id === op.id) mapaPreenchePv();   // quem está com o balão aberto vê mudar
+    } else if (op.op === 'carga') {
+      t = mapaAchaTok(op.id);
+      if (t) mapaCargaAplica(t, op);
+      if (mapaTokPop.dataset.id === op.id) mapaCargaRender(false);   // quem está com o balão aberto vê mudar
     } else if (op.op === 'foto') {
       t = mapaAchaTok(op.id);
       if (t) t.foto = (typeof op.foto === 'string' && /^f_[0-9a-f]{12}$/.test(op.foto)) ? op.foto : null;
@@ -5319,6 +5388,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       '<div class="mapa-dica">Digite <b>-5</b> pra tirar, <b>+5</b> pra curar, ou o número novo. O temporário é gasto primeiro.</div>' +
       '<div class="mapa-lin"><label>Tamanho</label><select class="mapa-tam">' + ops + '</select></div>' +
       (t.char_id ? '<button type="button" class="mapa-op" data-acao="ficha"><span>Abrir ficha</span><span class="q">&#8599;</span></button>' : '') +
+      mapaCargasHtml(t) +
       (!t.pc ? '<button type="button" class="mapa-op" data-acao="foto" title="A foto fica guardada só no seu navegador; a mesa a recebe de você ao vivo"><span>' + (t.foto ? 'Trocar a foto' : 'Pôr uma foto') + '</span></button>' : '') +
       (t.foto ? '<button type="button" class="mapa-op" data-acao="tirafoto"><span>Tirar a foto</span></button>' : '') +
       '<button type="button" class="mapa-op perigo" data-acao="tirar"><span>Tirar do mapa</span></button>';
@@ -5400,14 +5470,14 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   // já substitui. O mouseup do próprio clique desfaria a seleção — por isso é
   // segurado uma vez. Clicando de novo, o cursor vai pra onde clicou.
   mapaTokPop.addEventListener('mousedown', function(e) {
-    if (e.target.tagName === 'INPUT' && document.activeElement !== e.target) e.target._segura = true;
+    if (e.target.tagName === 'INPUT' && !e.target.classList.contains('carga-nome') && document.activeElement !== e.target) e.target._segura = true;
   });
   mapaTokPop.addEventListener('mouseup', function(e) {
     if (e.target.tagName === 'INPUT' && e.target._segura) { e.preventDefault(); e.target._segura = false; }
   });
   mapaTokPop.addEventListener('focusin', function(e) {
     var inp = e.target;
-    if (inp.tagName !== 'INPUT') return;
+    if (inp.tagName !== 'INPUT' || inp.classList.contains('carga-nome')) return;   // o nome da carga não seleciona tudo ao clicar: dá pra editar no meio
     inp._orig = inp.value; inp._editou = false; inp._substituiu = false;
     inp.select();
   });
@@ -5426,6 +5496,12 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     }
     else if (b.dataset.acao === 'ficha') openSheet(t.char_id, t.ficha);
     else if (b.dataset.acao === 'tirar') { mapaFechaPops(); mapaTok({ op:'del', id:id }); }
+    else if (b.classList.contains('mapa-bola')) {          // bolinha: marca até ela; clicar na última marcada desmarca uma
+      var ln = b.closest('.mapa-carga'), c = ln && (t.cargas || []).filter(function(x) { return x.k === ln.dataset.k; })[0], i = +b.dataset.i;
+      if (c) mapaTok({ op:'carga', a:'q', id:id, k:c.k, q:(c.q === i ? i - 1 : i) });
+    }
+    else if (b.classList.contains('carga-x')) { var ln2 = b.closest('.mapa-carga'); if (ln2) mapaTok({ op:'carga', a:'del', id:id, k:ln2.dataset.k }); }
+    else if (b.dataset.acao === 'carga+') { mapaTok({ op:'carga', a:'add', id:id, k:mapaCargaK(), nome:'' }); mapaCargaRender(true); }
     else if (b.dataset.acao === 'foto') { _mapaTokFotoId = id; document.getElementById('mapaTokFoto').click(); }
     else if (b.dataset.acao === 'tirafoto') { mapaFechaPops(); mapaTok({ op:'foto', id:id, foto:null }); }
   });
@@ -5442,6 +5518,10 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     var id = mapaTokPop.dataset.id;
     if (!mapaAchaTok(id)) return;
     if (e.target.classList.contains('mapa-tam')) mapaTok({ op:'tam', id:id, tam:+e.target.value });
+    else if (e.target.classList.contains('carga-nome')) {
+      var ln = e.target.closest('.mapa-carga');
+      if (ln) mapaTok({ op:'carga', a:'nome', id:id, k:ln.dataset.k, nome:e.target.value.trim().slice(0, 30) });
+    }
     else if (e.target.tagName === 'INPUT') mapaConfirmaPv(e.target);
   });
   mapaTokPop.addEventListener('keydown', function(e) {
