@@ -1637,6 +1637,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       <div class="mapa-lin"><label for="mapaNpcTam">Tamanho</label><select id="mapaNpcTam"></select></div>
       <div class="mapa-lin"><label for="mapaNpcQtd">Quantos</label><input type="number" id="mapaNpcQtd" min="1" max="20" value="1"></div>
       <div class="mapa-lin"><span class="rot">Imagem</span><button class="mapa-op" id="mapaNpcImgBtn" type="button">escolher (opcional)</button></div>
+      <div class="mapa-lin"><span class="rot" title="A foto fica guardada só no seu navegador; a mesa a recebe de você ao vivo">Foto</span><button class="mapa-op" id="mapaNpcFotoBtn" type="button">escolher (só no meu navegador)</button></div>
       <button class="btn mapa-acao" id="mapaNpcOk" type="button">Colocar no mapa</button>
     </div>
 
@@ -1688,6 +1689,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 
     <input type="file" id="mapaFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
     <input type="file" id="mapaNpcFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+    <input type="file" id="mapaNpcFoto" accept="image/*" hidden>
+    <input type="file" id="mapaTokFoto" accept="image/*" hidden>
   </div>
 
   <!-- Rail: trama + personagens + dados + chat -->
@@ -2821,7 +2824,20 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var SUS_WORKLET = 'class C extends AudioWorkletProcessor{constructor(){super();this.b=new Float32Array(4096);this.n=0;}' +
     'process(i){var c=i[0]&&i[0][0];if(!c)return true;for(var k=0;k<c.length;k++){this.b[this.n++]=c[k];if(this.n===4096){this.port.postMessage(this.b.slice(0));this.n=0;}}return true;}}' +
     'registerProcessor("sus-cap",C);';
+  // Enquanto alguém sussurra pra mim, a voz de todo mundo na chamada cai 30% (só pra mim); volta ao normal quando acaba.
+  // Usa o comando setParticipantVolume do Jitsi (0 a 1) em cada participante. Se esta versão do vídeo não tiver o comando, nada acontece.
+  var SUS_VOL_OUTROS = 0.7, susAbaixado = false;
+  function susVolumeDe(id, v) { try { jitsiApi.executeCommand('setParticipantVolume', id, v); } catch (_) {} }
+  function susAbaixaOutros(quer) {
+    if (quer === susAbaixado) return;
+    susAbaixado = quer;
+    if (!jitsiApi) return;
+    var lista = [];
+    try { lista = jitsiApi.getParticipantsInfo() || []; } catch (_) {}
+    lista.forEach(function(p) { if (p && p.participantId) susVolumeDe(p.participantId, quer ? SUS_VOL_OUTROS : 1); });
+  }
   function susStatus() {
+    susAbaixaOutros(Object.keys(susRx).length > 0);
     var quem = Object.keys(susRx).map(function(k) { return susRx[k].nome; });
     if (susEnv) { susEstadoEl.textContent = '🎙 Sussurrando para ' + susEnv.alvo + ' — a mesa não te ouve'; susEstadoEl.hidden = false; }
     else if (quem.length) { susEstadoEl.textContent = '🔊 ' + quem.join(', ') + (quem.length > 1 ? ' estão sussurrando' : ' está sussurrando') + ' para você'; susEstadoEl.hidden = false; }
@@ -3582,6 +3598,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       jitsiApi.addListener(ev, function() { setTimeout(function() { _tileTs = 0; jitsiTileReafirma(false); }, 600); });
     });
     jitsiApi.addListener('tileViewChanged', function(e) { jitsiTileReafirma(!!(e && e.enabled)); });
+    jitsiApi.addListener('participantJoined', function(e) { if (susAbaixado && e && e.id) susVolumeDe(e.id, SUS_VOL_OUTROS); });   // quem entra no meio de um sussurro também baixa
   }
 
   // ── Mapa (mesa de D20) ────────────────────────────────────────────
@@ -3718,6 +3735,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       id: String(t.id || ('npc_' + Math.random().toString(36).slice(2, 9))).slice(0, 80),
       nome: String(t.nome == null ? '' : t.nome).slice(0, 40),
       img: mapaUrlOk(t.img),
+      foto: (typeof t.foto === 'string' && /^f_[0-9a-f]{12}$/.test(t.foto)) ? t.foto : null,   // foto de NPC: só o código; a imagem vem do navegador de quem a pôs
       tam: MAPA_TAM_OK.indexOf(tam) >= 0 ? tam : 1,
       col: Math.round(+t.col || 0),
       row: Math.round(+t.row || 0),
@@ -3965,6 +3983,96 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       '<rect width="100%" height="100%" fill="url(#mapaFavo)"/>';
     mapaHex.style.display = '';
   }
+  // ── Fotos de NPC ──────────────────────────────────────────────────
+  // A foto de um NPC fica guardada SÓ no navegador de quem a escolheu (IndexedDB). No mapa vai apenas o código dela
+  // (hash da imagem, ex.: f_1a2b3c4d5e6f). Quem vê um código que não tem pede pelo canal da mesa e quem tem manda
+  // (~10 KB). Quem recebe guarda só na memória: fechou a aba, pede de novo (se alguém que tenha a foto estiver na mesa).
+  var FOTO_RE = /^f_[0-9a-f]{12}$/, FOTO_LADO = 160, FOTO_MAX_B64 = 40000;
+  var fotoUrl = {}, fotoBlob = {}, fotoVisto = {}, fotoReqTs = {}, fotoPedido = {}, fotoTimer = null, fotoCanalPronto = false;
+  function fotoIdb() {
+    return new Promise(function(ok, err) {
+      var r = indexedDB.open('mesaFotos', 1);
+      r.onupgradeneeded = function() { r.result.createObjectStore('fotos'); };
+      r.onsuccess = function() { ok(r.result); }; r.onerror = function() { err(r.error); };
+    });
+  }
+  function fotoMemoria(id, blob) { fotoBlob[id] = blob; if (!fotoUrl[id]) fotoUrl[id] = URL.createObjectURL(blob); }
+  function fotoGuarda(id, blob) {                       // a minha: memória + navegador
+    fotoMemoria(id, blob);
+    return fotoIdb().then(function(db) {
+      return new Promise(function(ok) { var tx = db.transaction('fotos', 'readwrite'); tx.objectStore('fotos').put(blob, id); tx.oncomplete = ok; tx.onerror = ok; });
+    }).catch(function() {});
+  }
+  function fotoCarregaLocais() {
+    return fotoIdb().then(function(db) {
+      return new Promise(function(ok) {
+        var rq = db.transaction('fotos', 'readonly').objectStore('fotos').openCursor();
+        rq.onsuccess = function() { var c = rq.result; if (!c) { ok(); return; } if (FOTO_RE.test(c.key)) fotoMemoria(c.key, c.value); c.continue(); };
+        rq.onerror = function() { ok(); };
+      });
+    }).then(function() { mapaRenderTokens(); }).catch(function() {});
+  }
+  function fotoIdDe(h) { return 'f_' + Array.prototype.slice.call(new Uint8Array(h), 0, 6).map(function(b) { return (b < 16 ? '0' : '') + b.toString(16); }).join(''); }
+  // abre a imagem, recorta o quadrado do meio, encolhe para 160 px e dá o código (hash do resultado)
+  function fotoPrepara(file) {
+    return createImageBitmap(file).then(function(bmp) {
+      var lado = Math.min(bmp.width, bmp.height), c = document.createElement('canvas');
+      c.width = c.height = FOTO_LADO;
+      c.getContext('2d').drawImage(bmp, (bmp.width - lado) / 2, (bmp.height - lado) / 2, lado, lado, 0, 0, FOTO_LADO, FOTO_LADO);
+      if (bmp.close) bmp.close();
+      return new Promise(function(ok, err) { c.toBlob(function(b) { b ? ok(b) : err(new Error('sem imagem')); }, 'image/jpeg', 0.85); });
+    }).then(function(blob) {
+      return blob.arrayBuffer().then(function(buf) {
+        return crypto.subtle.digest('SHA-256', buf).then(function(h) { return { id:fotoIdDe(h), blob:blob }; });
+      });
+    });
+  }
+  function fotoB64(buf) {
+    var u8 = new Uint8Array(buf), s = '';
+    for (var i = 0; i < u8.length; i += 0x2000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x2000));
+    return btoa(s);
+  }
+  function fotoPrecisa() {                              // há token com foto que eu não tenho? pede (no máximo a cada 8 s por foto)
+    clearTimeout(fotoTimer);
+    fotoTimer = setTimeout(function() {
+      if (channel && !fotoCanalPronto) { fotoPrecisa(); return; }       // o canal ainda está abrindo: tenta de novo daqui a pouco
+      var falta = [], agora = Date.now();
+      mapaCena.tokens.forEach(function(tk) {
+        if (tk.foto && !fotoUrl[tk.foto] && agora - (fotoPedido[tk.foto] || 0) > 8000 && falta.indexOf(tk.foto) < 0) falta.push(tk.foto);
+      });
+      if (!falta.length) return;
+      falta.forEach(function(id) { fotoPedido[id] = agora; });
+      send('foto-req', { ids:falta.slice(0, 20), by:MAPA_ME });
+    }, 400);
+  }
+  function fotoResponde(p) {                            // alguém pediu: se eu tenho, mando (um respiro aleatório evita todo mundo mandar junto)
+    if (!p || !Array.isArray(p.ids) || p.by === MAPA_ME) return;
+    var agora = Date.now();
+    p.ids.slice(0, 20).forEach(function(id) {
+      if (typeof id !== 'string' || !FOTO_RE.test(id) || !fotoBlob[id]) return;
+      fotoReqTs[id] = agora;
+      setTimeout(function() {
+        if ((fotoVisto[id] || 0) > fotoReqTs[id]) return;   // outro já respondeu
+        fotoBlob[id].arrayBuffer().then(function(buf) { send('foto', { id:id, d:fotoB64(buf), by:MAPA_ME }); });
+      }, 100 + Math.random() * 600);
+    });
+  }
+  function fotoRecebe(p) {
+    if (!p || typeof p.id !== 'string' || !FOTO_RE.test(p.id) || typeof p.d !== 'string' || !p.d || p.d.length > FOTO_MAX_B64) return;
+    fotoVisto[p.id] = Date.now();
+    if (fotoUrl[p.id]) return;
+    var u8;
+    try { var bin = atob(p.d); u8 = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); } catch (_) { return; }
+    if (u8.length < 4 || u8[0] !== 0xFF || u8[1] !== 0xD8 || u8[2] !== 0xFF) return;   // só JPEG
+    crypto.subtle.digest('SHA-256', u8).then(function(h) {
+      if (fotoIdDe(h) !== p.id) return;                  // não bate com o código: descarta (ninguém troca a foto de outro)
+      fotoMemoria(p.id, new Blob([u8], { type:'image/jpeg' }));
+      mapaRenderTokens();
+    });
+  }
+  fotoCarregaLocais();
+  setInterval(fotoPrecisa, 10000);                      // quem tinha a foto pode ter chegado depois: tenta de novo a cada 10 s enquanto faltar
+
   function mapaRenderTokens() {
     var vivos = {};
     mapaCena.tokens.forEach(function(t) {
@@ -3983,6 +4091,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     Object.keys(mapaTokEls).forEach(function(id) {
       if (!vivos[id]) { mapaTokEls[id].remove(); delete mapaTokEls[id]; }
     });
+    fotoPrecisa();
   }
   function mapaPintaTok(el, t) {
     var geo = mapaTokGeo(t), rosto = el.firstChild;
@@ -3994,20 +4103,21 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     el.style.width = el.style.height = geo.lado + 'px';
     el.style.zIndex = String(20 - Math.round(t.tam * 2));   // maior embaixo: o goblin do lado do dragão continua clicável
     rosto.style.borderWidth = Math.max(2, geo.lado * 0.05) + 'px';
-    var chave = (t.img || '') + '|' + t.nome;
+    var src = (t.foto && fotoUrl[t.foto]) || t.img;      // foto de NPC (se já chegou) ou a imagem do servidor
+    var chave = (src || '') + '|' + t.nome;
     if (el._chave !== chave) {
       el._chave = chave;
       rosto.innerHTML = '';
-      if (t.img) {
+      if (src) {
         var im = document.createElement('img');
-        im.src = t.img; im.alt = ''; im.draggable = false;
+        im.src = src; im.alt = ''; im.draggable = false;
         rosto.appendChild(im);
       } else {
         rosto.textContent = mapaIniciais(t.nome);
       }
     }
-    if (!t.img) rosto.style.fontSize = Math.max(8, geo.lado * (rosto.textContent.length > 2 ? 0.28 : 0.36)) + 'px';
-    var num = el.querySelector('.num'), n = t.img ? /\s(\d+)$/.exec(t.nome) : null;
+    if (!src) rosto.style.fontSize = Math.max(8, geo.lado * (rosto.textContent.length > 2 ? 0.28 : 0.36)) + 'px';
+    var num = el.querySelector('.num'), n = src ? /\s(\d+)$/.exec(t.nome) : null;
     num.classList.toggle('tem', !!n);
     num.textContent = n ? n[1] : '';
     num.style.fontSize = Math.max(7, geo.lado * 0.24) + 'px';
@@ -4104,6 +4214,9 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       t = mapaAchaTok(op.id);
       if (t) { t.pvMax = mapaPvMaxNorm(op.pvMax); t.pv = mapaPvNorm(op.pv, t.pvMax); t.pvTemp = mapaPvTempNorm(op.pvTemp); }
       if (mapaTokPop.dataset.id === op.id) mapaPreenchePv();   // quem está com o balão aberto vê mudar
+    } else if (op.op === 'foto') {
+      t = mapaAchaTok(op.id);
+      if (t) t.foto = (typeof op.foto === 'string' && /^f_[0-9a-f]{12}$/.test(op.foto)) ? op.foto : null;
     } else if (op.op === 'del') {
       mapaCena.tokens = mapaCena.tokens.filter(function(x){ return x.id !== op.id; });
       if (mapaTokPop.dataset.id === op.id) mapaFechaPops();
@@ -5206,6 +5319,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       '<div class="mapa-dica">Digite <b>-5</b> pra tirar, <b>+5</b> pra curar, ou o número novo. O temporário é gasto primeiro.</div>' +
       '<div class="mapa-lin"><label>Tamanho</label><select class="mapa-tam">' + ops + '</select></div>' +
       (t.char_id ? '<button type="button" class="mapa-op" data-acao="ficha"><span>Abrir ficha</span><span class="q">&#8599;</span></button>' : '') +
+      (!t.pc ? '<button type="button" class="mapa-op" data-acao="foto" title="A foto fica guardada só no seu navegador; a mesa a recebe de você ao vivo"><span>' + (t.foto ? 'Trocar a foto' : 'Pôr uma foto') + '</span></button>' : '') +
+      (t.foto ? '<button type="button" class="mapa-op" data-acao="tirafoto"><span>Tirar a foto</span></button>' : '') +
       '<button type="button" class="mapa-op perigo" data-acao="tirar"><span>Tirar do mapa</span></button>';
     mapaTokPop.dataset.id = id;
     mapaPreenchePv();
@@ -5311,6 +5426,17 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     }
     else if (b.dataset.acao === 'ficha') openSheet(t.char_id, t.ficha);
     else if (b.dataset.acao === 'tirar') { mapaFechaPops(); mapaTok({ op:'del', id:id }); }
+    else if (b.dataset.acao === 'foto') { _mapaTokFotoId = id; document.getElementById('mapaTokFoto').click(); }
+    else if (b.dataset.acao === 'tirafoto') { mapaFechaPops(); mapaTok({ op:'foto', id:id, foto:null }); }
+  });
+  var _mapaTokFotoId = null;
+  document.getElementById('mapaTokFoto').addEventListener('change', function(e) {
+    var f = e.target.files && e.target.files[0], id = _mapaTokFotoId;
+    e.target.value = '';
+    if (!f || !id || !mapaAchaTok(id)) return;
+    fotoPrepara(f).then(function(r) {
+      return fotoGuarda(r.id, r.blob).then(function() { mapaFechaPops(); mapaTok({ op:'foto', id:id, foto:r.id }); });
+    }).catch(function() { alert('Não consegui abrir essa imagem.'); });
   });
   mapaTokPop.addEventListener('change', function(e) {
     var id = mapaTokPop.dataset.id;
@@ -5479,6 +5605,21 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       alert('A imagem não subiu: ' + err.message);
     }).then(function(){ _mapaNpcSubindo = false; mapaNpcOk.disabled = false; });
   });
+  // foto do NPC (fica no navegador de quem escolheu; ver "Fotos de NPC")
+  var _mapaNpcFoto = null, mapaNpcFotoBtn = document.getElementById('mapaNpcFotoBtn'), mapaNpcFotoFile = document.getElementById('mapaNpcFoto');
+  function mapaNpcLimpaFoto() { _mapaNpcFoto = null; mapaNpcFotoBtn.textContent = 'escolher (só no meu navegador)'; mapaNpcFotoBtn.classList.remove('on'); }
+  mapaNpcFotoBtn.addEventListener('click', function() { mapaNpcFotoFile.click(); });
+  mapaNpcFotoFile.addEventListener('change', function() {
+    var f = mapaNpcFotoFile.files && mapaNpcFotoFile.files[0];
+    mapaNpcFotoFile.value = '';
+    if (!f) return;
+    mapaNpcFotoBtn.textContent = 'preparando…';
+    fotoPrepara(f).then(function(r) {
+      return fotoGuarda(r.id, r.blob).then(function() {
+        _mapaNpcFoto = r.id; mapaNpcFotoBtn.textContent = '✓ foto pronta'; mapaNpcFotoBtn.classList.add('on');
+      });
+    }).catch(function() { mapaNpcLimpaFoto(); alert('Não consegui abrir essa imagem.'); });
+  });
   function mapaColocaNpc() {
     if (_mapaNpcSubindo || !mapaTemMapa()) return;
     var base = mapaNpcNome.value.trim().slice(0, 36) || 'NPC';
@@ -5493,11 +5634,11 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       toks.push({
         id: 'npc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) + i,
         nome: (qtd === 1 && n0 === 0) ? base : base + ' ' + (n0 + i + 1),
-        img: _mapaNpcImg, tam: tam, col: lugar.col, row: lugar.row, pc: false
+        img: _mapaNpcImg, foto: _mapaNpcFoto, tam: tam, col: lugar.col, row: lugar.row, pc: false
       });
     }
     mapaTok({ op:'add', toks:toks });
-    mapaNpcNome.value = ''; mapaNpcQtd.value = 1; mapaNpcLimpaImg();
+    mapaNpcNome.value = ''; mapaNpcQtd.value = 1; mapaNpcLimpaImg(); mapaNpcLimpaFoto();
     mapaFechaPops();
   }
   mapaNpcOk.addEventListener('click', mapaColocaNpc);
@@ -6783,6 +6924,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     else if (event === 'som-lib') { if (somLoaded) somLoad(function(){ somRefreshUI(); }); }
     else if (event === 'som-gain') { if (payload && payload.id != null) { somGain[String(payload.id)] = payload.gain; somPersistGain(); somApplyVol(payload.id); somRenderPads(); } }
     // 'mapa-open'/'mapa-close' eram "abre pra mesa toda"; agora cada um entra e sai por si (ver Host do palco)
+    else if (event === 'foto-req') fotoResponde(payload);
+    else if (event === 'foto') fotoRecebe(payload);
     else if (event === 'palco-st') palcoRecebeEstado(payload);
     else if (event === 'palco-req') { if (payload && payload.by !== MAPA_ME && palcoDentro) palcoTrack(); }   // quem chegou pede o estado: quem está no palco responde
     else if (event === 'mapa-vista') palcoVistaRecebe(payload);
@@ -6819,12 +6962,16 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     ['som-play','som-stop','som-state','som-state-req','som-lib','som-gain'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
+    ['foto-req','foto'].forEach(function(ev){
+      channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
+    });
     ['palco-st','palco-req','mapa-cena','mapa-grade','mapa-img','mapa-tok','mapa-dsn','mapa-nev','mapa-vista','mapa-vista-req','mapa-regua'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
     channel.subscribe(function(status){
       document.getElementById('connDot').classList.toggle('on', status === 'SUBSCRIBED');
-      if (status === 'SUBSCRIBED') { susOuve(); send('chars-req', {}); send('mesa-ctx-req', {}); send('som-state-req', {}); send('timer-req', {}); channel.track({ id:MAPA_ME, nome:nome }); palcoTrack(); send('palco-req', { by:MAPA_ME }); }
+      fotoCanalPronto = status === 'SUBSCRIBED';
+      if (status === 'SUBSCRIBED') { fotoPrecisa(); susOuve(); send('chars-req', {}); send('mesa-ctx-req', {}); send('som-state-req', {}); send('timer-req', {}); channel.track({ id:MAPA_ME, nome:nome }); palcoTrack(); send('palco-req', { by:MAPA_ME }); }
     });
   }
 
