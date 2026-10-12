@@ -821,6 +821,12 @@ body.mapa-on .palco-host { display:flex; }
   font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; pointer-events:none;
 }
 .palco-congelado[hidden] { display:none; }
+/* o host caiu ou saiu: o quadro compartilhado fica todo preto pra quem ficou, até ele voltar (ou passarem os 10 min) */
+.palco-preto { display:none; position:absolute; z-index:5; left:0; top:0; bottom:0; right:calc(252px + 20px); background:#000; align-items:center; justify-content:center; padding:24px; box-sizing:border-box; }
+body.palco-sem-host .palco-preto { display:flex; }
+.palco-preto-msg { max-width:420px; text-align:center; font-family:var(--font-mono); font-size:12px; line-height:1.7; letter-spacing:0.1em; text-transform:uppercase; color:var(--fg-dim); }
+.palco-preto-msg b { color:var(--holo); font-weight:600; }
+body.palco-sem-host .mapa-bar, body.palco-sem-host .dsn-bar, body.palco-sem-host .nev-bar { visibility:hidden; pointer-events:none; }
 /* Sem isso, cada arrasto no mapa deixa uma seleção invisível, e o arrasto seguinte, ao começar dentro dela,
    vira um arrastar-e-soltar nativo (cursor proibido, o mapa trava). Campos de texto seguem selecionáveis. */
 .mapa-panel { user-select:none; -webkit-user-select:none; }
@@ -958,6 +964,7 @@ body.palco-pausado #mapaGradeBtn, body.palco-pausado #mapaLimparBt { pointer-eve
 .ferr-mapa.alguem::after { content:''; position:absolute; top:5px; right:5px; width:7px; height:7px; border-radius:50%; background:#ff8a7a; box-shadow:0 0 7px #ff8a7a; }
 @media (max-width:920px) {
   body.mapa-on .mapa-view { right:0; top:164px; }
+  .palco-preto { right:0; top:164px; }
   body.mapa-on .mapa-bar { top:170px; left:50%; max-width:94vw; }
   .palco-janela { top:132px; right:10px; }
   .palco-host { position:absolute; z-index:6; left:10px; top:auto; bottom:10px; }
@@ -1534,7 +1541,6 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     <div class="palco-esq">
       <div class="palco-host" id="palcoHost">
         <span id="palcoHostQuem">Host: —</span>
-        <button class="palco-host-bt" id="palcoControlar" type="button" title="Assumir o controle da mesa" hidden>Controlar</button>
         <button class="palco-host-bt" id="palcoRostoBt" type="button" title="Uma tela só de rostos, só pra você. Aperte de novo pra voltar à mesa." hidden>Rosto a rosto</button>
         <button class="palco-host-bt" id="palcoLevaBt" type="button" title="Leva TODO MUNDO pra tela de rostos, como se a mesa tivesse fechado (quem já está nela não sente nada). Aperte de novo pra soltar." hidden>Levar todos</button>
         <button class="palco-host-bt" id="palcoMestreBt" type="button" title="Modo Mestre: ferramentas só suas (névoa que esconde partes do mapa dos jogadores)" hidden>Mestre</button>
@@ -1590,6 +1596,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     <div class="abas-bar" id="abasBar"></div>
     <div class="abas-menu" id="abasMenu" hidden></div>
     <div class="palco-congelado" id="palcoCongelado" hidden>Mesa em pausa · o host desligou o tempo real</div>
+    <div class="palco-preto" id="palcoPreto" aria-live="polite"><div class="palco-preto-msg" id="palcoPretoMsg"></div></div>
     <div class="mapa-bar">
       <span class="led"></span><span class="panel-title">Mesa</span>
       <div class="mapa-add" id="mapaAdd"></div>
@@ -4449,7 +4456,6 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var NEV_MAX = 600, NEV_PTS = 500;
   var mapaNev = document.getElementById('mapaNev');
   var nevMestreOn = false, nevModo = 'a', nevCasas = 2, nevDrag = null, nevPreEl = null;
-  var nevEscudo = false;   // sou host mas herdei o posto de um Mestre: vejo a névoa como os jogadores até apertar "Mestre"
   function dsnNum(v) { v = +v; return isFinite(v) ? Math.round(v * 10) / 10 : 0; }
   function dsnCor(c) { return (typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c)) ? c : '#111111'; }
   function dsnId() { return MAPA_ME.slice(0, 4) + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
@@ -4750,16 +4756,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   }
   // O host fora do Modo Mestre vê o mapa limpo (a névoa é pros jogadores); no Modo Mestre vê a névoa
   // translúcida pra poder editar. Jogador sempre vê a névoa.
-  // Exceção (escudo): quem herda o posto de um host que estava no Modo Mestre (ele saiu ou caiu) começa vendo a névoa como
-  // os jogadores, pra o mapa inteiro do Mestre não aparecer por acidente; apertar "Mestre" tira o escudo.
-  function nevMeVeNevoa() { return !palcoSouHost || nevMestreOn || nevEscudo; }
-  // o navegador do Mestre lembra que ele estava no Modo Mestre: se ele cair e voltar a ser host, o modo volta sozinho
-  function nevMestreLembra(on) { try { if (on) localStorage.setItem('mesaMestreModo', String(Date.now())); else localStorage.removeItem('mesaMestreModo'); } catch (_) {} }
-  function nevMestreRecente() {
-    var ts = 0;
-    try { ts = +localStorage.getItem('mesaMestreModo') || 0; } catch (_) {}
-    return !!ts && Date.now() - ts <= palcoGraca();
-  }
+  function nevMeVeNevoa() { return !palcoSouHost || nevMestreOn; }
   function nevForma(o, cor) {
     if (o.k === 't') return dsnSvg('polyline', { points:dsnPts(o.p), fill:'none', stroke:cor, 'stroke-width':o.w, 'stroke-linecap':'round', 'stroke-linejoin':'round' });
     var x0 = Math.min(o.a[0], o.a[2]), y0 = Math.min(o.a[1], o.a[3]), w = Math.abs(o.a[2] - o.a[0]), h = Math.abs(o.a[3] - o.a[1]);
@@ -4863,18 +4860,13 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     on = !!on && palcoSouHost && palcoDentro;
     if (on === nevMestreOn) return;
     nevMestreOn = on;
-    if (on) nevEscudo = false;
     document.body.classList.toggle('mestre-on', on);
     nevBar.hidden = !on;
     palcoMestreBt.classList.toggle('on', on);
     if (!on && dsnTool.indexOf('nv-') === 0) dsnSetTool('mover');
     nevRender(); mapaRenderTokens(); nevSyncUI();
-    palcoTrack();   // os outros ficam sabendo se o host está no Modo Mestre (quem herdar o posto começa com o escudo)
   }
-  palcoMestreBt.addEventListener('click', function() {
-    if (nevEscudo) { nevEscudo = false; nevRender(); mapaRenderTokens(); }   // assumir o Modo Mestre de propósito
-    nevMestre(!nevMestreOn); nevMestreLembra(nevMestreOn);
-  });
+  palcoMestreBt.addEventListener('click', function() { nevMestre(!nevMestreOn); });   // o host já entra no Modo Mestre; o botão deixa ver o mapa limpo e voltar
   nevOnIn.addEventListener('change', function() {
     if (!nevMestreOn) return;
     // ligar a névoa pela primeira vez cobre tudo: os jogadores só veem o que for revelado depois
@@ -5986,7 +5978,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 
   // ── abrir / fechar: cada um no seu palco ──
   // Abrir não puxa ninguém junto. Quem está dentro aparece na presença do canal,
-  // e é dela que sai o host: o primeiro a entrar, ou quem apertou "Controlar".
+  // e é dela que sai o host: o primeiro a entrar (ninguém toma o posto de outro).
   function mapaAberto() { return document.body.classList.contains('mapa-on'); }
   function openMapa() {
     if (mapaAberto()) return;
@@ -6015,7 +6007,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     mapaBtn.classList.remove('open');
     document.body.classList.remove('wb-on', 'wb-right');
     jitsiTile(true);   // a grade é o padrão, também fora do palco
-    if (palcoSouHost) { palcoEsqueceHost(); nevMestreLembra(false); }   // saiu de propósito: passa o posto na hora, e não retoma depois (nem o Modo Mestre)
+    if (palcoSouHost) { _palcoBatida = 0; palcoBatidaHost(); }   // host que sai: o posto fica guardado 10 min (retoma ao voltar), como numa queda
     palcoDentro = false; palcoClaim = 0; palcoRosto = false; rostoMeu = false; rostoDispensado = false;
     palcoTrack(); palcoRecalcula();
   }
@@ -6114,7 +6106,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   document.getElementById('mapaFechar').addEventListener('click', function() {
     if (!mapaAberto()) return;
     var msg = 'Sair do palco?\n\nA mesa continua para quem ficou.';
-    if (palcoSouHost) msg += '\n\nVocê é o host: o posto passa para outro jogador' + (nevMestreOn ? ' e o Modo Mestre termina.' : '.');
+    if (palcoSouHost) msg += '\n\nVocê é o host: enquanto estiver fora, o quadro fica PRETO para os outros. Seu posto fica guardado por 10 minutos; se voltar nesse tempo, você retoma.';
     if (!window.confirm(msg)) return;
     closeMapa();
   });
@@ -6122,17 +6114,16 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   // ── Host do palco ──
   var palcoDentro = false, palcoDesde = 0, palcoClaim = 0, palcoLive = true;
   var palcoPres = {};            // id → o que cada conectado anunciou
-  // Host que CAI (aba fechada, rede, travou) não perde o posto na hora: o posto fica guardado por 10 minutos, ou até alguém
-  // apertar "Controlar", ou até ele voltar. Enquanto isso ninguém é host (a mesa segue livre, ninguém é promovido sozinho).
-  // Quem sai de propósito (✕ do palco) continua passando o posto na hora. Quem volta (F5, outra aba) retoma sozinho se
-  // ninguém assumiu nesse meio-tempo: o navegador dele lembra (mesaHostRecente).
+  // Host que CAI ou SAI (✕) não perde o posto na hora: fica guardado por 10 minutos e ninguém assume — o quadro compartilhado
+  // fica preto pra quem ficou. Se ele voltar nesse prazo (F5, outra aba, reabrir o palco), retoma sozinho: o navegador dele lembra
+  // (mesaHostRecente). Passados os 10 minutos, o próximo da fila (quem entrou primeiro) assume. Se todos saírem do palco, o
+  // primeiro que entrar vira host. O host já entra no Modo Mestre.
   var PALCO_GRACA_MS = 10 * 60 * 1000, palcoFantasma = null, _palcoBatida = 0;
   function palcoGraca() { return window.__PALCO_GRACA_MS != null ? +window.__PALCO_GRACA_MS : PALCO_GRACA_MS; }
   function palcoBatidaHost() {                  // o host se lembra de que era host (pra retomar se cair)
     if (!palcoSouHost || Date.now() - _palcoBatida < 15000) return;
     _palcoBatida = Date.now();
     try { localStorage.setItem('mesaHostRecente', String(_palcoBatida)); } catch (_) {}
-    if (nevMestreOn) nevMestreLembra(true);
   }
   function palcoEsqueceHost() { _palcoBatida = 0; try { localStorage.removeItem('mesaHostRecente'); } catch (_) {} }
   function palcoReivindicaVolta() {             // voltei depois de cair sendo host: retomo, a menos que alguém tenha assumido
@@ -6152,7 +6143,6 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var palcoSeguir = true;        // o meu interruptor, quando não sou host: ligado = espelho da tela do host
   var _palcoSeguia = false;
   var palcoHostQuem = document.getElementById('palcoHostQuem');
-  var palcoCtrlBt = document.getElementById('palcoControlar');
   var palcoLiveBox = document.getElementById('palcoLiveBox');
   var palcoLiveIn = document.getElementById('palcoLive');
   var palcoAviso = document.getElementById('palcoCongelado');
@@ -6200,17 +6190,17 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   document.getElementById('palcoLevaBt').addEventListener('click', palcoLevaTodos);
   document.getElementById('rostoVolta').addEventListener('click', rostoVoltaClique);
 
-  // O estado do palco (dentro, "Controlar", tempo real) vai por BROADCAST, não pela
+  // O estado do palco (dentro, tempo real) vai por BROADCAST, não pela
   // presença: o Supabase fecha o canal inteiro de quem atualiza a presença mais
   // de umas 5 vezes em poucos segundos (testado) — e com o canal vão os dados e o
   // chat. A presença só serve pra saber quem está conectado (um track por conexão).
   function palcoTrack() {   // anuncia o meu estado; o nome ficou, o mecanismo mudou
-    send('palco-st', { id:MAPA_ME, nome:(nome || 'Jogador'), dentro:palcoDentro, desde:palcoDesde, claim:palcoClaim, live:palcoLive, rosto:palcoRosto, mestre:!!(palcoSouHost && nevMestreOn) });
+    send('palco-st', { id:MAPA_ME, nome:(nome || 'Jogador'), dentro:palcoDentro, desde:palcoDesde, claim:palcoClaim, live:palcoLive, rosto:palcoRosto });
   }
-  var palcoMestreVisto = false;   // o último host que vi estava no Modo Mestre? (guardado também quando ele sai ou cai)
   function palcoRecebeEstado(m) {
     if (!m || !m.id || m.id === MAPA_ME) return;
-    if (m.id === palcoHostId && m.dentro) palcoMestreVisto = !!m.mestre;
+    // o host SAIU do palco (✕): vale como queda — o posto fica guardado e o quadro escurece pra quem ficou
+    if (!m.dentro && m.id === palcoHostId && palcoPres[m.id]) palcoFantasma = { id:m.id, nome:palcoPres[m.id].nome, caiuEm:Date.now() };
     if (m.dentro) palcoPres[m.id] = m; else delete palcoPres[m.id];
     palcoRecalcula();
   }
@@ -6227,17 +6217,18 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   }
   // gente nova no canal: se estou no palco, conto como estou (ela não viu meus avisos antigos)
   function palcoNovoNoCanal() { if (palcoDentro) palcoTrack(); }
-  // Host = de quem está no palco, o que apertou "Controlar" por último; sem ninguém
-  // que tenha apertado, o que entrou primeiro. Todo mundo faz a mesma conta, então
+  // Host = de quem está no palco, o que "reivindicou" por último (só o host que volta de uma queda faz isso); sem ninguém
+  // que tenha reivindicado, o que entrou primeiro. Todo mundo faz a mesma conta, então
   // todo mundo chega no mesmo host sem precisar de árbitro.
   function palcoEscolheHost() {
     var lista = Object.keys(palcoPres).filter(function(k) { return k !== MAPA_ME; }).map(function(k) { return palcoPres[k]; });
     if (palcoDentro) lista.push({ id:MAPA_ME, nome:(nome || 'Jogador'), dentro:true, desde:palcoDesde, claim:palcoClaim, live:palcoLive, rosto:palcoRosto });
     lista = lista.filter(function(m) { return m && m.dentro; });
+    if (palcoFantasma && !lista.length) palcoFantasma = null;                  // todo mundo saiu do palco: não há ninguém pra esperar, o primeiro que entrar vira host
     if (palcoFantasma && Date.now() - palcoFantasma.caiuEm > palcoGraca()) palcoFantasma = null;   // passou o prazo: volta a conta normal
     if (palcoFantasma) {
       var novos = lista.filter(function(m) { return (m.claim || 0) > palcoFantasma.caiuEm; });
-      if (novos.length) { palcoFantasma = null; lista = novos; }              // alguém apertou "Controlar" depois da queda: vale
+      if (novos.length) { palcoFantasma = null; lista = novos; }              // o host voltou e reivindicou o posto depois da queda: vale
       else {
         var volta = lista.filter(function(m) { return m.id === palcoFantasma.id; })[0];
         if (volta) { palcoFantasma = null; return volta; }                    // o mesmo host reapareceu
@@ -6262,19 +6253,16 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     palcoAviso.textContent = !palcoSeguir ? 'Tempo real desligado · a mesa está parada pra você' : 'Mesa em pausa · o host desligou o tempo real';
     abasRender();
     if (palcoSouHost) palcoBatidaHost();
-    else if (eraHost) palcoEsqueceHost();           // perdi o posto (alguém assumiu): não retomo sozinho depois
+    else if (eraHost && palcoDentro) palcoEsqueceHost();   // perdi o posto com o palco aberto (alguém assumiu): não retomo sozinho depois. Se saí do palco, o registro fica: posso voltar e retomar
     var restaMin = palcoFantasma ? Math.max(1, Math.ceil((palcoFantasma.caiuEm + palcoGraca() - Date.now()) / 60000)) : 0;
+    var preto = !h && !!palcoFantasma && palcoDentro && !privAtiva;       // sem host (guardado pra quem caiu): o quadro compartilhado fica preto
+    document.body.classList.toggle('palco-sem-host', preto);
+    if (preto) document.getElementById('palcoPretoMsg').innerHTML = 'Aguardando <b>' + esc(palcoFantasma.nome || 'o host') + '</b> voltar<br>posto guardado por ' + restaMin + ' min';
     palcoHostQuem.innerHTML = h ? (palcoSouHost ? '<b>Você</b> é o host' : 'Host: <b>' + esc(h.nome || 'Jogador') + '</b>')
-      : (palcoFantasma ? 'Host: <b>' + esc(palcoFantasma.nome || 'Jogador') + '</b> caiu · posto guardado por ' + restaMin + ' min (ou aperte Controlar)' : 'Host: —');
-    palcoCtrlBt.hidden = !palcoDentro || palcoSouHost;
+      : (palcoFantasma ? 'Host: <b>' + esc(palcoFantasma.nome || 'Jogador') + '</b> caiu · posto guardado por ' + restaMin + ' min' : 'Host: —');
     palcoMestreBt.hidden = !palcoDentro || !palcoSouHost;
     if (nevMestreOn && (!palcoDentro || !palcoSouHost)) nevMestre(false);   // perdeu o posto de host: o Modo Mestre acaba
-    if (palcoSouHost && !eraHost) {
-      if (nevMestreRecente()) nevMestre(true);          // eu era o Mestre e voltei (F5, queda): o Modo Mestre volta sozinho
-      else if (palcoMestreVisto) nevEscudo = true;      // herdei o posto de um Mestre: começo vendo a névoa como os jogadores
-      palcoMestreVisto = false;
-    }
-    if (!palcoSouHost) nevEscudo = false;
+    if (palcoSouHost && !eraHost) nevMestre(true);     // quem é host já é o Mestre: o Modo Mestre liga sozinho
     if (palcoSouHost !== eraHost) { nevRender(); mapaRenderTokens(); }       // virou (ou deixou de ser) host: muda o que vê da névoa
     palcoLiveBox.hidden = !palcoDentro;
     palcoAplicaRosto(!!h && !!h.rosto);
@@ -6293,7 +6281,6 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     mapaBtn.classList.toggle('alguem', alguem && !palcoDentro);
     mapaBtn.dataset.dica = alguem && h ? 'Mesa e Quadro · ' + (h.nome || 'alguém') + ' está no palco' : 'Mesa e Quadro';
   }
-  palcoCtrlBt.addEventListener('click', function() { palcoClaim = Date.now(); palcoTrack(); palcoRecalcula(); });
   setInterval(function() { if (palcoFantasma || palcoSouHost) palcoRecalcula(); }, 20000);   // atualiza o prazo na tela, encerra a guarda vencida e renova a batida do host
   function palcoLigaTempoReal() {
     palcoLive = true; palcoLiveIn.checked = true;
