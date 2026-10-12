@@ -1038,6 +1038,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
    (300×150) em vez de cobrir o mapa — daí o width/height explícitos */
 .mapa-hex { width:100%; height:100%; display:block; }
 .mapa-tokens { position:absolute; inset:0; }
+.mapa-npc-alvo { position:absolute; pointer-events:none; z-index:19; border:2px dashed #ff8a7a; border-radius:50%; background:rgba(255,110,90,0.18); box-shadow:0 0 0 1px rgba(0,0,0,0.5); }
+.mapa-npc-alvo[hidden] { display:none; }
 .mapa-tok { position:absolute; cursor:grab; touch-action:none; border-radius:50%; }   /* a área clicável é o círculo do rosto: o canto da caixa quadrada não agarra o token */
 .mapa-tok.drag { cursor:grabbing; z-index:60 !important; }
 .mapa-tok .rosto {
@@ -4279,13 +4281,13 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   // ── tokens ──
   // Ocupação por quadrado, pra token novo nascer num lugar livre perto do
   // centro da vista em vez de empilhar em cima de outro.
-  function mapaLugarLivre(tam, extra) {
+  function mapaLugarLivre(tam, extra, centro) {   // centro (opcional): {col,row} onde procurar; sem ele, o meio da tela
     var n = Math.max(1, Math.ceil(tam));
     var r = mapaView.getBoundingClientRect();
     var c = mapaTelaParaMundo(r.left + r.width / 2, r.top + r.height / 2);
     var cabe = mapaCasasNoMapa();
     var cols = Math.max(n, cabe.cols), rows = Math.max(n, cabe.rows);
-    var meio = mapaCasaEm(c.x, c.y);
+    var meio = centro || mapaCasaEm(c.x, c.y);
     var base = {
       col: mapaClamp(meio.col - Math.floor((n - 1) / 2), 0, cols - n),
       row: mapaClamp(meio.row - Math.floor((n - 1) / 2), 0, rows - n)
@@ -5397,6 +5399,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   function mapaFechaPops() {
     [mapaGradePop, mapaNpcPop, mapaTokPop, mapaLimparPop, mapaSalaPop, mapaImgPop].forEach(function(p){ p.classList.remove('show'); });
     mapaTokPop.dataset.id = '';
+    if (typeof mapaNpcAlvoEsconde === 'function') mapaNpcAlvoEsconde();
     mapaGradeBtn.classList.remove('on');
     mapaNpcBtn.classList.remove('on');
     mapaLimparBt.classList.remove('on');
@@ -5713,7 +5716,26 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     mapaNpcTam.appendChild(op);
   });
   function mapaNpcLimpaImg() { _mapaNpcImg = null; mapaNpcImgBtn.textContent = 'escolher (opcional)'; mapaNpcImgBtn.classList.remove('on'); }
+  var _mapaNpcOnde = null;                 // casa escolhida pelo duplo clique do host (null = o NPC nasce no meio da tela)
+  var mapaNpcAlvo = document.createElement('div');
+  mapaNpcAlvo.className = 'mapa-npc-alvo'; mapaNpcAlvo.hidden = true;
+  mapaTokens.appendChild(mapaNpcAlvo);
+  function mapaNpcAlvoEsconde() { _mapaNpcOnde = null; if (mapaNpcAlvo) mapaNpcAlvo.hidden = true; }
+  function mapaNpcNoPonto(e) {
+    var w = mapaTelaParaMundo(e.clientX, e.clientY), casa = mapaCasaEm(w.x, w.y);
+    mapaFechaPops();
+    _mapaNpcOnde = { col:casa.col, row:casa.row };
+    var g = mapaTokGeo({ col:casa.col, row:casa.row, tam:1 });
+    mapaNpcAlvo.style.left = g.x + 'px'; mapaNpcAlvo.style.top = g.y + 'px'; mapaNpcAlvo.style.width = mapaNpcAlvo.style.height = g.lado + 'px';
+    mapaNpcAlvo.hidden = false;
+    mapaNpcPop.classList.add('show');
+    var rp = mapaPanel.getBoundingClientRect();
+    mapaNpcPop.style.left = mapaClamp(e.clientX - rp.left + 16, 8, Math.max(8, rp.width - mapaNpcPop.offsetWidth - 8)) + 'px';
+    mapaNpcPop.style.top = mapaClamp(e.clientY - rp.top - 24, 8, Math.max(8, rp.height - mapaNpcPop.offsetHeight - 8)) + 'px';
+    mapaNpcNome.focus();
+  }
   mapaNpcBtn.addEventListener('click', function() {
+    mapaNpcAlvoEsconde();
     if (mapaAbrePopEm(mapaNpcPop, mapaNpcBtn, 'esq')) mapaNpcNome.focus();
   });
   mapaNpcImgBtn.addEventListener('click', function(){ if (!_mapaNpcSubindo) mapaNpcFile.click(); });
@@ -5758,7 +5780,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     mapaCena.tokens.forEach(function(t) { var m = re.exec(t.nome); if (m) n0 = Math.max(n0, m[1] ? +m[1] : 1); });
     var toks = [];
     for (var i = 0; i < qtd; i++) {
-      var lugar = mapaLugarLivre(tam, toks);
+      var lugar = mapaLugarLivre(tam, toks, _mapaNpcOnde);
       toks.push({
         id: 'npc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) + i,
         nome: (qtd === 1 && n0 === 0) ? base : base + ' ' + (n0 + i + 1),
@@ -5940,7 +5962,12 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     var p = mapaPontoView(e), passo = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
     mapaZoom(Math.exp(-mapaClamp(passo, -300, 300) * 0.0015), p.x, p.y);
   }, { passive:false });
-  mapaView.addEventListener('dblclick', function(e){ if (!e.target.closest('.mapa-tok') && !palcoSegue()) mapaFit(); });
+  mapaView.addEventListener('dblclick', function(e) {
+    if (e.target.closest('.mapa-tok')) return;
+    // o host, com a mão (ferramenta padrão), cria um NPC onde deu o duplo clique; quem não é host continua enquadrando o mapa
+    if (palcoSouHost && mapaTemMapa() && dsnTool === 'mover' && !e.target.closest('.mapa-pop')) { mapaNpcNoPonto(e); return; }
+    if (!palcoSegue()) mapaFit();
+  });
 
   // ── abrir / fechar: cada um no seu palco ──
   // Abrir não puxa ninguém junto. Quem está dentro aparece na presença do canal,
