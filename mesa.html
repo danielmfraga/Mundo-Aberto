@@ -5957,6 +5957,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     palcoDentro = true; palcoDesde = Date.now(); palcoClaim = 0; palcoLive = true;
     palcoTrack(); palcoRecalcula();
     palcoChatPonto();
+    setTimeout(palcoReivindicaVolta, 2500);          // dá tempo de ver quem está na sala antes de decidir se retoma o posto
   }
   function closeMapa() {
     if (!mapaAberto()) return;
@@ -5972,6 +5973,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     mapaBtn.classList.remove('open');
     document.body.classList.remove('wb-on', 'wb-right');
     jitsiTile(true);   // a grade é o padrão, também fora do palco
+    if (palcoSouHost) palcoEsqueceHost();           // saiu de propósito: passa o posto na hora, e não retoma depois
     palcoDentro = false; palcoClaim = 0; palcoRosto = false; rostoMeu = false; rostoDispensado = false;
     palcoTrack(); palcoRecalcula();
   }
@@ -6072,6 +6074,27 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   // ── Host do palco ──
   var palcoDentro = false, palcoDesde = 0, palcoClaim = 0, palcoLive = true;
   var palcoPres = {};            // id → o que cada conectado anunciou
+  // Host que CAI (aba fechada, rede, travou) não perde o posto na hora: o posto fica guardado por 10 minutos, ou até alguém
+  // apertar "Controlar", ou até ele voltar. Enquanto isso ninguém é host (a mesa segue livre, ninguém é promovido sozinho).
+  // Quem sai de propósito (✕ do palco) continua passando o posto na hora. Quem volta (F5, outra aba) retoma sozinho se
+  // ninguém assumiu nesse meio-tempo: o navegador dele lembra (mesaHostRecente).
+  var PALCO_GRACA_MS = 10 * 60 * 1000, palcoFantasma = null, _palcoBatida = 0;
+  function palcoGraca() { return window.__PALCO_GRACA_MS != null ? +window.__PALCO_GRACA_MS : PALCO_GRACA_MS; }
+  function palcoBatidaHost() {                  // o host se lembra de que era host (pra retomar se cair)
+    if (!palcoSouHost || Date.now() - _palcoBatida < 15000) return;
+    _palcoBatida = Date.now();
+    try { localStorage.setItem('mesaHostRecente', String(_palcoBatida)); } catch (_) {}
+  }
+  function palcoEsqueceHost() { _palcoBatida = 0; try { localStorage.removeItem('mesaHostRecente'); } catch (_) {} }
+  function palcoReivindicaVolta() {             // voltei depois de cair sendo host: retomo, a menos que alguém tenha assumido
+    if (!palcoDentro || palcoSouHost) return;
+    var ts = 0;
+    try { ts = +localStorage.getItem('mesaHostRecente') || 0; } catch (_) {}
+    if (!ts || Date.now() - ts > palcoGraca()) return;
+    var assumiu = Object.keys(palcoPres).some(function(k) { return k !== MAPA_ME && palcoPres[k] && palcoPres[k].dentro && (palcoPres[k].claim || 0) > ts; });
+    if (assumiu) { palcoEsqueceHost(); return; }
+    palcoClaim = Date.now(); palcoTrack(); palcoRecalcula();
+  }
   var palcoSouHost = false, palcoCongelado = false, palcoHostId = null;
   var palcoRosto = false;        // (host) levei todo mundo pra tela de rostos
   var rostoMeu = false;          // entrei por conta própria na tela de rostos (qualquer um pode)
@@ -6144,7 +6167,11 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   function palcoLePresenca() {
     var st = (channel && channel.presenceState) ? channel.presenceState() : null;
     if (!st || !Object.keys(st).length) return;   // ainda sem estado: não apaga ninguém
-    Object.keys(palcoPres).forEach(function(k) { if (!st[k]) delete palcoPres[k]; });
+    Object.keys(palcoPres).forEach(function(k) {
+      if (st[k]) return;
+      if (k === palcoHostId && k !== MAPA_ME && palcoPres[k]) palcoFantasma = { id:k, nome:palcoPres[k].nome, caiuEm:Date.now() };   // o host caiu: guarda o posto
+      delete palcoPres[k];
+    });
     palcoRecalcula();
   }
   // gente nova no canal: se estou no palco, conto como estou (ela não viu meus avisos antigos)
@@ -6156,6 +6183,16 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     var lista = Object.keys(palcoPres).filter(function(k) { return k !== MAPA_ME; }).map(function(k) { return palcoPres[k]; });
     if (palcoDentro) lista.push({ id:MAPA_ME, nome:(nome || 'Jogador'), dentro:true, desde:palcoDesde, claim:palcoClaim, live:palcoLive, rosto:palcoRosto });
     lista = lista.filter(function(m) { return m && m.dentro; });
+    if (palcoFantasma && Date.now() - palcoFantasma.caiuEm > palcoGraca()) palcoFantasma = null;   // passou o prazo: volta a conta normal
+    if (palcoFantasma) {
+      var novos = lista.filter(function(m) { return (m.claim || 0) > palcoFantasma.caiuEm; });
+      if (novos.length) { palcoFantasma = null; lista = novos; }              // alguém apertou "Controlar" depois da queda: vale
+      else {
+        var volta = lista.filter(function(m) { return m.id === palcoFantasma.id; })[0];
+        if (volta) { palcoFantasma = null; return volta; }                    // o mesmo host reapareceu
+        return null;                                                          // ninguém assumiu: o posto continua guardado
+      }
+    }
     lista.sort(function(a, b) { return (b.claim || 0) - (a.claim || 0) || (a.desde || 0) - (b.desde || 0) || (a.id < b.id ? -1 : 1); });
     return lista[0] || null;
   }
@@ -6173,7 +6210,11 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     palcoAviso.hidden = !pausadoAqui;
     palcoAviso.textContent = !palcoSeguir ? 'Tempo real desligado · a mesa está parada pra você' : 'Mesa em pausa · o host desligou o tempo real';
     abasRender();
-    palcoHostQuem.innerHTML = h ? (palcoSouHost ? '<b>Você</b> é o host' : 'Host: <b>' + esc(h.nome || 'Jogador') + '</b>') : 'Host: —';
+    if (palcoSouHost) palcoBatidaHost();
+    else if (eraHost) palcoEsqueceHost();           // perdi o posto (alguém assumiu): não retomo sozinho depois
+    var restaMin = palcoFantasma ? Math.max(1, Math.ceil((palcoFantasma.caiuEm + palcoGraca() - Date.now()) / 60000)) : 0;
+    palcoHostQuem.innerHTML = h ? (palcoSouHost ? '<b>Você</b> é o host' : 'Host: <b>' + esc(h.nome || 'Jogador') + '</b>')
+      : (palcoFantasma ? 'Host: <b>' + esc(palcoFantasma.nome || 'Jogador') + '</b> caiu · posto guardado por ' + restaMin + ' min (ou aperte Controlar)' : 'Host: —');
     palcoCtrlBt.hidden = !palcoDentro || palcoSouHost;
     palcoMestreBt.hidden = !palcoDentro || !palcoSouHost;
     if (nevMestreOn && (!palcoDentro || !palcoSouHost)) nevMestre(false);   // perdeu o posto de host: o Modo Mestre acaba
@@ -6196,6 +6237,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     mapaBtn.dataset.dica = alguem && h ? 'Mesa e Quadro · ' + (h.nome || 'alguém') + ' está no palco' : 'Mesa e Quadro';
   }
   palcoCtrlBt.addEventListener('click', function() { palcoClaim = Date.now(); palcoTrack(); palcoRecalcula(); });
+  setInterval(function() { if (palcoFantasma || palcoSouHost) palcoRecalcula(); }, 20000);   // atualiza o prazo na tela, encerra a guarda vencida e renova a batida do host
   function palcoLigaTempoReal() {
     palcoLive = true; palcoLiveIn.checked = true;
     palcoTrack();
