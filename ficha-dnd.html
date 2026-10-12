@@ -7328,23 +7328,55 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (elFerr) criaBusca(elFerr.previousElementSibling, 'ferramentas');
   })();
 
+  // Mandar um verbete para o token da mesa (vira uma linha em "Cargas" do balão do token). A ficha abre pela mesa
+  // (window.open) ou dentro dela; a conversa é por postMessage e só vale entre páginas da mesma origem.
+  function mesaAlvo() { return window.opener || (window.parent !== window ? window.parent : null); }
+  var envioPendente = null;
+  window.addEventListener('message', function(e) {
+    var d = e.data;
+    if (e.origin !== location.origin || !d || d.tipo !== 'mesa-carga-ok') return;
+    clearTimeout(envioPendente); envioPendente = null;
+    var nomeV = String(d.nome == null ? '' : d.nome).slice(0, 40);
+    avisa({ ok: 'Mandei “' + nomeV + '” para as Cargas do token', ja: '“' + nomeV + '” já está nas Cargas do token',
+      'sem-token': 'Este personagem não está no mapa da mesa', cheio: 'O token já tem 12 linhas de cargas' }[d.estado] || 'Não consegui mandar para o token');
+  });
+  function mandaParaToken(chave) {
+    var alvo = mesaAlvo(), d = AJUDA[chave];
+    if (!alvo || !d) { avisa('Abra a ficha pelo personagem na mesa para mandar ao token'); return; }
+    try { alvo.postMessage({ tipo: 'mesa-carga', char_id: RID, nome: d.t }, location.origin); }
+    catch (err) { avisa('Não consegui falar com a mesa'); return; }
+    clearTimeout(envioPendente);
+    envioPendente = setTimeout(function() { avisa('A mesa não respondeu. Abra a ficha pelo personagem na mesa.'); }, 2500);
+  }
+
   balao.addEventListener('contextmenu', function(e) {
-    var alvo = e.target.closest('.tag, .balao-item-t');
-    if (!alvo || somenteLeitura) return;
-    var chave = alvo.dataset.ir || alvo.dataset.k;
-    var dest = chave && destinoDe(chave);
-    if (!dest) return;
+    var alvo = e.target.closest('.tag, .balao-item-t, .balao-t');
+    if (!alvo) return;
+    var chave = alvo.classList.contains('balao-t') ? balao.dataset.chave : (alvo.dataset.ir || alvo.dataset.k);
+    if (!chave || !AJUDA[chave]) return;
+    var dest = destinoDe(chave);
+    var podeFicha = !!dest && !somenteLeitura, podeToken = !!mesaAlvo();
+    if (!podeFicha && !podeToken) return;
     e.preventDefault();
     invMenu.innerHTML = '';
-    var b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = dest.r + ': ' + (AJUDA[chave] ? AJUDA[chave].t : chave);
-    b.addEventListener('click', function() {
-      fechaMenu();
-      var feito = poeNaFicha(chave);
-      if (feito) { calcula(); marca(); avisa(feito); }
-    });
-    invMenu.appendChild(b);
+    if (podeFicha) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = dest.r + ': ' + AJUDA[chave].t;
+      b.addEventListener('click', function() {
+        fechaMenu();
+        var feito = poeNaFicha(chave);
+        if (feito) { calcula(); marca(); avisa(feito); }
+      });
+      invMenu.appendChild(b);
+    }
+    if (podeToken) {
+      var bt = document.createElement('button');
+      bt.type = 'button'; bt.className = 'menu-token';
+      bt.textContent = 'Mandar para o token: ' + AJUDA[chave].t;
+      bt.addEventListener('click', function() { fechaMenu(); mandaParaToken(chave); });
+      invMenu.appendChild(bt);
+    }
     invMenu.hidden = false;
     var r = invMenu.getBoundingClientRect();
     invMenu.style.left = Math.min(e.clientX, innerWidth - r.width - 10) + 'px';
