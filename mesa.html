@@ -1041,6 +1041,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 .mapa-tok { position:absolute; cursor:grab; touch-action:none; border-radius:50%; }   /* a área clicável é o círculo do rosto: o canto da caixa quadrada não agarra o token */
 .mapa-tok.drag { cursor:grabbing; z-index:60 !important; }
 .mapa-tok .rosto {
+  transform:rotate(var(--rotinv, 0deg));
   position:absolute; inset:0; border-radius:50%; overflow:hidden; border-style:solid; border-color:#4ed3e8;
   background:#15314a; color:#fff; font-family:var(--font-display); font-weight:700; line-height:1;
   display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.65);
@@ -1052,6 +1053,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 @keyframes mapaAcha { 0% { box-shadow:0 0 0 0 rgba(255,255,255,0.95); } 100% { box-shadow:0 0 0 18px rgba(255,255,255,0); } }
 /* token com imagem e número no nome ("Lobo 3"): o número fica num selo, senão os lobos são iguais */
 .mapa-tok .num {
+  transform:rotate(var(--rotinv, 0deg));
   position:absolute; right:-6%; bottom:-6%; min-width:42%; height:42%; padding:0 6%; border-radius:999px;
   display:none; align-items:center; justify-content:center; pointer-events:none;
   background:#ff6b5b; color:#fff; border:2px solid #0b1320; font-family:var(--font-mono); font-weight:700; line-height:1;
@@ -1060,7 +1062,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 /* nome só no mouse por cima e no arrasto: sempre à mostra, um token encobre o nome do vizinho.
    Fica do mesmo tamanho na tela em qualquer zoom (--inv = 1/escala). */
 .mapa-tok .nm {
-  position:absolute; left:50%; top:100%; transform:translate(-50%, 3px) scale(var(--inv, 1)); transform-origin:top center;
+  position:absolute; left:50%; top:100%; transform:translate(-50%, 3px) rotate(var(--rotinv, 0deg)) scale(var(--inv, 1)); transform-origin:top center;
   max-width:170px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; pointer-events:none; display:none;
   font-family:var(--font-display); font-size:12px; font-weight:600; color:#fff;
   background:rgba(4,8,16,0.88); padding:1px 7px; border-radius:9px;
@@ -1595,6 +1597,9 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       <button class="mapa-ico" id="mapaSalaBtn" type="button" title="Sala em branco, por medida em metros">&#128208;</button>
       <button class="mapa-ico" id="mapaGradeBtn" type="button" title="Ajustar a grade">#</button>
       <label class="mapa-ico mapa-fundo" title="Cor do fundo"><span class="mapa-fundo-am" id="mapaFundoAm"></span><input type="color" id="mapaFundoCor" value="#f0f0f0"></label>
+      <button class="mapa-ico" id="mapaGiraE" type="button" title="Girar o tabuleiro 90° para a esquerda">&#10226;</button>
+      <button class="mapa-ico" id="mapaGiraD" type="button" title="Girar o tabuleiro 90° para a direita">&#10227;</button>
+      <button class="mapa-ico" id="mapaGiraZero" type="button" title="Voltar o tabuleiro à posição original" hidden>0&#176;</button>
       <button class="mapa-ico" id="mapaFit" type="button" title="Ver o mapa inteiro (ou duplo clique no mapa)">&#9974;</button>
       <button class="mapa-ico mapa-limpar" id="mapaLimparBt" type="button" title="Limpar o mapa">&#128465;</button>
     </div>
@@ -2830,6 +2835,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var jitsiMudo = false;            // o meu microfone no vídeo está mudo? (o Jitsi avisa quando muda)
   var susEnv = null;                // o sussurro que estou fazendo agora
   var susRx = {};                   // de quem estou ouvindo: chave → { nome, prox, timer }
+  var susFimSid = {};               // de quem: o código do último sussurro que ACABOU (pedaços atrasados dele são ignorados)
   var susCtx = null, susCanalIn = null;
   var susEstadoEl = document.getElementById('susEstado'), susBtn = document.getElementById('susBtn');
   var SUS_WORKLET = 'class C extends AudioWorkletProcessor{constructor(){super();this.b=new Float32Array(4096);this.n=0;}' +
@@ -2869,7 +2875,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       var v = soma / (b - a);
       out[j] = Math.max(-1, Math.min(1, v)) * 32767;
     }
-    var msg = { de:nome, seq:env.seq++, d:susB64(out) };
+    var msg = { de:nome, seq:env.seq++, s:env.sid, d:susB64(out) };
     if (env.pronto) susEnviaPacote(env, msg);
     else if (env.fila.length < 40) env.fila.push(msg);     // o canal ainda está abrindo: guarda o começo da fala
   }
@@ -2909,14 +2915,14 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       var av = document.createElement('div'); av.className = 'msg-aviso priv'; av.textContent = 'Este navegador não consegue sussurrar por voz';
       f.el.appendChild(av); return;
     }
-    var env = susEnv = { alvo:alvo, fila:[], pronto:false, seq:0, parou:false, desmutar:false, fimPendente:false, canal:null, ctx:null, stream:null, node:null, timer:null };
+    var env = susEnv = { sid:Math.random().toString(36).slice(2, 8), alvo:alvo, fila:[], pronto:false, seq:0, parou:false, desmutar:false, fimPendente:false, canal:null, ctx:null, stream:null, node:null, timer:null };
     if (jitsiApi && !jitsiMudo) { try { jitsiApi.executeCommand('toggleAudio'); env.desmutar = true; jitsiMudo = true; } catch (_) {} }   // a mesa para de te ouvir
     env.canal = sbRealtimeClient.channel('mesa:' + SALA + ':sus:' + dmKey(alvo), { config:{ broadcast:{ self:false } } });
     env.canal.subscribe(function(st) {
       if (st !== 'SUBSCRIBED' || env.pronto) return;
       env.pronto = true;
       env.fila.forEach(function(m) { susEnviaPacote(env, m); }); env.fila = [];
-      if (env.fimPendente) { susEnviaPacote(env, { de:nome, fim:true }); setTimeout(function() { try { env.canal.unsubscribe(); } catch (_) {} }, 600); }
+      if (env.fimPendente) { susEnviaPacote(env, { de:nome, fim:true, s:env.sid }); setTimeout(function() { try { env.canal.unsubscribe(); } catch (_) {} }, 600); }
     });
     env.timer = setTimeout(susPara, SUS_MAX_MS);            // botão que ficou preso não deixa o microfone aberto pra sempre
     susBtn.classList.add('on'); susStatus();
@@ -2931,7 +2937,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     var env = susEnv;
     if (!env) return;
     susEnv = null; env.parou = true; clearTimeout(env.timer);
-    if (env.pronto) { susEnviaPacote(env, { de:nome, fim:true }); setTimeout(function() { try { env.canal.unsubscribe(); } catch (_) {} }, 600); }
+    if (env.pronto) { susEnviaPacote(env, { de:nome, fim:true, s:env.sid }); setTimeout(function() { try { env.canal.unsubscribe(); } catch (_) {} }, 600); }
     else env.fimPendente = true;                            // soltou antes de o canal abrir: manda o fim assim que abrir
     susLimpa(env);
     if (env.desmutar && jitsiApi && jitsiMudo) { try { jitsiApi.executeCommand('toggleAudio'); jitsiMudo = false; } catch (_) {} }   // o microfone da chamada volta como estava
@@ -2954,7 +2960,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   function susRecebe(p) {
     if (!p || typeof p.de !== 'string' || dmKey(p.de) === dmKey(nome)) return;
     var k = dmKey(p.de), r = susRx[k];
-    if (p.fim) { susFimRx(k); return; }
+    if (p.fim) { if (p.s) susFimSid[k] = p.s; susFimRx(k); return; }       // lembra qual sussurro acabou
+    if (p.s && susFimSid[k] === p.s) return;                                // pedaço atrasado de um sussurro que já acabou: não reabre o aviso nem baixa o volume de novo
     if (typeof p.d !== 'string' || !p.d || p.d.length > 60000) return;
     if (!r) {                                               // começou a sussurrar pra mim
       r = susRx[k] = { nome:p.de, prox:0, timer:null };
@@ -3666,7 +3673,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   // Só grava depois de saber o que já estava salvo: gravar a cena vazia do
   // começo por cima apagaria o mapa da sala.
   var mapaPronto = false, mapaCarregando = null;
-  var mapaVs = { s:1, tx:0, ty:0 };   // vista local: escala e deslocamento
+  var mapaVs = { s:1, tx:0, ty:0, rot:0 };   // vista local: escala, deslocamento e giro (graus, de 90 em 90)
   var mapaTokEls = {};                // id do token → elemento
   var mapaDrag = null, mapaPan = null, mapaPinch = null, mapaToques = {};
   var _mapaSalvarT = null, _mapaGradeT = null, _mapaImgT = null, _mapaFila = Promise.resolve();
@@ -3792,6 +3799,27 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     }
     if (foco) { var ls = mapaTokPop.querySelectorAll('.carga-nome'); if (ls.length) ls[ls.length - 1].focus(); }
   }
+  // A ficha (aberta por aqui) manda um verbete com o botão direito: vira uma linha em "Cargas" do token daquele personagem.
+  function mapaSemAcento(x) { return String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
+  function mapaCargaDaFicha(charId, nomeV) {
+    var nomeL = String(nomeV || '').trim().slice(0, 30);
+    if (!nomeL || !charId) return 'erro';
+    var tk = null;
+    mapaCena.tokens.forEach(function(x) { if (!tk && x.char_id === charId) tk = x; });
+    if (!tk) return 'sem-token';
+    var chave = mapaSemAcento(nomeL);
+    if ((tk.cargas || []).some(function(c) { return mapaSemAcento(c.nome) === chave; })) return 'ja';
+    if ((tk.cargas || []).length >= 12) return 'cheio';
+    mapaTok({ op:'carga', a:'add', id:tk.id, k:mapaCargaK(), nome:nomeL });
+    return 'ok';
+  }
+  window.addEventListener('message', function(e) {
+    var d = e.data;
+    if (e.origin !== location.origin || !d || d.tipo !== 'mesa-carga' || typeof d.nome !== 'string') return;
+    var estado = 'erro';
+    try { estado = mapaCargaDaFicha(String(d.char_id || ''), d.nome); } catch (_) {}
+    try { e.source.postMessage({ tipo:'mesa-carga-ok', nome:d.nome.slice(0, 40), estado:estado }, e.origin); } catch (_) {}
+  });
   function mapaTokNorm(t) {
     t = t || {};
     var tam = +t.tam, pvMax = mapaPvMaxNorm(t.pvMax);
@@ -3866,8 +3894,29 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   }
 
   // ── vista (de cada um) ──
+  // girar o tabuleiro: o mundo é desenhado com translate · rotate · scale; tela = T + R(giro)·(escala·mundo).
+  // Sem giro, a transformação continua exatamente a de antes.
+  function mapaRotMat() { var a = (mapaVs.rot || 0) * Math.PI / 180; return { c:Math.cos(a), s:Math.sin(a) }; }
+  function mapaCentraMundo(cx, cy, sc) {       // põe o ponto (cx,cy) do mundo no meio da vista (na escala sc, se vier)
+    var r = mapaView.getBoundingClientRect(), m = mapaRotMat();
+    if (sc !== undefined) mapaVs.s = sc;
+    mapaVs.tx = r.width / 2 - mapaVs.s * (m.c * cx - m.s * cy);
+    mapaVs.ty = r.height / 2 - mapaVs.s * (m.s * cx + m.c * cy);
+  }
+  function mapaGira(delta) {                   // gira em torno do que está no meio da tela
+    if (typeof palcoSegue === 'function' && palcoSegue()) return;   // quem acompanha o host vê o giro dele
+    var r = mapaView.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    var c = mapaTelaParaMundo(r.left + r.width / 2, r.top + r.height / 2);
+    mapaVs.rot = (((mapaVs.rot || 0) + delta) % 360 + 360) % 360;
+    mapaCentraMundo(c.x, c.y);
+    mapaAplicaVista();
+  }
   function mapaAplicaVista() {
-    mapaMundo.style.transform = 'translate(' + mapaVs.tx + 'px,' + mapaVs.ty + 'px) scale(' + mapaVs.s + ')';
+    var rot = mapaVs.rot || 0;
+    mapaMundo.style.transform = 'translate(' + mapaVs.tx + 'px,' + mapaVs.ty + 'px)' + (rot ? ' rotate(' + rot + 'deg)' : '') + ' scale(' + mapaVs.s + ')';
+    mapaMundo.style.setProperty('--rotinv', (-rot) + 'deg');
+    var gz = document.getElementById('mapaGiraZero'); if (gz) gz.hidden = !rot;
     mapaMundo.style.setProperty('--inv', String(1 / mapaVs.s));
     if (typeof palcoVistaAgenda === 'function') palcoVistaAgenda();
     if (typeof reguaPinta === 'function' && Object.keys(reguas || {}).length) reguaPinta();
@@ -3876,16 +3925,15 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (!mapaTemMapa() || !mapaCena.w || !mapaCena.h) return;
     var r = mapaView.getBoundingClientRect();
     if (!r.width || !r.height) return;
-    var s = Math.min(r.width / mapaCena.w, r.height / mapaCena.h) * 0.96, cx = mapaCena.w / 2, cy = mapaCena.h / 2;
+    var vq = (mapaVs.rot || 0) % 180 === 90, vw = vq ? r.height : r.width, vh = vq ? r.width : r.height;   // girado de lado: largura e altura trocam
+    var s = Math.min(vw / mapaCena.w, vh / mapaCena.h) * 0.96, cx = mapaCena.w / 2, cy = mapaCena.h / 2;
     if (!mapaCena.img && mapaCena.w * mapaCena.h > 6e6) {
       // sala em branco enorme: enquadra o que tem nela; vazia, abre no meio em escala confortável
       var b = mapaConteudoBox();
-      if (b) { cx = b.cx; cy = b.cy; s = mapaClamp(Math.min(r.width / (b.w * 1.15), r.height / (b.h * 1.15)), 0.2, 1.5); }
+      if (b) { cx = b.cx; cy = b.cy; s = mapaClamp(Math.min(vw / (b.w * 1.15), vh / (b.h * 1.15)), 0.2, 1.5); }
       else s = 0.8;
     }
-    mapaVs.s = s;
-    mapaVs.tx = r.width / 2 - cx * s;
-    mapaVs.ty = r.height / 2 - cy * s;
+    mapaCentraMundo(cx, cy, s);
     mapaAplicaVista();
   }
   // retângulo que cobre tokens e desenho (ou null se a sala está vazia)
@@ -3911,7 +3959,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   function mapaPontoView(e) { var r = mapaView.getBoundingClientRect(); return { x:e.clientX - r.left, y:e.clientY - r.top }; }
   function mapaTelaParaMundo(cx, cy) {
     var r = mapaView.getBoundingClientRect();
-    return { x:(cx - r.left - mapaVs.tx) / mapaVs.s, y:(cy - r.top - mapaVs.ty) / mapaVs.s };
+    var dx = cx - r.left - mapaVs.tx, dy = cy - r.top - mapaVs.ty, m = mapaRotMat();   // desfaz o giro e a escala
+    return { x:(m.c * dx + m.s * dy) / mapaVs.s, y:(-m.s * dx + m.c * dy) / mapaVs.s };
   }
   // ── geometria da grade (vale pros dois tipos) ──────────────────────
   // Quadrada: a casa (col,row) começa em (dx + col·tam, dy + row·tam).
@@ -4316,9 +4365,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   function mapaMostraTok(id) {      // centraliza a vista no token e faz ele piscar
     var t = mapaAchaTok(id), el = mapaTokEls[id];
     if (!t || !el) return;
-    var geo = mapaTokGeo(t), r = mapaView.getBoundingClientRect();
-    mapaVs.tx = r.width / 2 - (geo.x + geo.lado / 2) * mapaVs.s;
-    mapaVs.ty = r.height / 2 - (geo.y + geo.lado / 2) * mapaVs.s;
+    var geo = mapaTokGeo(t);
+    mapaCentraMundo(geo.x + geo.lado / 2, geo.y + geo.lado / 2);
     mapaAplicaVista();
     el.classList.remove('acha'); void el.offsetWidth; el.classList.add('acha');
     setTimeout(function(){ el.classList.remove('acha'); }, 1900);
@@ -5733,6 +5781,9 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   // sem fundo ainda: o botão vai direto no seletor de arquivo (nada pra
   // ajustar). Com fundo, abre o popover de zoom/posição — trocar a imagem
   // fica dentro dele.
+  document.getElementById('mapaGiraE').addEventListener('click', function() { mapaGira(-90); });
+  document.getElementById('mapaGiraD').addEventListener('click', function() { mapaGira(90); });
+  document.getElementById('mapaGiraZero').addEventListener('click', function() { mapaGira(-(mapaVs.rot || 0)); });
   mapaTrocarBt.addEventListener('click', function() {
     if (mapaCena.img) mapaAbrePopEm(mapaImgPop, mapaTrocarBt, 'dir');
     else { mapaFechaPops(); mapaFile.click(); }
@@ -6169,16 +6220,16 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (!palcoSouHost || !palcoLive || privAtiva || !palcoDentro) return;
     var r = mapaView.getBoundingClientRect();
     if (!r.width || !r.height) return;
-    send('mapa-vista', { by:MAPA_ME, cx:dsnNum((r.width / 2 - mapaVs.tx) / mapaVs.s), cy:dsnNum((r.height / 2 - mapaVs.ty) / mapaVs.s), vw:dsnNum(r.width / mapaVs.s), vh:dsnNum(r.height / mapaVs.s) });
+    var c0 = mapaTelaParaMundo(r.left + r.width / 2, r.top + r.height / 2);
+    send('mapa-vista', { by:MAPA_ME, cx:dsnNum(c0.x), cy:dsnNum(c0.y), vw:dsnNum(r.width / mapaVs.s), vh:dsnNum(r.height / mapaVs.s), rot:mapaVs.rot || 0 });
   }
   function palcoVistaAgenda() { if (palcoSouHost && !_palcoVistaT) _palcoVistaT = setTimeout(palcoVistaEnvia, 80); }
   function palcoVistaRecebe(v) {
     if (!v || !palcoSegue() || !(+v.vw > 0) || !(+v.vh > 0)) return;
     var r = mapaView.getBoundingClientRect();
     if (!r.width || !r.height) return;
-    mapaVs.s = mapaClamp(Math.min(r.width / v.vw, r.height / v.vh), 0.03, 8);   // cabe tudo que o host vê
-    mapaVs.tx = r.width / 2 - v.cx * mapaVs.s;
-    mapaVs.ty = r.height / 2 - v.cy * mapaVs.s;
+    mapaVs.rot = ((Math.round((+v.rot || 0) / 90) % 4) + 4) % 4 * 90;                 // o giro do host (de 90 em 90)
+    mapaCentraMundo(+v.cx || 0, +v.cy || 0, mapaClamp(Math.min(r.width / v.vw, r.height / v.vh), 0.03, 8));   // cabe tudo que o host vê
     mapaAplicaVista();
   }
   setInterval(function() { if (mapaAberto()) palcoVistaEnvia(); }, 3000);   // batimento: quem chegou ou perdeu uma mensagem se acerta sozinho
