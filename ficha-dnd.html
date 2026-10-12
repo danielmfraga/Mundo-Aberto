@@ -410,6 +410,12 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 .nivel-circ .fl-l { margin: 1px 0 0; padding: 0; }
 .nivel .xp .fl-v { font-size: 12px; text-align: center; min-width: 64px; }
 .nivel .xp .fl-l { text-align: center; padding: 0; }
+/* quanto XP vale este nível e o próximo (tabela do livro; só leitura) */
+.xp-faixa { margin-top: 1px; min-width: 70px; font-size: 9px; line-height: 1.4; color: var(--fg-faint); cursor: help; }
+.xp-faixa[hidden] { display: none; }
+.xp-lin { display: flex; justify-content: space-between; gap: 6px; }
+.xp-lin b { font-weight: 600; color: var(--fg-dim); font-variant-numeric: tabular-nums; }
+.xp-faixa.pode b.prox { color: var(--dnd); }
 
 /* CA: escudo desenhado em SVG por trás — o conteúdo não é recortado */
 /* o conjunto (rótulo · número · escudo) centraliza na PARTE LARGA do escudo,
@@ -1093,6 +1099,10 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
         <div class="fl-l">nível</div>
       </div>
       <div class="fl xp"><div class="fl-v num" contenteditable="true" inputmode="numeric" data-field="xp"></div><div class="fl-l">xp</div></div>
+      <div class="xp-faixa" id="xpFaixa" hidden>
+        <div class="xp-lin"><span id="xpAtualN"></span><b id="xpAtualV"></b></div>
+        <div class="xp-lin"><span id="xpProxN"></span><b class="prox" id="xpProxV"></b></div>
+      </div>
     </div>
 
     <!-- classe de armadura -->
@@ -6876,7 +6886,37 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     el.title = dica + (avisos.length ? ' · ' + avisos.join(' · ') : '') + ' · dá pra digitar por cima';
   }
 
+  // XP mínimo de cada nível (índice = nível − 1): a tabela de avanço do livro
+  var XP_NIVEL = [0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000, 85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000];
+  function atualizaXpFaixa() {
+    var el = document.getElementById('xpFaixa');
+    if (!el) return;
+    var n = parseInt(texto('nivel'), 10);
+    if (!(n >= 1 && n <= 20)) { el.hidden = true; return; }
+    var fmt = function(v) { return v.toLocaleString('pt-BR'); };
+    document.getElementById('xpAtualN').textContent = 'nível ' + n;
+    document.getElementById('xpAtualV').textContent = fmt(XP_NIVEL[n - 1]);
+    var xp = parseInt(texto('xp').replace(/\D/g, ''), 10), dica = 'XP mínimo para estar no nível ' + n;
+    el.classList.remove('pode');
+    if (n < 20) {
+      document.getElementById('xpProxN').textContent = 'nível ' + (n + 1);
+      document.getElementById('xpProxV').textContent = fmt(XP_NIVEL[n]);
+      dica += ' · para subir ao nível ' + (n + 1) + ': ' + fmt(XP_NIVEL[n]) + ' XP';
+      if (!isNaN(xp)) {
+        if (xp >= XP_NIVEL[n]) { dica += ' — o XP já é suficiente para subir'; el.classList.add('pode'); }
+        else dica += ' — faltam ' + fmt(XP_NIVEL[n] - xp) + ' XP';
+      }
+    } else {
+      document.getElementById('xpProxN').textContent = 'máximo';
+      document.getElementById('xpProxV').textContent = '—';
+    }
+    el.title = dica;
+    el.hidden = false;
+  }
+  // o XP muda a dica (faltam / já dá para subir) sem esperar o resto da ficha recalcular
+  ["xp", "nivel"].forEach(function(n) { var e = campo(n); if (e) e.addEventListener("input", atualizaXpFaixa); });
   function calcula() {
+    atualizaXpFaixa();
     // 1. proficiência, a partir do nível
     var pb = profDe(texto('nivel'));
     calculado(campo('proficiencia'), pb == null ? '' : sinal(pb), 'Sai do nível');
