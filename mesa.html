@@ -1218,7 +1218,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 /* A lista de pessoas NÃO mora dentro da faixa das abas (ela rola na horizontal, e por isso cortava tudo o que passava da
    sua altura: só um nome aparecia). Vai solta no <body>, por cima de tudo, e o JS a põe ao lado do botão "＋ Privado". */
 .chat-conv-menu {
-  position:fixed; z-index:9500; left:8px; top:8px; min-width:200px; max-width:calc(100vw - 16px); max-height:320px; overflow-y:auto; overscroll-behavior:contain;
+  position:fixed; z-index:9996; left:8px; top:8px; min-width:200px;   /* acima do palco (9990) e das gavetas dele: com 9500 a lista nascia ATRÁS do palco e o "+ Privado" parecia morto */ max-width:calc(100vw - 16px); max-height:320px; overflow-y:auto; overscroll-behavior:contain;
   display:flex; flex-direction:column; gap:3px; padding:7px;
   background:rgba(11,19,32,0.98); border:1px solid var(--line-strong); border-radius:10px; box-shadow:0 14px 34px rgba(0,0,0,0.65);
 }
