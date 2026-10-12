@@ -4401,7 +4401,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   }
   // pega a cena de novo do Storage (quando a mesa volta ao vivo e a cena que chegou, se chegou, pode ter ficado pra trás)
   function mapaRecarrega() {
-    return fetch(MAPA_ARQ + '?t=' + Date.now(), { headers:MAPA_HDR, cache:'no-store' })
+    return fetch(mapaArqAtual + '?t=' + Date.now(), { headers:MAPA_HDR, cache:'no-store' })
       .then(function(r) { return r.ok ? r.json() : null; })
       .then(function(c) {
         if (!c) return;
@@ -5274,10 +5274,11 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   function mapaSalva(saindo) {
     clearTimeout(_mapaSalvarT); _mapaSalvarT = null;
     var req = { method:'POST', headers:Object.assign({ 'Content-Type':'application/json', 'x-upsert':'true' }, MAPA_HDR), body:JSON.stringify(mapaCenaMesa) };
-    if (saindo) { req.keepalive = true; fetch(MAPA_ARQ, req).catch(function(){}); return; }
+    var arq = mapaArqAtual;        // o arquivo vale na hora do pedido (a Mesa pode trocar de dono antes da fila andar)
+    if (saindo) { req.keepalive = true; fetch(arq, req).catch(function(){}); return; }
     // em fila: duas gravações ao mesmo tempo podiam chegar fora de ordem
     _mapaFila = _mapaFila.then(function() {
-      return fetch(MAPA_ARQ, req).then(function(r) {
+      return fetch(arq, req).then(function(r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         if (/não salvou/.test(mapaStatusEl.textContent)) mapaStatus('');
       }).catch(function(err) {
@@ -5287,6 +5288,73 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     });
   }
   window.addEventListener('pagehide', function(){ if (_mapaSalvarT) mapaSalva(true); });
+
+  // ── A Mesa de cada host ──
+  // A cena da aba "Mesa" (mapa, quadro, tokens, névoa) é DO HOST. A Mesa que a sala já tinha fica com o primeiro host da sala
+  // (arquivo <sala>__dono.json guarda o apelido) e continua no arquivo de sempre (<sala>.json). Qualquer outro host tem o seu
+  // próprio arquivo (<sala>__<apelido>.json), em branco na 1ª vez: quem vira host NÃO herda o mapa, o quadro nem a névoa do
+  // anterior, que ficam guardados, intactos, até o dono voltar a ser host. Todo mundo segue o host: quando ele muda, cada um
+  // carrega a Mesa dele. O apelido (sem acento/maiúscula) é a identidade; mudar de apelido é virar outro host.
+  var mapaArqAtual = MAPA_ARQ;                   // arquivo da Mesa que está carregada agora
+  var mapaDonoSlug = null;                       // de quem é a Mesa carregada (null = ainda não decidi)
+  var palcoHostObj = null;                       // o host atual, como o palcoRecalcula escolheu
+  var _mapaSegueT = null, _mapaTrocando = false;
+  var MAPA_ARQ_DONO = SB_URL + '/storage/v1/object/personagens/mesa/d20/' + MAPA_SALA + '__dono.json';
+  function mapaSlug(n) {
+    return String(n || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'sem-nome';
+  }
+  function mapaArqSlug(slug) { return SB_URL + '/storage/v1/object/personagens/mesa/d20/' + MAPA_SALA + '__' + slug + '.json'; }
+  function mapaLeArq(url) {        // → o objeto; null se o arquivo não existe; lança em qualquer outro erro
+    return fetch(url + '?t=' + Date.now(), { headers:MAPA_HDR, cache:'no-store' }).then(function(r) {
+      return r.text().then(function(txt) {
+        if (r.ok) return JSON.parse(txt);
+        var j = null; try { j = JSON.parse(txt); } catch (_) {}
+        if (j && (j.error === 'not_found' || j.code === 'NoSuchKey')) return null;
+        throw new Error('HTTP ' + r.status);
+      });
+    });
+  }
+  function mapaEscreveArq(url, obj) {
+    return fetch(url, { method:'POST', headers:Object.assign({ 'Content-Type':'application/json', 'x-upsert':'true' }, MAPA_HDR), body:JSON.stringify(obj) })
+      .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); });
+  }
+  function mapaSegueMs() { return window.__MAPA_SEGUE_MS != null ? +window.__MAPA_SEGUE_MS : 3200; }
+  // chamado a cada recálculo do host; só age quando o host SE ASSENTA (quem acabou de entrar pode ser "host" por um instante
+  // até ouvir os outros, e não deve trocar de Mesa por isso)
+  function mapaAgendaSegue() {
+    var h = palcoHostObj;
+    if (!h || _mapaSegueT || mapaSlug(h.nome) === mapaDonoSlug) return;
+    _mapaSegueT = setTimeout(mapaSegueAgora, mapaSegueMs());
+  }
+  function mapaSegueAgora() {
+    _mapaSegueT = null;
+    var h = palcoHostObj;
+    if (!h) return;
+    var slug = mapaSlug(h.nome), euSou = h.id === MAPA_ME;
+    if (slug === mapaDonoSlug) return;
+    var denovo = function(ms) { _mapaSegueT = setTimeout(mapaSegueAgora, ms); };
+    if (_mapaTrocando) { denovo(700); return; }
+    _mapaTrocando = true;
+    mapaLeArq(MAPA_ARQ_DONO).then(function(m) {
+      if (m && m.slug) return m.slug;
+      if (!euSou) return null;       // a sala ainda não tem dono: quem é host grava; os outros esperam
+      return mapaEscreveArq(MAPA_ARQ_DONO, { slug:slug, nome:h.nome, em:Date.now() }).then(function() { return slug; });
+    }).then(function(dono) {
+      if (!dono) { denovo(1500); return; }
+      var arq = slug === dono ? MAPA_ARQ : mapaArqSlug(slug);
+      if (arq === mapaArqAtual) { mapaDonoSlug = slug; return; }
+      return mapaLeArq(arq).then(function(c) {
+        if (!palcoHostObj || mapaSlug(palcoHostObj.nome) !== slug) { denovo(300); return; }   // o host mudou enquanto eu buscava
+        if (_mapaSalvarT) mapaSalva(false);        // o que estava pendente vai pra Mesa de antes
+        mapaArqAtual = arq; mapaDonoSlug = slug;
+        mapaCenaMesa = mapaNormaliza(c);           // sem arquivo = Mesa em branco
+        mapaPronto = true;
+        if (!privAtiva) { mapaCena = mapaCenaMesa; mapaFimArraste(); mapaFechaPops(); mapaRender(); if (mapaAberto()) mapaFit(); }
+        if (euSou) send('mapa-cena', { cena:mapaCenaMesa, by:MAPA_ME });
+      });
+    }).catch(function(err) { console.warn('[mesa] a Mesa do host não carregou:', err); denovo(3000); })
+      .then(function() { _mapaTrocando = false; });
+  }
 
   function mapaSobe(file, prefixo, rotulo) {
     return new Promise(function(ok, falha) {
@@ -5992,6 +6060,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     palcoTrack(); palcoRecalcula();
     palcoChatPonto();
     setTimeout(palcoReivindicaVolta, 2500);          // dá tempo de ver quem está na sala antes de decidir se retoma o posto
+    setTimeout(palcoMarcaPrimeiro, palcoSozinhoMs());
   }
   function closeMapa() {
     if (!mapaAberto()) return;
@@ -6125,6 +6194,17 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     _palcoBatida = Date.now();
     try { localStorage.setItem('mesaHostRecente', String(_palcoBatida)); } catch (_) {}
   }
+  // Sala VAZIA (ninguém mais conectado): quem chega primeiro vira host de verdade e o prazo de quem caiu antes zera. O 'claim'
+  // vale como carimbo: o antigo host que voltar depois (dentro dos 10 min) vê que alguém assumiu e não toma o posto de volta.
+  // Só vale com a presença já sincronizada e sem mais ninguém conectado (quem acabou de entrar numa sala cheia não sabe ainda).
+  function palcoSozinhoMs() { return window.__PALCO_SOZINHO_MS != null ? +window.__PALCO_SOZINHO_MS : 3500; }
+  function palcoMarcaPrimeiro() {
+    if (!palcoDentro || !palcoSouHost || palcoClaim) return;
+    var st = (channel && channel.presenceState) ? channel.presenceState() : null;
+    if (!st || !st[MAPA_ME]) return;
+    if (Object.keys(st).some(function(k) { return k !== MAPA_ME; })) return;
+    palcoClaim = Date.now(); palcoTrack(); palcoRecalcula();
+  }
   function palcoEsqueceHost() { _palcoBatida = 0; try { localStorage.removeItem('mesaHostRecente'); } catch (_) {} }
   function palcoReivindicaVolta() {             // voltei depois de cair sendo host: retomo, a menos que alguém tenha assumido
     if (!palcoDentro || palcoSouHost) return;
@@ -6195,12 +6275,15 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   // de umas 5 vezes em poucos segundos (testado) — e com o canal vão os dados e o
   // chat. A presença só serve pra saber quem está conectado (um track por conexão).
   function palcoTrack() {   // anuncia o meu estado; o nome ficou, o mecanismo mudou
-    send('palco-st', { id:MAPA_ME, nome:(nome || 'Jogador'), dentro:palcoDentro, desde:palcoDesde, claim:palcoClaim, live:palcoLive, rosto:palcoRosto });
+    send('palco-st', { id:MAPA_ME, nome:(nome || 'Jogador'), dentro:palcoDentro, desde:palcoDesde, claim:palcoClaim, live:palcoLive, rosto:palcoRosto, fant:(palcoFantasma ? { id:palcoFantasma.id, nome:palcoFantasma.nome, caiuEm:palcoFantasma.caiuEm } : null) });
   }
   function palcoRecebeEstado(m) {
     if (!m || !m.id || m.id === MAPA_ME) return;
     // o host SAIU do palco (✕): vale como queda — o posto fica guardado e o quadro escurece pra quem ficou
     if (!m.dentro && m.id === palcoHostId && palcoPres[m.id]) palcoFantasma = { id:m.id, nome:palcoPres[m.id].nome, caiuEm:Date.now() };
+    // quem chega no meio da espera de um host que caiu fica sabendo (senão veria outro jogador como host e uma Mesa diferente)
+    if (m.fant && !palcoFantasma && m.fant.id !== MAPA_ME && +m.fant.caiuEm && Date.now() - m.fant.caiuEm < palcoGraca() && !palcoPres[m.fant.id])
+      palcoFantasma = { id:m.fant.id, nome:m.fant.nome, caiuEm:+m.fant.caiuEm };
     if (m.dentro) palcoPres[m.id] = m; else delete palcoPres[m.id];
     palcoRecalcula();
   }
@@ -6241,6 +6324,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   function palcoRecalcula() {
     var h = palcoEscolheHost(), eraHost = palcoSouHost, estavaPausado = palcoCongelado;
     palcoHostId = h ? h.id : null;
+    palcoHostObj = h;
     palcoSouHost = !!h && h.id === MAPA_ME;
     // quem perde ou ganha o posto começa com o tempo real ligado
     if (palcoSouHost !== eraHost && !palcoLive) { palcoLive = true; palcoTrack(); }
@@ -6280,6 +6364,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     Object.keys(palcoPres).forEach(function(k) { if (k !== MAPA_ME && palcoPres[k] && palcoPres[k].dentro) alguem = true; });
     mapaBtn.classList.toggle('alguem', alguem && !palcoDentro);
     mapaBtn.dataset.dica = alguem && h ? 'Mesa e Quadro · ' + (h.nome || 'alguém') + ' está no palco' : 'Mesa e Quadro';
+    mapaAgendaSegue();     // a Mesa é do host: se o host mudou de pessoa, todo mundo carrega a Mesa dele
   }
   setInterval(function() { if (palcoFantasma || palcoSouHost) palcoRecalcula(); }, 20000);   // atualiza o prazo na tela, encerra a guarda vencida e renova a batida do host
   function palcoLigaTempoReal() {
