@@ -4449,6 +4449,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var NEV_MAX = 600, NEV_PTS = 500;
   var mapaNev = document.getElementById('mapaNev');
   var nevMestreOn = false, nevModo = 'a', nevCasas = 2, nevDrag = null, nevPreEl = null;
+  var nevEscudo = false;   // sou host mas herdei o posto de um Mestre: vejo a névoa como os jogadores até apertar "Mestre"
   function dsnNum(v) { v = +v; return isFinite(v) ? Math.round(v * 10) / 10 : 0; }
   function dsnCor(c) { return (typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c)) ? c : '#111111'; }
   function dsnId() { return MAPA_ME.slice(0, 4) + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
@@ -4749,7 +4750,16 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   }
   // O host fora do Modo Mestre vê o mapa limpo (a névoa é pros jogadores); no Modo Mestre vê a névoa
   // translúcida pra poder editar. Jogador sempre vê a névoa.
-  function nevMeVeNevoa() { return !palcoSouHost || nevMestreOn; }
+  // Exceção (escudo): quem herda o posto de um host que estava no Modo Mestre (ele saiu ou caiu) começa vendo a névoa como
+  // os jogadores, pra o mapa inteiro do Mestre não aparecer por acidente; apertar "Mestre" tira o escudo.
+  function nevMeVeNevoa() { return !palcoSouHost || nevMestreOn || nevEscudo; }
+  // o navegador do Mestre lembra que ele estava no Modo Mestre: se ele cair e voltar a ser host, o modo volta sozinho
+  function nevMestreLembra(on) { try { if (on) localStorage.setItem('mesaMestreModo', String(Date.now())); else localStorage.removeItem('mesaMestreModo'); } catch (_) {} }
+  function nevMestreRecente() {
+    var ts = 0;
+    try { ts = +localStorage.getItem('mesaMestreModo') || 0; } catch (_) {}
+    return !!ts && Date.now() - ts <= palcoGraca();
+  }
   function nevForma(o, cor) {
     if (o.k === 't') return dsnSvg('polyline', { points:dsnPts(o.p), fill:'none', stroke:cor, 'stroke-width':o.w, 'stroke-linecap':'round', 'stroke-linejoin':'round' });
     var x0 = Math.min(o.a[0], o.a[2]), y0 = Math.min(o.a[1], o.a[3]), w = Math.abs(o.a[2] - o.a[0]), h = Math.abs(o.a[3] - o.a[1]);
@@ -4853,13 +4863,18 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     on = !!on && palcoSouHost && palcoDentro;
     if (on === nevMestreOn) return;
     nevMestreOn = on;
+    if (on) nevEscudo = false;
     document.body.classList.toggle('mestre-on', on);
     nevBar.hidden = !on;
     palcoMestreBt.classList.toggle('on', on);
     if (!on && dsnTool.indexOf('nv-') === 0) dsnSetTool('mover');
     nevRender(); mapaRenderTokens(); nevSyncUI();
+    palcoTrack();   // os outros ficam sabendo se o host está no Modo Mestre (quem herdar o posto começa com o escudo)
   }
-  palcoMestreBt.addEventListener('click', function() { nevMestre(!nevMestreOn); });
+  palcoMestreBt.addEventListener('click', function() {
+    if (nevEscudo) { nevEscudo = false; nevRender(); mapaRenderTokens(); }   // assumir o Modo Mestre de propósito
+    nevMestre(!nevMestreOn); nevMestreLembra(nevMestreOn);
+  });
   nevOnIn.addEventListener('change', function() {
     if (!nevMestreOn) return;
     // ligar a névoa pela primeira vez cobre tudo: os jogadores só veem o que for revelado depois
@@ -6000,7 +6015,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     mapaBtn.classList.remove('open');
     document.body.classList.remove('wb-on', 'wb-right');
     jitsiTile(true);   // a grade é o padrão, também fora do palco
-    if (palcoSouHost) palcoEsqueceHost();           // saiu de propósito: passa o posto na hora, e não retoma depois
+    if (palcoSouHost) { palcoEsqueceHost(); nevMestreLembra(false); }   // saiu de propósito: passa o posto na hora, e não retoma depois (nem o Modo Mestre)
     palcoDentro = false; palcoClaim = 0; palcoRosto = false; rostoMeu = false; rostoDispensado = false;
     palcoTrack(); palcoRecalcula();
   }
@@ -6096,7 +6111,13 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   });
   document.getElementById('mapaMinimiza').addEventListener('click', minimizaMapa);
   document.getElementById('palcoPilula').addEventListener('click', restauraMapa);
-  document.getElementById('mapaFechar').addEventListener('click', closeMapa);
+  document.getElementById('mapaFechar').addEventListener('click', function() {
+    if (!mapaAberto()) return;
+    var msg = 'Sair do palco?\n\nA mesa continua para quem ficou.';
+    if (palcoSouHost) msg += '\n\nVocê é o host: o posto passa para outro jogador' + (nevMestreOn ? ' e o Modo Mestre termina.' : '.');
+    if (!window.confirm(msg)) return;
+    closeMapa();
+  });
 
   // ── Host do palco ──
   var palcoDentro = false, palcoDesde = 0, palcoClaim = 0, palcoLive = true;
@@ -6111,6 +6132,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (!palcoSouHost || Date.now() - _palcoBatida < 15000) return;
     _palcoBatida = Date.now();
     try { localStorage.setItem('mesaHostRecente', String(_palcoBatida)); } catch (_) {}
+    if (nevMestreOn) nevMestreLembra(true);
   }
   function palcoEsqueceHost() { _palcoBatida = 0; try { localStorage.removeItem('mesaHostRecente'); } catch (_) {} }
   function palcoReivindicaVolta() {             // voltei depois de cair sendo host: retomo, a menos que alguém tenha assumido
@@ -6183,10 +6205,12 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   // de umas 5 vezes em poucos segundos (testado) — e com o canal vão os dados e o
   // chat. A presença só serve pra saber quem está conectado (um track por conexão).
   function palcoTrack() {   // anuncia o meu estado; o nome ficou, o mecanismo mudou
-    send('palco-st', { id:MAPA_ME, nome:(nome || 'Jogador'), dentro:palcoDentro, desde:palcoDesde, claim:palcoClaim, live:palcoLive, rosto:palcoRosto });
+    send('palco-st', { id:MAPA_ME, nome:(nome || 'Jogador'), dentro:palcoDentro, desde:palcoDesde, claim:palcoClaim, live:palcoLive, rosto:palcoRosto, mestre:!!(palcoSouHost && nevMestreOn) });
   }
+  var palcoMestreVisto = false;   // o último host que vi estava no Modo Mestre? (guardado também quando ele sai ou cai)
   function palcoRecebeEstado(m) {
     if (!m || !m.id || m.id === MAPA_ME) return;
+    if (m.id === palcoHostId && m.dentro) palcoMestreVisto = !!m.mestre;
     if (m.dentro) palcoPres[m.id] = m; else delete palcoPres[m.id];
     palcoRecalcula();
   }
@@ -6245,6 +6269,12 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     palcoCtrlBt.hidden = !palcoDentro || palcoSouHost;
     palcoMestreBt.hidden = !palcoDentro || !palcoSouHost;
     if (nevMestreOn && (!palcoDentro || !palcoSouHost)) nevMestre(false);   // perdeu o posto de host: o Modo Mestre acaba
+    if (palcoSouHost && !eraHost) {
+      if (nevMestreRecente()) nevMestre(true);          // eu era o Mestre e voltei (F5, queda): o Modo Mestre volta sozinho
+      else if (palcoMestreVisto) nevEscudo = true;      // herdei o posto de um Mestre: começo vendo a névoa como os jogadores
+      palcoMestreVisto = false;
+    }
+    if (!palcoSouHost) nevEscudo = false;
     if (palcoSouHost !== eraHost) { nevRender(); mapaRenderTokens(); }       // virou (ou deixou de ser) host: muda o que vê da névoa
     palcoLiveBox.hidden = !palcoDentro;
     palcoAplicaRosto(!!h && !!h.rosto);
@@ -6313,6 +6343,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var diarioAbas = null;                    // null = não carregado
   var diarioTab = 0, diarioSub = 0, diarioPage = 0;
   var _diarioSaveT = null, _diarioBcastT = null;
+  var diarioBloq = false;                   // o caderno NÃO carregou (falha de rede/servidor): nada é gravado, pra não sobrescrever o verdadeiro com um em branco
   var diarioOverlay = document.getElementById('diarioOverlay');
   var diarioText    = document.getElementById('diarioText');
   var diarioCounter = document.getElementById('diarioCounter');
@@ -6443,6 +6474,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     document.getElementById('diarioNext').disabled = diarioPage === pg.length - 1;
   }
   function diarioSave() {
+    if (diarioBloq) { diarioStatus.textContent = 'não carregou · nada foi salvo'; return; }
     diarioStatus.textContent = 'salvando…';
     if (_diarioSaveT) clearTimeout(_diarioSaveT);
     _diarioSaveT = setTimeout(function() {
@@ -6460,7 +6492,9 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     sbGet('/rest/v1/personagens?select=char_id,name,img_url,tipo:sheet_data->>sheet_type,vtm:sheet_data->vtmFields&deleted_at=is.null&order=name.asc')
       .then(function(rows){ diarioChars = Array.isArray(rows) ? rows.filter(function(r){ return r && r.name; }) : []; }).catch(function(){});
     sbGet('/rest/v1/diario_mesa?sala=eq.' + encodeURIComponent(SALA) + '&select=abas,paginas').then(function(rows){
-      var row = (Array.isArray(rows) && rows[0]) ? rows[0] : null;
+      if (!Array.isArray(rows)) throw new Error('diario');   // resposta de erro do servidor (não é "sala sem caderno", que vem como lista vazia)
+      diarioBloq = false; diarioText.contentEditable = 'true';
+      var row = rows[0] || null;
       if (row && Array.isArray(row.abas) && row.abas.length) diarioAbas = row.abas;                          // migra p/ subabas no diarioEnsure
       else if (row && Array.isArray(row.paginas) && row.paginas.length) diarioAbas = [{ nome:'Diário', paginas:row.paginas }]; // formato bem antigo
       else diarioAbas = [{ nome:'Diário', subabas:[{ nome:'Geral', paginas:[''] }] }];
@@ -6470,7 +6504,12 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       diarioTab = 0; diarioSub = diarioDefaultSub(diarioAbas[0]); diarioPage = 0;
       diarioRender();                                   // abre na 1ª aba, subaba Geral, pág 1
       setTimeout(function(){ diarioText.focus(); }, 40);
-    }).catch(function(){ diarioEnsure(); diarioStatus.textContent = ''; diarioRender(); });
+    }).catch(function(){
+      // não deu pra ler o caderno: mostra vazio mas SÓ PARA LER; salvar agora apagaria o caderno de verdade
+      diarioBloq = true; diarioText.contentEditable = 'false';
+      diarioEnsure(); diarioRender();
+      diarioStatus.textContent = 'não carregou · feche e abra de novo';
+    });
   }
   function closeDiario() { diarioCloseSubmenu(); diarioOverlay.classList.remove('show'); }
   function applyDiarioPg(p) {   // edição de texto de outra pessoa (aba t, subaba s, página i)
@@ -6499,7 +6538,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (typing) diarioRenderTabs();   // não mexe no caret; só atualiza abas/subabas
     else diarioRender();
   }
-  function diarioBcastStruct() { send('diario-struct', { abas:diarioAbas }); }
+  function diarioBcastStruct() { if (diarioBloq) return; send('diario-struct', { abas:diarioAbas }); }   // sem caderno carregado, não manda o vazio pros outros
   function diarioAddTab() {   // nova aba de topo (com uma subaba padrão)
     var nome = (window.prompt('Nome da nova aba:', 'Aba ' + (diarioAbas.length + 1)) || '').trim();
     if (!nome) return;
@@ -6593,7 +6632,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     diarioCurPages()[diarioPage] = diarioText.innerHTML;
     var t = diarioTab, s = diarioSub, i = diarioPage, val = diarioText.innerHTML;
     if (_diarioBcastT) clearTimeout(_diarioBcastT);
-    _diarioBcastT = setTimeout(function(){ send('diario-pg', { t:t, s:s, i:i, text:val }); }, 250);
+    _diarioBcastT = setTimeout(function(){ if (!diarioBloq) send('diario-pg', { t:t, s:s, i:i, text:val }); }, 250);
     diarioSave();
   }
   function diarioPickMention(i) {
