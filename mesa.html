@@ -794,9 +794,7 @@ body.mapa-on .mapa-bar {
 .palco-esq { display:none; position:absolute; z-index:6; left:10px; top:10px; flex-direction:column; align-items:flex-start; gap:10px; max-height:calc(100% - 70px); overflow-y:auto; scrollbar-width:thin; }
 body.mapa-on .palco-esq { display:flex; }
 .palco-esq { scrollbar-color:rgba(78,211,232,0.35) transparent; padding-right:4px; }   /* a coluna toda rola com a roda (host, ferramentas e Mestre juntos); ela só ocupa a largura dos painéis, então não engole o mapa */
-.palco-esq-linha { display:flex; align-items:flex-start; gap:10px; flex:0 0 auto; }   /* ferramentas à esquerda, caixa do Mestre ao lado */
-.palco-esq-linha .dsn-bar { order:1; }
-.palco-esq-linha .nev-bar { order:2; }
+.palco-esq-linha { display:flex; flex-direction:column; align-items:flex-start; gap:10px; flex:0 0 auto; }   /* abertura padrão: host, caixa do Mestre e paleta, uma embaixo da outra (cada uma pode ser arrastada) */
 @media (max-height:860px) { .nev-dica { display:none; } }
 .palco-host {
   display:none; position:relative; flex:0 0 auto; align-items:center; gap:8px; max-width:200px; flex-wrap:wrap;
