@@ -903,6 +903,10 @@ body:not(.mapa-on) .dsn-bar { display:none; }
 .dsn-sep { width:18px; height:1px; background:var(--line-strong); margin:2px 0; }
 .dsn-esp i { display:block; border-radius:50%; background:currentColor; }
 .dsn-esp.active { color:var(--holo); border-color:var(--holo); box-shadow:0 0 8px rgba(78,211,232,0.3); }
+@media (min-width:921px) {
+  .dsn-bar { display:grid; grid-template-columns:repeat(2, auto); justify-items:center; gap:5px; }   /* em duas colunas: a paleta cabe na tela sem precisar rolar */
+  .dsn-bar .dsn-sep { grid-column:1 / -1; justify-self:stretch; width:auto; }
+}
 @media (max-width:920px) {
   .palco-esq, .palco-esq-linha { display:contents; }   /* no celular cada um volta pro seu canto */
   .dsn-bar { position:absolute; z-index:6; flex-direction:row; flex-wrap:wrap; justify-content:center; top:auto; bottom:52px; left:50%; transform:translateX(-50%); max-width:94vw; }
