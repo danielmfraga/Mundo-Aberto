@@ -6326,6 +6326,14 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   }
   function tsAvisaTodos() { send('tesouro', { by:MAPA_ME, nome:nome }); }
   function tsFmtPeso(n) { return (Math.round(n * 100) / 100).toString().replace('.', ','); }
+  // valor em PO de um texto como '1.000 PO', '5 PP' ou '0,5 PO' (1 PL = 10 PO, 1 PE = 0,5 PO, 1 PP = 0,1 PO, 1 PC = 0,01 PO); sem moeda reconhecível = 0
+  function tsValorPO(t) {
+    var m = /([\d.]+(?:,\d+)?)\s*(PC|PP|PE|PO|PL)\b/i.exec(t || '');
+    if (!m) return 0;
+    var n = parseFloat(m[1].replace(/\./g, '').replace(',', '.'));
+    return (n || 0) * { pc:0.01, pp:0.1, pe:0.5, po:1, pl:10 }[m[2].toLowerCase()];
+  }
+  function tsFmtPO(n) { return (Math.round(n * 100) / 100).toLocaleString('pt-BR', { maximumFractionDigits:2 }) + ' PO'; }
   function tsIcone(it) {
     var d = it.cat_id && TSD.ITENS[it.cat_id], k = d ? (d.i || d.c) : 'geral';
     return '<svg viewBox="0 0 24 24" aria-hidden="true">' + (TSD.ICONES[k] || TSD.ICONES.geral || '') + '</svg>';
@@ -6357,10 +6365,11 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     document.querySelectorAll('#tsMoedas input[data-m]').forEach(function(inp) {
       if (document.activeElement !== inp) inp.value = tsBolsa[inp.dataset.m] || 0;
     });
-    var peso = 0;
+    var peso = 0, valor = 0;
     tsCorpo.innerHTML = '';
     tsItens.forEach(function(it) {
       peso += (+it.peso || 0) * (it.qtd || 1);
+      valor += tsValorPO(it.valor) * (it.qtd || 1);
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'ts-slot' + (it.raridade ? ' r-' + it.raridade : ''); b.dataset.id = it.id;
       b.title = it.nome + (it.qtd > 1 ? ' ×' + it.qtd : '') + (it.raridade ? ' · ' + TS_RAR[it.raridade] : '') + (it.onde ? ' · achado em ' + it.onde : '') + ' · botão direito: mandar pra uma ficha';
@@ -6370,7 +6379,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       tsCorpo.appendChild(b);
     });
     document.getElementById('tsVazio').hidden = tsItens.length > 0 || tsFalta;
-    document.getElementById('tsPeso').textContent = tsItens.length ? (tsItens.length + (tsItens.length === 1 ? ' item' : ' itens') + ' · ' + tsFmtPeso(peso) + ' kg no total') : '';
+    document.getElementById('tsPeso').textContent = tsItens.length ? (tsItens.length + (tsItens.length === 1 ? ' item' : ' itens') + ' · ' + tsFmtPeso(peso) + ' kg' + (valor ? ' · valem ≈ ' + tsFmtPO(valor) + (mesaChars.length > 1 ? ' (≈ ' + tsFmtPO(valor / mesaChars.length) + ' por personagem)' : '') : '')) : '';
     var h = document.getElementById('tsHist');
     h.innerHTML = '';
     document.getElementById('tsHistBox').hidden = !tsEnvios.length;
