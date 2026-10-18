@@ -901,6 +901,11 @@ body.mapa-on .palco-menu { display:flex; }
 .ts-form input, .ts-form select, .ts-form textarea { box-sizing:border-box; width:100%; padding:6px 8px; border-radius:5px; font-family:var(--font-mono); font-size:11px; color:var(--fg); background:rgba(255,255,255,0.05); border:1px solid var(--line-strong); outline:0; resize:vertical; }
 .ts-form input:focus, .ts-form select:focus, .ts-form textarea:focus { border-color:rgba(232,196,106,0.6); }
 .ts-form select option { background:#0b1320; }
+.ts-sug { display:flex; flex-direction:column; gap:1px; padding:3px; border-radius:6px; background:#0b1320; border:1px solid rgba(232,196,106,0.4); }
+.ts-sug[hidden] { display:none; }
+.ts-sug button { cursor:pointer; display:flex; justify-content:space-between; gap:8px; text-align:left; padding:5px 8px; border-radius:4px; font-family:var(--font-mono); font-size:11px; color:var(--fg-dim); background:none; border:0; }
+.ts-sug button i { font-style:normal; color:var(--fg-faint); font-size:10px; flex:0 0 auto; }
+.ts-sug button:hover, .ts-sug button.on { background:rgba(232,196,106,0.14); color:var(--fg); }
 .ts-form-linha { display:flex; gap:6px; }
 .ts-form-linha label { flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:3px; font-family:var(--font-mono); font-size:8.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--fg-faint); }
 .ts-info { font-family:var(--font-mono); font-size:10px; line-height:1.6; color:var(--fg-dim); padding:6px 8px; border-radius:5px; background:rgba(255,255,255,0.03); border:1px dashed var(--line-strong); }
@@ -1636,8 +1641,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
         <details class="ts-hist" id="tsHistBox"><summary>Entregas recentes</summary><div id="tsHist"></div></details>
         <form class="ts-form" id="tsForm" hidden autocomplete="off">
           <div class="ts-form-tit" id="tsFormTit">Registrar item</div>
-          <input type="text" id="tsFNome" list="tsCatNomes" placeholder="Nome (escolha do catálogo ou escreva um novo)" maxlength="80">
-          <datalist id="tsCatNomes"></datalist>
+          <input type="text" id="tsFNome" placeholder="Nome (escolha do catálogo ou escreva um novo)" maxlength="80">
+          <div class="ts-sug" id="tsSug" hidden></div>
           <div class="ts-info" id="tsFInfo" hidden></div>
           <div class="ts-form-linha">
             <label>Qtd<input type="number" id="tsFQtd" min="1" step="1" value="1"></label>
@@ -6410,19 +6415,48 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (lb) tsMenuMoeda(e, lb.querySelector('input').dataset.m);
   });
   // ── formulário (registrar / editar) ──
+  // sem acento nem maiúscula: digitar "onix" acha "Ônix" (o mesmo jeito da busca do catálogo na ficha)
+  function tsSem(t) { return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
+  var tsCatLista = null, tsSugSel = -1;
   function tsCatMapa() {
     if (tsNomeCat) return tsNomeCat;
-    tsNomeCat = {};
-    var dl = document.getElementById('tsCatNomes'), html = '';
+    tsNomeCat = {}; tsCatLista = [];
     Object.keys(TSD.ITENS).forEach(function(id) {
-      var n = TSD.ITENS[id].n; tsNomeCat[n.toLowerCase()] = id;
-      html += '<option value="' + esc(n) + '"></option>';
+      var d = TSD.ITENS[id], sn = tsSem(d.n);
+      tsNomeCat[sn] = id; tsCatLista.push({ id:id, n:d.n, s:sn, o:tsSem(d.o) });
     });
-    dl.innerHTML = html;
     return tsNomeCat;
   }
+  function tsSugFecha() { var b = document.getElementById('tsSug'); b.hidden = true; b.innerHTML = ''; tsSugSel = -1; }
+  function tsSugMostra() {
+    tsCatMapa();
+    var q = tsSem(document.getElementById('tsFNome').value), box = document.getElementById('tsSug');
+    var idExato = tsNomeCat[q];
+    if (!q || (idExato && TSD.ITENS[idExato].n === document.getElementById('tsFNome').value.trim())) { tsSugFecha(); return; }   // já está escrito do jeito certo
+    var ini = [], meio = [], desc = [];
+    tsCatLista.forEach(function(c) {
+      var i = c.s.indexOf(q);
+      if (i === 0) ini.push(c); else if (i > 0) meio.push(c); else if (q.length >= 3 && c.o.indexOf(q) >= 0) desc.push(c);
+    });
+    var achou = ini.concat(meio, desc).slice(0, 7);
+    if (!achou.length) { tsSugFecha(); return; }
+    box.innerHTML = ''; tsSugSel = -1;
+    achou.forEach(function(c) {
+      var d = TSD.ITENS[c.id], b = document.createElement('button');
+      b.type = 'button'; b.dataset.id = c.id;
+      b.innerHTML = '<span>' + esc(c.n) + '</span><i>' + esc(d.v || '') + '</i>';
+      b.addEventListener('mousedown', function(e) { e.preventDefault(); tsSugEscolhe(c.id); });
+      box.appendChild(b);
+    });
+    box.hidden = false;
+  }
+  function tsSugEscolhe(id) {
+    document.getElementById('tsFNome').value = TSD.ITENS[id].n;
+    tsSugFecha(); tsInfoCatalogo(!tsEdit);
+    document.getElementById('tsFQtd').focus();
+  }
   function tsInfoCatalogo(preenche) {
-    var id = tsCatMapa()[document.getElementById('tsFNome').value.trim().toLowerCase()], info = document.getElementById('tsFInfo');
+    var id = tsCatMapa()[tsSem(document.getElementById('tsFNome').value)], info = document.getElementById('tsFInfo');
     if (!id) { info.hidden = true; return null; }
     var d = TSD.ITENS[id];
     info.textContent = 'Catálogo: ' + [d.d, d.o].filter(Boolean).join(' — ') + ' (' + tsFmtPeso(d.p) + ' kg' + (d.v ? ' · ' + d.v : '') + ')';
@@ -6448,14 +6482,27 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     document.getElementById('tsFOnde').value = it ? (it.onde || '') : '';
     document.getElementById('tsFNotas').value = it ? (it.notas || '') : '';
     document.getElementById('tsFRemove').hidden = !it;
-    tsInfoCatalogo(false);
+    tsInfoCatalogo(false); tsSugFecha();
     tsForm.hidden = false;
     document.getElementById('tsFNome').focus();
   }
   function tsFechaForm() { tsForm.hidden = true; tsEdit = null; }
   document.getElementById('tsAdd').addEventListener('click', function() { tsAbreForm(null); });
   document.getElementById('tsFCancel').addEventListener('click', tsFechaForm);
-  document.getElementById('tsFNome').addEventListener('input', function() { tsInfoCatalogo(!tsEdit); });
+  document.getElementById('tsFNome').addEventListener('input', function() { tsInfoCatalogo(!tsEdit); tsSugMostra(); });
+  document.getElementById('tsFNome').addEventListener('blur', function() { setTimeout(tsSugFecha, 150); });
+  document.getElementById('tsFNome').addEventListener('keydown', function(e) {
+    var box = document.getElementById('tsSug');
+    if (box.hidden) return;
+    var bs = box.querySelectorAll('button');
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      var d = e.key === 'ArrowDown' ? 1 : -1;
+      tsSugSel = tsSugSel < 0 ? (d > 0 ? 0 : bs.length - 1) : (tsSugSel + d + bs.length) % bs.length;
+      bs.forEach(function(b, i) { b.classList.toggle('on', i === tsSugSel); });
+    } else if (e.key === 'Enter' && tsSugSel >= 0) { e.preventDefault(); tsSugEscolhe(bs[tsSugSel].dataset.id); }
+    else if (e.key === 'Escape') { e.stopPropagation(); tsSugFecha(); }
+  });
   document.getElementById('tsModo').addEventListener('click', function() {
     tsModo = tsModo === 'grade' ? 'lista' : 'grade';
     try { localStorage.setItem('mesaTesouroModo', tsModo); } catch (e) {}
@@ -6465,8 +6512,10 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     e.preventDefault();
     var nm = document.getElementById('tsFNome').value.trim();
     if (!nm) { document.getElementById('tsFNome').focus(); return; }
+    var catId = tsInfoCatalogo(false);
+    if (catId) nm = TSD.ITENS[catId].n;   // "onix" vira o nome certo do catálogo: Ônix
     var corpo = {
-      cat_id: tsInfoCatalogo(false) || null, nome: nm,
+      cat_id: catId || null, nome: nm,
       qtd: Math.max(1, Math.floor(+document.getElementById('tsFQtd').value || 1)),
       peso: Math.max(0, +document.getElementById('tsFPeso').value || 0),
       valor: document.getElementById('tsFValor').value.trim() || null,
