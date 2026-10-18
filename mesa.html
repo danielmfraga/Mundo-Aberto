@@ -904,6 +904,9 @@ body:not(.mapa-on) .dsn-bar { display:none; }
 .dsn-esp i { display:block; border-radius:50%; background:currentColor; }
 .dsn-esp.active { color:var(--holo); border-color:var(--holo); box-shadow:0 0 8px rgba(78,211,232,0.3); }
 @media (min-width:921px) {
+  body.mapa-on .palco-host, body.mapa-on .dsn-bar, body.mapa-on .nev-bar, body.mapa-on .mapa-bar, body.mapa-on .palco-menu, body.mapa-on .abas-bar,
+  .palco-gavetas > .panel .panel-head { cursor:grab; }
+  .arrastando { z-index:12 !important; cursor:grabbing !important; box-shadow:0 10px 28px rgba(0,0,0,0.5); }
   .dsn-bar { display:grid; grid-template-columns:repeat(2, auto); justify-items:center; gap:5px; }   /* em duas colunas: a paleta cabe na tela sem precisar rolar */
   .dsn-bar .dsn-sep { grid-column:1 / -1; justify-self:stretch; width:auto; }
 }
@@ -6111,6 +6114,75 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       palcoRecalcula();
     });
   }
+  // ── Caixas arrastáveis do palco ──
+  // Toda caixa flutuante (host, paleta de desenho, Mestre, barra da Mesa, menu de painéis, abas e as gavetas) pode ser puxada
+  // pra onde a pessoa preferir, por qualquer ponto dela (botões também: se o dedo andou, é arrasto e o clique é descartado).
+  // A posição fica guardada neste navegador. Duplo clique no fundo da caixa devolve ao lugar de origem. Só o — e o ✕ ficam fixos.
+  var PALCO_POS_CHAVE = 'mesa-palco-pos-v1';
+  var palcoPos = {};
+  try { palcoPos = JSON.parse(localStorage.getItem(PALCO_POS_CHAVE) || '{}') || {}; } catch (e) { palcoPos = {}; }
+  var palcoArrs = [];   // { el, chave, opt }
+  function palcoPosGuarda() { try { localStorage.setItem(PALCO_POS_CHAVE, JSON.stringify(palcoPos)); } catch (e) {} }
+  function palcoPosMovel() { return window.innerWidth > 920; }   // no celular cada caixa fica no seu canto
+  function palcoPosColoca(el, x, y) {
+    var w = el.offsetWidth || 40, h = el.offsetHeight || 30;
+    x = Math.max(0, Math.min(x, window.innerWidth - w));
+    y = Math.max(0, Math.min(y, window.innerHeight - h));
+    el.style.left = x + 'px'; el.style.top = y + 'px';
+    return { x:x, y:y };
+  }
+  function palcoPosPrende(el, opt) {
+    el.style.position = 'fixed'; el.style.right = 'auto'; el.style.bottom = 'auto'; el.style.transform = 'none'; el.style.margin = '0';
+    if (opt && opt.conteudo) el.style.width = 'max-content';
+  }
+  function palcoPosSolta(el) { ['position', 'left', 'top', 'right', 'bottom', 'transform', 'margin', 'width'].forEach(function(k) { el.style[k] = ''; }); }
+  function palcoPosAplica(a) {
+    var p = palcoPos[a.chave];
+    if (!palcoPosMovel()) { palcoPosSolta(a.el); return; }
+    if (!p || (a.opt.gaveta && !a.opt.ativo())) return;   // a gaveta só vale enquanto o painel está nela
+    palcoPosPrende(a.el, a.opt); palcoPosColoca(a.el, p.x, p.y);
+  }
+  function palcoArrastavel(el, chave, opt) {
+    opt = opt || {};
+    opt.ativo = opt.ativo || function() { return document.body.classList.contains('mapa-on'); };
+    var a = { el:el, chave:chave, opt:opt };
+    palcoArrs.push(a);
+    el.addEventListener('pointerdown', function(e) {
+      if (e.button !== 0 || !palcoPosMovel() || !opt.ativo()) return;
+      if (e.target.closest('input, textarea, select, [contenteditable]')) return;
+      if (opt.alca && !e.target.closest(opt.alca)) return;
+      var sx = e.clientX, sy = e.clientY, r = el.getBoundingClientRect(), movendo = false, pos = null;
+      function mov(ev) {
+        var dx = ev.clientX - sx, dy = ev.clientY - sy;
+        if (!movendo) {
+          if (Math.abs(dx) + Math.abs(dy) < 6) return;
+          movendo = true; palcoPosPrende(el, opt); el.classList.add('arrastando');
+        }
+        pos = palcoPosColoca(el, r.left + dx, r.top + dy);
+      }
+      function fim() {
+        document.removeEventListener('pointermove', mov); document.removeEventListener('pointerup', fim); document.removeEventListener('pointercancel', fim);
+        if (!movendo) return;
+        el.classList.remove('arrastando');
+        if (pos) { palcoPos[chave] = pos; palcoPosGuarda(); }
+        var engole = function(ev) { ev.stopPropagation(); ev.preventDefault(); };   // o clique que sobra do soltar não aperta o botão sob o dedo
+        window.addEventListener('click', engole, { capture:true, once:true });
+        setTimeout(function() { window.removeEventListener('click', engole, true); }, 60);
+      }
+      document.addEventListener('pointermove', mov); document.addEventListener('pointerup', fim); document.addEventListener('pointercancel', fim);
+    });
+    el.addEventListener('dblclick', function(e) {
+      if (!opt.ativo() || !(e.target === el || (opt.alca && e.target.matches(opt.alca)))) return;
+      delete palcoPos[chave]; palcoPosGuarda(); palcoPosSolta(el);
+    });
+    palcoPosAplica(a);
+    return a;
+  }
+  [['palcoHost', 'host', true], ['dsnBar', 'paleta', true], ['nevBar', 'mestre', false], ['palcoMenu', 'menu', true], ['abasBar', 'abas', true]].forEach(function(x) {
+    palcoArrastavel(document.getElementById(x[0]), x[1], { conteudo:x[2] });
+  });
+  palcoArrastavel(document.querySelector('.mapa-panel .mapa-bar'), 'barra', { conteudo:true });
+  window.addEventListener('resize', function() { palcoArrs.forEach(palcoPosAplica); });
   // ── Menu de painéis do palco: Personagens, Dados e Chat viram gavetas flutuantes ──
   // É o painel de verdade da coluna (ids e botões intactos), só que levado pra gaveta enquanto
   // aberto e devolvido ao lugar ao fechar, minimizar ou sair do palco. Som e Diário já são
@@ -6127,12 +6199,15 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     painel.classList.remove('dobrado');       // na gaveta abre inteiro; a preferência dele volta ao devolver
     painel.parentNode.replaceChild(ph, painel);
     palcoGavetas.appendChild(painel);
+    if (!painel._arr) painel._arr = palcoArrastavel(painel, 'gaveta-' + n, { alca:'.panel-head', gaveta:true, ativo:function() { return painel.parentNode === palcoGavetas; } });
+    palcoPosAplica(painel._arr);
     if (n === 'chat') { var m = document.getElementById('chatMsgs'); m.scrollTop = m.scrollHeight; }
   }
   function palcoGavFecha(n) {
     var g = palcoGav[n], painel = PALCO_PAINEL[n];
     if (!g || !painel) return;
     g.ph.parentNode.replaceChild(painel, g.ph);
+    palcoPosSolta(painel);   // de volta à coluna: sem a posição solta da gaveta
     if (g.dobrado) painel.classList.add('dobrado');
     delete palcoGav[n];
   }
