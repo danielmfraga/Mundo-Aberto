@@ -665,6 +665,18 @@ body {
 .resv-banner:hover { background:#a6ecc2; }
 .diario-overlay { position:fixed; inset:0; z-index:9992; display:none; align-items:center; justify-content:center; background:rgba(6,10,16,0.74); padding:20px; }
 .diario-overlay.show { display:flex; }
+/* Mapa-múndi (Thun-dra Maal) dentro da Mesa: janela grande no centro, fixa (não arrasta nem redimensiona) */
+.mundo-overlay { position:fixed; inset:0; z-index:9996; display:none; align-items:center; justify-content:center; background:rgba(6,10,16,0.74); padding:20px; }
+.mundo-overlay.show { display:flex; }
+.mundo-box { position:relative; width:min(1600px,96vw); height:min(90vh,1000px); display:flex; flex-direction:column; background:#0b1118; border:1px solid var(--holo-soft); border-radius:10px; box-shadow:0 20px 60px rgba(0,0,0,0.6); overflow:hidden; }
+.mundo-head { display:flex; align-items:center; gap:10px; padding:9px 14px; border-bottom:1px solid rgba(78,211,232,0.22); }
+.mundo-title { font-family:var(--font-mono); font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:var(--holo); }
+.mundo-dica { margin-left:auto; font-family:var(--font-mono); font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--fg-mute, #7d8b99); }
+.mundo-close { background:transparent; border:none; color:var(--fg-mute, #9aa7b4); font-size:17px; line-height:1; cursor:pointer; padding:2px 4px; }
+.mundo-close:hover { color:var(--fg); }
+.mundo-frame { flex:1 1 auto; width:100%; border:0; background:#05080c; }
+/* só o desenho do ícone brilha (neon), não o botão */
+.mapa-ico .mundo-neon { color:#6ff0ff; filter:drop-shadow(0 0 2px rgba(111,240,255,0.95)) drop-shadow(0 0 5px rgba(78,211,232,0.7)); }
 .diario-book {
   position:relative;
   width:min(680px,94vw); height:min(82vh,860px); display:flex; flex-direction:column;
@@ -1616,6 +1628,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       <button class="mapa-ico" type="button" data-menu="som" title="Mesa de Som"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 13.2V4.2l7-1.6v8.9"/><circle cx="5.2" cy="13.3" r="1.9"/><circle cx="12.2" cy="11.7" r="1.9"/></svg></button>
       <button class="mapa-ico" type="button" data-menu="tesouro" title="Tesouro do grupo"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.4 8V6.4A3.6 3.6 0 0 1 6 2.8h6a3.6 3.6 0 0 1 3.6 3.6V8"/><rect x="2" y="8" width="14" height="7.2" rx="1.2"/><path d="M2 11.2h14"/><rect x="7.5" y="9.8" width="3" height="3" rx=".6"/></svg></button>
       <button class="mapa-ico" type="button" data-menu="diario" title="Diário da Mesa"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2.8h9.2a1 1 0 0 1 1 1v11.4H5a1 1 0 0 1-1-1z"/><path d="M7 6.5h4.5M7 9.5h4.5"/></svg></button>
+      <button class="mapa-ico" type="button" data-menu="mundo" title="Mapa-múndi (Thun-dra Maal)"><svg class="mundo-neon" viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.2 4.6 6.4 3l5.2 1.8L15.8 3.2v10.2L11.6 15 6.4 13.2 2.2 14.8z"/><path d="M6.4 3v10.2M11.6 4.8V15"/></svg></button>
     </div>
     <div class="palco-gavetas" id="palcoGavetas"></div>
     <!-- Tesouro do grupo: o painel mora aqui, escondido, e o botão do menu o leva pra uma gaveta (igual Personagens, Dados e Chat) -->
@@ -2016,6 +2029,18 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       <div class="som-add-hint" id="somAddHint">máx 5 MB por arquivo</div>
       <div class="som-add-status" id="somAddStatus"></div>
     </div>
+  </div>
+</div>
+
+<!-- Mapa-múndi: o mesmo mapa pra todo mundo da mesa (tempo real); o iframe só nasce na primeira abertura -->
+<div class="mundo-overlay" id="mundoOverlay">
+  <div class="mundo-box">
+    <div class="mundo-head">
+      <span class="mundo-title">Mapa-múndi · Thun-dra Maal</span>
+      <span class="mundo-dica">todos editam juntos</span>
+      <button class="mundo-close" id="mundoClose" type="button" title="Fechar (Esc)">&#10005;</button>
+    </div>
+    <iframe class="mundo-frame" id="mundoFrame" title="Mapa-múndi" allow="fullscreen" referrerpolicy="no-referrer"></iframe>
   </div>
 </div>
 
@@ -6695,7 +6720,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   function palcoMenuSync() {
     var on = {
       personagens:!!palcoGav.personagens, dados:!!palcoGav.dados, chat:!!palcoGav.chat, tesouro:!!palcoGav.tesouro,
-      som:palcoSomEl.classList.contains('show'), diario:palcoDiarioEl.classList.contains('show')
+      som:palcoSomEl.classList.contains('show'), diario:palcoDiarioEl.classList.contains('show'),
+      mundo:document.getElementById('mundoOverlay').classList.contains('show')
     };
     palcoMenu.querySelectorAll('[data-menu]').forEach(function(b) {
       b.classList.toggle('on', !!on[b.dataset.menu]);
@@ -6708,12 +6734,13 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     var n = b.dataset.menu;
     if (n === 'som') toggleSom();
     else if (n === 'diario') { if (palcoDiarioEl.classList.contains('show')) closeDiario(); else openDiario(); }
+    else if (n === 'mundo') toggleMundo();
     else if (palcoGav[n]) palcoGavFecha(n);
     else { palcoGavAbre(n); if (n === 'chat') chatAbreNaoLida(); }
     palcoMenuSync();
   });
   // Som e Diário também abrem/fecham por outros caminhos (Esc, o botão deles): o menu acompanha
-  [palcoSomEl, palcoDiarioEl].forEach(function(el) { new MutationObserver(palcoMenuSync).observe(el, { attributes:true, attributeFilter:['class'] }); });
+  [palcoSomEl, palcoDiarioEl, document.getElementById('mundoOverlay')].forEach(function(el) { new MutationObserver(palcoMenuSync).observe(el, { attributes:true, attributeFilter:['class'] }); });
   // há conversa privada não lida e a gaveta do chat está fechada: o botão fica aceso (também ao abrir o palco depois)
   function palcoChatPonto() {
     if (!palcoMenu || !document.body.classList.contains('mapa-on') || palcoGav.chat) return;
@@ -7402,6 +7429,30 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (document.activeElement === diarioSearchInput) { diarioSearchInput.value = ''; diarioSearchResults.innerHTML = ''; diarioSearchInput.blur(); return; }
     if (document.activeElement !== diarioText) closeDiario();
   });
+
+  // ── Mapa-múndi (Thun-dra Maal) ─────────────────────────────────────
+  // Um mapa só pra todo mundo (mapa "thundra" no Supabase). Quem está na Mesa edita: o mapa pede a identidade
+  // ("thundra-pronto") e a Mesa responde com o nome do jogador e a chave da Mesa. O Mestre não tem vantagem.
+  var MUNDO_URL = 'https://pub-1b0bdc8be4a84d9fa63b4a26d8389ff4.r2.dev/index.html';
+  var MUNDO_CHAVE = '';   // vem de /api/mapa-chave (env MAPA_CHAVE_MESA na Vercel): fora do código por causa do repositório público
+  var mundoOverlay = document.getElementById('mundoOverlay'), mundoFrame = document.getElementById('mundoFrame');
+  function mundoEnviaId() {
+    try { mundoFrame.contentWindow.postMessage({ tipo:'thundra-id', nome:nome || 'Jogador', chave:MUNDO_CHAVE }, new URL(MUNDO_URL).origin); } catch (e) {}
+  }
+  function openMundo() {
+    if (!MUNDO_CHAVE) fetch('/api/mapa-chave').then(function(r) { return r.ok ? r.json() : null; }).then(function(j) { if (j && j.chave) { MUNDO_CHAVE = j.chave; mundoEnviaId(); } }).catch(function() {});
+    if (!mundoFrame.getAttribute('src')) mundoFrame.src = MUNDO_URL + '?nome=' + encodeURIComponent(nome || 'Jogador');
+    mundoOverlay.classList.add('show');
+  }
+  function closeMundo() { mundoOverlay.classList.remove('show'); }
+  function toggleMundo() { if (mundoOverlay.classList.contains('show')) closeMundo(); else openMundo(); }
+  window.addEventListener('message', function(e) {
+    if (!mundoFrame.contentWindow || e.source !== mundoFrame.contentWindow) return;
+    if (e.data && e.data.tipo === 'thundra-pronto') mundoEnviaId();
+  });
+  document.getElementById('mundoClose').addEventListener('click', closeMundo);
+  mundoOverlay.addEventListener('click', function(e) { if (e.target === mundoOverlay) closeMundo(); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && mundoOverlay.classList.contains('show')) closeMundo(); });
 
   // ── Mesa de Som (soundboard compartilhado) ────────────────────────
   // Prévia (🎧) toca só localmente; Compartilhar (📢) toca pra todos via
