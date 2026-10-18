@@ -1329,7 +1329,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
 </div>
 
 <script src="ficha-guard.js?v=2026100301"></script>
-<script src="itens-dnd.js?v=2026101701"></script>
+<script src="itens-dnd.js?v=2026101801"></script>
 <script>
 (function() {
   'use strict';
@@ -6204,8 +6204,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     return m ? m[1].trim() : null;
   }
   function svgDe(cat) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + (ICONES[cat] || ICONES.geral) + '</svg>'; }
-  function iconeDe(d) { return d.i || d.c; }
-  function dadosDe(it) { return it.livre ? { n: it.nome, c: 'geral', p: +it.peso || 0, v: it.valor || '', d: it.raridade ? 'item ' + it.raridade.replace('_', ' ') : 'item avulso', o: it.obs || '' } : (ITENS[it.id] || { n: it.id, c: 'geral', p: 0, d: '', o: '' }); }
+  function iconeDe(d) { return ITENS_DND.icone(d); }   // o do item, ou (pedras, arte, avulsos) o que o nome sugere
+  function dadosDe(it) { return it.livre ? { n: it.nome, c: 'geral', avulso: 1, p: +it.peso || 0, v: it.valor || '', d: it.raridade ? 'item ' + it.raridade.replace('_', ' ') : 'item avulso', o: it.obs || '' } : (ITENS[it.id] || { n: it.id, c: 'geral', p: 0, d: '', o: '' }); }
   function num(v) { return (Math.round(v * 100) / 100).toString().replace('.', ','); }
 
   function capacidade() {

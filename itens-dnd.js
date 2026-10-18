@@ -21,7 +21,31 @@
     barra:    '<path d="M5 19L17 7"/><path d="M15 5l4 4-2 2-4-4z"/>',
     garrafa:  '<path d="M10 3h4v3h-4z"/><path d="M7 9a5 5 0 0 1 10 0v7a5 5 0 0 1-10 0z"/>',
     gema:     '<path d="M6 4h12l3 5-9 11L3 9z"/><path d="M3 9h18"/><path d="M9 4l-1.5 5L12 20l4.5-11L15 4"/>',
-    arte:     '<path d="M4 18h16"/><path d="M4 18L3 8l5 4 4-7 4 7 5-4-1 10"/>'
+    arte:     '<path d="M4 18h16"/><path d="M4 18L3 8l5 4 4-7 4 7 5-4-1 10"/>',
+    // joias, utensílios e objetos de arte (o Tesouro e o inventário escolhem pelo nome, ver icone() abaixo)
+    anel:     '<circle cx="12" cy="15" r="5"/><path d="M9.5 6.5L12 3l2.5 3.5L12 10z"/>',
+    calice:   '<path d="M7 4h10l-.5 5a4.5 4.5 0 0 1-9 0z"/><path d="M12 13.5V19"/><path d="M8.5 20h7"/>',
+    caneca:   '<path d="M5 6h11v9a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"/><path d="M16 8h2a2.5 2.5 0 0 1 0 5h-2"/>',
+    jarro:    '<path d="M9 3h6"/><path d="M10 3v3c-3 1-4 4-4 7 0 4 2 7 6 7s6-3 6-7c0-3-1-6-4-7V3"/><path d="M8 11h8"/>',
+    coroa:    '<path d="M4 19h16"/><path d="M4 19L3 8l5 4 4-7 4 7 5-4-1 11"/><circle cx="12" cy="4.5" r="0.8"/>',
+    colar:    '<path d="M5 4c0 8 3 11 7 11s7-3 7-11"/><path d="M12 15l-2 3 2 3 2-3z"/>',
+    medalhao: '<circle cx="12" cy="14" r="5"/><path d="M8.5 3L12 9l3.5-6"/><path d="M12 11.5v5M9.5 14h5"/>',
+    bracelete:'<path d="M5 8c0-2 3-3.5 7-3.5s7 1.5 7 3.5v8c0 2-3 3.5-7 3.5S5 18 5 16z"/><path d="M5 8c0 2 3 3.5 7 3.5S19 10 19 8"/>',
+    estatueta:'<circle cx="12" cy="5.5" r="2.5"/><path d="M8 21l1.5-9h5L16 21z"/><path d="M6.5 21h11"/><path d="M9.5 12L8 9M14.5 12L16 9"/>',
+    cranio:   '<path d="M12 3a7 7 0 0 0-7 7c0 2.5 1.2 4 3 5v3h8v-3c1.8-1 3-2.5 3-5a7 7 0 0 0-7-7z"/><circle cx="9.5" cy="10.5" r="1.4"/><circle cx="14.5" cy="10.5" r="1.4"/><path d="M10.5 18v2M13.5 18v2"/>',
+    quadro:   '<rect x="3.5" y="4.5" width="17" height="15" rx="1"/><path d="M6.5 16l4-5 3 3.5 2-2 2.5 3.5"/><circle cx="16" cy="9" r="1.4"/>',
+    veste:    '<path d="M8 4l4 2 4-2 4 3-3 3v10H7V10L4 7z"/>',
+    pergaminho:'<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h7M9 16h7"/>',
+    musica:   '<path d="M9 18V5l10-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
+    espelho:  '<circle cx="12" cy="9" r="6"/><path d="M12 15v6M9 21h6"/>',
+    mascara:  '<path d="M4 8c3-2 13-2 16 0 0 6-3 10-8 10S4 14 4 8z"/><circle cx="9" cy="11" r="1.6"/><circle cx="15" cy="11" r="1.6"/>',
+    dados:    '<rect x="3.5" y="3.5" width="11" height="11" rx="2.2"/><rect x="10" y="10" width="10.5" height="10.5" rx="2.2"/><circle cx="9" cy="9" r="0.9"/><circle cx="15.2" cy="15.2" r="0.9"/>',
+    bau:      '<path d="M3 10V7a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v3"/><rect x="3" y="10" width="18" height="10" rx="1.5"/><path d="M3 14.5h18"/><rect x="10.5" y="12.5" width="3" height="4" rx="0.6"/>',
+    roda:     '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="1.6"/><path d="M12 4v16M4 12h16M6.3 6.3l11.4 11.4M17.7 6.3L6.3 17.7"/>',
+    gaiola:   '<path d="M5 20h14"/><path d="M6 20V11a6 6 0 0 1 12 0v9"/><path d="M10 20V5.5M14 20V5.5M12 5V2.5"/>',
+    pente:    '<path d="M4 8h16v3.5H4z"/><path d="M6 11.5V19M9.5 11.5V19M13 11.5V19M16.5 11.5V19"/>',
+    perola:   '<circle cx="12" cy="12" r="6.5"/><path d="M9 9.5a3.5 3.5 0 0 1 3-2"/>',
+    estrela:  '<path d="M12 3l2.7 5.8 6.3.7-4.7 4.3 1.3 6.2L12 16.9 6.4 20l1.3-6.2L3 9.5l6.3-.7z"/>'
   };
   var CATEGORIAS = [
     { k: 'arma_s', r: 'Armas simples' }, { k: 'arma_m', r: 'Armas marciais' },
@@ -330,5 +354,35 @@
     arte_carruagem_real_dourada_ou_barcaca_funeraria:   { n: 'Carruagem real dourada ou barcaça funerária', c: 'arte', p: 0, v: '7.500 PO', d: 'objeto de arte', o: 'Veículo cerimonial de estado pleno' },
     arte_armadura_cerimonial_de_ouro_com_perolas_negras:{ n: 'Armadura cerimonial de ouro com pérolas negras', c: 'arte', p: 0, v: '7.500 PO', d: 'objeto de arte', o: 'Traje de combate ornamental régio' }
   };
-  window.ITENS_DND = { ICONES: ICONES, CATEGORIAS: CATEGORIAS, ITENS: ITENS };
+  // Qual ícone desenhar: o do próprio item (i), ou, nas pedras, objetos de arte e itens avulsos, o que o NOME sugere
+  // (sem acento nem maiúscula: "Cálice", "calice" e "CÁLICE" dão o mesmo). A primeira regra que casar vale; a ordem importa.
+  var REGRAS = [
+    [/^perola/, 'perola'], [/estrel/, 'estrela'],
+    [/(^|[^a-z])(cranio)/, 'cranio'], [/(^|[^a-z])(anel|aneis)/, 'anel'],
+    [/(^|[^a-z])(calice|taca|copa)/, 'calice'], [/(^|[^a-z])(caneca|chifre|copo)/, 'caneca'],
+    [/(^|[^a-z])(jarro|jarra|vaso|garrafa|frasco|rolha)/, 'jarro'],
+    [/(^|[^a-z])(coroa|tiara|diadema)/, 'coroa'], [/(^|[^a-z])(medalhao|broche|amuleto|talisma)/, 'medalhao'],
+    [/(^|[^a-z])(colar|corrente|gargantilha|pingente)/, 'colar'], [/(^|[^a-z])(bracelete|pulseira|tornozeleira)/, 'bracelete'],
+    [/(^|[^a-z])(mascara|tapa-olho)/, 'mascara'], [/(^|[^a-z])(espelho)/, 'espelho'],
+    [/(^|[^a-z])(partitura|pergaminho|manuscrito|livro|grimorio|mapa)/, 'pergaminho'],
+    [/caixa de musica|(^|[^a-z])(harpa|alaude|flauta|violino|instrumento)/, 'musica'],
+    [/(^|[^a-z])(estatueta|idolo|escultura|matriosca)/, 'estatueta'],
+    [/(^|[^a-z])(pintura|quadro|tapecaria|retrato)/, 'quadro'],
+    [/(^|[^a-z])(vestimenta|manto|traje|tunica|roupa|capa|veste|luva|lenco)/, 'veste'],
+    [/(^|[^a-z])(gaiola|jaula)/, 'gaiola'], [/(^|[^a-z])(pente)/, 'pente'], [/(^|[^a-z])(dados|tabuleiro)/, 'dados'], [/(^|[^a-z])(carruagem|barcaca)/, 'roda'],
+    [/(^|[^a-z])(caixa|bau|cofre|cofrinho)/, 'bau'],
+    [/(^|[^a-z])(armadura|cota|peitoral)/, 'armadura'], [/(^|[^a-z])(escudo)/, 'escudo'],
+    [/(^|[^a-z])(espada|adaga|lamina|machado|cimitarra|rapieira|lanca|maca|martelo)/, 'arma'], [/(^|[^a-z])(arco|besta)/, 'dist'],
+    [/(^|[^a-z])(pocao|elixir|pocoes)/, 'cons'], [/(^|[^a-z])(varinha|cajado|bastao)/, 'barra']
+  ];
+  function semAcento(t) { return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
+  function icone(d) {
+    if (d.i) return d.i;
+    if (d.c === 'gema' || d.c === 'arte' || d.avulso) {
+      var n = semAcento(d.n);
+      for (var k = 0; k < REGRAS.length; k++) if (REGRAS[k][0].test(n)) return REGRAS[k][1];
+    }
+    return d.c === 'gema' || d.c === 'arte' ? d.c : (d.c || 'geral');
+  }
+  window.ITENS_DND = { ICONES: ICONES, CATEGORIAS: CATEGORIAS, ITENS: ITENS, icone: icone };
 })();

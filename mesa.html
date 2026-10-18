@@ -2140,7 +2140,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 
 <script src="https://8x8.vc/vpaas-magic-cookie-cacc35dda8be41dbbf0a769952e2df2c/external_api.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="itens-dnd.js?v=2026101701"></script>
+<script src="itens-dnd.js?v=2026101801"></script>
 <script>
 (function() {
   'use strict';
@@ -6365,7 +6365,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   }
   function tsFmtPO(n) { return (Math.round(n * 100) / 100).toLocaleString('pt-BR', { maximumFractionDigits:2 }) + ' PO'; }
   function tsIcone(it) {
-    var d = it.cat_id && TSD.ITENS[it.cat_id], k = d ? (d.i || d.c) : 'geral';
+    var d = it.cat_id && TSD.ITENS[it.cat_id], k = TSD.icone ? TSD.icone(d || { n:it.nome, c:'geral', avulso:1 }) : (d ? (d.i || d.c) : 'geral');
     return '<svg viewBox="0 0 24 24" aria-hidden="true">' + (TSD.ICONES[k] || TSD.ICONES.geral || '') + '</svg>';
   }
   function tsCarrega() {
