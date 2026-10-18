@@ -793,9 +793,11 @@ body.mapa-on .mapa-bar {
 }
 .palco-esq { display:none; position:absolute; z-index:6; left:10px; top:10px; flex-direction:column; align-items:flex-start; gap:10px; max-height:calc(100% - 70px); overflow-y:auto; scrollbar-width:thin; }
 body.mapa-on .palco-esq { display:flex; }
-.palco-esq { pointer-events:none; scrollbar-color:rgba(78,211,232,0.35) transparent; }   /* o espaço vazio ao lado dos painéis estreitos não pode engolir cliques do mapa */
+.palco-esq { scrollbar-color:rgba(78,211,232,0.35) transparent; padding-right:4px; }   /* a coluna toda rola com a roda (host, ferramentas e Mestre juntos); ela só ocupa a largura dos painéis, então não engole o mapa */
+.palco-esq-linha { display:flex; align-items:flex-start; gap:10px; flex:0 0 auto; }   /* ferramentas à esquerda, caixa do Mestre ao lado */
+.palco-esq-linha .dsn-bar { order:1; }
+.palco-esq-linha .nev-bar { order:2; }
 @media (max-height:860px) { .nev-dica { display:none; } }
-.palco-esq > * { pointer-events:auto; }
 .palco-host {
   display:none; position:relative; flex:0 0 auto; align-items:center; gap:8px; max-width:200px; flex-wrap:wrap;
   background:rgba(11,19,32,0.92); backdrop-filter:blur(6px); border:1px solid var(--line-strong); border-radius:8px; padding:7px 10px;
@@ -902,7 +904,7 @@ body:not(.mapa-on) .dsn-bar { display:none; }
 .dsn-esp i { display:block; border-radius:50%; background:currentColor; }
 .dsn-esp.active { color:var(--holo); border-color:var(--holo); box-shadow:0 0 8px rgba(78,211,232,0.3); }
 @media (max-width:920px) {
-  .palco-esq { display:contents; }   /* no celular cada um volta pro seu canto */
+  .palco-esq, .palco-esq-linha { display:contents; }   /* no celular cada um volta pro seu canto */
   .dsn-bar { position:absolute; z-index:6; flex-direction:row; flex-wrap:wrap; justify-content:center; top:auto; bottom:52px; left:50%; transform:translateX(-50%); max-width:94vw; }
   .dsn-sep { width:1px; height:18px; margin:0 2px; }
 }
@@ -1548,6 +1550,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
           <span>Tempo real</span><input type="checkbox" id="palcoLive" checked><i class="palco-sw"></i>
         </label>
       </div>
+      <div class="palco-esq-linha">
       <div class="nev-bar" id="nevBar" hidden>
         <div class="nev-tit">Mestre · Névoa</div>
         <label class="palco-live" title="Ligada: os jogadores só veem o que você revelou. Desligada: veem o mapa inteiro (o que você revelou fica guardado)">
@@ -1591,6 +1594,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
         <span class="wb-tool wb-color dsn-cor" data-color="#22b455" style="background:#22b455" title="Verde"></span>
         <span class="wb-tool wb-color dsn-cor" data-color="#ffffff" style="background:#fff" title="Branco"></span>
         <label class="wb-tool wb-color wb-color-custom" id="dsnCorCustom" title="Outra cor"><input type="color" id="dsnCorInput" value="#8b5cf6"></label>
+      </div>
       </div>
     </div>
     <div class="abas-bar" id="abasBar"></div>
