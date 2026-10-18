@@ -854,6 +854,74 @@ body.mapa-on .palco-menu { display:flex; }
 }
 .palco-gavetas > .chat-panel { height:min(520px, calc(100vh - 90px)); }
 .palco-gavetas .panel-head .dobra-seta { display:none; }   /* na gaveta o painel é sempre aberto */
+/* Tesouro do grupo (gaveta): moedas em cima, itens em ícones ou lista; botão direito num item manda pra ficha de alguém */
+.palco-gavetas > .tesouro-panel { width:350px; display:flex; flex-direction:column; border-color:rgba(232,196,106,0.4); }
+.tesouro-panel .ts-sp { flex:1 1 auto; }
+.ts-ib { cursor:pointer; min-width:24px; height:24px; padding:0 6px; border-radius:5px; font-size:13px; line-height:1; color:var(--fg-dim); background:rgba(255,255,255,0.04); border:1px solid var(--line); }
+.ts-ib:hover { color:var(--fg); border-color:var(--holo-soft); }
+.ts-ib.ts-add { color:#e8c46a; border-color:rgba(232,196,106,0.5); font-size:16px; }
+.ts-moedas { display:flex; gap:5px; padding:9px 10px 4px; flex:0 0 auto; }
+.ts-moeda { flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; gap:3px; padding:5px 3px 4px; border-radius:7px; border:1px solid var(--line); background:rgba(255,255,255,0.03); cursor:context-menu; }
+.ts-moeda input { width:100%; box-sizing:border-box; text-align:center; background:none; border:0; outline:0; color:var(--fg); font-family:var(--font-mono); font-size:13px; -moz-appearance:textfield; appearance:textfield; padding:0; }
+.ts-moeda input::-webkit-outer-spin-button, .ts-moeda input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+.ts-moeda span { font-family:var(--font-mono); font-size:9px; letter-spacing:0.16em; }
+.ts-moeda.pc { border-color:rgba(201,128,61,0.45); } .ts-moeda.pc span { color:#c9803d; }
+.ts-moeda.pp { border-color:rgba(192,200,208,0.4); } .ts-moeda.pp span { color:#c0c8d0; }
+.ts-moeda.pe { border-color:rgba(143,184,200,0.4); } .ts-moeda.pe span { color:#8fb8c8; }
+.ts-moeda.po { border-color:rgba(232,196,106,0.55); } .ts-moeda.po span { color:#e8c46a; }
+.ts-moeda.pl { border-color:rgba(191,232,255,0.45); } .ts-moeda.pl span { color:#bfe8ff; }
+.ts-aviso { margin:6px 10px 0; padding:8px 10px; border-radius:6px; font-family:var(--font-mono); font-size:10.5px; line-height:1.6; color:#ff8a7a; background:rgba(255,110,90,0.08); border:1px solid rgba(255,110,90,0.4); }
+.ts-aviso[data-t="ok"] { color:#3fbf6a; background:rgba(63,191,106,0.08); border-color:rgba(63,191,106,0.4); }
+.ts-aviso[hidden], .ts-vazio[hidden], .ts-form[hidden], .ts-info[hidden], #tsFRemove[hidden] { display:none; }
+.ts-corpo { padding:8px 10px; flex:1 1 auto; min-height:70px; overflow-y:auto; }
+.ts-corpo.ts-grade { display:grid; grid-template-columns:repeat(auto-fill, minmax(52px, 1fr)); gap:6px; align-content:start; }
+.ts-corpo.ts-lista { display:flex; flex-direction:column; gap:3px; }
+.ts-slot { position:relative; cursor:pointer; color:var(--fg); font-family:var(--font-mono); background:rgba(255,255,255,0.04); border:1px solid var(--rc, var(--line-strong)); border-radius:8px; }
+.ts-slot:hover { background:rgba(232,196,106,0.1); border-color:#e8c46a; }
+.ts-slot svg { fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; color:var(--rc, #cfe9f0); }
+.ts-grade .ts-slot { aspect-ratio:1; display:flex; align-items:center; justify-content:center; padding:0; }
+.ts-grade .ts-slot svg { width:58%; height:58%; }
+.ts-grade .ts-slot .nm, .ts-grade .ts-slot .pz { display:none; }
+.ts-slot .q { position:absolute; right:3px; bottom:2px; font-size:9.5px; color:#e8c46a; text-shadow:0 0 3px #000; }
+.ts-lista .ts-slot { display:flex; align-items:center; gap:8px; padding:5px 8px; text-align:left; }
+.ts-lista .ts-slot svg { width:16px; height:16px; flex:0 0 auto; }
+.ts-lista .ts-slot .nm { flex:1 1 auto; min-width:0; font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ts-lista .ts-slot .q { position:static; font-size:10px; }
+.ts-lista .ts-slot .pz { font-size:9.5px; color:var(--fg-faint); min-width:44px; text-align:right; }
+.ts-slot.r-incomum { --rc:#3fbf6a; } .ts-slot.r-raro { --rc:#3b8bff; } .ts-slot.r-muito_raro { --rc:#a56bff; } .ts-slot.r-lendario { --rc:#ff9a3d; box-shadow:0 0 8px rgba(255,154,61,0.35); }
+.ts-vazio { text-align:center; color:var(--fg-faint); font-family:var(--font-mono); font-size:10.5px; line-height:1.9; padding:12px 10px 16px; }
+.ts-vazio b { color:#e8c46a; }
+.ts-rodape { padding:2px 12px 8px; font-family:var(--font-mono); font-size:9.5px; letter-spacing:0.05em; color:var(--fg-faint); flex:0 0 auto; }
+.ts-hist { padding:0 12px 10px; font-family:var(--font-mono); font-size:10px; color:var(--fg-dim); flex:0 0 auto; }
+.ts-hist summary { cursor:pointer; letter-spacing:0.12em; text-transform:uppercase; font-size:9px; color:var(--fg-faint); }
+.ts-hist-l { display:flex; gap:6px; padding:3px 0; border-bottom:1px solid var(--line); line-height:1.5; }
+.ts-hist-l .ok { color:#3fbf6a; } .ts-hist-l .esp { color:#e8c46a; }
+.ts-form { display:flex; flex-direction:column; gap:7px; padding:10px 12px 12px; border-top:1px solid var(--line-strong); flex:0 0 auto; background:rgba(232,196,106,0.04); }
+.ts-form-tit { font-family:var(--font-mono); font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:#e8c46a; }
+.ts-form input, .ts-form select, .ts-form textarea { box-sizing:border-box; width:100%; padding:6px 8px; border-radius:5px; font-family:var(--font-mono); font-size:11px; color:var(--fg); background:rgba(255,255,255,0.05); border:1px solid var(--line-strong); outline:0; resize:vertical; }
+.ts-form input:focus, .ts-form select:focus, .ts-form textarea:focus { border-color:rgba(232,196,106,0.6); }
+.ts-form select option { background:#0b1320; }
+.ts-form-linha { display:flex; gap:6px; }
+.ts-form-linha label { flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:3px; font-family:var(--font-mono); font-size:8.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--fg-faint); }
+.ts-info { font-family:var(--font-mono); font-size:10px; line-height:1.6; color:var(--fg-dim); padding:6px 8px; border-radius:5px; background:rgba(255,255,255,0.03); border:1px dashed var(--line-strong); }
+.ts-form-bt { display:flex; align-items:center; gap:6px; }
+.ts-bt { cursor:pointer; padding:6px 11px; border-radius:5px; font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--fg-dim); background:rgba(255,255,255,0.04); border:1px solid var(--line-strong); }
+.ts-bt:hover { color:var(--fg); border-color:var(--holo-soft); }
+.ts-bt.ouro { color:#e8c46a; border-color:rgba(232,196,106,0.5); background:rgba(232,196,106,0.1); }
+.ts-bt.danger { color:#ff8a7a; border-color:rgba(255,110,90,0.4); }
+/* menu do botão direito do Tesouro (por cima de tudo, inclusive do palco) */
+.ts-menu { position:fixed; z-index:9996; min-width:200px; max-width:260px; max-height:70vh; overflow:auto; padding:6px; display:flex; flex-direction:column; gap:2px; background:#0b1320; border:1px solid var(--line-strong); border-radius:8px; box-shadow:0 12px 30px rgba(0,0,0,0.6); font-family:var(--font-mono); font-size:11px; color:var(--fg-dim); }
+.ts-menu[hidden] { display:none; }
+.ts-menu .tit { padding:4px 8px 2px; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:#e8c46a; }
+.ts-menu .sub { padding:5px 8px 2px; font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--fg-faint); }
+.ts-menu .sep { height:1px; margin:4px 0; background:var(--line-strong); }
+.ts-menu button { cursor:pointer; display:flex; align-items:center; gap:8px; text-align:left; padding:6px 8px; border-radius:5px; font:inherit; color:var(--fg-dim); background:none; border:1px solid transparent; }
+.ts-menu button:hover { background:rgba(232,196,106,0.12); color:var(--fg); border-color:rgba(232,196,106,0.4); }
+.ts-menu button.some { color:#ff8a7a; }
+.ts-menu button img, .ts-menu button .ph { width:20px; height:20px; border-radius:50%; object-fit:cover; background:rgba(255,255,255,0.08); flex:0 0 auto; }
+.ts-menu .qtd { display:flex; align-items:center; gap:6px; padding:4px 8px; }
+.ts-menu .qtd input { width:64px; padding:4px 6px; border-radius:5px; font:inherit; color:var(--fg); background:rgba(255,255,255,0.06); border:1px solid var(--line-strong); outline:0; }
+.ts-menu .vazio { padding:6px 8px; color:var(--fg-faint); line-height:1.6; }
 /* Mesa de Som: no palco a gaveta abre pela ESQUERDA (ao lado da paleta de desenho), onde não cobre o menu nem as gavetas */
 body.mapa-on .som-overlay { right:auto; left:64px; top:76px; height:calc(100vh - 150px); }
 body.mapa-on .som-overlay:not(.show) { transform:translateX(calc(-100% - 100px)); }
@@ -1541,9 +1609,55 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       <button class="mapa-ico" type="button" data-menu="dados" title="Dados"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="12" height="12" rx="2.8"/><circle cx="6.8" cy="6.8" r=".9" fill="currentColor"/><circle cx="9" cy="9" r=".9" fill="currentColor"/><circle cx="11.2" cy="11.2" r=".9" fill="currentColor"/></svg></button>
       <button class="mapa-ico" type="button" data-menu="chat" title="Chat"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4h13v8.5H8.2L5 15.5v-3H2.5z"/></svg></button>
       <button class="mapa-ico" type="button" data-menu="som" title="Mesa de Som"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 13.2V4.2l7-1.6v8.9"/><circle cx="5.2" cy="13.3" r="1.9"/><circle cx="12.2" cy="11.7" r="1.9"/></svg></button>
+      <button class="mapa-ico" type="button" data-menu="tesouro" title="Tesouro do grupo"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.4 8V6.4A3.6 3.6 0 0 1 6 2.8h6a3.6 3.6 0 0 1 3.6 3.6V8"/><rect x="2" y="8" width="14" height="7.2" rx="1.2"/><path d="M2 11.2h14"/><rect x="7.5" y="9.8" width="3" height="3" rx=".6"/></svg></button>
       <button class="mapa-ico" type="button" data-menu="diario" title="Diário da Mesa"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2.8h9.2a1 1 0 0 1 1 1v11.4H5a1 1 0 0 1-1-1z"/><path d="M7 6.5h4.5M7 9.5h4.5"/></svg></button>
     </div>
     <div class="palco-gavetas" id="palcoGavetas"></div>
+    <!-- Tesouro do grupo: o painel mora aqui, escondido, e o botão do menu o leva pra uma gaveta (igual Personagens, Dados e Chat) -->
+    <div id="tesouroCasa" hidden>
+      <div class="panel tesouro-panel" id="tesouroPanel">
+        <div class="panel-head">
+          <span class="led" style="background:#e8c46a;box-shadow:0 0 7px #e8c46a"></span><span class="panel-title">Tesouro</span>
+          <span class="ts-sp"></span>
+          <button class="ts-ib" id="tsModo" type="button" title="Ícones / lista"></button>
+          <button class="ts-ib ts-add" id="tsAdd" type="button" title="Registrar um item achado">+</button>
+        </div>
+        <div class="ts-moedas" id="tsMoedas">
+          <label class="ts-moeda pc" title="Cobre (PC). Botão direito: mandar pra uma ficha"><input type="number" min="0" step="1" data-m="pc"><span>PC</span></label>
+          <label class="ts-moeda pp" title="Prata (PP). Botão direito: mandar pra uma ficha"><input type="number" min="0" step="1" data-m="pp"><span>PP</span></label>
+          <label class="ts-moeda pe" title="Electro (PE). Botão direito: mandar pra uma ficha"><input type="number" min="0" step="1" data-m="pe"><span>PE</span></label>
+          <label class="ts-moeda po" title="Ouro (PO). Botão direito: mandar pra uma ficha"><input type="number" min="0" step="1" data-m="po"><span>PO</span></label>
+          <label class="ts-moeda pl" title="Platina (PL). Botão direito: mandar pra uma ficha"><input type="number" min="0" step="1" data-m="pl"><span>PL</span></label>
+        </div>
+        <div class="ts-aviso" id="tsAviso" hidden></div>
+        <div class="ts-corpo ts-grade" id="tsCorpo"></div>
+        <div class="ts-vazio" id="tsVazio" hidden>Nada no Tesouro ainda.<br>Aperte <b>+</b> pra registrar o que o grupo achar.<br>Botão direito num item manda pra ficha de alguém.</div>
+        <div class="ts-rodape"><span id="tsPeso"></span></div>
+        <details class="ts-hist" id="tsHistBox"><summary>Entregas recentes</summary><div id="tsHist"></div></details>
+        <form class="ts-form" id="tsForm" hidden autocomplete="off">
+          <div class="ts-form-tit" id="tsFormTit">Registrar item</div>
+          <input type="text" id="tsFNome" list="tsCatNomes" placeholder="Nome (escolha do catálogo ou escreva um novo)" maxlength="80">
+          <datalist id="tsCatNomes"></datalist>
+          <div class="ts-info" id="tsFInfo" hidden></div>
+          <div class="ts-form-linha">
+            <label>Qtd<input type="number" id="tsFQtd" min="1" step="1" value="1"></label>
+            <label>Peso (kg)<input type="number" id="tsFPeso" min="0" step="0.05" value="0"></label>
+            <label>Valor<input type="text" id="tsFValor" placeholder="ex.: 15 PO" maxlength="30"></label>
+          </div>
+          <div class="ts-form-linha">
+            <label>Raridade<select id="tsFRar"><option value="">Comum</option><option value="incomum">Incomum</option><option value="raro">Raro</option><option value="muito_raro">Muito raro</option><option value="lendario">Lendário</option></select></label>
+            <label>Onde foi achado<input type="text" id="tsFOnde" placeholder="ex.: cripta de Vael" maxlength="80"></label>
+          </div>
+          <textarea id="tsFNotas" rows="2" placeholder="Notas (efeito mágico, sintonização, de quem era…)" maxlength="500"></textarea>
+          <div class="ts-form-bt">
+            <button type="button" class="ts-bt danger" id="tsFRemove" hidden>Remover</button>
+            <span class="ts-sp"></span>
+            <button type="button" class="ts-bt" id="tsFCancel">Cancelar</button>
+            <button type="submit" class="ts-bt ouro" id="tsFSalva">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
     <!-- coluna da esquerda: a caixa do host e a paleta de desenho, uma embaixo da outra (nunca se sobrepõem, não importa quantos botões a caixa do host tenha) -->
     <div class="palco-esq">
       <div class="palco-host" id="palcoHost">
@@ -1996,6 +2110,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 
 <script src="https://8x8.vc/vpaas-magic-cookie-cacc35dda8be41dbbf0a769952e2df2c/external_api.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="itens-dnd.js?v=2026101701"></script>
 <script>
 (function() {
   'use strict';
@@ -6181,13 +6296,321 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   });
   palcoArrastavel(document.querySelector('.mapa-panel .mapa-bar'), 'barra', { conteudo:true });
   window.addEventListener('resize', function() { palcoArrs.forEach(palcoPosAplica); });
+  // ── Tesouro do grupo ──
+  // O que o grupo achou, num só lugar (tabelas mesa_tesouro*, ver mesa-tesouro-setup.sql). O catálogo de itens é o MESMO da
+  // ficha (itens-dnd.js). Botão direito num item (ou numa moeda) manda pra ficha de um personagem de D&D: vira uma linha em
+  // mesa_tesouro_envios, e a ficha-dnd põe no inventário quando abre (ou a cada ~20 s). Não grava direto na ficha de propósito:
+  // com ela aberta, o autosave do jogador passaria por cima do item.
+  var TSD = window.ITENS_DND || { ICONES:{}, CATEGORIAS:[], ITENS:{} };
+  var tsCorpo = document.getElementById('tsCorpo'), tsForm = document.getElementById('tsForm'), tsAviso = document.getElementById('tsAviso');
+  var tsItens = [], tsBolsa = { pc:0, pp:0, pe:0, po:0, pl:0 }, tsEnvios = [], tsFalta = false, tsEdit = null, tsNomeCat = null, tsTAviso = null;
+  var TS_MOEDAS = ['pc', 'pp', 'pe', 'po', 'pl'];
+  var TS_RAR = { '':'Comum', incomum:'Incomum', raro:'Raro', muito_raro:'Muito raro', lendario:'Lendário' };
+  var tsModo = 'grade';
+  try { if (localStorage.getItem('mesaTesouroModo') === 'lista') tsModo = 'lista'; } catch (e) {}
+  function tsReq(path, metodo, corpo, prefer) {
+    return fetch(SB_URL + '/rest/v1/' + path, {
+      method:metodo, headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer ' + SB_KEY, 'Content-Type':'application/json', 'Prefer':prefer || 'return=minimal' },
+      body: corpo ? JSON.stringify(corpo) : undefined
+    }).then(function(r) {
+      if (!r.ok) return r.text().then(function(t) { var e = new Error('HTTP ' + r.status); e.status = r.status; e.texto = t; throw e; });
+      return r.status === 204 ? null : r.json().catch(function() { return null; });
+    });
+  }
+  function tsSemTabela(e) { return !!e && (e.status === 404 || /PGRST205|42P01|does not exist/.test(e.texto || '')); }
+  function tsNota(txt, erro) {
+    clearTimeout(tsTAviso);
+    if (!txt) { tsAviso.hidden = true; return; }
+    tsAviso.textContent = txt; tsAviso.dataset.t = erro ? 'erro' : 'ok'; tsAviso.hidden = false;
+    if (!erro) tsTAviso = setTimeout(function() { tsAviso.hidden = true; }, 6000);
+  }
+  function tsAvisaTodos() { send('tesouro', { by:MAPA_ME, nome:nome }); }
+  function tsFmtPeso(n) { return (Math.round(n * 100) / 100).toString().replace('.', ','); }
+  function tsIcone(it) {
+    var d = it.cat_id && TSD.ITENS[it.cat_id], k = d ? (d.i || d.c) : 'geral';
+    return '<svg viewBox="0 0 24 24" aria-hidden="true">' + (TSD.ICONES[k] || TSD.ICONES.geral || '') + '</svg>';
+  }
+  function tsCarrega() {
+    var q = 'sala=eq.' + encodeURIComponent(SALA);
+    return Promise.all([
+      tsReq('mesa_tesouro?' + q + '&select=*&order=criado_em.asc,id.asc', 'GET'),
+      tsReq('mesa_tesouro_bolsa?' + q + '&select=*', 'GET'),
+      tsReq('mesa_tesouro_envios?' + q + '&select=*&order=id.desc&limit=12', 'GET')
+    ]).then(function(r) {
+      tsFalta = false; tsNota('');
+      tsItens = Array.isArray(r[0]) ? r[0] : [];
+      var b = (Array.isArray(r[1]) && r[1][0]) || {};
+      TS_MOEDAS.forEach(function(m) { tsBolsa[m] = +b[m] || 0; });
+      tsEnvios = Array.isArray(r[2]) ? r[2] : [];
+      tsRender();
+    }).catch(function(e) {
+      tsFalta = tsSemTabela(e);
+      tsNota(tsFalta ? 'O Tesouro ainda não existe no Supabase. Rode o arquivo mesa-tesouro-setup.sql no SQL Editor (uma vez só).' : 'Não consegui ler o Tesouro agora. Confira a conexão.', true);
+      tsRender();
+    });
+  }
+  function tsRender() {
+    var btModo = document.getElementById('tsModo');
+    btModo.innerHTML = tsModo === 'grade' ? '&#9776;' : '&#9638;';
+    btModo.title = tsModo === 'grade' ? 'Ver em lista' : 'Ver em ícones';
+    tsCorpo.className = 'ts-corpo ts-' + tsModo;
+    document.querySelectorAll('#tsMoedas input[data-m]').forEach(function(inp) {
+      if (document.activeElement !== inp) inp.value = tsBolsa[inp.dataset.m] || 0;
+    });
+    var peso = 0;
+    tsCorpo.innerHTML = '';
+    tsItens.forEach(function(it) {
+      peso += (+it.peso || 0) * (it.qtd || 1);
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'ts-slot' + (it.raridade ? ' r-' + it.raridade : ''); b.dataset.id = it.id;
+      b.title = it.nome + (it.qtd > 1 ? ' ×' + it.qtd : '') + (it.raridade ? ' · ' + TS_RAR[it.raridade] : '') + (it.onde ? ' · achado em ' + it.onde : '') + ' · botão direito: mandar pra uma ficha';
+      b.innerHTML = tsIcone(it) + '<span class="nm">' + esc(it.nome) + '</span>' +
+        (it.qtd > 1 ? '<span class="q">×' + it.qtd + '</span>' : '<span class="q"></span>') +
+        '<span class="pz">' + (it.peso ? tsFmtPeso(it.peso * (it.qtd || 1)) + ' kg' : '') + '</span>';
+      tsCorpo.appendChild(b);
+    });
+    document.getElementById('tsVazio').hidden = tsItens.length > 0 || tsFalta;
+    document.getElementById('tsPeso').textContent = tsItens.length ? (tsItens.length + (tsItens.length === 1 ? ' item' : ' itens') + ' · ' + tsFmtPeso(peso) + ' kg no total') : '';
+    var h = document.getElementById('tsHist');
+    h.innerHTML = '';
+    document.getElementById('tsHistBox').hidden = !tsEnvios.length;
+    tsEnvios.forEach(function(e) {
+      var i = e.item || {}, qual = i.moedas ? Object.keys(i.moedas).map(function(m) { return i.moedas[m] + ' ' + m.toUpperCase(); }).join(' + ') : (i.nome || i.id || 'Item') + ((i.q || 1) > 1 ? ' ×' + i.q : '');
+      var d = new Date(e.criado_em), hh = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ' ' + ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2);
+      var l = document.createElement('div'); l.className = 'ts-hist-l';
+      l.innerHTML = '<span class="' + (e.entregue_em ? 'ok' : 'esp') + '" title="' + (e.entregue_em ? 'Já está no inventário' : 'Chega quando a ficha abrir') + '">' + (e.entregue_em ? '✓' : '…') + '</span><span><b>' + esc(qual) + '</b> → ' + esc(e.char_nome || e.char_id) + ' · ' + hh + '</span>';
+      h.appendChild(l);
+    });
+  }
+  // ── moedas ──
+  function tsSalvaBolsa() {
+    var corpo = { sala:SALA, atualizado_em:new Date().toISOString() };
+    TS_MOEDAS.forEach(function(m) { corpo[m] = tsBolsa[m]; });
+    return tsReq('mesa_tesouro_bolsa?on_conflict=sala', 'POST', corpo, 'resolution=merge-duplicates,return=minimal')
+      .then(tsAvisaTodos).catch(function(e) { tsNota(tsSemTabela(e) ? 'O Tesouro ainda não existe no Supabase (mesa-tesouro-setup.sql).' : 'Não salvou as moedas.', true); });
+  }
+  document.getElementById('tsMoedas').addEventListener('change', function(e) {
+    var inp = e.target.closest('input[data-m]');
+    if (!inp) return;
+    var v = Math.max(0, Math.floor(+inp.value || 0));
+    inp.value = v; tsBolsa[inp.dataset.m] = v; tsSalvaBolsa();
+  });
+  document.getElementById('tsMoedas').addEventListener('keydown', function(e) { if (e.key === 'Enter') e.target.blur(); });
+  document.getElementById('tsMoedas').addEventListener('contextmenu', function(e) {
+    var lb = e.target.closest('.ts-moeda');
+    if (lb) tsMenuMoeda(e, lb.querySelector('input').dataset.m);
+  });
+  // ── formulário (registrar / editar) ──
+  function tsCatMapa() {
+    if (tsNomeCat) return tsNomeCat;
+    tsNomeCat = {};
+    var dl = document.getElementById('tsCatNomes'), html = '';
+    Object.keys(TSD.ITENS).forEach(function(id) {
+      var n = TSD.ITENS[id].n; tsNomeCat[n.toLowerCase()] = id;
+      html += '<option value="' + esc(n) + '"></option>';
+    });
+    dl.innerHTML = html;
+    return tsNomeCat;
+  }
+  function tsInfoCatalogo(preenche) {
+    var id = tsCatMapa()[document.getElementById('tsFNome').value.trim().toLowerCase()], info = document.getElementById('tsFInfo');
+    if (!id) { info.hidden = true; return null; }
+    var d = TSD.ITENS[id];
+    info.textContent = 'Catálogo: ' + [d.d, d.o].filter(Boolean).join(' — ') + ' (' + tsFmtPeso(d.p) + ' kg' + (d.v ? ' · ' + d.v : '') + ')';
+    info.hidden = false;
+    if (preenche) {
+      var pe = document.getElementById('tsFPeso'), va = document.getElementById('tsFValor');
+      if (!(+pe.value)) pe.value = d.p;
+      if (!va.value) va.value = d.v || '';
+    }
+    return id;
+  }
+  function tsAbreForm(id) {
+    tsEdit = id || null;
+    var it = id ? tsItens.filter(function(x) { return String(x.id) === String(id); })[0] : null;
+    if (id && !it) return;
+    tsCatMapa();
+    document.getElementById('tsFormTit').textContent = it ? 'Editar item' : 'Registrar item';
+    document.getElementById('tsFNome').value = it ? it.nome : '';
+    document.getElementById('tsFQtd').value = it ? it.qtd : 1;
+    document.getElementById('tsFPeso').value = it ? (+it.peso || 0) : 0;
+    document.getElementById('tsFValor').value = it ? (it.valor || '') : '';
+    document.getElementById('tsFRar').value = it ? (it.raridade || '') : '';
+    document.getElementById('tsFOnde').value = it ? (it.onde || '') : '';
+    document.getElementById('tsFNotas').value = it ? (it.notas || '') : '';
+    document.getElementById('tsFRemove').hidden = !it;
+    tsInfoCatalogo(false);
+    tsForm.hidden = false;
+    document.getElementById('tsFNome').focus();
+  }
+  function tsFechaForm() { tsForm.hidden = true; tsEdit = null; }
+  document.getElementById('tsAdd').addEventListener('click', function() { tsAbreForm(null); });
+  document.getElementById('tsFCancel').addEventListener('click', tsFechaForm);
+  document.getElementById('tsFNome').addEventListener('input', function() { tsInfoCatalogo(!tsEdit); });
+  document.getElementById('tsModo').addEventListener('click', function() {
+    tsModo = tsModo === 'grade' ? 'lista' : 'grade';
+    try { localStorage.setItem('mesaTesouroModo', tsModo); } catch (e) {}
+    tsRender();
+  });
+  tsForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var nm = document.getElementById('tsFNome').value.trim();
+    if (!nm) { document.getElementById('tsFNome').focus(); return; }
+    var corpo = {
+      cat_id: tsInfoCatalogo(false) || null, nome: nm,
+      qtd: Math.max(1, Math.floor(+document.getElementById('tsFQtd').value || 1)),
+      peso: Math.max(0, +document.getElementById('tsFPeso').value || 0),
+      valor: document.getElementById('tsFValor').value.trim() || null,
+      raridade: document.getElementById('tsFRar').value || null,
+      onde: document.getElementById('tsFOnde').value.trim() || null,
+      notas: document.getElementById('tsFNotas').value.trim() || null
+    };
+    var req = tsEdit ? tsReq('mesa_tesouro?id=eq.' + encodeURIComponent(tsEdit), 'PATCH', corpo)
+                     : tsReq('mesa_tesouro', 'POST', Object.assign({ sala:SALA, por:nome || null }, corpo));
+    req.then(function() { tsFechaForm(); tsAvisaTodos(); return tsCarrega(); })
+       .catch(function(er) { tsNota(tsSemTabela(er) ? 'O Tesouro ainda não existe no Supabase (mesa-tesouro-setup.sql).' : 'Não consegui guardar o item.', true); });
+  });
+  document.getElementById('tsFRemove').addEventListener('click', function() {
+    var it = tsItens.filter(function(x) { return String(x.id) === String(tsEdit); })[0];
+    if (!it || !window.confirm('Remover "' + it.nome + '" do Tesouro?')) return;
+    tsRemove(it);
+  });
+  function tsRemove(it) {
+    return tsReq('mesa_tesouro?id=eq.' + encodeURIComponent(it.id), 'DELETE')
+      .then(function() { tsFechaForm(); tsAvisaTodos(); return tsCarrega(); })
+      .catch(function() { tsNota('Não consegui remover o item.', true); });
+  }
+  tsCorpo.addEventListener('click', function(e) { var s = e.target.closest('.ts-slot'); if (s) tsAbreForm(s.dataset.id); });
+  tsCorpo.addEventListener('contextmenu', function(e) {
+    var s = e.target.closest('.ts-slot');
+    if (!s) return;
+    var it = tsItens.filter(function(x) { return String(x.id) === s.dataset.id; })[0];
+    if (it) tsMenuItem(e, it);
+  });
+  // ── menu do botão direito: mandar pra ficha ──
+  var tsMenuEl = document.createElement('div');
+  tsMenuEl.className = 'ts-menu'; tsMenuEl.hidden = true;
+  document.body.appendChild(tsMenuEl);
+  var tsMenuXY = [0, 0];
+  function tsMenuFecha() { tsMenuEl.hidden = true; }
+  function tsMenuPos() {
+    var r = tsMenuEl.getBoundingClientRect();
+    tsMenuEl.style.left = Math.max(6, Math.min(tsMenuXY[0], innerWidth - r.width - 8)) + 'px';
+    tsMenuEl.style.top = Math.max(6, Math.min(tsMenuXY[1], innerHeight - r.height - 8)) + 'px';
+  }
+  document.addEventListener('pointerdown', function(e) { if (!tsMenuEl.hidden && !tsMenuEl.contains(e.target)) tsMenuFecha(); }, true);
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') tsMenuFecha(); });
+  function tsMb(txt, classe, fn, htmlAntes) {
+    var b = document.createElement('button');
+    b.type = 'button'; if (classe) b.className = classe;
+    b.innerHTML = (htmlAntes || '') + '<span>' + esc(txt) + '</span>';
+    b.addEventListener('click', function() { tsMenuFecha(); fn(); });
+    tsMenuEl.appendChild(b);
+    return b;
+  }
+  function tsMdiv(classe, txt) { var d = document.createElement('div'); d.className = classe; if (txt) d.textContent = txt; tsMenuEl.appendChild(d); return d; }
+  // quem pode receber: personagens de D&D (não NPC); os que já estão na mesa vêm primeiro
+  var tsCharsCache = null, tsCharsT = 0;
+  function tsChars() {
+    if (tsCharsCache && Date.now() - tsCharsT < 30000) return Promise.resolve(tsCharsCache);
+    return sbGet('/rest/v1/personagens?select=char_id,name,img_url,eh_npc,tipo:sheet_data->>sheet_type&deleted_at=is.null&order=name.asc').then(function(rows) {
+      var naMesa = {}; mesaChars.forEach(function(c) { naMesa[c.char_id] = 1; });
+      rows = (Array.isArray(rows) ? rows : []).filter(function(r) {
+        var npc = (typeof r.eh_npc === 'boolean') ? r.eh_npc : (r.char_id && r.char_id.indexOf('npc_') === 0);
+        return r.char_id && !npc && r.tipo === 'dnd';
+      });
+      rows.sort(function(a, b) { return (naMesa[b.char_id] ? 1 : 0) - (naMesa[a.char_id] ? 1 : 0); });
+      rows.forEach(function(r) { r.naMesa = !!naMesa[r.char_id]; });
+      tsCharsCache = rows; tsCharsT = Date.now();
+      return rows;
+    });
+  }
+  function tsMenuEnviar(ev, titulo, max, enviar, extras) {
+    ev.preventDefault();
+    tsMenuXY = [ev.clientX, ev.clientY];
+    tsMenuEl.innerHTML = '';
+    tsMdiv('tit', titulo);
+    var inpQ = null;
+    if (max > 1) {
+      var q = tsMdiv('qtd'); q.innerHTML = 'Mandar <input type="number" min="1" max="' + max + '" value="1"> de ' + max;
+      inpQ = q.querySelector('input');
+    }
+    tsMdiv('sub', 'Mandar para a ficha de');
+    var lista = tsMdiv('vazio', 'Procurando personagens…');
+    tsMenuEl.hidden = false; tsMenuPos();
+    tsChars().then(function(rows) {
+      lista.remove();
+      if (!rows.length) tsMdiv('vazio', 'Nenhum personagem de D&D encontrado.');
+      rows.forEach(function(ch) {
+        var b = document.createElement('button'); b.type = 'button';
+        b.innerHTML = (ch.img_url ? '<img src="' + esc(ch.img_url) + '" alt="">' : '<span class="ph"></span>') + '<span>' + esc(ch.name || 'Sem nome') + (ch.naMesa ? '' : ' <i style="opacity:.45">(fora da mesa)</i>') + '</span>';
+        b.addEventListener('click', function() {
+          var n = inpQ ? Math.max(1, Math.min(max, Math.floor(+inpQ.value || 1))) : 1;
+          tsMenuFecha(); enviar(ch, n);
+        });
+        tsMenuEl.appendChild(b);
+      });
+      if (extras) { tsMdiv('sep'); extras(); }
+      tsMenuPos();
+    }).catch(function() { lista.textContent = 'Não consegui listar os personagens.'; });
+  }
+  function tsMenuItem(ev, it) {
+    tsMenuEnviar(ev, it.nome + (it.qtd > 1 ? ' ×' + it.qtd : ''), it.qtd || 1, function(ch, n) { tsEnviarItem(it, ch, n); }, function() {
+      tsMb('Editar…', '', function() { tsAbreForm(it.id); });
+      tsMb('Remover do Tesouro', 'some', function() { if (window.confirm('Remover "' + it.nome + '" do Tesouro?')) tsRemove(it); });
+    });
+  }
+  function tsMenuMoeda(ev, m) {
+    var total = tsBolsa[m] || 0;
+    if (total < 1) { ev.preventDefault(); tsNota('Não há ' + m.toUpperCase() + ' no Tesouro pra mandar.', true); setTimeout(function() { tsNota(''); }, 3000); return; }
+    tsMenuEnviar(ev, m.toUpperCase() + ' · ' + total + ' no Tesouro', total, function(ch, n) { tsEnviarMoeda(m, ch, n); });
+  }
+  function tsEnvia(ch, itemJson) {
+    return tsReq('mesa_tesouro_envios', 'POST', { sala:SALA, char_id:ch.char_id, char_nome:ch.name || null, item:itemJson, por:nome || null });
+  }
+  function tsEnviarItem(it, ch, n) {
+    n = Math.max(1, Math.min(it.qtd || 1, n));
+    var obs = [it.notas, it.onde ? 'Achado em ' + it.onde : ''].filter(Boolean).join(' · ');
+    var pacote = { id:it.cat_id || null, nome:it.nome, q:n, peso:+it.peso || 0, valor:it.valor || '', obs:obs, raridade:it.raridade || '' };
+    tsEnvia(ch, pacote).then(function() {
+      // o envio já existe: agora tira do Tesouro (nessa ordem, pra nunca perder o item se algo falhar no meio)
+      return n >= (it.qtd || 1) ? tsReq('mesa_tesouro?id=eq.' + encodeURIComponent(it.id), 'DELETE')
+                                : tsReq('mesa_tesouro?id=eq.' + encodeURIComponent(it.id), 'PATCH', { qtd:(it.qtd || 1) - n });
+    }).then(function() {
+      tsNota('Mandei ' + it.nome + (n > 1 ? ' ×' + n : '') + ' para ' + (ch.name || 'a ficha') + '. Chega no inventário quando a ficha abrir.');
+      tsAvisaTodos(); return tsCarrega();
+    }).catch(function(e) { tsNota(tsSemTabela(e) ? 'O Tesouro ainda não existe no Supabase (mesa-tesouro-setup.sql).' : 'Não consegui mandar o item.', true); });
+  }
+  function tsEnviarMoeda(m, ch, n) {
+    n = Math.max(1, Math.min(tsBolsa[m] || 0, n));
+    var moedas = {}; moedas[m] = n;
+    tsEnvia(ch, { moedas:moedas }).then(function() {
+      tsBolsa[m] = (tsBolsa[m] || 0) - n; tsRender();
+      return tsSalvaBolsa();
+    }).then(function() {
+      tsNota('Mandei ' + n + ' ' + m.toUpperCase() + ' para ' + (ch.name || 'a ficha') + '. Chega na ficha quando ela abrir.');
+      return tsCarrega();
+    }).catch(function(e) { tsNota(tsSemTabela(e) ? 'O Tesouro ainda não existe no Supabase (mesa-tesouro-setup.sql).' : 'Não consegui mandar as moedas.', true); });
+  }
+  // abre/fecha a gaveta: carrega ao abrir; avisa (bolinha no botão) quando alguém mexe com ela fechada
+  function tsAbre() {
+    var bt = document.querySelector('#palcoMenu [data-menu="tesouro"]');
+    if (bt) bt.classList.remove('novo');
+    tsRender(); tsCarrega();
+  }
+  function tsRecebeAviso(p) {
+    if (palcoGav.tesouro) { tsCarrega(); return; }
+    if (!p || p.by === MAPA_ME || !mapaAberto()) return;
+    var bt = document.querySelector('#palcoMenu [data-menu="tesouro"]');
+    if (bt) bt.classList.add('novo');
+  }
   // ── Menu de painéis do palco: Personagens, Dados e Chat viram gavetas flutuantes ──
   // É o painel de verdade da coluna (ids e botões intactos), só que levado pra gaveta enquanto
   // aberto e devolvido ao lugar ao fechar, minimizar ou sair do palco. Som e Diário já são
   // janelas por cima da página: o botão só liga e desliga elas.
   var palcoMenu = document.getElementById('palcoMenu'), palcoGavetas = document.getElementById('palcoGavetas');
   var palcoSomEl = document.getElementById('somOverlay'), palcoDiarioEl = document.getElementById('diarioOverlay');   // (os var somOverlay/diarioOverlay só nascem mais abaixo)
-  var PALCO_PAINEL = { personagens:document.querySelector('.chars-panel'), dados:document.querySelector('.dice-panel'), chat:document.querySelector('.chat-panel') };
+  var PALCO_PAINEL = { personagens:document.querySelector('.chars-panel'), dados:document.querySelector('.dice-panel'), chat:document.querySelector('.chat-panel'), tesouro:document.getElementById('tesouroPanel') };
   var palcoGav = {};   // nome → { ph:marcador onde o painel morava, dobrado:estava recolhido }
   function palcoGavAbre(n) {
     var painel = PALCO_PAINEL[n];
@@ -6200,6 +6623,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (!painel._arr) painel._arr = palcoArrastavel(painel, 'gaveta-' + n, { alca:'.panel-head', gaveta:true, ativo:function() { return painel.parentNode === palcoGavetas; } });
     palcoPosAplica(painel._arr);
     if (n === 'chat') { var m = document.getElementById('chatMsgs'); m.scrollTop = m.scrollHeight; }
+    if (n === 'tesouro') tsAbre();
   }
   function palcoGavFecha(n) {
     var g = palcoGav[n], painel = PALCO_PAINEL[n];
@@ -6212,7 +6636,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   function palcoGuardaGavetas() { Object.keys(palcoGav).forEach(palcoGavFecha); palcoMenuSync(); }
   function palcoMenuSync() {
     var on = {
-      personagens:!!palcoGav.personagens, dados:!!palcoGav.dados, chat:!!palcoGav.chat,
+      personagens:!!palcoGav.personagens, dados:!!palcoGav.dados, chat:!!palcoGav.chat, tesouro:!!palcoGav.tesouro,
       som:palcoSomEl.classList.contains('show'), diario:palcoDiarioEl.classList.contains('show')
     };
     palcoMenu.querySelectorAll('[data-menu]').forEach(function(b) {
@@ -7303,6 +7727,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     // o canal é self:true, então o próprio traço volta como eco — quem desenhou já pintou local
     else if (event === 'bau-aberto') { bauRevelar(payload); if (bauOverlay.classList.contains('show')) bauCarregar(); }
     else if (event === 'bau-novo') { if (bauOverlay.classList.contains('show')) bauCarregar(); }
+    else if (event === 'tesouro') tsRecebeAviso(payload);
     else if (event === 'timer') tmAplica(payload);
     else if (event === 'timer-req') { if (tmRodando || tmResta > 0) send('timer', { restaMs:tmRestante(), rodando:tmRodando, autor:tmAutor }); }
     else if (event === 'mesa-ctx') { applyContexto(payload.text); }
@@ -7344,7 +7769,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     channel.on('broadcast', { event:'chat' }, function(m){ dispatch('chat', m.payload); });
     channel.on('broadcast', { event:'chars' }, function(m){ dispatch('chars', m.payload); });
     channel.on('broadcast', { event:'chars-req' }, function(m){ dispatch('chars-req', m.payload); });
-    ['bau-aberto','bau-novo','timer','timer-req'].forEach(function(ev){
+    ['bau-aberto','bau-novo','timer','timer-req','tesouro'].forEach(function(ev){
       channel.on('broadcast', { event:ev }, function(m){ dispatch(ev, m.payload); });
     });
     channel.on('broadcast', { event:'mesa-ctx' }, function(m){ dispatch('mesa-ctx', m.payload); });
