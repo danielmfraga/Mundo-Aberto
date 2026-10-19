@@ -6950,8 +6950,10 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       var novos = lista.filter(function(m) { return (m.claim || 0) > palcoFantasma.caiuEm; });
       if (novos.length) { palcoFantasma = null; lista = novos; }              // o host voltou e reivindicou o posto depois da queda: vale
       else {
-        var volta = lista.filter(function(m) { return m.id === palcoFantasma.id; })[0];
-        if (volta) { palcoFantasma = null; return volta; }                    // o mesmo host reapareceu
+        // o mesmo host reapareceu: pela conexão (F5) ou pelo APELIDO (voltou de outro navegador/aparelho, sem a lembrança local)
+        var slugF = mapaSlug(palcoFantasma.nome);
+        var volta = lista.filter(function(m) { return m.id === palcoFantasma.id; })[0] || lista.filter(function(m) { return slugF !== 'sem-nome' && mapaSlug(m.nome) === slugF; })[0];
+        if (volta) { palcoFantasma = null; return volta; }
         return null;                                                          // ninguém assumiu: o posto continua guardado
       }
     }
