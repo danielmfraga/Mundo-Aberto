@@ -1683,6 +1683,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       <div class="palco-host" id="palcoHost">
         <span id="palcoHostQuem">Host: —</span>
         <button class="palco-host-bt" id="palcoRostoBt" type="button" title="Uma tela só de rostos, só pra você. Aperte de novo pra voltar à mesa." hidden>Rosto a rosto</button>
+        <button class="palco-host-bt" id="palcoAssumeBt" type="button" title="Tomar o posto de host: a mesa passa a ser a sua e quem era host vira jogador" hidden>Virar host</button>
         <button class="palco-host-bt" id="palcoLevaBt" type="button" title="Leva TODO MUNDO pra tela de rostos, como se a mesa tivesse fechado (quem já está nela não sente nada). Aperte de novo pra soltar." hidden>Levar todos</button>
         <button class="palco-host-bt" id="palcoMestreBt" type="button" title="Modo Mestre: ferramentas só suas (névoa que esconde partes do mapa dos jogadores)" hidden>Mestre</button>
         <label class="palco-live" id="palcoLiveBox" title="Ligado: você vê a tela do host, igual. Desligado: a mesa fica parada pra você">
@@ -6882,6 +6883,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     meu.textContent = on ? 'Voltar à mesa' : 'Rosto a rosto';
     leva.textContent = palcoRosto ? 'Soltar todos' : 'Levar todos';
     meu.hidden = !palcoDentro; leva.hidden = !palcoSouHost;
+    document.getElementById('palcoAssumeBt').hidden = !palcoDentro || palcoSouHost || !!palcoFantasma;
     if (on === _rostoAplicado) return;
     _rostoAplicado = on;
     document.body.classList.toggle('rosto-a-rosto', on);
@@ -6903,6 +6905,15 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (palcoSouHost && palcoRosto) { palcoRosto = false; palcoTrack(); palcoRecalcula(); }   // o host que volta solta todos
     else { if (_rostoForcado) rostoDispensado = true; palcoAplicaRosto(_rostoForcado); }       // quem foi levado sai só por si
   }
+  // Virar host: quem está no palco sem ser host pode tomar o posto (o prazo de espera de um host que caiu é respeitado: o botão só aparece depois dele).
+  // Vale o carimbo mais recente (palcoClaim): todo mundo faz a mesma conta e chega no mesmo host.
+  function palcoAssume() {
+    if (!palcoDentro || palcoSouHost || palcoFantasma) return;
+    var atual = palcoHostObj && palcoHostObj.nome ? ' (' + palcoHostObj.nome + ')' : '';
+    if (!window.confirm('Virar o host da mesa?' + String.fromCharCode(10,10) + 'Quem é host agora' + atual + ' perde o posto e a mesa passa a ser a sua.')) return;
+    palcoClaim = Date.now(); palcoTrack(); palcoRecalcula();
+  }
+  document.getElementById('palcoAssumeBt').addEventListener('click', palcoAssume);
   document.getElementById('palcoRostoBt').addEventListener('click', palcoMeuRosto);
   document.getElementById('palcoLevaBt').addEventListener('click', palcoLevaTodos);
   document.getElementById('rostoVolta').addEventListener('click', rostoVoltaClique);
