@@ -1193,6 +1193,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   font-family:var(--font-mono); font-size:10px; color:var(--fg-dim);
 }
 .mapa-pop.show { display:flex; }
+.mapa-pop.arrastando { cursor:grabbing; user-select:none; }
+.mapa-pop h4 { cursor:grab; }
 .mapa-pop h4 { font-size:9.5px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:#ff8a7a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .mapa-lin { display:flex; align-items:center; gap:8px; }
 .mapa-lin > label, .mapa-lin > .rot { flex:0 0 64px; letter-spacing:0.06em; }
@@ -3956,7 +3958,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (!foco && a && el.contains(a) && a.classList.contains('carga-nome')) return;
     el.outerHTML = mapaCargasHtml(tk);
     var tel = mapaTokEls[id];
-    if (tel) {                                           // o balão cresceu: mantém ele dentro da tela
+    if (tel && !mapaTokPop.dataset.solto) {              // o balão cresceu: mantém ele dentro da tela (a não ser que a pessoa o tenha puxado pra outro lugar)
       var rp = mapaPanel.getBoundingClientRect(), rt = tel.getBoundingClientRect(), ph = mapaTokPop.offsetHeight;
       mapaTokPop.style.top = mapaClamp(rt.top - rp.top, 8, Math.max(8, rp.height - ph - 8)) + 'px';
     }
@@ -5627,7 +5629,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var mapaImgPop = document.getElementById('mapaImgPop');
   function mapaFechaPops() {
     [mapaGradePop, mapaNpcPop, mapaTokPop, mapaLimparPop, mapaSalaPop, mapaImgPop].forEach(function(p){ p.classList.remove('show'); });
-    mapaTokPop.dataset.id = '';
+    mapaTokPop.dataset.id = ''; [mapaGradePop, mapaNpcPop, mapaTokPop, mapaLimparPop, mapaSalaPop, mapaImgPop].forEach(function(p){ delete p.dataset.solto; });
     if (typeof mapaNpcAlvoEsconde === 'function') mapaNpcAlvoEsconde();
     mapaGradeBtn.classList.remove('on');
     mapaNpcBtn.classList.remove('on');
@@ -6326,6 +6328,30 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   });
   palcoArrastavel(document.querySelector('.mapa-panel .mapa-bar'), 'barra', { conteudo:true });
   window.addEventListener('resize', function() { palcoArrs.forEach(palcoPosAplica); });
+  // ── Balões do mapa arrastáveis (ficha do token, grade, NPC, sala…) ──
+  // Nascem ao lado do que foi clicado; puxando por qualquer ponto que não seja campo de digitar, ficam onde a pessoa largar,
+  // até fechar (a próxima abertura volta a nascer ao lado do token). Marca dataset.solto pro balão não ser reposicionado sozinho.
+  document.querySelectorAll('.mapa-pop').forEach(function(pop) {
+    pop.addEventListener('pointerdown', function(e) {
+      if (e.button !== 0 || e.target.closest('input, textarea, select, [contenteditable]')) return;
+      var sx = e.clientX, sy = e.clientY, r = pop.getBoundingClientRect(), pr = (pop.offsetParent || document.body).getBoundingClientRect(), movendo = false;
+      function mov(ev) {
+        var dx = ev.clientX - sx, dy = ev.clientY - sy;
+        if (!movendo) { if (Math.abs(dx) + Math.abs(dy) < 6) return; movendo = true; pop.classList.add('arrastando'); pop.dataset.solto = '1'; }
+        pop.style.left = mapaClamp(r.left - pr.left + dx, 0, Math.max(0, pr.width - r.width)) + 'px';
+        pop.style.top = mapaClamp(r.top - pr.top + dy, 0, Math.max(0, pr.height - r.height)) + 'px';
+      }
+      function fim() {
+        document.removeEventListener('pointermove', mov); document.removeEventListener('pointerup', fim); document.removeEventListener('pointercancel', fim);
+        if (!movendo) return;
+        pop.classList.remove('arrastando');
+        var engole = function(ev) { ev.stopPropagation(); ev.preventDefault(); };   // o clique que sobra do soltar não aperta o botão sob o dedo
+        window.addEventListener('click', engole, { capture:true, once:true });
+        setTimeout(function() { window.removeEventListener('click', engole, true); }, 60);
+      }
+      document.addEventListener('pointermove', mov); document.addEventListener('pointerup', fim); document.addEventListener('pointercancel', fim);
+    });
+  });
   // ── Tesouro do grupo ──
   // O que o grupo achou, num só lugar (tabelas mesa_tesouro*, ver mesa-tesouro-setup.sql). O catálogo de itens é o MESMO da
   // ficha (itens-dnd.js). Botão direito num item (ou numa moeda) manda pra ficha de um personagem de D&D: vira uma linha em
