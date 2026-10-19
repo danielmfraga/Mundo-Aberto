@@ -4408,7 +4408,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     }
     el.dataset.nome = t.nome || '';
   }
-  // os personagens da mesa ficam na barra do mapa: um clique e o token entra;
+  // os personagens da mesa ficam na barra do mapa: um clique abre a ficha;
   // arrastando (daqui ou do painel Personagens) ele cai no quadrado onde soltar
   var MAPA_TIPO_PJ = 'application/x-mesa-pj';
   function mapaArrastaPj(el, c) {
@@ -4425,7 +4425,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       var noMapa = !!mapaAchaTok('pc_' + c.char_id);
       b.type = 'button';
       b.className = 'mapa-pc' + (noMapa ? ' no-mapa' : '');
-      b.title = noMapa ? ((c.name || 'Personagem') + ' já está no mapa — clique pra achar, ou arraste pra mudar de lugar') : ('Colocar ' + (c.name || 'personagem') + ' no mapa (clique, ou arraste até o quadrado)');
+      b.title = (c.name || 'Personagem') + (noMapa ? ' — clique abre a ficha; arraste pra mudar de lugar no mapa' : ' — clique abre a ficha; arraste até o quadrado pra colocar no mapa');
       if (c.img_url) {
         var im = document.createElement('img');
         im.src = c.img_url; im.alt = ''; im.draggable = false;
@@ -4433,7 +4433,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       } else {
         b.textContent = mapaIniciais(c.name);
       }
-      b.addEventListener('click', function(){ mapaPoePc(c); });
+      b.addEventListener('click', function(){ openSheet(c.char_id, c.ficha); });   // clique = ficha; arrastar = token pro mapa (dragstart abaixo)
       mapaArrastaPj(b, c);
       mapaAddEl.appendChild(b);
     });
