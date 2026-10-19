@@ -4220,6 +4220,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     mapaTrocarBt.title = mapaCena.img ? 'Ajustar a imagem de fundo' : 'Colocar uma imagem de fundo';
   }
   function mapaRender() {
+    cartaoGuarda(mapaCena.tokens);   // cena que chegou do Storage/da mesa: o navegador também fica com o cartão
     // a mesa sempre tem uma cena (imagem ou grade em branco — mapaNormaliza
     // garante isso), então mapaMundo fica sempre visível: nada de tela vazia
     mapaMundo.style.width = mapaCena.w + 'px';
@@ -4475,6 +4476,23 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     }
     return base;
   }
+  // ── Cartão do personagem (PV, PV temporário e cargas) guardado neste navegador ──
+  // Além de ir pra cena (Storage), o cartão de cada personagem é copiado pro navegador a cada mudança. Se o token sair do mapa
+  // ou a cena for trocada/zerada, ao pôr o personagem de novo o cartão volta como estava. Chave: sala + char_id.
+  var CARTAO_CHAVE = 'mesa-cartao-v1';
+  function cartaoLe() { try { return JSON.parse(localStorage.getItem(CARTAO_CHAVE) || '{}') || {}; } catch (e) { return {}; } }
+  function cartaoGuarda(toks, idEditado) {   // idEditado: token que acabou de ser editado de verdade (esse pode esvaziar); um token em branco que simplesmente chegou não apaga o cartão guardado
+    var tudo = cartaoLe(), mudou = false;
+    (toks || []).forEach(function(t) {
+      if (!t || !t.pc || !t.char_id) return;
+      var novo = { pv:t.pv, pvMax:t.pvMax, pvTemp:t.pvTemp, cargas:t.cargas || [] }, k = SALA + '|' + t.char_id;
+      var vazio = novo.pv == null && novo.pvMax == null && !novo.pvTemp && !novo.cargas.length;
+      if (vazio && tudo[k] && t.id !== idEditado) return;
+      if (JSON.stringify(tudo[k]) !== JSON.stringify(novo)) { tudo[k] = novo; mudou = true; }
+    });
+    if (mudou) { try { localStorage.setItem(CARTAO_CHAVE, JSON.stringify(tudo)); } catch (e) {} }
+  }
+  function cartaoDe(charId) { return cartaoLe()[SALA + '|' + charId] || null; }
   function mapaAplicaTok(op) {
     if (!op) return;
     var t;
@@ -4504,6 +4522,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       mapaCena.tokens = mapaCena.tokens.filter(function(x){ return x.id !== op.id; });
       if (mapaTokPop.dataset.id === op.id) mapaFechaPops();
     }
+    if (op.op === 'add' || op.op === 'pv' || op.op === 'carga') cartaoGuarda(mapaCena.tokens, op.op === 'add' ? null : op.id);
     mapaRenderTokens();
     if (op.op === 'add' || op.op === 'del') mapaRenderRoster();
   }
@@ -4525,7 +4544,9 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (ja && onde) { mapaTok({ op:'mov', id:id, col:onde.col, row:onde.row }); return; }
     if (ja) { mapaMostraTok(id); return; }
     var lugar = onde || mapaLugarLivre(1);
-    mapaTok({ op:'add', toks:[{ id:id, nome:c.name || 'Personagem', img:c.img_url || null, tam:1, col:lugar.col, row:lugar.row, pc:true, char_id:c.char_id, ficha:c.ficha || null }] });
+    var tk = { id:id, nome:c.name || 'Personagem', img:c.img_url || null, tam:1, col:lugar.col, row:lugar.row, pc:true, char_id:c.char_id, ficha:c.ficha || null }, ct = cartaoDe(c.char_id);
+    if (ct) { tk.pv = ct.pv; tk.pvMax = ct.pvMax; tk.pvTemp = ct.pvTemp; tk.cargas = ct.cargas; }   // o cartão volta como estava
+    mapaTok({ op:'add', toks:[tk] });
   }
   function mapaMostraTok(id) {      // centraliza a vista no token e faz ele piscar
     var t = mapaAchaTok(id), el = mapaTokEls[id];
