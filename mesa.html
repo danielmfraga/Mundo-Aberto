@@ -665,6 +665,27 @@ body {
 .resv-banner:hover { background:#a6ecc2; }
 .diario-overlay { position:fixed; inset:0; z-index:9992; display:none; align-items:center; justify-content:center; background:rgba(6,10,16,0.74); padding:20px; }
 .diario-overlay.show { display:flex; }
+/* Volume da mesa: controle só meu, pra todos e pra cada pessoa (e pra tela que alguém compartilha) */
+.vol-box { position:fixed; top:120px; right:310px; z-index:9996; width:300px; max-width:92vw; max-height:70vh; display:none; flex-direction:column; gap:8px;
+  padding:10px 12px 12px; background:#0b1320; border:1px solid var(--holo-soft); border-radius:10px; box-shadow:0 12px 30px rgba(0,0,0,0.6); font-family:var(--font-mono); font-size:11px; color:var(--fg-dim); }
+.vol-box.show { display:flex; }
+@media (max-width:920px) { .vol-box { left:8px; right:8px; top:70px; width:auto; max-width:none; } }
+.vol-box.arrastando { cursor:grabbing; user-select:none; }
+.vol-head { display:flex; align-items:center; justify-content:space-between; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:var(--holo); cursor:grab; }
+.vol-x { background:transparent; border:none; color:var(--fg-dim); font-size:15px; line-height:1; cursor:pointer; padding:2px 4px; }
+.vol-x:hover { color:var(--fg); }
+.vol-lista { display:flex; flex-direction:column; gap:6px; overflow-y:auto; min-height:0; }
+.vol-lin { display:grid; grid-template-columns:28px minmax(0,1fr) 40px; grid-template-rows:auto auto; column-gap:8px; row-gap:2px; align-items:center; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:rgba(255,255,255,0.03); }
+.vol-lin.todos { border-color:var(--holo-soft); background:rgba(78,211,232,0.06); }
+.vol-lin.tela .vol-nome::before { content:'🖥 '; }
+.vol-nome { grid-column:2; grid-row:1; color:var(--fg); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; }
+.vol-pct { grid-column:3; grid-row:1; text-align:right; font-size:10px; }
+.vol-mudo { grid-column:1; grid-row:1 / span 2; width:28px; height:28px; border-radius:7px; border:1px solid var(--line); background:rgba(255,255,255,0.04); color:var(--fg-dim); cursor:pointer; font-size:14px; line-height:1; padding:0; }
+.vol-mudo:hover { color:var(--fg); border-color:var(--holo-soft); }
+.vol-lin.mudo .vol-mudo { color:var(--danger); border-color:rgba(255,85,102,0.6); }
+.vol-lin input[type=range] { grid-column:2 / span 2; grid-row:2; width:100%; accent-color:var(--holo); margin:0; }
+.vol-lin.mudo input[type=range] { opacity:0.45; }
+.vol-vazio, .vol-dica { font-size:9.5px; line-height:1.4; color:var(--fg-faint); }
 /* Mapa-múndi (Thun-dra Maal) dentro da Mesa: janela grande no centro, fixa (não arrasta nem redimensiona) */
 .mundo-overlay { position:fixed; inset:0; z-index:9996; display:none; align-items:center; justify-content:center; background:rgba(6,10,16,0.74); padding:20px; }
 .mundo-overlay.show { display:flex; }
@@ -1631,6 +1652,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       <button class="mapa-ico" type="button" data-menu="tesouro" title="Tesouro do grupo"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.4 8V6.4A3.6 3.6 0 0 1 6 2.8h6a3.6 3.6 0 0 1 3.6 3.6V8"/><rect x="2" y="8" width="14" height="7.2" rx="1.2"/><path d="M2 11.2h14"/><rect x="7.5" y="9.8" width="3" height="3" rx=".6"/></svg></button>
       <button class="mapa-ico" type="button" data-menu="diario" title="Diário da Mesa"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2.8h9.2a1 1 0 0 1 1 1v11.4H5a1 1 0 0 1-1-1z"/><path d="M7 6.5h4.5M7 9.5h4.5"/></svg></button>
       <button class="mapa-ico" type="button" data-menu="mundo" title="Mapa-múndi (Thun-dra Maal)"><svg class="mundo-neon" viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.2 4.6 6.4 3l5.2 1.8L15.8 3.2v10.2L11.6 15 6.4 13.2 2.2 14.8z"/><path d="M6.4 3v10.2M11.6 4.8V15"/></svg></button>
+      <button class="mapa-ico" type="button" data-menu="volume" title="Volume da mesa: geral e de cada pessoa (só pra você)"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.6 7v4h2.6L9 14.2V3.8L5.2 7z"/><path d="M11.6 6.4a3.4 3.4 0 0 1 0 5.2M13.6 4.5a6 6 0 0 1 0 9"/></svg></button>
     </div>
     <div class="palco-gavetas" id="palcoGavetas"></div>
     <!-- Tesouro do grupo: o painel mora aqui, escondido, e o botão do menu o leva pra uma gaveta (igual Personagens, Dados e Chat) -->
@@ -2033,6 +2055,18 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       <div class="som-add-status" id="somAddStatus"></div>
     </div>
   </div>
+</div>
+
+<!-- Volume da mesa: só pra mim (não muda o que os outros ouvem) -->
+<div class="vol-box" id="volBox">
+  <div class="vol-head"><span>Volume da mesa</span><button class="vol-x" id="volFecha" type="button" title="Fechar">&#10005;</button></div>
+  <div class="vol-lin todos" id="volTodos">
+    <button class="vol-mudo" type="button" data-vol-mudo title="Silenciar todos (só pra você)">&#128266;</button>
+    <span class="vol-nome">Todos</span><span class="vol-pct">100%</span>
+    <input type="range" min="0" max="100" step="1" value="100" aria-label="Volume geral">
+  </div>
+  <div class="vol-lista" id="volLista"></div>
+  <div class="vol-dica">Só você ouve a diferença. O máximo é o volume normal da chamada. Cada pessoa é lembrada pelo apelido, neste navegador.</div>
 </div>
 
 <!-- Mapa-múndi: o mesmo mapa pra todo mundo da mesa (tempo real); o iframe só nasce na primeira abertura -->
@@ -3017,7 +3051,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (!jitsiApi) return;
     var lista = [];
     try { lista = jitsiApi.getParticipantsInfo() || []; } catch (_) {}
-    lista.forEach(function(p) { if (p && p.participantId) susVolumeDe(p.participantId, quer ? SUS_VOL_OUTROS : 1); });
+    volAplicaTodos();   // o volume final de cada um já leva em conta o sussurro (susAbaixado)
   }
   function susStatus() {
     susAbaixaOutros(Object.keys(susRx).length > 0);
@@ -3783,6 +3817,113 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     });
     jitsiApi.addListener('tileViewChanged', function(e) { jitsiTileReafirma(!!(e && e.enabled)); });
     jitsiApi.addListener('participantJoined', function(e) { if (susAbaixado && e && e.id) susVolumeDe(e.id, SUS_VOL_OUTROS); });   // quem entra no meio de um sussurro também baixa
+  }
+
+  // ── Volume da mesa (só pra mim) ───────────────────────────────────
+  // O controle do vídeo (JaaS) é pequeno e some. Aqui há um geral ("Todos") e um por pessoa, e um por tela compartilhada,
+  // usando o comando setParticipantVolume do Jitsi (0 a 1, nunca passa do normal). O volume final de cada um é
+  // geral × da pessoa × (0,7 enquanto alguém sussurra pra mim). Quem entra de novo ganha um código novo no vídeo, por isso
+  // a pessoa é lembrada pelo apelido (neste navegador). Só se manda comando quando o valor muda, e valor 100% de quem
+  // nunca foi mexido não manda nada.
+  var VOL_CHAVE = 'mesa-volume-v1';
+  var volEst = { master:1, mudoGeral:false, pessoas:{} };   // pessoas: apelido (sem acento) → { v:0..1, mudo:bool }
+  try { var _v = JSON.parse(localStorage.getItem(VOL_CHAVE) || 'null'); if (_v && typeof _v === 'object') volEst = { master:(_v.master == null ? 1 : +_v.master), mudoGeral:!!_v.mudoGeral, pessoas:_v.pessoas || {} }; } catch (e) {}
+  var volMeuId = null, volTelas = [], volAplicado = {}, volTimer = null;
+  var volBox = document.getElementById('volBox'), volLista = document.getElementById('volLista'), volTodosEl = document.getElementById('volTodos');
+  function volGuarda() { try { localStorage.setItem(VOL_CHAVE, JSON.stringify(volEst)); } catch (e) {} }
+  function volDe(nm, tela) { var p = volEst.pessoas[mapaSlug(nm) + (tela ? '|tela' : '')]; return p ? { v:(p.v == null ? 1 : p.v), mudo:!!p.mudo } : { v:1, mudo:false }; }
+  function volFinal(nm, tela) {
+    var p = volDe(nm, tela);
+    return Math.max(0, Math.min(1, (volEst.mudoGeral ? 0 : volEst.master) * (p.mudo ? 0 : p.v) * (susAbaixado ? SUS_VOL_OUTROS : 1)));
+  }
+  // quem está na chamada além de mim: [{ id, nome, tela:bool }]
+  function volGente() {
+    var info = [];
+    try { info = jitsiApi ? (jitsiApi.getParticipantsInfo() || []) : []; } catch (_) {}
+    var porId = {}, saida = [];
+    info.forEach(function(p) { if (p && p.participantId) porId[p.participantId] = p; });
+    info.forEach(function(p) {
+      if (!p || !p.participantId) return;
+      var id = p.participantId, nm = p.displayName || p.formattedDisplayName || '';
+      if (id === volMeuId || (!volMeuId && nm && nm === nome)) return;
+      var m = /^(.*)-v\d+$/.exec(id);                                  // tela compartilhada que o Jitsi mostra como participante virtual
+      if (m) saida.push({ id:id, nome:(porId[m[1]] && porId[m[1]].displayName) || nm || 'Tela', tela:true });
+      else saida.push({ id:id, nome:nm || 'Participante', tela:false });
+    });
+    volTelas.forEach(function(dono) {                                   // quem compartilha a tela: se o Jitsi não listou a tela como participante, usa o código dela
+      if (dono === volMeuId || !porId[dono] || saida.some(function(g) { return g.tela && g.id.indexOf(dono + '-v') === 0; })) return;
+      saida.push({ id:dono + '-v0', nome:porId[dono].displayName || 'Participante', tela:true });
+    });
+    return saida;
+  }
+  function volAplicaTodos() {
+    if (!jitsiApi) return;
+    volGente().forEach(function(g) {
+      var v = Math.round(volFinal(g.nome, g.tela) * 100) / 100, antes = volAplicado[g.id];
+      if (antes === undefined && v === 1) return;                      // nunca mexi e está no normal: não manda nada
+      if (antes === v) return;
+      volAplicado[g.id] = v; susVolumeDe(g.id, v);
+    });
+  }
+  function volPct(v) { return Math.round(v * 100) + '%'; }
+  function volLinha(chave, nm, v, mudo, tela) {
+    var d = document.createElement('div');
+    d.className = 'vol-lin' + (tela ? ' tela' : '') + (mudo ? ' mudo' : '');
+    d.dataset.chave = chave + (tela ? '|tela' : '');
+    d.innerHTML = '<button class="vol-mudo" type="button" data-vol-mudo title="' + (mudo ? 'Voltar o som' : 'Silenciar (só pra você)') + '">' + (mudo ? '&#128263;' : '&#128266;') + '</button>' +
+      '<span class="vol-nome"></span><span class="vol-pct">' + volPct(mudo ? 0 : v) + '</span><input type="range" min="0" max="100" step="1" value="' + Math.round(v * 100) + '">';
+    d.querySelector('.vol-nome').textContent = (tela ? 'Tela de ' : '') + nm; d.querySelector('.vol-nome').title = nm;
+    return d;
+  }
+  function volRender() {
+    if (!volBox.classList.contains('show')) return;
+    var foco = document.activeElement;
+    if (foco && volLista.contains(foco) && foco.type === 'range') return;     // não refaz a lista debaixo do dedo
+    volLista.innerHTML = '';
+    var gente = volGente();
+    gente.forEach(function(g) { var p = volDe(g.nome, g.tela); volLista.appendChild(volLinha(mapaSlug(g.nome), g.nome, p.v, p.mudo, g.tela)); });
+    if (!gente.length) volLista.innerHTML = '<div class="vol-vazio">Ninguém mais na chamada agora. Quando alguém entrar (ou compartilhar a tela), aparece aqui.</div>';
+    volTodosEl.classList.toggle('mudo', volEst.mudoGeral);
+    volTodosEl.querySelector('input').value = Math.round(volEst.master * 100);
+    volTodosEl.querySelector('.vol-pct').textContent = volPct(volEst.mudoGeral ? 0 : volEst.master);
+    volTodosEl.querySelector('.vol-mudo').innerHTML = volEst.mudoGeral ? '&#128263;' : '&#128266;';
+  }
+  function volAbre() { volBox.classList.add('show'); volRender(); volAplicaTodos(); clearInterval(volTimer); volTimer = setInterval(function() { volRender(); volAplicaTodos(); }, 4000); }
+  function volFecha() { volBox.classList.remove('show'); clearInterval(volTimer); volTimer = null; }
+  function volToggle() { if (volBox.classList.contains('show')) volFecha(); else volAbre(); }
+  document.getElementById('volFecha').addEventListener('click', volFecha);
+  volBox.addEventListener('input', function(e) {
+    var r = e.target; if (!r || r.type !== 'range') return;
+    var lin = r.closest('.vol-lin'), v = (+r.value || 0) / 100;
+    if (lin === volTodosEl) { volEst.master = v; if (v > 0) volEst.mudoGeral = false; lin.classList.toggle('mudo', volEst.mudoGeral); }
+    else {
+      var p = volEst.pessoas[lin.dataset.chave] || (volEst.pessoas[lin.dataset.chave] = { v:1, mudo:false });
+      p.v = v; if (v > 0) p.mudo = false; lin.classList.toggle('mudo', p.mudo);
+    }
+    lin.querySelector('.vol-pct').textContent = volPct(v);
+    volGuarda(); volAplicaTodos();
+  });
+  volBox.addEventListener('click', function(e) {
+    var b = e.target.closest('[data-vol-mudo]'); if (!b) return;
+    var lin = b.closest('.vol-lin');
+    if (lin === volTodosEl) volEst.mudoGeral = !volEst.mudoGeral;
+    else { var p = volEst.pessoas[lin.dataset.chave] || (volEst.pessoas[lin.dataset.chave] = { v:1, mudo:false }); p.mudo = !p.mudo; }
+    volGuarda(); volAplicaTodos();
+    var foco = document.activeElement; if (foco && foco.blur) foco.blur();
+    volRender();
+  });
+  function volLigaEventos() {
+    jitsiApi.addListener('videoConferenceJoined', function(e) { if (e && e.id) volMeuId = e.id; volAplicado = {}; setTimeout(function() { volAplicaTodos(); volRender(); }, 1500); });
+    ['participantJoined', 'participantLeft', 'displayNameChange'].forEach(function(ev) {
+      jitsiApi.addListener(ev, function(e) {
+        if (ev === 'participantLeft' && e && e.id) delete volAplicado[e.id];
+        setTimeout(function() { volAplicaTodos(); volRender(); }, ev === 'participantLeft' ? 100 : 900);
+      });
+    });
+    jitsiApi.addListener('contentSharingParticipantsChanged', function(e) {
+      volTelas = (e && (e.data || e.participants)) || []; if (!Array.isArray(volTelas)) volTelas = [];
+      setTimeout(function() { volAplicaTodos(); volRender(); }, 600);
+    });
   }
 
   // ── Mapa (mesa de D20) ────────────────────────────────────────────
@@ -6349,6 +6490,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     palcoArrastavel(document.getElementById(x[0]), x[1], { conteudo:x[2] });
   });
   palcoArrastavel(document.querySelector('.mapa-panel .mapa-bar'), 'barra', { conteudo:true });
+  palcoArrastavel(document.getElementById('volBox'), 'volume', { conteudo:false, alca:'.vol-head' });
   window.addEventListener('resize', function() { palcoArrs.forEach(palcoPosAplica); });
   // ── Balões do mapa arrastáveis (ficha do token, grade, NPC, sala…) ──
   // Nascem ao lado do que foi clicado; puxando por qualquer ponto que não seja campo de digitar, ficam onde a pessoa largar,
@@ -6769,7 +6911,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     var on = {
       personagens:!!palcoGav.personagens, dados:!!palcoGav.dados, chat:!!palcoGav.chat, tesouro:!!palcoGav.tesouro,
       som:palcoSomEl.classList.contains('show'), diario:palcoDiarioEl.classList.contains('show'),
-      mundo:document.getElementById('mundoOverlay').classList.contains('show')
+      mundo:document.getElementById('mundoOverlay').classList.contains('show'), volume:document.getElementById('volBox').classList.contains('show')
     };
     palcoMenu.querySelectorAll('[data-menu]').forEach(function(b) {
       b.classList.toggle('on', !!on[b.dataset.menu]);
@@ -6783,12 +6925,13 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (n === 'som') toggleSom();
     else if (n === 'diario') { if (palcoDiarioEl.classList.contains('show')) closeDiario(); else openDiario(); }
     else if (n === 'mundo') toggleMundo();
+    else if (n === 'volume') volToggle();
     else if (palcoGav[n]) palcoGavFecha(n);
     else { palcoGavAbre(n); if (n === 'chat') chatAbreNaoLida(); }
     palcoMenuSync();
   });
   // Som e Diário também abrem/fecham por outros caminhos (Esc, o botão deles): o menu acompanha
-  [palcoSomEl, palcoDiarioEl, document.getElementById('mundoOverlay')].forEach(function(el) { new MutationObserver(palcoMenuSync).observe(el, { attributes:true, attributeFilter:['class'] }); });
+  [palcoSomEl, palcoDiarioEl, document.getElementById('mundoOverlay'), document.getElementById('volBox')].forEach(function(el) { new MutationObserver(palcoMenuSync).observe(el, { attributes:true, attributeFilter:['class'] }); });
   // há conversa privada não lida e a gaveta do chat está fechada: o botão fica aceso (também ao abrir o palco depois)
   function palcoChatPonto() {
     if (!palcoMenu || !document.body.classList.contains('mapa-on') || palcoGav.chat) return;
@@ -8016,6 +8159,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       });
       setupTrxWatchdog();
       jitsiLigaTile();
+      volLigaEventos();
       jitsiMudo = !ENT.mic;                                  // começa mudo se a entrada pediu microfone desligado
       jitsiApi.addListener('audioMuteStatusChanged', function(e) { jitsiMudo = !!(e && e.muted); });
       jitsiApi.addListener('videoConferenceJoined', function() { if (ENT_FOTO.url) { try { jitsiApi.executeCommand('avatarUrl', ENT_FOTO.url); } catch (_) {} } });   // a foto vira o avatar na chamada
