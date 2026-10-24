@@ -683,28 +683,47 @@ body.sem-papel .ca { filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55)); }
 .inv-corpo.modo-lista { display: flex; flex-direction: column; }
 .inv-vazio { font-size: 10.5px; font-style: italic; color: var(--fg-faint); padding: 6px 2px; }
 .inv-vazio[hidden] { display: none; }
+/* equipamento: o boneco com os lugares do corpo, e a mochila embaixo */
+.inv-corpo.modo-boneco { display: flex; flex-direction: column; gap: 8px; }
+.dl-boneco { display: grid; grid-template-columns: repeat(3, minmax(0, 64px)); grid-auto-rows: 64px; gap: 6px; justify-content: center; padding: 8px 4px 4px; }
+.dl-slot {
+  position: relative; border-radius: 8px; background: var(--quadro); border: 1px dashed var(--dnd-line);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+}
+.dl-slot:hover, .dl-slot.alvo { border-color: var(--gold); background: rgba(176,138,46,0.09); }
+.dl-slot.cheio { border-style: solid; }
+.dl-slot .inv-slot { width: 100%; height: 100%; aspect-ratio: auto; }
+.dl-ghost { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0.22; pointer-events: none; }
+.dl-ghost svg { width: 52%; height: 52%; fill: none; stroke: var(--icone); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.dl-rot { position: absolute; left: 0; right: 0; bottom: 2px; text-align: center; font-family: var(--font-mono); font-size: 7px; letter-spacing: 0.04em; color: var(--fg-faint); pointer-events: none; }
+.dl-mochila-t { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-dim); border-top: 1px solid var(--line); padding-top: 6px; }
+.dl-mochila { display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 5px; min-height: 42px; }
+.dl-mochila .inv-vazio { grid-column: 1 / -1; }
+.dl-mochila.alvo { outline: 1px dashed var(--gold); outline-offset: 2px; border-radius: 6px; }
+@media print { .dl-slot { border-color: #bbb; } .dl-ghost { display: none; } }
+
 
 /* quadro */
-.modo-grade .inv-slot {
+.modo-grade .inv-slot, .modo-boneco .inv-slot {
   position: relative; aspect-ratio: 1; border-radius: 7px; cursor: pointer; padding: 0;
   background: var(--quadro); border: 1px solid var(--dnd-line); display: flex; align-items: center; justify-content: center;
   transition: all 0.15s;
 }
 .inv-slot.arrastando { opacity: 0.4; }
-.modo-grade .inv-slot:hover { border-color: var(--gold); box-shadow: 0 2px 8px rgba(38,39,43,0.14); transform: translateY(-1px); }
-.modo-grade .inv-slot svg { width: 60%; height: 60%; fill: none; stroke: var(--icone); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.modo-grade .inv-slot.mestre::after {
+.modo-grade .inv-slot:hover, .modo-boneco .inv-slot:hover { border-color: var(--gold); box-shadow: 0 2px 8px rgba(38,39,43,0.14); transform: translateY(-1px); }
+.modo-grade .inv-slot svg, .modo-boneco .inv-slot svg { width: 60%; height: 60%; fill: none; stroke: var(--icone); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.modo-grade .inv-slot.mestre::after, .modo-boneco .inv-slot.mestre::after {
   content: '\2b25'; position: absolute; top: 2px; right: 3px; font-size: 7px; color: var(--gold);
 }
 .modo-lista .inv-slot.mestre .nome::before { content: '\2b25 '; color: var(--gold); font-size: 9px; }
-.modo-grade .inv-slot.equipado { border-color: var(--gold); background: rgba(176,138,46,0.09); }
-.modo-grade .inv-slot .q {
+.modo-grade .inv-slot.equipado, .modo-boneco .inv-slot.equipado { border-color: var(--gold); background: rgba(176,138,46,0.09); }
+.modo-grade .inv-slot .q, .modo-boneco .inv-slot .q {
   position: absolute; right: 2px; bottom: 1px; font-family: var(--font-mono); font-size: 8px; color: var(--fg-dim);
 }
-.modo-grade .inv-slot .eqp {
+.modo-grade .inv-slot .eqp, .modo-boneco .inv-slot .eqp {
   position: absolute; top: 3px; left: 3px; width: 5px; height: 5px; border-radius: 50%; background: var(--gold);
 }
-.modo-grade .inv-slot .nome { display: none; }
+.modo-grade .inv-slot .nome, .modo-boneco .inv-slot .nome { display: none; }
 
 /* lista */
 .modo-lista .inv-slot {
@@ -1291,7 +1310,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
               <div class="inv-barra"><div class="inv-barra-f" id="invBarra"></div></div>
             </div>
             <div class="inv-bts">
-              <button type="button" class="inv-bt" id="invModo" title="Alternar entre quadros e lista">&#9638;</button>
+              <button type="button" class="inv-bt" id="invModo" title="Ver como: quadros, lista ou equipamento">&#9638;</button>
               <button type="button" class="inv-bt" id="invCarregar" title="Bônus de capacidade de carga">&#9878;</button>
               <button type="button" class="inv-bt destaque" id="invAdd" title="Adicionar item">+</button>
             </div>
@@ -6218,10 +6237,128 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     inv.itens.forEach(function(it) { t += dadosDe(it).p * (it.q || 1); });
     return t;
   }
+  // ── Equipamento (o inventário "de jogo": um boneco com os lugares do corpo) ──
+  // Terceiro jeito de ver o inventário, ao lado de quadros e lista. O item vestido guarda o lugar em it.slot e continua com
+  // it.eq = true (é o eq que a CA e as armas já leem). O que não está vestido fica na Mochila, embaixo, em quadros. Qualquer
+  // item pode ir em qualquer lugar (o jogo não proíbe amuleto no pé), mas cada item tem lugares sugeridos pelo tipo/nome.
+  var DL_SLOTS = [
+    { k: 'pescoco', r: 'Pescoço', g: 'colar' }, { k: 'cabeca', r: 'Cabeça', g: 'elmo' }, { k: 'capa', r: 'Capa', g: 'veste' },
+    { k: 'arma1', r: 'Mão principal', g: 'arma' }, { k: 'corpo', r: 'Corpo', g: 'armadura' }, { k: 'arma2', r: 'Outra mão', g: 'escudo' },
+    { k: 'anel1', r: 'Anel', g: 'anel' }, { k: 'maos', r: 'Luvas', g: 'bracelete' }, { k: 'anel2', r: 'Anel', g: 'anel' },
+    null, { k: 'pes', r: 'Pés', g: 'bota' }, null
+  ];
+  var DL_NOMES = {};
+  DL_SLOTS.forEach(function(s) { if (s) DL_NOMES[s.k] = s.r; });
+  var DL_REGRAS = [
+    [/(^|[^a-z])(elmo|capacete|chapeu|coroa|tiara|diadema|capuz|mascara|tapa-olho)/, ['cabeca']],
+    [/(^|[^a-z])(colar|amuleto|medalhao|pingente|gargantilha|talisma|broche|corrente)/, ['pescoco']],
+    [/(^|[^a-z])(capa|manto)/, ['capa']],
+    [/(^|[^a-z])(luva|manopla|bracelete|pulseira|braceleira)/, ['maos']],
+    [/(^|[^a-z])(anel|aneis)/, ['anel1', 'anel2']],
+    [/(^|[^a-z])(bota|botas|sapato|sandalia|calcado|coturno)/, ['pes']],
+    [/(^|[^a-z])(escudo)/, ['arma2']]
+  ];
+  function dlSugestao(it) {
+    var d = dadosDe(it), n = semAcento(d.n || '');
+    if (d.esc) return ['arma2'];
+    if (d.ca != null) return ['corpo'];
+    if (d.cl || d.c === 'arma' || d.c === 'dist') return ['arma1', 'arma2'];
+    for (var k = 0; k < DL_REGRAS.length; k++) if (DL_REGRAS[k][0].test(n)) return DL_REGRAS[k][1];
+    if (/(^|[^a-z])(armadura|cota|peitoral|tunica|veste|vestimenta|traje|roupa)/.test(n)) return ['corpo'];
+    return [];
+  }
+  function dlOcupacao() {              // lugar → índice do item vestido (o primeiro que reivindicou vale)
+    var oc = {};
+    inv.itens.forEach(function(it, i) { if (it.eq && it.slot && DL_NOMES[it.slot] && oc[it.slot] === undefined) oc[it.slot] = i; });
+    return oc;
+  }
+  function dlArrumaVestidos() {        // quem foi vestido por outro lado (Equipar nos quadros/lista) ganha um lugar sugerido, se livre
+    var oc = dlOcupacao();
+    inv.itens.forEach(function(it, i) {
+      if (!it.eq || (it.slot && oc[it.slot] === i)) return;
+      var alvo = dlSugestao(it).filter(function(s) { return oc[s] === undefined; })[0];
+      if (alvo) { it.slot = alvo; oc[alvo] = i; } else delete it.slot;
+    });
+  }
+  function dlEquipa(i, slot) {         // põe o item i no lugar; quem estava lá volta pra mochila (ou troca de lugar com ele)
+    var it = inv.itens[i]; if (!it || !DL_NOMES[slot] || somenteLeitura) return;
+    var oc = dlOcupacao(), j = oc[slot], antigo = it.eq ? it.slot : null;
+    if (j === i) return;
+    if (!it.eq && (it.q || 1) > 1) { it.q -= 1; it = JSON.parse(JSON.stringify(it)); it.q = 1; inv.itens.splice(i + 1, 0, it); if (j !== undefined && j > i) j += 1; }   // uma unidade do monte vai pro corpo
+    if (j !== undefined) {
+      var outro = inv.itens[j];
+      if (antigo && DL_NOMES[antigo]) outro.slot = antigo; else { outro.eq = false; delete outro.slot; }
+    }
+    it.eq = true; it.slot = slot;
+    mexeu();
+  }
+  function dlTira(i) {
+    var it = inv.itens[i]; if (!it || somenteLeitura) return;
+    it.eq = false; delete it.slot;
+    mexeu();
+  }
+  function dlVestirSozinho(i) {        // "Equipar" no balão: vai pro lugar sugerido (livre) ou pro primeiro livre
+    var it = inv.itens[i], oc = dlOcupacao();
+    var sug = dlSugestao(it), alvo = sug.filter(function(s) { return oc[s] === undefined; })[0];
+    if (!alvo) alvo = DL_SLOTS.filter(function(s) { return s && oc[s.k] === undefined; }).map(function(s) { return s.k; })[0] || sug[0] || 'arma1';
+    dlEquipa(i, alvo);
+  }
+  function dlEscolhe(slot, x, y) {     // clicar num lugar vazio: lista da mochila (os que combinam com o lugar primeiro)
+    if (somenteLeitura) return;
+    var cand = [];
+    inv.itens.forEach(function(it, i) { if (!it.eq) cand.push({ i: i, ok: dlSugestao(it).indexOf(slot) >= 0 }); });
+    cand.sort(function(a, b) { return (b.ok ? 1 : 0) - (a.ok ? 1 : 0) || a.i - b.i; });
+    invMenu.innerHTML = '';
+    var cab = document.createElement('div'); cab.className = 'sep'; cab.style.display = 'none';
+    if (!cand.length) {
+      var vz = document.createElement('button'); vz.type = 'button'; vz.disabled = true; vz.textContent = 'Nada na mochila pra vestir';
+      invMenu.appendChild(vz);
+    }
+    cand.slice(0, 14).forEach(function(c) {
+      var d = dadosDe(inv.itens[c.i]);
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = (c.ok ? '★ ' : '') + d.n;
+      b.addEventListener('click', function() { fechaMenu(); dlEquipa(c.i, slot); });
+      invMenu.appendChild(b);
+    });
+    invMenu.hidden = false;
+    var r = invMenu.getBoundingClientRect();
+    invMenu.style.left = Math.min(x, innerWidth - r.width - 10) + 'px';
+    invMenu.style.top = Math.min(y, innerHeight - r.height - 10) + 'px';
+  }
+  function dlGhost(s) {
+    return svgDe(s.g);
+  }
+  function invPintaBoneco(botao) {
+    dlArrumaVestidos();
+    var oc = dlOcupacao();
+    var corpo = document.createElement('div'); corpo.className = 'dl-boneco';
+    DL_SLOTS.forEach(function(s) {
+      var c = document.createElement('div');
+      if (!s) { c.className = 'dl-vazio-cel'; corpo.appendChild(c); return; }
+      c.className = 'dl-slot'; c.dataset.slot = s.k; c.title = s.r;
+      var i = oc[s.k];
+      if (i !== undefined) { c.classList.add('cheio'); c.appendChild(botao(inv.itens[i], i)); }
+      else c.innerHTML = '<span class="dl-ghost">' + dlGhost(s) + '</span><span class="dl-rot">' + s.r + '</span>';
+      corpo.appendChild(c);
+    });
+    invCorpo.appendChild(corpo);
+    var mo = document.createElement('div'); mo.className = 'dl-mochila-t'; mo.textContent = 'Mochila';
+    invCorpo.appendChild(mo);
+    var gr = document.createElement('div'); gr.className = 'dl-mochila';
+    var n = 0;
+    inv.itens.forEach(function(it, i) { if (it.eq && it.slot && oc[it.slot] === i) return; n++; gr.appendChild(botao(it, i)); });
+    if (!n) gr.innerHTML = '<div class="inv-vazio">Nada na mochila. Use o + para adicionar, ou arraste o equipamento pra cá pra guardar.</div>';
+    invCorpo.appendChild(gr);
+  }
+  function invBtModo() {
+    var b = document.getElementById('invModo'); if (!b) return;
+    b.innerHTML = inv.modo === 'grade' ? '&#9638;' : (inv.modo === 'lista' ? '&#9776;' : '&#9823;');
+    b.title = 'Ver como: ' + (inv.modo === 'grade' ? 'quadros (clique: lista)' : (inv.modo === 'lista' ? 'lista (clique: equipamento)' : 'equipamento (clique: quadros)'));
+  }
   function invPinta() {
     invCorpo.className = 'inv-corpo modo-' + inv.modo;
     invCorpo.innerHTML = '';
-    inv.itens.forEach(function(it, i) {
+    function botao(it, i) {
       var d = dadosDe(it);
       var b = document.createElement('button');
       b.type = 'button';
@@ -6232,9 +6369,12 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       b.innerHTML = svgDe(iconeDe(d)) + '<span class="nome">' + d.n + '</span>' +
         ((it.q || 1) > 1 ? '<span class="q">×' + it.q + '</span>' : '<span class="q"></span>') +
         (it.eq ? '<span class="eqp"></span>' : '');
-      invCorpo.appendChild(b);
-    });
-    invVazio.hidden = inv.itens.length > 0;
+      return b;
+    }
+    if (inv.modo === 'boneco') invPintaBoneco(botao);
+    else inv.itens.forEach(function(it, i) { invCorpo.appendChild(botao(it, i)); });
+    invVazio.hidden = inv.itens.length > 0 || inv.modo === 'boneco';
+    invBtModo();
 
     var peso = pesoTotal(), cap = capacidade();
     document.getElementById('invPeso').textContent = num(peso);
@@ -6249,7 +6389,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       itens: Array.isArray(d.itens) ? d.itens : [],
       bonus: +d.bonus || 0,
       dobra: !!d.dobra,
-      modo: d.modo === 'lista' ? 'lista' : 'grade',
+      modo: d.modo === 'lista' ? 'lista' : (d.modo === 'boneco' ? 'boneco' : 'grade'),
       maestrias: Array.isArray(d.maestrias) ? d.maestrias : []
     };
     document.getElementById('invBonus').value = inv.bonus;
@@ -6279,10 +6419,15 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     var acoes = document.createElement('div');
     acoes.className = 'balao-acoes';
 
-    if (pode) {
+    if (inv.modo === 'boneco') {
+      var eq0 = document.createElement('button');
+      eq0.type = 'button'; eq0.textContent = (it.eq && it.slot) ? 'Tirar do corpo' : 'Equipar';
+      eq0.addEventListener('click', function() { if (it.eq && it.slot) dlTira(i); else dlVestirSozinho(i); fechaBalao(); });
+      acoes.appendChild(eq0);
+    } else if (pode) {
       var eq = document.createElement('button');
       eq.type = 'button'; eq.textContent = it.eq ? 'Desequipar' : 'Equipar';
-      eq.addEventListener('click', function() { it.eq = !it.eq; mexeu(); mostraItem(i, elo); });
+      eq.addEventListener('click', function() { it.eq = !it.eq; if (!it.eq) delete it.slot; mexeu(); mostraItem(i, elo); });
       acoes.appendChild(eq);
     }
 
@@ -6321,7 +6466,8 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
       b.addEventListener('click', function() { fn(); fechaMenu(); mexeu(); });
       invMenu.appendChild(b);
     }
-    if (pode) bt(it.eq ? 'Desequipar' : 'Equipar', '', function() { it.eq = !it.eq; });
+    if (inv.modo === 'boneco') bt((it.eq && it.slot) ? 'Tirar do corpo' : 'Equipar', '', function() { if (it.eq && it.slot) dlTira(i); else dlVestirSozinho(i); });
+    else if (pode) bt(it.eq ? 'Desequipar' : 'Equipar', '', function() { it.eq = !it.eq; if (!it.eq) delete it.slot; });
     if (d.dd && nomeDaMaestria(d)) {
       bt(temMaestria(it.id) ? 'Tirar maestria' : 'Marcar maestria (' + nomeDaMaestria(d) + ')', '', function() { viraMaestria(it.id); });
     }
@@ -6337,7 +6483,9 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
 
   invCorpo.addEventListener('click', function(e) {
     var s = e.target.closest('.inv-slot');
-    if (s) mostraItem(+s.dataset.i, s);
+    if (s) { mostraItem(+s.dataset.i, s); return; }
+    var c = e.target.closest('.dl-slot');
+    if (c && !c.classList.contains('cheio')) { e.stopPropagation(); dlEscolhe(c.dataset.slot, e.clientX, e.clientY); }   // lugar vazio: escolhe um item da mochila
   });
   invCorpo.addEventListener('contextmenu', function(e) {
     var s = e.target.closest('.inv-slot');
@@ -6360,12 +6508,22 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
     if (invArrasto === null) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    invCorpo.querySelectorAll('.alvo').forEach(function(x) { x.classList.remove('alvo'); });
+    var a = e.target.closest && (e.target.closest('.dl-slot') || e.target.closest('.dl-mochila'));
+    if (a) a.classList.add('alvo');
   });
   invCorpo.addEventListener('drop', function(e) {
     if (invArrasto === null) return;
     e.preventDefault();
     var de = invArrasto;
     invArrasto = null;
+    invCorpo.querySelectorAll('.alvo').forEach(function(x) { x.classList.remove('alvo'); });
+    if (inv.modo === 'boneco') {                                   // no equipamento: soltar num lugar veste; soltar na mochila guarda
+      var lugar = e.target.closest && e.target.closest('.dl-slot');
+      if (lugar) { dlEquipa(de, lugar.dataset.slot); return; }
+      var it0 = inv.itens[de];
+      if (e.target.closest && e.target.closest('.dl-mochila') && it0 && it0.eq) { dlTira(de); return; }
+    }
     var s = e.target.closest && e.target.closest('.inv-slot');
     if (!s) return;
     var para = +s.dataset.i;
@@ -6385,8 +6543,7 @@ body.sumario [data-ajuda]:hover { outline: 1px dashed rgba(224,180,87,0.75); out
   });
 
   document.getElementById('invModo').addEventListener('click', function() {
-    inv.modo = inv.modo === 'grade' ? 'lista' : 'grade';
-    this.innerHTML = inv.modo === 'grade' ? '&#9638;' : '&#9776;';
+    inv.modo = inv.modo === 'grade' ? 'lista' : (inv.modo === 'lista' ? 'boneco' : 'grade');
     mexeu();
   });
   document.getElementById('invCarregar').addEventListener('click', function(e) {

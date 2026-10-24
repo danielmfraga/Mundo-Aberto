@@ -35,6 +35,8 @@
     cranio:   '<path d="M12 3a7 7 0 0 0-7 7c0 2.5 1.2 4 3 5v3h8v-3c1.8-1 3-2.5 3-5a7 7 0 0 0-7-7z"/><circle cx="9.5" cy="10.5" r="1.4"/><circle cx="14.5" cy="10.5" r="1.4"/><path d="M10.5 18v2M13.5 18v2"/>',
     quadro:   '<rect x="3.5" y="4.5" width="17" height="15" rx="1"/><path d="M6.5 16l4-5 3 3.5 2-2 2.5 3.5"/><circle cx="16" cy="9" r="1.4"/>',
     veste:    '<path d="M8 4l4 2 4-2 4 3-3 3v10H7V10L4 7z"/>',
+    elmo:     '<path d="M4 15a8 8 0 0 1 16 0v3H4z"/><path d="M12 7v6"/><path d="M8 18v-3h8v3"/>',
+    bota:     '<path d="M8 3h6v9l5 2.5V19H5v-4l3-2z"/>',
     pergaminho:'<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h7M9 16h7"/>',
     musica:   '<path d="M9 18V5l10-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
     espelho:  '<circle cx="12" cy="9" r="6"/><path d="M12 15v6M9 21h6"/>',
@@ -357,6 +359,7 @@
   // Qual ícone desenhar: o do próprio item (i), ou, nas pedras, objetos de arte e itens avulsos, o que o NOME sugere
   // (sem acento nem maiúscula: "Cálice", "calice" e "CÁLICE" dão o mesmo). A primeira regra que casar vale; a ordem importa.
   var REGRAS = [
+    [/(^|[^a-z])(elmo|capacete|casco|barbuta)/, 'elmo'], [/(^|[^a-z])(bota|botas|sapato|sandalia|calcado|coturno)/, 'bota'],
     [/^perola/, 'perola'], [/estrel/, 'estrela'],
     [/(^|[^a-z])(cranio)/, 'cranio'], [/(^|[^a-z])(anel|aneis)/, 'anel'],
     [/(^|[^a-z])(calice|taca|copa)/, 'calice'], [/(^|[^a-z])(caneca|chifre|copo)/, 'caneca'],
