@@ -7038,7 +7038,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     meu.textContent = on ? 'Voltar à mesa' : 'Rosto a rosto';
     leva.textContent = palcoRosto ? 'Soltar todos' : 'Levar todos';
     meu.hidden = !palcoDentro; leva.hidden = !palcoSouHost;
-    document.getElementById('palcoAssumeBt').hidden = !palcoDentro || palcoSouHost || !!palcoFantasma;
+    document.getElementById('palcoAssumeBt').hidden = !palcoDentro || palcoSouHost;   // vale também na espera de um host que caiu: não precisa esperar os 3 min
     if (on === _rostoAplicado) return;
     _rostoAplicado = on;
     document.body.classList.toggle('rosto-a-rosto', on);
@@ -7060,11 +7060,11 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (palcoSouHost && palcoRosto) { palcoRosto = false; palcoTrack(); palcoRecalcula(); }   // o host que volta solta todos
     else { if (_rostoForcado) rostoDispensado = true; palcoAplicaRosto(_rostoForcado); }       // quem foi levado sai só por si
   }
-  // Virar host: quem está no palco sem ser host pode tomar o posto (o prazo de espera de um host que caiu é respeitado: o botão só aparece depois dele).
+  // Virar host: quem está no palco sem ser host pode tomar o posto a qualquer hora, inclusive durante a espera de um host que caiu (o carimbo vence a guarda).
   // Vale o carimbo mais recente (palcoClaim): todo mundo faz a mesma conta e chega no mesmo host.
   function palcoAssume() {
-    if (!palcoDentro || palcoSouHost || palcoFantasma) return;
-    var atual = palcoHostObj && palcoHostObj.nome ? ' (' + palcoHostObj.nome + ')' : '';
+    if (!palcoDentro || palcoSouHost) return;
+    var atual = palcoHostObj && palcoHostObj.nome ? ' (' + palcoHostObj.nome + ')' : (palcoFantasma ? ' (' + (palcoFantasma.nome || 'o host') + ' caiu e ainda tem tempo pra voltar)' : '');
     if (!window.confirm('Virar o host da mesa?' + String.fromCharCode(10,10) + 'Quem é host agora' + atual + ' perde o posto e a mesa passa a ser a sua.')) return;
     palcoClaim = Date.now(); palcoTrack(); palcoRecalcula();
   }
