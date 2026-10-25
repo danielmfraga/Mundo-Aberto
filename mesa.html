@@ -528,6 +528,7 @@ body {
   content:''; position:absolute; top:5px; right:5px; width:6px; height:6px; border-radius:50%;
   background:#c3a6ff; box-shadow:0 0 8px #c3a6ff; animation:somPulse 1.2s infinite;
 }
+.ferr-vol.open { background:rgba(78,211,232,0.26); border-color:var(--holo); }
 .ferr-resv { color:#8fe6b2; background:rgba(90,220,140,0.08); border-color:rgba(90,220,140,0.45); }
 .ferr-resv:hover { background:rgba(90,220,140,0.18); box-shadow:0 0 14px rgba(90,220,140,0.28); }
 .ferr-resv.active { color:#06210f; background:#8fe6b2; border-color:#8fe6b2; box-shadow:0 0 16px rgba(90,220,140,0.5); }
@@ -854,7 +855,7 @@ body.mapa-on .palco-host { display:flex; }
   font-family:var(--font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; pointer-events:none;
 }
 .palco-congelado[hidden] { display:none; }
-/* o host caiu ou saiu: o quadro compartilhado fica todo preto pra quem ficou, até ele voltar (ou passarem os 10 min) */
+/* o host caiu ou saiu: o quadro compartilhado fica todo preto pra quem ficou, até ele voltar (ou passarem os 3 min) */
 .palco-preto { display:none; position:absolute; z-index:5; left:0; top:0; bottom:0; right:calc(252px + 20px); background:#000; align-items:center; justify-content:center; padding:24px; box-sizing:border-box; }
 body.palco-sem-host .palco-preto { display:flex; }
 .palco-preto-msg { max-width:420px; text-align:center; font-family:var(--font-mono); font-size:12px; line-height:1.7; letter-spacing:0.1em; text-transform:uppercase; color:var(--fg-dim); }
@@ -1944,6 +1945,10 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       <button class="ferr ferr-resv" id="resvBtn" type="button" data-dica="Sala Reservada · aparte privado por vídeo. A mesa não te ouve, e os dados rolados lá são secretos.">
         <svg viewBox="0 0 56.21 55.89" aria-hidden="true"><path d="M28.93,30.69l-1.04,1.04c-.14.14-.33.22-.53.22h-1.25v1.25c0,.42-.33.75-.75.75h-1.25v1.25c0,.42-.33.75-.75.75h-2.5c-.42,0-.75-.33-.75-.75v-2.5c0-.2.08-.39.22-.53l5.04-5.04c-.17-.53-.26-1.09-.26-1.68,0-3.04,2.46-5.5,5.5-5.5s5.5,2.46,5.5,5.5-2.46,5.5-5.5,5.5c-.58,0-1.15-.09-1.68-.26ZM30.77,23.57c-.22.39-.22.86,0,1.25s.64.62,1.08.62.86-.24,1.08-.62c.22-.39.22-.86,0-1.25s-.64-.62-1.08-.62-.86.24-1.08.62Z"/></svg>
         <span class="sr">Sala Reservada</span>
+      </button>
+      <button class="ferr ferr-vol" id="volBtn" type="button" data-dica="Volume da mesa: geral e de cada pessoa (só pra você)">
+        <svg viewBox="0 0 56.21 55.89" aria-hidden="true"><path d="M17.5 23.5h5.5l8.5-6.5v22l-8.5-6.5h-5.5z"/><path d="M35.5 22.5a7 7 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M39.5 18.5a12.5 12.5 0 0 1 0 19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        <span class="sr">Volume da mesa</span>
       </button>
     </div>
 
@@ -3888,10 +3893,17 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     volTodosEl.querySelector('.vol-pct').textContent = volPct(volEst.mudoGeral ? 0 : volEst.master);
     volTodosEl.querySelector('.vol-mudo').innerHTML = volEst.mudoGeral ? '&#128263;' : '&#128266;';
   }
-  function volAbre() { volBox.classList.add('show'); volRender(); volAplicaTodos(); clearInterval(volTimer); volTimer = setInterval(function() { volRender(); volAplicaTodos(); }, 4000); }
-  function volFecha() { volBox.classList.remove('show'); clearInterval(volTimer); volTimer = null; }
+  function volAbre(botao) {
+    volBox.classList.add('show');
+    // aberto pelo botão da lateral (fora do palco): nasce ao lado dele; pelo palco, no lugar de sempre
+    if (botao && !palcoPos.volume) { var r = botao.getBoundingClientRect(); volBox.style.right = Math.max(8, innerWidth - r.left + 10) + 'px'; volBox.style.left = 'auto'; volBox.style.top = Math.max(8, Math.min(r.top, innerHeight - 160)) + 'px'; }
+    else if (!palcoPos.volume) { volBox.style.right = ''; volBox.style.left = ''; volBox.style.top = ''; }
+    document.getElementById('volBtn').classList.add('open');
+    volRender(); volAplicaTodos(); clearInterval(volTimer); volTimer = setInterval(function() { volRender(); volAplicaTodos(); }, 4000); }
+  function volFecha() { volBox.classList.remove('show'); document.getElementById('volBtn').classList.remove('open'); clearInterval(volTimer); volTimer = null; }
   function volToggle() { if (volBox.classList.contains('show')) volFecha(); else volAbre(); }
   document.getElementById('volFecha').addEventListener('click', volFecha);
+  document.getElementById('volBtn').addEventListener('click', function() { if (volBox.classList.contains('show')) volFecha(); else volAbre(this); });
   volBox.addEventListener('input', function(e) {
     var r = e.target; if (!r || r.type !== 'range') return;
     var lin = r.closest('.vol-lin'), v = (+r.value || 0) / 100;
@@ -6395,7 +6407,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     mapaBtn.classList.remove('open');
     document.body.classList.remove('wb-on', 'wb-right');
     jitsiTile(true);   // a grade é o padrão, também fora do palco
-    if (palcoSouHost) { _palcoBatida = 0; palcoBatidaHost(); }   // host que sai: o posto fica guardado 10 min (retoma ao voltar), como numa queda
+    if (palcoSouHost) { _palcoBatida = 0; palcoBatidaHost(); }   // host que sai: o posto fica guardado 3 min (retoma ao voltar), como numa queda
     palcoDentro = false; palcoClaim = 0; palcoRosto = false; rostoMeu = false; rostoDispensado = false;
     palcoTrack(); palcoRecalcula();
   }
@@ -6956,7 +6968,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   document.getElementById('mapaFechar').addEventListener('click', function() {
     if (!mapaAberto()) return;
     var msg = 'Sair do palco?\n\nA mesa continua para quem ficou.';
-    if (palcoSouHost) msg += '\n\nVocê é o host: enquanto estiver fora, o quadro fica PRETO para os outros. Seu posto fica guardado por 10 minutos; se voltar nesse tempo, você retoma.';
+    if (palcoSouHost) msg += '\n\nVocê é o host: enquanto estiver fora, o quadro fica PRETO para os outros. Seu posto fica guardado por 3 minutos; se voltar nesse tempo, você retoma.';
     if (!window.confirm(msg)) return;
     closeMapa();
   });
@@ -6964,11 +6976,11 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   // ── Host do palco ──
   var palcoDentro = false, palcoDesde = 0, palcoClaim = 0, palcoLive = true;
   var palcoPres = {};            // id → o que cada conectado anunciou
-  // Host que CAI ou SAI (✕) não perde o posto na hora: fica guardado por 10 minutos e ninguém assume — o quadro compartilhado
+  // Host que CAI ou SAI (✕) não perde o posto na hora: fica guardado por 3 minutos e ninguém assume — o quadro compartilhado
   // fica preto pra quem ficou. Se ele voltar nesse prazo (F5, outra aba, reabrir o palco), retoma sozinho: o navegador dele lembra
-  // (mesaHostRecente). Passados os 10 minutos, o próximo da fila (quem entrou primeiro) assume. Se todos saírem do palco, o
+  // (mesaHostRecente). Passados os 3 minutos, o próximo da fila (quem entrou primeiro) assume. Se todos saírem do palco, o
   // primeiro que entrar vira host. O host já entra no Modo Mestre.
-  var PALCO_GRACA_MS = 10 * 60 * 1000, palcoFantasma = null, _palcoBatida = 0;
+  var PALCO_GRACA_MS = 3 * 60 * 1000, palcoFantasma = null, _palcoBatida = 0;
   function palcoGraca() { return window.__PALCO_GRACA_MS != null ? +window.__PALCO_GRACA_MS : PALCO_GRACA_MS; }
   function palcoBatidaHost() {                  // o host se lembra de que era host (pra retomar se cair)
     if (!palcoSouHost || Date.now() - _palcoBatida < 15000) return;
@@ -6976,7 +6988,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     try { localStorage.setItem('mesaHostRecente', String(_palcoBatida)); } catch (_) {}
   }
   // Sala VAZIA (ninguém mais conectado): quem chega primeiro vira host de verdade e o prazo de quem caiu antes zera. O 'claim'
-  // vale como carimbo: o antigo host que voltar depois (dentro dos 10 min) vê que alguém assumiu e não toma o posto de volta.
+  // vale como carimbo: o antigo host que voltar depois (dentro dos 3 min) vê que alguém assumiu e não toma o posto de volta.
   // Só vale com a presença já sincronizada e sem mais ninguém conectado (quem acabou de entrar numa sala cheia não sabe ainda).
   function palcoSozinhoMs() { return window.__PALCO_SOZINHO_MS != null ? +window.__PALCO_SOZINHO_MS : 3500; }
   function palcoMarcaPrimeiro() {
