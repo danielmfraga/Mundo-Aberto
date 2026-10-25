@@ -679,6 +679,7 @@ body {
 .vol-lin { display:grid; grid-template-columns:28px minmax(0,1fr) 40px; grid-template-rows:auto auto; column-gap:8px; row-gap:2px; align-items:center; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:rgba(255,255,255,0.03); }
 .vol-lin.todos { border-color:var(--holo-soft); background:rgba(78,211,232,0.06); }
 .vol-lin.tela .vol-nome::before { content:'🖥 '; }
+.vol-lin.tela .vol-nome { color:var(--holo); }
 .vol-nome { grid-column:2; grid-row:1; color:var(--fg); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; }
 .vol-pct { grid-column:3; grid-row:1; text-align:right; font-size:10px; }
 .vol-mudo { grid-column:1; grid-row:1 / span 2; width:28px; height:28px; border-radius:7px; border:1px solid var(--line); background:rgba(255,255,255,0.04); color:var(--fg-dim); cursor:pointer; font-size:14px; line-height:1; padding:0; }
@@ -2071,7 +2072,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     <input type="range" min="0" max="100" step="1" value="100" aria-label="Volume geral">
   </div>
   <div class="vol-lista" id="volLista"></div>
-  <div class="vol-dica">Só você ouve a diferença. O máximo é o volume normal da chamada. Cada pessoa é lembrada pelo apelido, neste navegador.</div>
+  <div class="vol-dica">Só você ouve a diferença. O máximo é o volume normal da chamada. O volume de cada pessoa vale pra voz e pro som da tela que ela compartilha (o vídeo não separa os dois). Cada pessoa é lembrada pelo apelido, neste navegador.</div>
 </div>
 
 <!-- Mapa-múndi: o mesmo mapa pra todo mundo da mesa (tempo real); o iframe só nasce na primeira abertura -->
@@ -3836,35 +3837,34 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var volMeuId = null, volTelas = [], volAplicado = {}, volTimer = null;
   var volBox = document.getElementById('volBox'), volLista = document.getElementById('volLista'), volTodosEl = document.getElementById('volTodos');
   function volGuarda() { try { localStorage.setItem(VOL_CHAVE, JSON.stringify(volEst)); } catch (e) {} }
-  function volDe(nm, tela) { var p = volEst.pessoas[mapaSlug(nm) + (tela ? '|tela' : '')]; return p ? { v:(p.v == null ? 1 : p.v), mudo:!!p.mudo } : { v:1, mudo:false }; }
-  function volFinal(nm, tela) {
-    var p = volDe(nm, tela);
+  function volDe(nm) { var p = volEst.pessoas[mapaSlug(nm)]; return p ? { v:(p.v == null ? 1 : p.v), mudo:!!p.mudo } : { v:1, mudo:false }; }
+  function volFinal(nm) {
+    var p = volDe(nm);
     return Math.max(0, Math.min(1, (volEst.mudoGeral ? 0 : volEst.master) * (p.mudo ? 0 : p.v) * (susAbaixado ? SUS_VOL_OUTROS : 1)));
   }
-  // quem está na chamada além de mim: [{ id, nome, tela:bool }]
+  // quem está na chamada além de mim: [{ id, nome, tela:bool }]. O Jitsi só tem UM volume por pessoa: o áudio de uma tela
+  // compartilhada chega como faixa da mesma pessoa e usa o mesmo número (verificado no código do vídeo), então não há
+  // controle separado pra tela. "tela" só marca quem está compartilhando, pra avisar na linha.
   function volGente() {
     var info = [];
     try { info = jitsiApi ? (jitsiApi.getParticipantsInfo() || []) : []; } catch (_) {}
-    var porId = {}, saida = [];
-    info.forEach(function(p) { if (p && p.participantId) porId[p.participantId] = p; });
+    var saida = [], comTela = {};
+    volTelas.forEach(function(dono) { comTela[dono] = true; });
     info.forEach(function(p) {
       if (!p || !p.participantId) return;
       var id = p.participantId, nm = p.displayName || p.formattedDisplayName || '';
+      var m = /^(.*)-v\d+$/.exec(id);                                  // a tela que o Jitsi mostra como "participante virtual": é do dono, não é outra pessoa
+      if (m) { comTela[m[1]] = true; return; }
       if (id === volMeuId || (!volMeuId && nm && nm === nome)) return;
-      var m = /^(.*)-v\d+$/.exec(id);                                  // tela compartilhada que o Jitsi mostra como participante virtual
-      if (m) saida.push({ id:id, nome:(porId[m[1]] && porId[m[1]].displayName) || nm || 'Tela', tela:true });
-      else saida.push({ id:id, nome:nm || 'Participante', tela:false });
+      saida.push({ id:id, nome:nm || 'Participante', tela:false });
     });
-    volTelas.forEach(function(dono) {                                   // quem compartilha a tela: se o Jitsi não listou a tela como participante, usa o código dela
-      if (dono === volMeuId || !porId[dono] || saida.some(function(g) { return g.tela && g.id.indexOf(dono + '-v') === 0; })) return;
-      saida.push({ id:dono + '-v0', nome:porId[dono].displayName || 'Participante', tela:true });
-    });
+    saida.forEach(function(g) { g.tela = !!comTela[g.id]; });
     return saida;
   }
   function volAplicaTodos() {
     if (!jitsiApi) return;
     volGente().forEach(function(g) {
-      var v = Math.round(volFinal(g.nome, g.tela) * 100) / 100, antes = volAplicado[g.id];
+      var v = Math.round(volFinal(g.nome) * 100) / 100, antes = volAplicado[g.id];
       if (antes === undefined && v === 1) return;                      // nunca mexi e está no normal: não manda nada
       if (antes === v) return;
       volAplicado[g.id] = v; susVolumeDe(g.id, v);
@@ -3874,10 +3874,10 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   function volLinha(chave, nm, v, mudo, tela) {
     var d = document.createElement('div');
     d.className = 'vol-lin' + (tela ? ' tela' : '') + (mudo ? ' mudo' : '');
-    d.dataset.chave = chave + (tela ? '|tela' : '');
+    d.dataset.chave = chave;
     d.innerHTML = '<button class="vol-mudo" type="button" data-vol-mudo title="' + (mudo ? 'Voltar o som' : 'Silenciar (só pra você)') + '">' + (mudo ? '&#128263;' : '&#128266;') + '</button>' +
       '<span class="vol-nome"></span><span class="vol-pct">' + volPct(mudo ? 0 : v) + '</span><input type="range" min="0" max="100" step="1" value="' + Math.round(v * 100) + '">';
-    d.querySelector('.vol-nome').textContent = (tela ? 'Tela de ' : '') + nm; d.querySelector('.vol-nome').title = nm;
+    d.querySelector('.vol-nome').textContent = nm + (tela ? ' · compartilhando tela' : ''); d.querySelector('.vol-nome').title = nm;
     return d;
   }
   function volRender() {
@@ -3886,7 +3886,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     if (foco && volLista.contains(foco) && foco.type === 'range') return;     // não refaz a lista debaixo do dedo
     volLista.innerHTML = '';
     var gente = volGente();
-    gente.forEach(function(g) { var p = volDe(g.nome, g.tela); volLista.appendChild(volLinha(mapaSlug(g.nome), g.nome, p.v, p.mudo, g.tela)); });
+    gente.forEach(function(g) { var p = volDe(g.nome); volLista.appendChild(volLinha(mapaSlug(g.nome), g.nome, p.v, p.mudo, g.tela)); });
     if (!gente.length) volLista.innerHTML = '<div class="vol-vazio">Ninguém mais na chamada agora. Quando alguém entrar (ou compartilhar a tela), aparece aqui.</div>';
     volTodosEl.classList.toggle('mudo', volEst.mudoGeral);
     volTodosEl.querySelector('input').value = Math.round(volEst.master * 100);
