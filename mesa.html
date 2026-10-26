@@ -866,6 +866,9 @@ body.palco-sem-host .mapa-bar, body.palco-sem-host .dsn-bar, body.palco-sem-host
    vira um arrastar-e-soltar nativo (cursor proibido, o mapa trava). Campos de texto seguem selecionáveis. */
 .mapa-panel { user-select:none; -webkit-user-select:none; }
 .mapa-panel input, .mapa-panel textarea { user-select:text; -webkit-user-select:text; }
+/* o texto do chat e do registro de dados dá pra selecionar e copiar mesmo com o palco aberto */
+.mapa-panel .chat-msgs, .mapa-panel .chat-msgs *, .mapa-panel .rolllog, .mapa-panel .rolllog * { user-select:text; -webkit-user-select:text; }
+.mapa-panel .chat-msgs, .mapa-panel .rolllog { cursor:text; }
 .palco-janela {
   display:none; position:absolute; z-index:7; top:10px; right:calc(252px + 30px); gap:6px; align-items:center;
   background:rgba(11,19,32,0.92); backdrop-filter:blur(6px); border:1px solid var(--line-strong); border-radius:8px; padding:7px 8px;
@@ -6301,7 +6304,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   });
   mapaPanel.addEventListener('selectstart', function(e) {
     var t = e.target && e.target.nodeType === 1 ? e.target : (e.target && e.target.parentElement);
-    if (!t || !t.closest('input, textarea')) e.preventDefault();
+    if (!t || !t.closest('input, textarea, .chat-msgs, .rolllog')) e.preventDefault();   // campos, chat e registro de dados deixam selecionar (copiar e colar)
   });
   mapaView.addEventListener('pointerdown', function(e) {
     try { window.getSelection().removeAllRanges(); } catch (_) {}   // uma seleção velha vira arrasto nativo
@@ -6469,7 +6472,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     palcoArrs.push(a);
     el.addEventListener('pointerdown', function(e) {
       if (e.button !== 0 || !palcoPosMovel() || !opt.ativo()) return;
-      if (e.target.closest('input, textarea, select, [contenteditable]')) return;
+      if (e.target.closest('input, textarea, select, [contenteditable], .chat-msgs, .rolllog')) return;   // selecionar texto não arrasta a caixa
       if (opt.alca && !e.target.closest(opt.alca)) return;
       var sx = e.clientX, sy = e.clientY, r = el.getBoundingClientRect(), movendo = false, pos = null;
       function mov(ev) {
