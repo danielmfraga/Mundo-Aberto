@@ -1640,7 +1640,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
 <div class="mesa-grid">
   <!-- Vídeo -->
   <div class="panel video-panel">
-    <div class="panel-head"><span class="led"></span><span class="panel-title">Vídeo</span><button class="pip-bt" id="pipBtn" type="button" title="Vídeo flutuante: as telinhas das pessoas numa janela pequena que fica por cima de tudo (até do jogo)">&#10697; Flutuar</button><span class="trx-badge trx-off" id="trxBadge" title="Status da transcrição"><span class="trx-dot"></span><span id="trxLabel">Transcrição off</span></span></div>
+    <div class="panel-head"><span class="led"></span><span class="panel-title">Vídeo</span><button class="pip-bt" id="pipBtn" type="button" title="Janela flutuante com quem está falando (e microfone, câmera e desligar), por cima de tudo">&#10697; Quem fala</button><button class="pip-bt" id="pipTodosBtn" type="button" title="Janela flutuante com TODAS as pessoas (a grade de rostos), por cima de tudo. O Chrome pede pra compartilhar esta guia: é só a Mesa mostrando o próprio vídeo na janelinha.">&#10697; Todos</button><span class="trx-badge trx-off" id="trxBadge" title="Status da transcrição"><span class="trx-dot"></span><span id="trxLabel">Transcrição off</span></span></div>
     <div id="jitsi"></div>
   </div>
 
@@ -1660,7 +1660,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
       <button class="mapa-ico" type="button" data-menu="diario" title="Diário da Mesa"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2.8h9.2a1 1 0 0 1 1 1v11.4H5a1 1 0 0 1-1-1z"/><path d="M7 6.5h4.5M7 9.5h4.5"/></svg></button>
       <button class="mapa-ico" type="button" data-menu="mundo" title="Mapa-múndi (Thun-dra Maal)"><svg class="mundo-neon" viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.2 4.6 6.4 3l5.2 1.8L15.8 3.2v10.2L11.6 15 6.4 13.2 2.2 14.8z"/><path d="M6.4 3v10.2M11.6 4.8V15"/></svg></button>
       <button class="mapa-ico" type="button" data-menu="volume" title="Volume da mesa: geral e de cada pessoa (só pra você)"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.6 7v4h2.6L9 14.2V3.8L5.2 7z"/><path d="M11.6 6.4a3.4 3.4 0 0 1 0 5.2M13.6 4.5a6 6 0 0 1 0 9"/></svg></button>
-      <button class="mapa-ico" type="button" data-menu="flutuar" title="Vídeo flutuante: as telinhas numa janela pequena por cima de tudo (até do jogo)"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.2" y="3.4" width="13.6" height="11.2" rx="1.6"/><rect x="8.4" y="8.4" width="5.6" height="4" rx="0.8" fill="currentColor" stroke="none"/></svg></button>
+      <button class="mapa-ico" type="button" data-menu="flutuar" title="Vídeo flutuante com TODAS as pessoas, por cima de tudo (até do jogo)"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.2" y="3.4" width="13.6" height="11.2" rx="1.6"/><rect x="8.4" y="8.4" width="5.6" height="4" rx="0.8" fill="currentColor" stroke="none"/></svg></button>
     </div>
     <div class="palco-gavetas" id="palcoGavetas"></div>
     <!-- Tesouro do grupo: o painel mora aqui, escondido, e o botão do menu o leva pra uma gaveta (igual Personagens, Dados e Chat) -->
@@ -3838,7 +3838,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   var pipAtivo = false, pipBt = document.getElementById('pipBtn');
   function pipSuporta() { return 'documentPictureInPicture' in window; }
   function pipMarca(on) {
-    pipAtivo = on; pipBt.classList.toggle('on', on); pipBt.innerHTML = on ? '&#10697; Voltar' : '&#10697; Flutuar';
+    pipAtivo = on; pipBt.classList.toggle('on', on); pipBt.innerHTML = on ? '&#10697; Voltar' : '&#10697; Quem fala';
     try { palcoMenuSync(); } catch (_) {}
   }
   function pipToggle() {
@@ -3851,6 +3851,75 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     jitsiApi.addListener('pipEntered', function() { pipMarca(true); });
     jitsiApi.addListener('pipLeft', function() { pipMarca(false); });
   }
+
+  // ── Vídeo flutuante com TODOS (Region Capture + Document Picture-in-Picture) ──
+  // O Picture-in-Picture do próprio Jitsi mostra uma pessoa só (quem fala). Pra mostrar a grade inteira, a Mesa captura a
+  // imagem do SEU PRÓPRIO quadro de vídeo (#jitsi) — Region Capture (cropTo), que entrega quadros em todo Chrome 104+ (o Element
+  // Capture não entregou imagem nos testes) — e a põe numa janelinha que fica por cima de tudo. Se algo da Mesa (um painel
+  // aberto por cima) cobrir o quadro de vídeo, aparece na janelinha também. O Chrome pede pra
+  // compartilhar "esta guia" (a imagem não sai do seu computador). Dois cliques porque o navegador só deixa abrir a janela
+  // com um clique novo: 1º escolhe o compartilhamento, 2º abre. Fechar a janelinha encerra o compartilhamento.
+  var pipTodosEst = 'off', pipTodosStream = null, pipTodosJanela = null, pipTodosBt = document.getElementById('pipTodosBtn'), pipDicaT = null;
+  function pipDica(txt) {
+    var d = document.getElementById('pipDica');
+    if (!d) { d = document.createElement('div'); d.id = 'pipDica'; d.style.cssText = 'position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:10060;padding:9px 16px;border-radius:8px;background:rgba(7,12,22,0.97);border:1px solid var(--holo-soft);color:var(--fg);font-family:var(--font-mono);font-size:11px;letter-spacing:0.06em;box-shadow:0 10px 30px rgba(0,0,0,0.6);pointer-events:none;'; document.body.appendChild(d); }
+    d.textContent = txt; d.style.display = txt ? 'block' : 'none';
+    clearTimeout(pipDicaT); if (txt) pipDicaT = setTimeout(function() { d.style.display = 'none'; }, 9000);
+  }
+  function pipTodosMarca() {
+    pipTodosBt.classList.toggle('on', pipTodosEst !== 'off');
+    pipTodosBt.innerHTML = pipTodosEst === 'off' ? '&#10697; Todos' : (pipTodosEst === 'pronto' ? '&#10697; Abrir janela' : '&#10697; Fechar');
+    try { palcoMenuSync(); } catch (_) {}
+  }
+  function pipTodosParou() {
+    try { if (pipTodosStream) pipTodosStream.getTracks().forEach(function(t) { t.stop(); }); } catch (_) {}
+    pipTodosStream = null; pipTodosJanela = null; pipTodosEst = 'off'; pipTodosMarca();
+  }
+  async function pipTodosToggle() {
+    if (pipTodosEst === 'aberto') { try { if (pipTodosJanela) pipTodosJanela.close(); } catch (_) {} pipTodosParou(); return; }
+    if (!('documentPictureInPicture' in window) || !window.CropTarget || !navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+      alert('A janela flutuante com todos precisa do Chrome ou do Edge recente (versão 116 ou mais). Neste navegador não dá; o botão "Quem fala" pode funcionar.'); return;
+    }
+    if (pipTodosEst === 'off') {
+      try {
+        var alvo = document.getElementById('jitsi');
+        var rt = await CropTarget.fromElement(alvo);
+        var st = await navigator.mediaDevices.getDisplayMedia({ video:{ frameRate:15 }, audio:false, preferCurrentTab:true, selfBrowserSurface:'include', surfaceSwitching:'exclude', monitorTypeSurfaces:'exclude' });
+        await st.getVideoTracks()[0].cropTo(rt);
+        pipTodosStream = st;
+        st.getVideoTracks()[0].addEventListener('ended', pipTodosParou);   // clicou em "Parar de compartilhar" no aviso do Chrome
+        pipTodosEst = 'pronto'; pipTodosMarca();
+        pipDica('Pronto! Clique de novo no botão (⧉) pra abrir a janela flutuante.');
+      } catch (e) {
+        console.warn('[pip todos]', e); pipTodosParou();
+        if (e && e.name !== 'NotAllowedError') pipDica('Não consegui compartilhar o vídeo (' + (e.name || 'erro') + ').');
+      }
+      return;
+    }
+    // 'pronto': abre a janela com o clique novo
+    try {
+      var jan = await documentPictureInPicture.requestWindow({ width:480, height:300 });
+      jan.document.title = 'Mesa — todos';
+      jan.document.body.style.cssText = 'margin:0;background:#000;overflow:hidden;';
+      var v = jan.document.createElement('video');
+      v.autoplay = true; v.muted = true; v.playsInline = true; v.srcObject = pipTodosStream;
+      v.style.cssText = 'width:100vw;height:100vh;object-fit:contain;background:#000;display:block;';
+      jan.document.body.appendChild(v);
+      try { v.play(); } catch (_) {}
+      jan.addEventListener('pagehide', pipTodosParou);
+      pipTodosJanela = jan; pipTodosEst = 'aberto'; pipTodosMarca();
+    } catch (e) {
+      console.warn('[pip todos janela]', e);
+      pipDica('Não consegui abrir a janela flutuante (' + (e.name || 'erro') + '). Tente de novo.'); pipTodosParou();
+    }
+  }
+  pipTodosBt.addEventListener('click', pipTodosToggle);
+  window.__pipTodosProbe = function() { var v = document.createElement('video'); v.muted = true; v.autoplay = true; v.style.cssText = 'position:fixed;left:0;bottom:0;width:200px;z-index:99999;pointer-events:none;'; v.srcObject = pipTodosStream; document.body.appendChild(v); window.__probeV = v; };   // gancho de teste
+  window.__pipTodosInfo = function() {   // gancho de teste
+    var v = pipTodosJanela && pipTodosJanela.document.querySelector('video'), tr = pipTodosStream && pipTodosStream.getVideoTracks()[0];
+    return { janela: v ? { w:v.videoWidth, h:v.videoHeight, t:v.currentTime, pausado:v.paused } : null, faixa: tr ? { estado:tr.readyState, cfg:tr.getSettings() } : null };
+  };
+  window.addEventListener('pagehide', function() { try { if (pipTodosJanela) pipTodosJanela.close(); } catch (_) {} });
 
   // ── Volume da mesa (só pra mim) ───────────────────────────────────
   // O controle do vídeo (JaaS) é pequeno e some. Aqui há um geral ("Todos") e um por pessoa, e um por tela compartilhada,
@@ -6950,7 +7019,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     var on = {
       personagens:!!palcoGav.personagens, dados:!!palcoGav.dados, chat:!!palcoGav.chat, tesouro:!!palcoGav.tesouro,
       som:palcoSomEl.classList.contains('show'), diario:palcoDiarioEl.classList.contains('show'),
-      flutuar:pipAtivo, mundo:document.getElementById('mundoOverlay').classList.contains('show'), volume:document.getElementById('volBox').classList.contains('show')
+      flutuar:(pipTodosEst !== 'off') || pipAtivo, mundo:document.getElementById('mundoOverlay').classList.contains('show'), volume:document.getElementById('volBox').classList.contains('show')
     };
     palcoMenu.querySelectorAll('[data-menu]').forEach(function(b) {
       b.classList.toggle('on', !!on[b.dataset.menu]);
@@ -6965,7 +7034,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     else if (n === 'diario') { if (palcoDiarioEl.classList.contains('show')) closeDiario(); else openDiario(); }
     else if (n === 'mundo') toggleMundo();
     else if (n === 'volume') volToggle();
-    else if (n === 'flutuar') pipToggle();
+    else if (n === 'flutuar') pipTodosToggle();
     else if (palcoGav[n]) palcoGavFecha(n);
     else { palcoGavAbre(n); if (n === 'chat') chatAbreNaoLida(); }
     palcoMenuSync();
