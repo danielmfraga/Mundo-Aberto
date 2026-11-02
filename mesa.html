@@ -792,6 +792,17 @@ body.wb-on .video-panel #jitsi { min-height:0; border-radius:8px; }
 /* layout: coluna à direita (o do palco) */
 body.wb-on.wb-right .video-panel { top:10px; right:10px; left:auto; bottom:10px; width:252px; height:auto; }
 
+/* vídeo flutuante com todos: fora do palco, o quadro de vídeo vira uma coluna estreita (rostos empilhados) enquanto a janelinha existe */
+body.pip-vertical:not(.mapa-on) .video-panel {
+  position:fixed; z-index:9995; top:64px; right:10px; bottom:10px; left:auto; width:252px; height:auto;
+  border:1px solid var(--holo-soft); border-radius:8px; overflow:hidden; box-shadow:0 0 24px rgba(0,0,0,0.6);
+}
+body.pip-vertical:not(.mapa-on) .video-panel .panel-head { padding:4px 6px; gap:4px; flex-wrap:wrap; }   /* só os botões de flutuar: é por eles que se abre/fecha a janelinha */
+body.pip-vertical:not(.mapa-on) .video-panel .panel-head .led, body.pip-vertical:not(.mapa-on) .video-panel .panel-head .panel-title, body.pip-vertical:not(.mapa-on) .video-panel .panel-head .trx-badge { display:none; }
+body.pip-vertical:not(.mapa-on) .video-panel .pip-bt { margin-left:0; }
+body.pip-vertical:not(.mapa-on) .video-panel { display:flex; flex-direction:column; }
+body.pip-vertical:not(.mapa-on) .video-panel #jitsi { min-height:0; flex:1 1 auto; border-radius:8px; }
+
 /* separador da paleta */
 .wb-sep { width:1px; height:18px; background:var(--line-strong); margin:0 2px; flex:0 0 auto; }
 @media (max-width:920px) {
@@ -3873,6 +3884,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   }
   function pipTodosParou() {
     try { if (pipTodosStream) pipTodosStream.getTracks().forEach(function(t) { t.stop(); }); } catch (_) {}
+    document.body.classList.remove('pip-vertical');
     pipTodosStream = null; pipTodosJanela = null; pipTodosEst = 'off'; pipTodosMarca();
   }
   async function pipTodosToggle() {
@@ -3882,6 +3894,8 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     }
     if (pipTodosEst === 'off') {
       try {
+        document.body.classList.add('pip-vertical');   // rostos empilhados: o quadro de vídeo vira uma coluna estreita enquanto a janelinha existe
+        await new Promise(function(r) { setTimeout(r, 450); });
         var alvo = document.getElementById('jitsi');
         var rt = await CropTarget.fromElement(alvo);
         var st = await navigator.mediaDevices.getDisplayMedia({ video:{ frameRate:15 }, audio:false, preferCurrentTab:true, selfBrowserSurface:'include', surfaceSwitching:'exclude', monitorTypeSurfaces:'exclude' });
@@ -3898,7 +3912,9 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
     }
     // 'pronto': abre a janela com o clique novo
     try {
-      var jan = await documentPictureInPicture.requestWindow({ width:480, height:300 });
+      var asp = (pipTodosStream.getVideoTracks()[0].getSettings() || {}).aspectRatio || 0.4;
+      var larg = asp < 0.9 ? 260 : 480, alt = Math.max(220, Math.min(Math.round(larg / asp), Math.round((screen.availHeight || 800) * 0.8)));   // em pé quando o quadro é uma coluna
+      var jan = await documentPictureInPicture.requestWindow({ width:larg, height:alt });
       jan.document.title = 'Mesa — todos';
       jan.document.body.style.cssText = 'margin:0;background:#000;overflow:hidden;';
       var v = jan.document.createElement('video');
@@ -3917,7 +3933,7 @@ body.espaco-mao .dsn-tool[data-tool="mover"] { color:var(--holo); border-color:v
   window.__pipTodosProbe = function() { var v = document.createElement('video'); v.muted = true; v.autoplay = true; v.style.cssText = 'position:fixed;left:0;bottom:0;width:200px;z-index:99999;pointer-events:none;'; v.srcObject = pipTodosStream; document.body.appendChild(v); window.__probeV = v; };   // gancho de teste
   window.__pipTodosInfo = function() {   // gancho de teste
     var v = pipTodosJanela && pipTodosJanela.document.querySelector('video'), tr = pipTodosStream && pipTodosStream.getVideoTracks()[0];
-    return { janela: v ? { w:v.videoWidth, h:v.videoHeight, t:v.currentTime, pausado:v.paused } : null, faixa: tr ? { estado:tr.readyState, cfg:tr.getSettings() } : null };
+    return { janela: v ? { w:v.videoWidth, h:v.videoHeight, t:v.currentTime, pausado:v.paused, jw:pipTodosJanela.innerWidth, jh:pipTodosJanela.innerHeight } : null, coluna:document.body.classList.contains('pip-vertical'), faixa: tr ? { estado:tr.readyState, cfg:tr.getSettings() } : null };
   };
   window.addEventListener('pagehide', function() { try { if (pipTodosJanela) pipTodosJanela.close(); } catch (_) {} });
 
